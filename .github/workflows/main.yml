@@ -21,11 +21,11 @@ jobs:
           echo -e "\033[31;1;4mConcurrency Group\033[0m"
           echo -e "$CONCURRENCY_GROUP\n"
         shell: bash
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: 3.8
-      - run: pip install -U ruff black~=22.0
+      - run: pip install -U ruff==0.4.1 black~=22.0
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: rustfmt
@@ -34,7 +34,7 @@ jobs:
       - name: Rust Format
         run: cargo fmt --all -- --check
       - name: Clippy
-        run: cargo clippy -- -D warnings
+        run: cargo clippy --all-targets -- -D warnings
       - name: Black Codestyle Format
         run: black --check --diff retworkx rustworkx retworkx tests
       - name: Python Lint
@@ -45,7 +45,7 @@ jobs:
         run: pushd rustworkx-core && cargo test && popd
       - name: rustworkx-core Docs
         run: pushd rustworkx-core && cargo doc && popd
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: rustworkx_core_docs
           path: target/doc/rustworkx_core
@@ -59,20 +59,27 @@ jobs:
         rust: [stable]
         python-version: [3.8, 3.9, "3.10", "3.11", "3.12"]
         platform: [
-          { os: "macOS-latest", python-architecture: "x64", rust-target: "x86_64-apple-darwin" },
+          { os: "macOS-13", python-architecture: "x64", rust-target: "x86_64-apple-darwin" },
+          { os: "macOS-14", python-architecture: "arm64", rust-target: "aarch64-apple-darwin" },
           { os: "ubuntu-latest", python-architecture: "x64", rust-target: "x86_64-unknown-linux-gnu" },
           { os: "windows-latest", python-architecture: "x64", rust-target: "x86_64-pc-windows-msvc" },
         ]
         include:
           # Test minimal supported Rust version
-          - rust: 1.64
+          - rust: 1.70.0
             python-version: 3.8
             platform: { os: "ubuntu-latest", python-architecture: "x64", rust-target: "x86_64-unknown-linux-gnu" }
             msrv: "MSRV"
+        # Exclude python 3.8 and 3.9 on arm64 until actions/setup-python#808 is resolved
+        exclude:
+          - platform: {os: "macOS-14", python-architecture: "arm64", rust-target: "aarch64-apple-darwin" }
+            python-version: 3.8
+          - platform: {os: "macOS-14", python-architecture: "arm64", rust-target: "aarch64-apple-darwin" }
+            python-version: 3.9
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
           architecture: ${{ matrix.platform.python-architecture }}
@@ -83,12 +90,12 @@ jobs:
           toolchain: ${{ matrix.rust }}
           targets: ${{ matrix.platform.rust-target }}
       - name: 'Install dependencies'
-        run: python -m pip install --upgrade tox
+        run: python -m pip install --upgrade nox
       - name: 'Install binary dependencies'
         run: sudo apt-get install -y graphviz
         if: runner.os == 'Linux'
       - name: 'Run tests'
-        run: tox -epy
+        run: nox -e test
   tests_stubs:
     if: github.repository_owner == 'Qiskit'
     needs: [tests]
@@ -98,27 +105,27 @@ jobs:
       matrix:
         python-version: [3.8, 3.9, "3.10", "3.11"]
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
           architecture: x64
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
       - name: 'Install dependencies'
-        run: python -m pip install --upgrade tox
+        run: python -m pip install --upgrade nox
       - name: 'Run rustworkx stub tests'
-        run: tox -estubs
+        run: nox -estubs
   coverage:
     if: github.repository_owner == 'Qiskit'
     needs: [tests]
     name: Coverage
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: 3.8
       - name: Install Rust toolchain
@@ -143,27 +150,28 @@ jobs:
         run: |
           set -e
           mv tests/retworkx*profraw .
-          ./grcov . --binary-path ./target/debug/ -s . -t lcov --branch --ignore-not-existing --ignore "/*" -o ./coveralls.info
-      - uses: actions/upload-artifact@v3
+          ./grcov . --binary-path ./target/debug/ -s . -t lcov --branch --ignore-not-existing --ignore "/*" -o ./coveralls.lcov
+      - uses: actions/upload-artifact@v4
         with:
           name: coverage
-          path: coveralls.info
+          path: coveralls.lcov
       - name: Coveralls
-        uses: coverallsapp/github-action@master
+        uses: coverallsapp/github-action@v2
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          path-to-lcov: coveralls.info
+          format: lcov
+          file: ./coveralls.lcov
   docs:
     if: github.repository_owner == 'Qiskit'
     needs: [tests]
     name: Build Docs
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: 3.8
       - name: Install Rust toolchain
@@ -171,10 +179,10 @@ jobs:
       - name: Install binary deps
         run: sudo apt-get install -y graphviz
       - name: Install deps
-        run: pip install -U tox
+        run: pip install -U nox
       - name: Build Docs
-        run: tox -edocs
-      - uses: actions/upload-artifact@v3
+        run: nox -e docs
+      - uses: actions/upload-artifact@v4
         with:
           name: html_docs
           path: docs/build/html

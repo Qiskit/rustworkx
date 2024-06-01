@@ -10,18 +10,16 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-mod longest_path;
-
 use super::DictMap;
 use hashbrown::{HashMap, HashSet};
 use indexmap::IndexSet;
 use rustworkx_core::dictmap::InitWithHasher;
-use std::cmp::Ordering;
-use std::collections::BinaryHeap;
 
 use super::iterators::NodeIndices;
 use crate::{digraph, DAGHasCycle, InvalidNode, StablePyGraph};
 
+use rustworkx_core::dag_algo::lexicographical_topological_sort as core_lexico_topo_sort;
+use rustworkx_core::dag_algo::longest_path as core_longest_path;
 use rustworkx_core::traversal::dfs_edges;
 
 use pyo3::exceptions::PyValueError;
@@ -32,7 +30,65 @@ use pyo3::Python;
 use petgraph::algo;
 use petgraph::graph::NodeIndex;
 use petgraph::prelude::*;
+use petgraph::stable_graph::EdgeReference;
 use petgraph::visit::NodeCount;
+
+use num_traits::{Num, Zero};
+
+/// Calculate the longest path in a directed acyclic graph (DAG).
+///
+/// This function interfaces with the Python `PyDiGraph` object to compute the longest path
+/// using the provided weight function.
+///
+/// # Arguments
+/// * `graph`: Reference to a `PyDiGraph` object.
+/// * `weight_fn`: A callable that takes the source node index, target node index, and the weight
+///   object and returns the weight of the edge as a `PyResult<T>`.
+///
+/// # Type Parameters
+/// * `F`: Type of the weight function.
+/// * `T`: The type of the edge weight. Must implement `Num`, `Zero`, `PartialOrd`, and `Copy`.
+///
+/// # Returns
+/// * `PyResult<(Vec<G::NodeId>, T)>` representing the longest path as a sequence of node indices and its total weight.
+fn longest_path<F, T>(graph: &digraph::PyDiGraph, mut weight_fn: F) -> PyResult<(Vec<usize>, T)>
+where
+    F: FnMut(usize, usize, &PyObject) -> PyResult<T>,
+    T: Num + Zero + PartialOrd + Copy,
+{
+    let dag = &graph.graph;
+
+    // Create a new weight function that matches the required signature
+    let edge_cost = |edge_ref: EdgeReference<'_, PyObject>| -> Result<T, PyErr> {
+        let source = edge_ref.source().index();
+        let target = edge_ref.target().index();
+        let weight = edge_ref.weight();
+        weight_fn(source, target, weight)
+    };
+
+    let (path, path_weight) = match core_longest_path(dag, edge_cost) {
+        Ok(Some((path, path_weight))) => (
+            path.into_iter().map(NodeIndex::index).collect(),
+            path_weight,
+        ),
+        Ok(None) => return Err(DAGHasCycle::new_err("The graph contains a cycle")),
+        Err(e) => return Err(e),
+    };
+
+    Ok((path, path_weight))
+}
+
+/// Return a pair of [`petgraph::Direction`] values corresponding to the "forwards" and "backwards"
+/// direction of graph traversal, based on whether the graph is being traved forwards (following
+/// the edges) or backward (reversing along edges).  The order of returns is (forwards, backwards).
+#[inline(always)]
+pub fn traversal_directions(reverse: bool) -> (petgraph::Direction, petgraph::Direction) {
+    if reverse {
+        (petgraph::Direction::Outgoing, petgraph::Direction::Incoming)
+    } else {
+        (petgraph::Direction::Incoming, petgraph::Direction::Outgoing)
+    }
+}
 
 /// Find the longest path in a DAG
 ///
@@ -70,7 +126,7 @@ pub fn dag_longest_path(
             }
         };
     Ok(NodeIndices {
-        nodes: longest_path::longest_path(graph, edge_weight_callable)?.0,
+        nodes: longest_path(graph, edge_weight_callable)?.0,
     })
 }
 
@@ -109,7 +165,7 @@ pub fn dag_longest_path_length(
                 None => Ok(1),
             }
         };
-    let (_, path_weight) = longest_path::longest_path(graph, edge_weight_callable)?;
+    let (_, path_weight) = longest_path(graph, edge_weight_callable)?;
     Ok(path_weight)
 }
 
@@ -151,7 +207,7 @@ pub fn dag_weighted_longest_path(
         Ok(float_res)
     };
     Ok(NodeIndices {
-        nodes: longest_path::longest_path(graph, edge_weight_callable)?.0,
+        nodes: longest_path(graph, edge_weight_callable)?.0,
     })
 }
 
@@ -192,7 +248,7 @@ pub fn dag_weighted_longest_path_length(
         }
         Ok(float_res)
     };
-    let (_, path_weight) = longest_path::longest_path(graph, edge_weight_callable)?;
+    let (_, path_weight) = longest_path(graph, edge_weight_callable)?;
     Ok(path_weight)
 }
 
@@ -326,9 +382,9 @@ pub fn layers(
         next_layer = Vec::new();
     }
     if !index_output {
-        Ok(PyList::new(py, output).into())
+        Ok(PyList::new_bound(py, output).into())
     } else {
-        Ok(PyList::new(py, output_indices).into())
+        Ok(PyList::new_bound(py, output_indices).into())
     }
 }
 
@@ -338,94 +394,128 @@ pub fn layers(
 /// topologically sorted using the provided key function. A topological sort
 /// is a linear ordering of vertices such that for every directed edge from
 /// node :math:`u` to node :math:`v`, :math:`u` comes before :math:`v`
-/// in the ordering.
+/// in the ordering.  If ``reverse`` is set to ``False``, the edges are treated
+/// as if they pointed in the opposite direction.
 ///
 /// This function differs from :func:`~rustworkx.topological_sort` because
 /// when there are ties between nodes in the sort order this function will
 /// use the string returned by the ``key`` argument to determine the output
-/// order used.
+/// order used.  The ``reverse`` argument does not affect the ordering of keys
+/// from this function, only the edges of the graph.
 ///
 /// :param PyDiGraph dag: The DAG to get the topological sorted nodes from
 /// :param callable key: key is a python function or other callable that
 ///     gets passed a single argument the node data from the graph and is
 ///     expected to return a string which will be used for resolving ties
 ///     in the sorting order.
+/// :param bool reverse: If ``False`` (the default), perform a regular
+///     topological ordering.  If ``True``, return the lexicographical
+///     topological order that would have been found if all the edges in the
+///     graph were reversed.  This does not affect the comparisons from the
+///     ``key``.
+/// :param Iterable[int] initial: If given, the initial node indices to start the topological
+///     ordering from.  If not given, the topological ordering will certainly contain every node in
+///     the graph.  If given, only the ``initial`` nodes and nodes that are dominated by the
+///     ``initial`` set will be in the ordering.  Notably, any node that has a natural in degree of
+///     zero will not be in the output ordering if ``initial`` is given and the zero-in-degree node
+///     is not in it.  It is a :exc:`ValueError` to give an `initial` set where the nodes have even
+///     a partial topological order between themselves.
 ///
 /// :returns: A list of node's data lexicographically topologically sorted.
 /// :rtype: list
 #[pyfunction]
-#[pyo3(text_signature = "(dag, key, /)")]
+#[pyo3(signature = (dag, /, key, *, reverse=false, initial=None))]
 pub fn lexicographical_topological_sort(
     py: Python,
     dag: &digraph::PyDiGraph,
     key: PyObject,
+    reverse: bool,
+    initial: Option<&Bound<PyAny>>,
 ) -> PyResult<PyObject> {
-    let key_callable = |a: &PyObject| -> PyResult<PyObject> {
-        let res = key.call1(py, (a,))?;
-        Ok(res.to_object(py))
+    let key_callable = |a: NodeIndex| -> PyResult<String> {
+        let weight = &dag.graph[a];
+        let res: String = key.call1(py, (weight,))?.extract(py)?;
+        Ok(res)
     };
-    // HashMap of node_index indegree
-    let node_count = dag.node_count();
-    let mut in_degree_map: HashMap<NodeIndex, usize> = HashMap::with_capacity(node_count);
+    let initial: Option<Vec<NodeIndex>> = match initial {
+        Some(initial) => {
+            let mut initial_vec: Vec<NodeIndex> = Vec::new();
+            for maybe_index in initial.iter()? {
+                let node = NodeIndex::new(maybe_index?.extract::<usize>()?);
+                initial_vec.push(node);
+            }
+            Some(initial_vec)
+        }
+        None => None,
+    };
+    let out_list = core_lexico_topo_sort(&dag.graph, key_callable, reverse, initial.as_deref())?;
+    match out_list {
+        Some(out_list) => Ok(PyList::new_bound(
+            py,
+            out_list
+                .into_iter()
+                .map(|node| dag.graph[node].clone_ref(py)),
+        )
+        .into()),
+        None => Err(PyValueError::new_err(
+            "at least one initial node is reachable from another",
+        )),
+    }
+}
+
+/// Return the topological generations of a DAG
+///
+/// A topological generation is node collection in which ancestors of a node in each
+/// generation are guaranteed to be in a previous generation, and any descendants of
+/// a node are guaranteed to be in a following generation. Nodes are guaranteed to
+/// be in the earliest possible generation that they can belong to.
+///
+/// :param PyDiGraph graph: The DAG to get the topological generations from
+///
+/// :returns: A list of topological generations.
+/// :rtype: list
+///
+/// :raises DAGHasCycle: if a cycle is encountered while sorting the graph
+#[pyfunction]
+#[pyo3(text_signature = "(dag, /)")]
+pub fn topological_generations(dag: &digraph::PyDiGraph) -> PyResult<Vec<NodeIndices>> {
+    let mut in_degree_map: HashMap<NodeIndex, usize> = HashMap::new();
+    let mut zero_in_degree: Vec<NodeIndex> = Vec::new();
     for node in dag.graph.node_indices() {
-        in_degree_map.insert(node, dag.in_degree(node.index()));
-    }
-
-    #[derive(Clone, Eq, PartialEq)]
-    struct State {
-        key: String,
-        node: NodeIndex,
-    }
-
-    impl Ord for State {
-        fn cmp(&self, other: &State) -> Ordering {
-            // Notice that the we flip the ordering on costs.
-            // In case of a tie we compare positions - this step is necessary
-            // to make implementations of `PartialEq` and `Ord` consistent.
-            other
-                .key
-                .cmp(&self.key)
-                .then_with(|| other.node.index().cmp(&self.node.index()))
+        let in_degree = dag.in_degree(node.index());
+        if in_degree == 0 {
+            zero_in_degree.push(node);
+        } else {
+            in_degree_map.insert(node, in_degree);
         }
     }
 
-    // `PartialOrd` needs to be implemented as well.
-    impl PartialOrd for State {
-        fn partial_cmp(&self, other: &State) -> Option<Ordering> {
-            Some(self.cmp(other))
-        }
-    }
-    let mut zero_indegree = BinaryHeap::with_capacity(node_count);
-    for (node, degree) in in_degree_map.iter() {
-        if *degree == 0 {
-            let map_key_raw = key_callable(&dag.graph[*node])?;
-            let map_key: String = map_key_raw.extract(py)?;
-            zero_indegree.push(State {
-                key: map_key,
-                node: *node,
-            });
-        }
-    }
-    let mut out_list: Vec<&PyObject> = Vec::with_capacity(node_count);
+    let mut generations: Vec<NodeIndices> = Vec::new();
     let dir = petgraph::Direction::Outgoing;
-    while let Some(State { node, .. }) = zero_indegree.pop() {
-        let neighbors = dag.graph.neighbors_directed(node, dir);
-        for child in neighbors {
-            let child_degree = in_degree_map.get_mut(&child).unwrap();
-            *child_degree -= 1;
-            if *child_degree == 0 {
-                let map_key_raw = key_callable(&dag.graph[child])?;
-                let map_key: String = map_key_raw.extract(py)?;
-                zero_indegree.push(State {
-                    key: map_key,
-                    node: child,
-                });
-                in_degree_map.remove(&child);
+    while !zero_in_degree.is_empty() {
+        let this_generation = zero_in_degree.clone();
+        zero_in_degree.clear();
+        for node in this_generation.iter() {
+            let neighbors = dag.graph.neighbors_directed(*node, dir);
+            for child in neighbors {
+                let child_degree = in_degree_map.get_mut(&child).unwrap();
+                *child_degree -= 1;
+                if *child_degree == 0 {
+                    zero_in_degree.push(child);
+                    in_degree_map.remove(&child);
+                }
             }
         }
-        out_list.push(&dag.graph[node])
+        generations.push(NodeIndices {
+            nodes: this_generation.iter().map(|node| node.index()).collect(),
+        });
     }
-    Ok(PyList::new(py, out_list).into())
+
+    // Check for cycle
+    if !in_degree_map.is_empty() {
+        return Err(DAGHasCycle::new_err("Topological sort encountered a cycle"));
+    }
+    Ok(generations)
 }
 
 /// Return the topological sort of node indices from the provided graph
@@ -693,12 +783,12 @@ pub fn transitive_reduction(
                     descendants.insert(v, dfs);
                 }
                 for desc in &descendants[&v] {
-                    u_nbrs.remove(&NodeIndex::new(desc.1));
+                    u_nbrs.swap_remove(&NodeIndex::new(desc.1));
                 }
             }
             *check_count.get_mut(&v).unwrap() -= 1;
             if check_count[&v] == 0 {
-                descendants.remove(&v);
+                descendants.swap_remove(&v);
             }
         }
         for v in u_nbrs {

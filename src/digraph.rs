@@ -22,9 +22,11 @@ use std::io::{BufReader, BufWriter};
 use std::str;
 
 use hashbrown::{HashMap, HashSet};
-use indexmap::IndexSet;
 
 use rustworkx_core::dictmap::*;
+use rustworkx_core::graph_ext::*;
+
+use smallvec::SmallVec;
 
 use pyo3::exceptions::PyIndexError;
 use pyo3::gc::PyVisit;
@@ -42,6 +44,7 @@ use petgraph::algo;
 use petgraph::graph::{EdgeIndex, NodeIndex};
 use petgraph::prelude::*;
 
+use crate::RxPyResult;
 use petgraph::visit::{
     EdgeIndexable, GraphBase, IntoEdgeReferences, IntoNodeReferences, NodeCount, NodeFiltered,
     NodeIndexable, Visitable,
@@ -52,8 +55,8 @@ use super::iterators::{
     EdgeIndexMap, EdgeIndices, EdgeList, NodeIndices, NodeMap, WeightedEdgeList,
 };
 use super::{
-    find_node_by_weight, merge_duplicates, weight_callable, DAGHasCycle, DAGWouldCycle, IsNan,
-    NoEdgeBetweenNodes, NoSuitableNeighbors, NodesRemoved, StablePyGraph,
+    find_node_by_weight, weight_callable, DAGHasCycle, DAGWouldCycle, IsNan, NoEdgeBetweenNodes,
+    NoSuitableNeighbors, NodesRemoved, StablePyGraph,
 };
 
 use super::dag_algo::is_directed_acyclic_graph;
@@ -318,9 +321,9 @@ impl PyDiGraph {
             };
             edges.push(edge);
         }
-        let out_dict = PyDict::new(py);
-        let nodes_lst: PyObject = PyList::new(py, nodes).into();
-        let edges_lst: PyObject = PyList::new(py, edges).into();
+        let out_dict = PyDict::new_bound(py);
+        let nodes_lst: PyObject = PyList::new_bound(py, nodes).into();
+        let edges_lst: PyObject = PyList::new_bound(py, edges).into();
         out_dict.set_item("nodes", nodes_lst)?;
         out_dict.set_item("edges", edges_lst)?;
         out_dict.set_item("nodes_removed", self.node_removed)?;
@@ -331,17 +334,13 @@ impl PyDiGraph {
     }
 
     fn __setstate__(&mut self, py: Python, state: PyObject) -> PyResult<()> {
-        let dict_state = state.downcast::<PyDict>(py)?;
-        let nodes_lst = dict_state
-            .get_item("nodes")?
-            .unwrap()
-            .downcast::<PyList>()?;
-        let edges_lst = dict_state
-            .get_item("edges")?
-            .unwrap()
-            .downcast::<PyList>()?;
+        let dict_state = state.downcast_bound::<PyDict>(py)?;
+        let binding = dict_state.get_item("nodes")?.unwrap();
+        let nodes_lst = binding.downcast::<PyList>()?;
+        let binding = dict_state.get_item("edges")?.unwrap();
+        let edges_lst = binding.downcast::<PyList>()?;
         self.graph = StablePyGraph::<Directed>::new();
-        let dict_state = state.downcast::<PyDict>(py)?;
+        let dict_state = state.downcast_bound::<PyDict>(py)?;
         self.multigraph = dict_state
             .get_item("multigraph")?
             .unwrap()
@@ -381,11 +380,8 @@ impl PyDiGraph {
             }
         } else if nodes_lst.len() == 1 {
             // graph has only one node, handle logic here to save one if in the loop later
-            let item = nodes_lst
-                .get_item(0)
-                .unwrap()
-                .downcast::<PyTuple>()
-                .unwrap();
+            let binding = nodes_lst.get_item(0).unwrap();
+            let item = binding.downcast::<PyTuple>().unwrap();
             let node_idx: usize = item.get_item(0).unwrap().extract().unwrap();
             let node_w = item.get_item(1).unwrap().extract().unwrap();
 
@@ -397,11 +393,8 @@ impl PyDiGraph {
                 self.graph.remove_node(NodeIndex::new(i));
             }
         } else {
-            let last_item = nodes_lst
-                .get_item(nodes_lst.len() - 1)
-                .unwrap()
-                .downcast::<PyTuple>()
-                .unwrap();
+            let binding = nodes_lst.get_item(nodes_lst.len() - 1).unwrap();
+            let last_item = binding.downcast::<PyTuple>().unwrap();
 
             // list of temporary nodes that will be removed later to re-create holes
             let node_bound_1: usize = last_item.get_item(0).unwrap().extract().unwrap();
@@ -488,15 +481,7 @@ impl PyDiGraph {
         if !self.multigraph {
             return false;
         }
-        let mut edges: HashSet<[NodeIndex; 2]> = HashSet::with_capacity(self.graph.edge_count());
-        for edge in self.graph.edge_references() {
-            let endpoints = [edge.source(), edge.target()];
-            if edges.contains(&endpoints) {
-                return true;
-            }
-            edges.insert(endpoints);
-        }
-        false
+        self.graph.has_parallel_edges()
     }
 
     /// Clear all nodes and edges
@@ -547,6 +532,24 @@ impl PyDiGraph {
         }
     }
 
+    /// Return a list of indices of all directed edges between specified nodes
+    ///
+    /// :returns: A list of all the edge indices connecting the specified start and end node
+    /// :rtype: EdgeIndices
+    pub fn edge_indices_from_endpoints(&self, node_a: usize, node_b: usize) -> EdgeIndices {
+        let node_a_index = NodeIndex::new(node_a);
+        let node_b_index = NodeIndex::new(node_b);
+
+        EdgeIndices {
+            edges: self
+                .graph
+                .edges_directed(node_a_index, petgraph::Direction::Outgoing)
+                .filter(|edge| edge.target() == node_b_index)
+                .map(|edge| edge.id().index())
+                .collect(),
+        }
+    }
+
     /// Return a list of all node data.
     ///
     /// :returns: A list of all the node data objects in the graph
@@ -583,6 +586,18 @@ impl PyDiGraph {
     #[pyo3(text_signature = "(self)")]
     pub fn node_indexes(&self) -> NodeIndices {
         self.node_indices()
+    }
+
+    /// Return True if there is a node in the graph.
+    ///
+    /// :param int node: The node index to check
+    ///
+    /// :returns: True if there is a node false if there is no node
+    /// :rtype: bool
+    #[pyo3(text_signature = "(self, node, /)")]
+    pub fn has_node(&self, node: usize) -> bool {
+        let index = NodeIndex::new(node);
+        self.graph.contains_node(index)
     }
 
     /// Return True if there is an edge from node_a to node_b.
@@ -970,6 +985,13 @@ impl PyDiGraph {
     /// By default the data/weight on edges into the removed node will be used
     /// for the retained edges.
     ///
+    /// This function has a minimum time complexity of :math:`\mathcal O(e_i e_o)`, where
+    /// :math:`e_i` and :math:`e_o` are the numbers of incoming and outgoing edges respectively.
+    /// If your ``condition`` can be cast as an equality between two hashable quantities, consider
+    /// using :meth:`remove_node_retain_edges_by_key` instead, or if your ``condition`` is
+    /// referential object identity of the edge weights, consider
+    /// :meth:`remove_node_retain_edges_by_id`.
+    ///
     /// :param int node: The index of the node to remove. If the index is not
     ///     present in the graph it will be ingored and this function willl have
     ///     no effect.
@@ -985,7 +1007,7 @@ impl PyDiGraph {
     ///
     ///     would only retain edges if the input edge to ``node`` had the same
     ///     data payload as the outgoing edge.
-    #[pyo3(text_signature = "(self, node, /, use_outgoing=None, condition=None)")]
+    #[pyo3(text_signature = "(self, node, /, use_outgoing=False, condition=None)")]
     #[pyo3(signature=(node, use_outgoing=false, condition=None))]
     pub fn remove_node_retain_edges(
         &mut self,
@@ -1031,8 +1053,181 @@ impl PyDiGraph {
         for (source, target, weight) in edge_list {
             self._add_edge(source, target, weight)?;
         }
-        self.graph.remove_node(index);
-        self.node_removed = true;
+        self.node_removed = self.graph.remove_node(index).is_some();
+        Ok(())
+    }
+
+    /// Remove a node from the graph and add edges from predecessors to successors in cases where
+    /// an incoming and outgoing edge have the same weight by Python object identity.
+    ///
+    /// This function has a minimum time complexity of :math:`\mathcal O(e_i + e_o)`, where
+    /// :math:`e_i` is the number of incoming edges and :math:`e_o` the number of outgoing edges
+    /// (the full complexity depends on the number of new edges to be created).
+    ///
+    /// Edges will be added between all pairs of predecessor and successor nodes that have the same
+    /// weight.  As a consequence, any weight which appears only on predecessor edges will not
+    /// appear in the output, as there are no successors to pair it with.
+    ///
+    /// :param int node: The index of the node to remove. If the index is not present in the graph
+    ///     it will be ignored and this function will have no effect.
+    #[pyo3(signature=(node, /))]
+    pub fn remove_node_retain_edges_by_id(&mut self, py: Python, node: usize) -> PyResult<()> {
+        // As many indices as will fit inline within the minimum inline size of a `SmallVec`.  Many
+        // use cases of this likely only have one inbound and outbound edge with each id anyway.
+        const INLINE_SIZE: usize =
+            2 * ::std::mem::size_of::<usize>() / ::std::mem::size_of::<NodeIndex>();
+        let new_node_list = || SmallVec::<[NodeIndex; INLINE_SIZE]>::new();
+        let node_index = NodeIndex::new(node);
+        let in_edges = {
+            let mut in_edges = HashMap::new();
+            for edge in self
+                .graph
+                .edges_directed(node_index, petgraph::Direction::Incoming)
+            {
+                in_edges
+                    .entry(PyAnyId(edge.weight().clone_ref(py)))
+                    .or_insert_with(new_node_list)
+                    .push(edge.source());
+            }
+            in_edges
+        };
+        let mut out_edges = {
+            let mut out_edges = HashMap::new();
+            for edge in self
+                .graph
+                .edges_directed(node_index, petgraph::Direction::Outgoing)
+            {
+                out_edges
+                    .entry(PyAnyId(edge.weight().clone_ref(py)))
+                    .or_insert_with(new_node_list)
+                    .push(edge.target());
+            }
+            out_edges
+        };
+
+        for (weight, in_edges_subset) in in_edges {
+            let out_edges_subset = match out_edges.remove(&weight) {
+                Some(out_edges_key) => out_edges_key,
+                None => continue,
+            };
+            for source in in_edges_subset {
+                for target in out_edges_subset.iter() {
+                    self._add_edge(source, *target, weight.clone_ref(py))?;
+                }
+            }
+        }
+        self.node_removed = self.graph.remove_node(node_index).is_some();
+        Ok(())
+    }
+
+    /// Remove a node from the graph and add edges from predecessors to successors in cases where
+    /// an incoming and outgoing edge have the same weight by Python object equality.
+    ///
+    /// This function has a minimum time complexity of :math:`\mathcal O(e_i + e_o)`, where
+    /// :math:`e_i` is the number of incoming edges and :math:`e_o` the number of outgoing edges
+    /// (the full complexity depends on the number of new edges to be created).
+    ///
+    /// Edges will be added between all pairs of predecessor and successor nodes that have equal
+    /// weights.  As a consequence, any weight which appears only on predecessor edges will not
+    /// appear in the output, as there are no successors to pair it with.
+    ///
+    /// If there are multiple edges with the same weight, the exact Python object used on the new
+    /// edges is an implementation detail and may change.  The only guarantees are that it will be
+    /// deterministic for a given graph, and that it will be drawn from the incoming edges if
+    /// ``use_outgoing=False`` (the default) or from the outgoing edges if ``use_outgoing=True``.
+    ///
+    /// :param int node: The index of the node to remove. If the index is not present in the graph
+    ///     it will be ignored and this function will have no effect.
+    /// :param key: A callable Python object that is called once for each connected edge, to
+    ///     generate the "key" for that weight.  It is passed exactly one argument positionally
+    ///     (the weight of the edge), and should return a Python object that is hashable and
+    ///     implements equality checking with all other relevant keys.  If not given, the edge
+    ///     weights will be used directly.
+    /// :param bool use_outgoing: If ``False`` (default), the new edges will use the weight from
+    ///     one of the incoming edges.  If ``True``, they will instead use a weight from one of the
+    ///     outgoing edges.
+    #[pyo3(signature=(node, /, key=None, *, use_outgoing=false))]
+    pub fn remove_node_retain_edges_by_key(
+        &mut self,
+        py: Python,
+        node: usize,
+        key: Option<Py<PyAny>>,
+        use_outgoing: bool,
+    ) -> PyResult<()> {
+        let node_index = NodeIndex::new(node);
+        let in_edges = {
+            let in_edges = PyDict::new_bound(py);
+            for edge in self
+                .graph
+                .edges_directed(node_index, petgraph::Direction::Incoming)
+            {
+                let key_value = if let Some(key_fn) = &key {
+                    key_fn.call1(py, (edge.weight(),))?
+                } else {
+                    edge.weight().clone_ref(py)
+                };
+                if let Some(edge_data) = in_edges.get_item(key_value.bind(py))? {
+                    let edge_data = edge_data.downcast::<RemoveNodeEdgeValue>()?;
+                    edge_data.borrow_mut().nodes.push(edge.source());
+                } else {
+                    in_edges.set_item(
+                        key_value,
+                        RemoveNodeEdgeValue {
+                            weight: edge.weight().clone_ref(py),
+                            nodes: vec![edge.source()],
+                        }
+                        .into_py(py),
+                    )?
+                }
+            }
+            in_edges
+        };
+        let out_edges = {
+            let out_edges = PyDict::new_bound(py);
+            for edge in self
+                .graph
+                .edges_directed(node_index, petgraph::Direction::Outgoing)
+            {
+                let key_value = if let Some(key_fn) = &key {
+                    key_fn.call1(py, (edge.weight(),))?
+                } else {
+                    edge.weight().clone_ref(py)
+                };
+                if let Some(edge_data) = out_edges.get_item(key_value.bind(py))? {
+                    let edge_data = edge_data.downcast::<RemoveNodeEdgeValue>()?;
+                    edge_data.borrow_mut().nodes.push(edge.target());
+                } else {
+                    out_edges.set_item(
+                        key_value,
+                        RemoveNodeEdgeValue {
+                            weight: edge.weight().clone_ref(py),
+                            nodes: vec![edge.target()],
+                        }
+                        .into_py(py),
+                    )?
+                }
+            }
+            out_edges
+        };
+
+        for (in_key, in_edge_data) in in_edges {
+            let in_edge_data = in_edge_data.downcast::<RemoveNodeEdgeValue>()?.borrow();
+            let out_edge_data = match out_edges.get_item(in_key)? {
+                Some(out_edge_data) => out_edge_data.downcast::<RemoveNodeEdgeValue>()?.borrow(),
+                None => continue,
+            };
+            for source in in_edge_data.nodes.iter() {
+                for target in out_edge_data.nodes.iter() {
+                    let weight = if use_outgoing {
+                        out_edge_data.weight.clone_ref(py)
+                    } else {
+                        in_edge_data.weight.clone_ref(py)
+                    };
+                    self._add_edge(*source, *target, weight)?;
+                }
+            }
+        }
+        self.node_removed = self.graph.remove_node(node_index).is_some();
         Ok(())
     }
 
@@ -1366,7 +1561,7 @@ impl PyDiGraph {
         };
 
         let have_same_weights =
-            source_weight.as_ref(py).compare(target_weight.as_ref(py))? == Ordering::Equal;
+            source_weight.bind(py).compare(target_weight.bind(py))? == Ordering::Equal;
 
         if have_same_weights {
             const DIRECTIONS: [petgraph::Direction; 2] =
@@ -1912,7 +2107,7 @@ impl PyDiGraph {
                 let mut file = Vec::<u8>::new();
                 build_dot(py, &self.graph, &mut file, graph_attr, node_attr, edge_attr)?;
                 Ok(Some(
-                    PyString::new(py, str::from_utf8(&file)?).to_object(py),
+                    PyString::new_bound(py, str::from_utf8(&file)?).to_object(py),
                 ))
             }
         }
@@ -2026,7 +2221,7 @@ impl PyDiGraph {
                     Some(del) => pieces[2..].join(del),
                     None => pieces[2..].join(&' '.to_string()),
                 };
-                PyString::new(py, &weight_str).into()
+                PyString::new_bound(py, &weight_str).into()
             } else {
                 py.None()
             };
@@ -2275,7 +2470,7 @@ impl PyDiGraph {
                 weight.clone_ref(py),
             )?;
         }
-        let out_dict = PyDict::new(py);
+        let out_dict = PyDict::new_bound(py);
         for (orig_node, new_node) in new_node_map.iter() {
             out_dict.set_item(orig_node.index(), new_node.index())?;
         }
@@ -2463,98 +2658,26 @@ impl PyDiGraph {
         obj: PyObject,
         check_cycle: Option<bool>,
         weight_combo_fn: Option<PyObject>,
-    ) -> PyResult<usize> {
-        let can_contract = |nodes: &IndexSet<NodeIndex, ahash::RandomState>| {
-            // Start with successors of `nodes` that aren't in `nodes` itself.
-            let visit_next: Vec<NodeIndex> = nodes
-                .iter()
-                .flat_map(|n| self.graph.edges(*n))
-                .filter_map(|edge| {
-                    let target_node = edge.target();
-                    if !nodes.contains(&target_node) {
-                        Some(target_node)
-                    } else {
-                        None
-                    }
-                })
-                .collect();
-
-            // Now, if we can reach any of `nodes`, there exists a path from `nodes`
-            // back to `nodes` of length > 1, meaning contraction is disallowed.
-            let mut dfs = Dfs::from_parts(visit_next, self.graph.visit_map());
-            while let Some(node) = dfs.next(&self.graph) {
-                if nodes.contains(&node) {
-                    // we found a path back to `nodes`
-                    return false;
-                }
+    ) -> RxPyResult<usize> {
+        let nodes = nodes.into_iter().map(|i| NodeIndex::new(i));
+        let check_cycle = check_cycle.unwrap_or(self.check_cycle);
+        let res = match (weight_combo_fn, &self.multigraph) {
+            (Some(user_callback), _) => {
+                self.graph
+                    .contract_nodes_simple(nodes, obj, check_cycle, |w1, w2| {
+                        user_callback.call1(py, (w1, w2))
+                    })?
             }
-            true
+            (None, false) => {
+                // By default, just take first edge.
+                self.graph
+                    .contract_nodes_simple(nodes, obj, check_cycle, move |w1, _| {
+                        Ok::<_, PyErr>(w1.clone_ref(py))
+                    })?
+            }
+            (None, true) => self.graph.contract_nodes(nodes, obj, check_cycle)?,
         };
-
-        let mut indices_to_remove: IndexSet<NodeIndex, ahash::RandomState> =
-            nodes.into_iter().map(NodeIndex::new).collect();
-
-        if check_cycle.unwrap_or(self.check_cycle) && !can_contract(&indices_to_remove) {
-            return Err(DAGWouldCycle::new_err("Contraction would create cycle(s)"));
-        }
-
-        // Create new node.
-        let node_index = self.graph.add_node(obj);
-
-        // Sanitize new node index from user input.
-        indices_to_remove.remove(&node_index);
-
-        // Determine edges for new node.
-        let mut incoming_edges: Vec<_> = indices_to_remove
-            .iter()
-            .flat_map(|&i| self.graph.edges_directed(i, Direction::Incoming))
-            .filter_map(|edge| {
-                let pred = edge.source();
-                if !indices_to_remove.contains(&pred) {
-                    Some((pred, edge.weight().clone_ref(py)))
-                } else {
-                    None
-                }
-            })
-            .collect();
-
-        let mut outgoing_edges: Vec<_> = indices_to_remove
-            .iter()
-            .flat_map(|&i| self.graph.edges_directed(i, Direction::Outgoing))
-            .filter_map(|edge| {
-                let succ = edge.target();
-                if !indices_to_remove.contains(&succ) {
-                    Some((succ, edge.weight().clone_ref(py)))
-                } else {
-                    None
-                }
-            })
-            .collect();
-
-        // Remove nodes that will be replaced.
-        for index in indices_to_remove {
-            self.remove_node(index.index())?;
-        }
-
-        // If `weight_combo_fn` was specified, merge edges according
-        // to that function, even if this is a multigraph. If unspecified,
-        // defer parallel edge handling to `add_edge_no_cycle_check`.
-        if let Some(merge_fn) = weight_combo_fn {
-            let f = |w1: &Py<_>, w2: &Py<_>| merge_fn.call1(py, (w1, w2));
-
-            incoming_edges = merge_duplicates(incoming_edges, f)?;
-            outgoing_edges = merge_duplicates(outgoing_edges, f)?;
-        }
-
-        for (source, weight) in incoming_edges {
-            self.add_edge_no_cycle_check(source, node_index, weight);
-        }
-
-        for (target, weight) in outgoing_edges {
-            self.add_edge_no_cycle_check(node_index, target, weight);
-        }
-
-        Ok(node_index.index())
+        Ok(res.index())
     }
 
     /// Return a new PyDiGraph object for a subgraph of this graph
@@ -2869,7 +2992,7 @@ impl PyDiGraph {
     /// required to return a boolean value stating whether the node's data payload fits some criteria.
     ///
     /// For example::
-    ///     
+    ///
     ///     from rustworkx import PyDiGraph
     ///
     ///     graph = PyDiGraph()
@@ -2917,8 +3040,8 @@ impl PyDiGraph {
     ///     def my_filter_function(edge):
     ///         if edge:
     ///             return edge == 'B'
-    ///         return False  
-    ///        
+    ///         return False
+    ///
     ///     indices = graph.filter_edges(my_filter_function)
     ///     assert indices == [1]
     ///
@@ -3081,4 +3204,34 @@ where
         multigraph: true,
         attrs: py.None(),
     }
+}
+
+/// Simple wrapper newtype that lets us use `Py` pointers as hash keys with the equality defined by
+/// the pointer address.  This is equivalent to using Python's `is` operator for comparisons.
+/// Using a newtype rather than casting the pointer to `usize` inline lets us retrieve a copy of
+/// the reference from the key entry.
+struct PyAnyId(Py<PyAny>);
+impl PyAnyId {
+    fn clone_ref(&self, py: Python) -> Py<PyAny> {
+        self.0.clone_ref(py)
+    }
+}
+impl ::std::hash::Hash for PyAnyId {
+    fn hash<H: ::std::hash::Hasher>(&self, state: &mut H) {
+        (self.0.as_ptr() as usize).hash(state)
+    }
+}
+impl PartialEq for PyAnyId {
+    fn eq(&self, other: &Self) -> bool {
+        self.0.as_ptr() == other.0.as_ptr()
+    }
+}
+impl Eq for PyAnyId {}
+
+/// Internal-only helper class used by `remove_node_retain_edges_by_key` to store its data as a
+/// typed object in a Python dictionary.
+#[pyclass]
+struct RemoveNodeEdgeValue {
+    weight: Py<PyAny>,
+    nodes: Vec<NodeIndex>,
 }

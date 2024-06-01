@@ -18,9 +18,13 @@ Connectivity and Cycles
    rustworkx.simple_cycles
    rustworkx.digraph_find_cycle
    rustworkx.articulation_points
+   rustworkx.bridges
    rustworkx.biconnected_components
    rustworkx.chain_decomposition
    rustworkx.all_simple_paths
    rustworkx.all_pairs_all_simple_paths
    rustworkx.stoer_wagner_min_cut
    rustworkx.longest_simple_path
+   rustworkx.is_bipartite
+   rustworkx.isolates
+   rustworkx.has_path

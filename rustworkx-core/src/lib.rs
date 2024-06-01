@@ -44,7 +44,7 @@
 //!
 //! ## Algorithm Modules
 //!
-//! The crate is organized into
+//! The crate provides the following graph algorithm modules
 //!
 //! * [`centrality`](./centrality/index.html)
 //! * [`connectivity`](./connectivity/index.html)
@@ -53,6 +53,27 @@
 //! * [`token_swapper`](./token_swapper/index.html)
 //! * [`traversal`](./traversal/index.html)
 //! * [`generators`](./generators/index.html)
+//!
+//! ## Graph Extensions
+//!
+//! The crate also provides traits which extend `petgraph` types with
+//! additional methods, when imported.
+//!
+//! For example, the
+//! [`contract_nodes`][graph_ext::ContractNodesDirected::contract_nodes] method
+//! becomes available for applicable graph types when the following trait is
+//! imported:
+//!
+//! ```rust
+//! use petgraph::prelude::*;
+//! use rustworkx_core::graph_ext::ContractNodesDirected;
+//!
+//! let mut dag: StableDiGraph<char, usize> = StableDiGraph::default();
+//! let m = dag.contract_nodes([], 'm', true).unwrap();
+//! ```
+//!
+//! See the documentation of [`graph_ext`] for a full listing of the available
+//! extensions and their compatibility with petgraph types.
 //!
 //! ## Release Notes
 //!
@@ -69,13 +90,17 @@ use std::convert::Infallible;
 /// to use needs a callback that returns [`Result`] but in your case no
 /// error can happen.
 pub type Result<T, E = Infallible> = core::result::Result<T, E>;
+pub mod err;
 
+pub mod bipartite_coloring;
 /// Module for centrality algorithms.
 pub mod centrality;
 /// Module for coloring algorithms.
 pub mod coloring;
 pub mod connectivity;
+pub mod dag_algo;
 pub mod generators;
+pub mod graph_ext;
 pub mod line_graph;
 /// Module for maximum weight matching algorithms.
 pub mod max_weight_matching;
@@ -89,6 +114,8 @@ mod min_scored;
 /// Module for swapping tokens
 pub mod token_swapper;
 pub mod utils;
+
+pub mod steiner_tree;
 
 // re-export petgraph so there is a consistent version available to users and
 // then only need to require rustworkx-core in their dependencies

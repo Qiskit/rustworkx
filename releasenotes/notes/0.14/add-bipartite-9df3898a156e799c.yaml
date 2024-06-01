@@ -1,0 +1,22 @@
+---
+features:
+  - |
+    Added a new function ``two_color`` to the rustworkx-core ``rustworkx_core::coloring``
+    module. This function is used to compute a two coloring of a graph and can
+    also be used to determine if a graph is bipartite as it returns ``None``
+    when a two coloring is not possible.
+  - |
+    Added a new function, :func:`~.two_color`, which is used to compute a
+    two coloring for a graph. For example:
+
+    .. jupyter-execute::
+
+      import rustworkx as rx
+      from rustworkx.visualization import mpl_draw
+
+      graph = rx.generators.heavy_square_graph(5)
+      colors = rx.two_color(graph)
+      mpl_draw(graph, node_color=[colors[i] for i in range(len(graph))])
+  - |
+    Added a new function, :func:`~.is_bipartite` to determine whether a given
+    graph object is bipartite or not.
