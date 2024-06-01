@@ -64,7 +64,6 @@ where
     Ok(())
 }
 
-
 fn attr_map_to_string<'a>(
     py: Python,
     attrs: Option<&'a PyObject>,
@@ -96,4 +95,4 @@ fn attr_map_to_string<'a>(
         .collect::<Vec<String>>()
         .join(", ");
     Ok(format!("[{}]", attr_string))
-}   
+}
