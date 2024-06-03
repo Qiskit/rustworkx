@@ -18,7 +18,7 @@ use petgraph::visit::{
     NodeRef,
 };
 use pyo3::prelude::*;
-use serde_json::json;
+use serde_json;
 
 static TYPE: [&str; 2] = ["graph", "digraph"];
 static EDGE: [&str; 2] = ["--", "->"];
