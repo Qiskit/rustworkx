@@ -468,7 +468,7 @@ where
     Ok(Some(block_list))
 }
 
-/// Tests for longest_path
+// Tests for longest_path
 #[cfg(test)]
 mod test_longest_path {
     use super::*;
@@ -577,7 +577,7 @@ mod test_longest_path {
     }
 }
 
-/// Tests for lexicographical_topological_sort
+// Tests for lexicographical_topological_sort
 // pub fn lexicographical_topological_sort<G, F, E>(
 //     dag: G,
 //     mut key: F,
@@ -757,7 +757,7 @@ mod test_lexicographical_topological_sort {
     }
 }
 
-/// Tests for collect_bicolor_runs
+// Tests for collect_bicolor_runs
 #[cfg(test)]
 mod test_collect_bicolor_runs {
 
@@ -822,35 +822,35 @@ mod test_collect_bicolor_runs {
 
     #[test]
     fn test_two_colors() {
-        // Based on the following graph from the Python unit tests:
-        // Input:
-        //         ┌─────────────┐                 ┌─────────────┐
-        //         │             │                 │             │
-        //         │    q0       │                 │    q1       │
-        //         │             │                 │             │
-        //         └───┬─────────┘                 └──────┬──────┘
-        //             │          ┌─────────────┐         │
-        //         q0  │          │             │         │  q1
-        //             │          │             │         │
-        //             └─────────►│     cx      │◄────────┘
-        //             ┌──────────┤             ├─────────┐
-        //             │          │             │         │
-        //         q0  │          └─────────────┘         │  q1
-        //             │                                  │
-        //             │          ┌─────────────┐         │
-        //             │          │             │         │
-        //             └─────────►│      cz     │◄────────┘
-        //              ┌─────────┤             ├─────────┐
-        //              │         └─────────────┘         │
-        //          q0  │                                 │ q1
-        //              │                                 │
-        //          ┌───▼─────────┐                ┌──────▼──────┐
-        //          │             │                │             │
-        //          │    q0       │                │    q1       │
-        //          │             │                │             │
-        //          └─────────────┘                └─────────────┘
-        //
-        // Expected: [[cx, cz]]
+        /* Based on the following graph from the Python unit tests:
+        Input:
+                ┌─────────────┐                 ┌─────────────┐
+                │             │                 │             │
+                │    q0       │                 │    q1       │
+                │             │                 │             │
+                └───┬─────────┘                 └──────┬──────┘
+                    │          ┌─────────────┐         │
+                q0  │          │             │         │  q1
+                    │          │             │         │
+                    └─────────►│     cx      │◄────────┘
+                    ┌──────────┤             ├─────────┐
+                    │          │             │         │
+                q0  │          └─────────────┘         │  q1
+                    │                                  │
+                    │          ┌─────────────┐         │
+                    │          │             │         │
+                    └─────────►│      cz     │◄────────┘
+                     ┌─────────┤             ├─────────┐
+                     │         └─────────────┘         │
+                 q0  │                                 │ q1
+                     │                                 │
+                 ┌───▼─────────┐                ┌──────▼──────┐
+                 │             │                │             │
+                 │    q0       │                │    q1       │
+                 │             │                │             │
+                 └─────────────┘                └─────────────┘
+        Expected: [[cx, cz]]
+        */
         let mut graph = DiGraph::new();
         // The node weight will correspond to the type of node
         // All edges have the same weight in this example
@@ -873,55 +873,55 @@ mod test_collect_bicolor_runs {
     }
     #[test]
     fn test_two_colors_with_pending() {
-        // Based on the following graph from the Python unit tests:
-        // Input:
-        // ┌─────────────┐
-        // │             │
-        // │    q0       │
-        // │             │
-        // └───┬─────────┘
-        //     | q0
-        //     │
-        // ┌───▼─────────┐
-        // │             │
-        // │    h        │
-        // │             │
-        // └───┬─────────┘
-        //     | q0
-        //     │                           ┌─────────────┐
-        //     │                           │             │
-        //     │                           │    q1       │
-        //     │                           │             │
-        //     |                           └──────┬──────┘
-        //     │          ┌─────────────┐         │
-        // q0  │          │             │         │  q1
-        //     │          │             │         │
-        //     └─────────►│     cx      │◄────────┘
-        //     ┌──────────┤             ├─────────┐
-        //     │          │             │         │
-        // q0  │          └─────────────┘         │  q1
-        //     │                                  │
-        //     │          ┌─────────────┐         │
-        //     │          │             │         │
-        //     └─────────►│      cz     │◄────────┘
-        //      ┌─────────┤             ├─────────┐
-        //      │         └─────────────┘         │
-        //  q0  │                                 │ q1
-        //      │                                 │
-        //  ┌───▼─────────┐                ┌──────▼──────┐
-        //  │             │                │             │
-        //  │    q0       │                │    y        │
-        //  │             │                │             │
-        //  └─────────────┘                └─────────────┘
-        //                                     | q1
-        //                                     │
-        //                                 ┌───▼─────────┐
-        //                                 │             │
-        //                                 │    q1       │
-        //                                 │             │
-        //                                 └─────────────┘
-        //
-        // Expected: [[h, cx, cz, y]]
+        /* Based on the following graph from the Python unit tests:
+        Input:
+                ┌─────────────┐
+                │             │
+                │    q0       │
+                │             │
+                └───┬─────────┘
+                 | q0
+                 │
+                ┌───▼─────────┐
+                │             │
+                │    h        │
+                │             │
+                └───┬─────────┘
+                    | q0
+                    │                           ┌─────────────┐
+                    │                           │             │
+                    │                           │    q1       │
+                    │                           │             │
+                    |                           └──────┬──────┘
+                    │          ┌─────────────┐         │
+                q0  │          │             │         │  q1
+                    │          │             │         │
+                    └─────────►│     cx      │◄────────┘
+                    ┌──────────┤             ├─────────┐
+                    │          │             │         │
+                q0  │          └─────────────┘         │  q1
+                    │                                  │
+                    │          ┌─────────────┐         │
+                    │          │             │         │
+                    └─────────►│      cz     │◄────────┘
+                     ┌─────────┤             ├─────────┐
+                     │         └─────────────┘         │
+                 q0  │                                 │ q1
+                     │                                 │
+                 ┌───▼─────────┐                ┌──────▼──────┐
+                 │             │                │             │
+                 │    q0       │                │    y        │
+                 │             │                │             │
+                 └─────────────┘                └─────────────┘
+                                                    | q1
+                                                    │
+                                                ┌───▼─────────┐
+                                                │             │
+                                                │    q1       │
+                                                │             │
+                                                └─────────────┘
+        Expected: [[h, cx, cz, y]]
+        */
         let mut graph = DiGraph::new();
         // The node weight will correspond to the type of node
         // All edges have the same weight in this example

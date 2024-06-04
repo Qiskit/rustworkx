@@ -636,12 +636,12 @@ pub fn collect_bicolor_runs(
 ) -> PyResult<Vec<Vec<PyObject>>> {
     let dag = &graph.graph;
 
-    let filter_fn_wrapper = |node: &PyObject| -> Result<Option<bool>, PyErr> {
+    let filter_fn_wrapper = |node: &PyObject| -> PyResult<Option<bool>> {
         let res = filter_fn.call1(py, (node,))?;
         res.extract(py)
     };
 
-    let color_fn_wrapper = |edge: &PyObject| -> Result<Option<usize>, PyErr> {
+    let color_fn_wrapper = |edge: &PyObject| -> PyResult<Option<usize>> {
         let res = color_fn.call1(py, (edge,))?;
         res.extract(py)
     };
