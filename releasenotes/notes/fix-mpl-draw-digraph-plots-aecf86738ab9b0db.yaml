@@ -1,0 +1,10 @@
+---
+fixes:
+  - |
+    Fixes the plots of multigraphs using the `mpl_draw()` function. Refer to
+    `#12345 <https://github.com/Qiskit/rustworkx/issues/774>` for more
+    details.
+other:
+  - |
+     The radius of the edges of self-loops in multigraphs is set to `0.25`. 
+     The edge labels are offset accordingly. 
