@@ -16,6 +16,7 @@ import tempfile
 import unittest
 import random
 import rustworkx
+import pydot
 from rustworkx.visualization import graphviz_draw
 
 try:
@@ -150,47 +151,50 @@ class TestGraphvizDraw(unittest.TestCase):
         self.assertTrue(os.path.isfile("test_graphviz_filename.svg"))
         if not SAVE_IMAGES:
             self.addCleanup(os.remove, "test_graphviz_filename.svg")
-    
+
     def test_escape_sequences(self):
         # Create a simple graph
         graph = rustworkx.generators.path_graph(2)
-        
-        # List of escape sequences to test
-        escapes = ["\\n", "\\t", "\\a"]
-        
-        # Define node attributes including randomly inserted escape sequences
+
+        escapes = [
+                    "\n",  # Newline
+                    "\t",  # Horizontal tab
+                    "\'",  # Single quote
+                    "\"",  # Double quote
+                    "\\",  # Backslash
+                    "\r",  # Carriage return
+                    "\b",  # Backspace
+                    "\f",  # Form feed
+                ]
+
         def node_attr(node):
-            # Create base strings
+            """
+            Define node attributes including randomly inserted escape sequences
+            """
+
             base_label = "label"
             base_tooltip = "tooltip"
-            
-            # Insert escape sequences at random positions
             insert_at_label = random.randint(0, len(base_label))
             insert_at_tooltip = random.randint(0, len(base_tooltip))
-            
-            # Generate label and tooltip using list comprehension and join
-            label = ''.join([base_label[:insert_at_label], random.choice(escapes), base_label[insert_at_label:]])
-            tooltip = ''.join([base_tooltip[:insert_at_tooltip], random.choice(escapes), base_tooltip[insert_at_tooltip:]])
-            
+            label = ''.join([
+                                base_label[:insert_at_label],
+                                random.choice(escapes),
+                                base_label[insert_at_label:]
+                            ])
+            tooltip = ''.join([
+                                base_tooltip[:insert_at_tooltip],
+                                random.choice(escapes),
+                                base_tooltip[insert_at_tooltip:]
+                            ])
             return {"label": label, "tooltip": tooltip}
-        
+
         # Draw the graph using graphviz_draw
-        image = graphviz_draw(
-            graph,
-            node_attr_fn=node_attr,
-            filename="test_escape_sequences.svg",
-            image_type="svg",
-            method="dot"
-        )
+        dot_str = graph.to_dot(node_attr)
+        dot = pydot.graph_from_dot_data(dot_str)[0]
 
-        # Check if file was created
-        self.assertTrue(os.path.isfile("test_escape_sequences.svg"))
-
-        # Cleanup the generated file after the test
-        if not os.environ.get("SAVE_IMAGES"):
-            os.remove("test_escape_sequences.svg")
-
-        # Optionally, load and check the image content if Pillow is installed
-        if image:
+        with tempfile.TemporaryDirectory() as tmpdirname:
+            tmp_path = os.path.join(tmpdirname, 'dag.png')
+            dot.write_png(tmp_path)
+            image = PIL.Image.open(tmp_path)
             self.assertIsInstance(image, PIL.Image.Image)
-
+            os.remove(tmp_path)
