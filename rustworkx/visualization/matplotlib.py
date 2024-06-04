@@ -755,14 +755,13 @@ def draw_edges(
             line_width = width
 
         # radius of edges
-
-        reverse_edge = np.concatenate(([dst], [src]))
-        for edge in edge_pos:  # the loop can be optimized
-            if bool(np.sum(np.all(np.equal(edge, reverse_edge)))):
-                rad = 0.25
-                break
-            else:
-                rad = 0
+        reverse_edge = [dst, src]
+        if (
+            len(np.where(np.all(edge_pos == reverse_edge, axis=(1, 2)))[0]) != 0
+        ):  # if reverse edge is in `edge_pos`
+            rad = 0.25
+        else:
+            rad = 0.0
 
         arrow = mpl.patches.FancyArrowPatch(
             (x1, y1),
@@ -773,7 +772,7 @@ def draw_edges(
             mutation_scale=mutation_scale,
             color=arrow_color,
             linewidth=line_width,
-            connectionstyle=f"{connectionstyle}, rad = {rad}",
+            connectionstyle=connectionstyle + f", rad = {rad}",
             linestyle=style,
             zorder=1,
         )  # arrows go behind nodes
@@ -1012,11 +1011,11 @@ def draw_edge_labels(
             y1 * label_pos + y2 * (1.0 - label_pos),
         )
         if (n2, n1) in labels.keys():  # loop
-            x += 0.05 * label_pos
+            dy = np.abs(y2 - y1)
             if n2 > n1:
-                y -= 0.25
+                y -= 0.25 * dy
             else:
-                y += 0.25
+                y += 0.25 * dy
 
         if rotate:
             # in degrees
