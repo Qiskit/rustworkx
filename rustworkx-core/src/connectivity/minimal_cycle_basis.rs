@@ -1,9 +1,9 @@
 use crate::connectivity::conn_components::connected_components;
 use crate::dictmap::*;
-use crate::shortest_path::dijkstra;
+use crate::shortest_path::{astar, dijkstra};
 use crate::Result;
 use hashbrown::{HashMap, HashSet};
-use petgraph::algo::{astar, min_spanning_tree, Measure};
+use petgraph::algo::{min_spanning_tree, Measure};
 use petgraph::csr::{DefaultIx, IndexType};
 use petgraph::data::{DataMap, Element};
 use petgraph::graph::Graph;
@@ -13,6 +13,7 @@ use petgraph::visit::{
     IntoNeighborsDirected, IntoNodeIdentifiers, IntoNodeReferences, NodeIndexable, Visitable,
 };
 use petgraph::Undirected;
+use std::cmp::Ordering;
 use std::convert::Infallible;
 use std::hash::Hash;
 
@@ -39,7 +40,7 @@ where
     G::NodeId: Eq + Hash,
     G::EdgeWeight: Clone,
     F: FnMut(G::EdgeRef) -> Result<K, E>,
-    K: Clone + PartialOrd + Copy + Measure + Default + Ord,
+    K: Clone + PartialOrd + Copy + Measure + Default,
 {
     components
         .into_iter()
@@ -77,7 +78,7 @@ where
         })
         .collect()
 }
-pub fn minimum_cycle_basis<G, F, K, E>(graph: G, mut weight_fn: F) -> Result<Vec<Vec<NodeIndex>>, E>
+pub fn minimal_cycle_basis<G, F, K, E>(graph: G, mut weight_fn: F) -> Result<Vec<Vec<NodeIndex>>, E>
 where
     G: EdgeCount
         + IntoNodeIdentifiers
@@ -88,10 +89,10 @@ where
         + IntoNeighborsDirected
         + Visitable
         + IntoEdges,
-    G::EdgeWeight: Clone + PartialOrd,
+    G::EdgeWeight: Clone,
     G::NodeId: Eq + Hash,
     F: FnMut(G::EdgeRef) -> Result<K, E>,
-    K: Clone + PartialOrd + Copy + Measure + Default + Ord,
+    K: Clone + PartialOrd + Copy + Measure + Default,
 {
     let conn_components = connected_components(&graph);
     let mut min_cycle_basis = Vec::new();
@@ -136,7 +137,7 @@ where
     H::EdgeWeight: Clone + PartialOrd,
     H::NodeId: Eq + Hash,
     F: FnMut(H::EdgeRef) -> Result<K, E>,
-    K: Clone + PartialOrd + Copy + Measure + Default + Ord,
+    K: Clone + PartialOrd + Copy + Measure + Default,
 {
     let mut sub_cb: Vec<Vec<usize>> = Vec::new();
     let num_edges = subgraph.edge_count();
@@ -243,7 +244,7 @@ where
     H: IntoNodeReferences + IntoEdgeReferences + DataMap + NodeIndexable + EdgeIndexable,
     H::NodeId: Eq + Hash,
     F: FnMut(H::EdgeRef) -> Result<K, E>,
-    K: Clone + PartialOrd + Copy + Measure + Default + Ord,
+    K: Clone + PartialOrd + Copy + Measure + Default,
 {
     let mut gi = Graph::<_, _, petgraph::Undirected>::default();
     let mut subgraph_gi_map = HashMap::new();
@@ -290,23 +291,27 @@ where
             |edge| Ok(*edge.weight()),
             None,
         );
-        // Find the shortest distance in the result and store it in the shortest_path_map
         let spl = result.unwrap()[&gi_lifted_nodeidx];
         shortest_path_map.insert(subnodeid, spl);
     }
-    let min_start = shortest_path_map.iter().min_by_key(|x| x.1).unwrap().0;
+    let min_start = shortest_path_map
+        .iter()
+        .min_by(|a, b| a.1.partial_cmp(b.1).unwrap_or(Ordering::Equal))
+        .unwrap()
+        .0;
     let min_start_node = subgraph_gi_map[min_start].0;
     let min_start_lifted_node = subgraph_gi_map[min_start].1;
-    let result = astar(
+    let result: Result<Option<(K, Vec<NodeIndex>)>> = astar(
         &gi,
-        min_start_node,
-        |finish| finish == min_start_lifted_node,
-        |e| *e.weight(),
-        |_| K::default(),
+        min_start_node.clone(),
+        |finish| Ok(finish == min_start_lifted_node.clone()),
+        |e| Ok(*e.weight()),
+        |_| Ok(K::default()),
     );
+
     let mut min_path: Vec<usize> = Vec::new();
     match result {
-        Some((_cost, path)) => {
+        Ok(Some((_cost, path))) => {
             for node in path {
                 if let Some(&subgraph_nodeid) = gi_subgraph_map.get(&node) {
                     let subgraph_node = NodeIndexable::to_index(&subgraph, subgraph_nodeid);
@@ -314,7 +319,8 @@ where
                 }
             }
         }
-        None => {}
+        Ok(None) => {}
+        Err(_) => {}
     }
     let edgelist = min_path
         .windows(2)
@@ -344,9 +350,9 @@ where
 }
 
 #[cfg(test)]
-mod test_minimum_cycle_basis {
-    use crate::connectivity::minimum_cycle_basis::minimum_cycle_basis;
-    use petgraph::graph::Graph;
+mod test_minimal_cycle_basis {
+    use crate::connectivity::minimal_cycle_basis::minimal_cycle_basis;
+    use petgraph::graph::{Graph, NodeIndex};
     use petgraph::Undirected;
     use std::convert::Infallible;
 
@@ -356,7 +362,7 @@ mod test_minimum_cycle_basis {
         let weight_fn = |edge: petgraph::graph::EdgeReference<i32>| -> Result<i32, Infallible> {
             Ok(*edge.weight())
         };
-        let output = minimum_cycle_basis(&graph, weight_fn).unwrap();
+        let output = minimal_cycle_basis(&graph, weight_fn).unwrap();
         assert_eq!(output.len(), 0);
     }
 
@@ -372,8 +378,7 @@ mod test_minimum_cycle_basis {
         let weight_fn = |edge: petgraph::graph::EdgeReference<i32>| -> Result<i32, Infallible> {
             Ok(*edge.weight())
         };
-        let cycles = minimum_cycle_basis(&graph, weight_fn);
-        println!("Cycles {:?}", cycles.as_ref().unwrap());
+        let cycles = minimal_cycle_basis(&graph, weight_fn);
         assert_eq!(cycles.unwrap().len(), 1);
     }
 
@@ -393,8 +398,58 @@ mod test_minimum_cycle_basis {
         let weight_fn = |edge: petgraph::graph::EdgeReference<i32>| -> Result<i32, Infallible> {
             Ok(*edge.weight())
         };
-        let cycles = minimum_cycle_basis(&graph, weight_fn);
+        let cycles = minimal_cycle_basis(&graph, weight_fn);
         assert_eq!(cycles.unwrap().len(), 2);
+    }
+
+    #[test]
+    fn test_non_trivial_graph() {
+        let mut g = Graph::<&str, i32, Undirected>::new_undirected();
+        let a = g.add_node("A");
+        let b = g.add_node("B");
+        let c = g.add_node("C");
+        let d = g.add_node("D");
+        let e = g.add_node("E");
+        let f = g.add_node("F");
+
+        g.add_edge(a, b, 7);
+        g.add_edge(c, a, 9);
+        g.add_edge(a, d, 11);
+        g.add_edge(b, c, 10);
+        g.add_edge(d, c, 2);
+        g.add_edge(d, e, 9);
+        g.add_edge(b, f, 15);
+        g.add_edge(c, f, 11);
+        g.add_edge(e, f, 6);
+
+        let weight_fn = |edge: petgraph::graph::EdgeReference<i32>| -> Result<i32, Infallible> {
+            Ok(*edge.weight())
+        };
+        let output = minimal_cycle_basis(&g, weight_fn);
+        let mut actual_output = output.unwrap();
+        for cycle in &mut actual_output {
+            cycle.sort();
+        }
+        actual_output.sort();
+
+        let expected_output: Vec<Vec<NodeIndex>> = vec![
+            vec![
+                NodeIndex::new(5),
+                NodeIndex::new(2),
+                NodeIndex::new(3),
+                NodeIndex::new(4),
+            ],
+            vec![NodeIndex::new(2), NodeIndex::new(5), NodeIndex::new(1)],
+            vec![NodeIndex::new(0), NodeIndex::new(2), NodeIndex::new(1)],
+            vec![NodeIndex::new(2), NodeIndex::new(3), NodeIndex::new(0)],
+        ];
+        let mut sorted_expected_output = expected_output.clone();
+        for cycle in &mut sorted_expected_output {
+            cycle.sort();
+        }
+        sorted_expected_output.sort();
+
+        assert_eq!(actual_output, sorted_expected_output);
     }
 
     #[test]
@@ -412,20 +467,19 @@ mod test_minimum_cycle_basis {
         let weight_fn = |edge: petgraph::graph::EdgeReference<i32>| -> Result<i32, Infallible> {
             Ok(*edge.weight())
         };
-        let output = minimum_cycle_basis(&weighted_diamond, weight_fn);
-        let expected_output: Vec<Vec<usize>> = vec![vec![0, 1, 3], vec![0, 1, 2, 3]];
+        let output = minimal_cycle_basis(&weighted_diamond, weight_fn);
+        let expected_output1: Vec<Vec<usize>> = vec![vec![0, 1, 3], vec![0, 1, 2, 3]];
+        let expected_output2: Vec<Vec<usize>> = vec![vec![1, 2, 3], vec![0, 1, 2, 3]];
         for cycle in output.unwrap().iter() {
-            println!("{:?}", cycle);
             let mut node_indices: Vec<usize> = Vec::new();
             for node in cycle.iter() {
                 node_indices.push(node.index());
             }
             node_indices.sort();
-            println!("Node indices {:?}", node_indices);
-            if expected_output.contains(&node_indices) {
-                println!("Found cycle {:?}", node_indices);
-            }
-            assert!(expected_output.contains(&node_indices));
+            assert!(
+                expected_output1.contains(&node_indices)
+                    || expected_output2.contains(&node_indices)
+            );
         }
     }
 
@@ -444,7 +498,7 @@ mod test_minimum_cycle_basis {
         let weight_fn =
             |_edge: petgraph::graph::EdgeReference<()>| -> Result<i32, Infallible> { Ok(1) };
 
-        let output = minimum_cycle_basis(&unweighted_diamond, weight_fn);
+        let output = minimal_cycle_basis(&unweighted_diamond, weight_fn);
         let expected_output: Vec<Vec<usize>> = vec![vec![0, 1, 3], vec![1, 2, 3]];
         for cycle in output.unwrap().iter() {
             let mut node_indices: Vec<usize> = Vec::new();
@@ -476,7 +530,7 @@ mod test_minimum_cycle_basis {
         let weight_fn = |edge: petgraph::graph::EdgeReference<i32>| -> Result<i32, Infallible> {
             Ok(*edge.weight())
         };
-        let output = minimum_cycle_basis(&complete_graph, weight_fn);
+        let output = minimal_cycle_basis(&complete_graph, weight_fn);
         for cycle in output.unwrap().iter() {
             assert_eq!(cycle.len(), 3);
         }

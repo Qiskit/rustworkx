@@ -14,6 +14,7 @@
 
 mod all_pairs_all_simple_paths;
 mod johnson_simple_cycles;
+mod minimum_cycle_basis;
 mod subgraphs;
 
 use super::{
@@ -22,10 +23,10 @@ use super::{
 
 use hashbrown::{HashMap, HashSet};
 
+use petgraph::algo;
 use petgraph::stable_graph::NodeIndex;
 use petgraph::unionfind::UnionFind;
 use petgraph::visit::{EdgeRef, IntoEdgeReferences, NodeCount, NodeIndexable, Visitable};
-use petgraph::algo;
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use pyo3::types::PyDict;
@@ -916,6 +917,27 @@ pub fn stoer_wagner_min_cut(
             },
         )
     }))
+}
+
+#[pyfunction]
+#[pyo3(text_signature = "(graph, edge_cost_fn, /)")]
+pub fn graph_minimum_cycle_basis(
+    py: Python,
+    graph: &graph::PyGraph,
+    edge_cost_fn: PyObject,
+) -> PyResult<Vec<Vec<NodeIndices>>> {
+    let basis = minimum_cycle_basis::minimum_cycle_basis_map(py, &graph.graph, edge_cost_fn);
+    Ok(basis
+        .into_iter()
+        .map(|cycle| {
+            cycle
+                .into_iter()
+                .map(|node| NodeIndices {
+                    nodes: node.iter().map(|nx| nx.index()).collect(),
+                })
+                .collect()
+        })
+        .collect())
 }
 
 /// Return the articulation points of an undirected graph.

@@ -570,6 +570,7 @@ fn rustworkx(py: Python<'_>, m: &Bound<PyModule>) -> PyResult<()> {
     ))?;
     m.add_wrapped(wrap_pyfunction!(metric_closure))?;
     m.add_wrapped(wrap_pyfunction!(stoer_wagner_min_cut))?;
+    m.add_wrapped(wrap_pyfunction!(graph_minimum_cycle_basis))?;
     m.add_wrapped(wrap_pyfunction!(steiner_tree::steiner_tree))?;
     m.add_wrapped(wrap_pyfunction!(digraph_dfs_search))?;
     m.add_wrapped(wrap_pyfunction!(graph_dfs_search))?;

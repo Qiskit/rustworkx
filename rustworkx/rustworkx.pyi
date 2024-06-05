@@ -247,7 +247,7 @@ def stoer_wagner_min_cut(
     /,
     weight_fn: Callable[[_T], float] | None = ...,
 ) -> tuple[float, NodeIndices] | None: ...
-def minimum_cycle_basis(
+def graph_minimum_cycle_basis(
     graph: PyGraph[_S, _T], 
     /,
     weight_fn: Callable[[_T], float] | None = ...
