@@ -583,6 +583,7 @@ def minimum_cycle_basis(graph, edge_cost_fn):
     """
     raise TypeError("Invalid Input Type %s for graph" % type(graph))
 
+
 @_rustworkx_dispatch
 def dijkstra_shortest_path_lengths(graph, node, edge_cost_fn, goal=None):
     """Compute the lengths of the shortest paths for a graph object using

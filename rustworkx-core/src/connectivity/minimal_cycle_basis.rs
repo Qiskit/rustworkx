@@ -17,18 +17,18 @@ use std::cmp::Ordering;
 use std::convert::Infallible;
 use std::hash::Hash;
 
+type SubgraphResult<K, E> = Result<Vec<SubgraphData<K>>, E>;
+type SubgraphData<K> = (
+    Graph<usize, K, Undirected>,
+    HashMap<usize, NodeIndex>,
+    HashMap<usize, EdgeIndex>,
+);
+
 fn create_subgraphs_from_components<G, F, K, E>(
     graph: G,
     components: Vec<HashSet<G::NodeId>>,
     mut weight_fn: F,
-) -> Result<
-    Vec<(
-        Graph<usize, K, Undirected>,
-        HashMap<usize, NodeIndex>,
-        HashMap<usize, EdgeIndex>,
-    )>,
-    E,
->
+) -> SubgraphResult<K, E>
 where
     G: IntoEdgeReferences
         + NodeIndexable
@@ -78,47 +78,118 @@ where
         })
         .collect()
 }
-pub fn minimal_cycle_basis<G, F, K, E>(graph: G, mut weight_fn: F) -> Result<Vec<Vec<NodeIndex>>, E>
+
+fn _min_cycle<H, F, K, E>(
+    subgraph: H,
+    orth: HashSet<(usize, usize)>,
+    mut weight_fn: F,
+) -> Result<Vec<(usize, usize)>, E>
 where
-    G: EdgeCount
-        + IntoNodeIdentifiers
-        + NodeIndexable
-        + EdgeIndexable
-        + DataMap
-        + GraphProp
-        + IntoNeighborsDirected
-        + Visitable
-        + IntoEdges,
-    G::EdgeWeight: Clone,
-    G::NodeId: Eq + Hash,
-    F: FnMut(G::EdgeRef) -> Result<K, E>,
+    H: IntoNodeReferences + IntoEdgeReferences + DataMap + NodeIndexable + EdgeIndexable,
+    H::NodeId: Eq + Hash,
+    F: FnMut(H::EdgeRef) -> Result<K, E>,
     K: Clone + PartialOrd + Copy + Measure + Default,
 {
-    let conn_components = connected_components(&graph);
-    let mut min_cycle_basis = Vec::new();
-    let subgraphs_with_maps =
-        create_subgraphs_from_components(&graph, conn_components, &mut weight_fn)?;
-    // Convert weight_fn to a closure that takes a subgraph edge and returns the weight of the original graph edge
-    for (subgraph, node_subnode_map, edge_subedge_map) in subgraphs_with_maps {
-        // Find the key of edge_subedge_map that corresponds to the value e.id()
-        let mut subgraph_weight_fn = |e: <&Graph<usize, K, Undirected, DefaultIx> as IntoEdgeReferences>::EdgeRef| -> Result<K, Infallible> {
-            // use the edge_subedge_map to find the key that corresponds to the value e.id()
-            let edge = edge_subedge_map.iter().find(|(_key, &value)| value == e.id()).unwrap().0;
-            match weight_fn(
-                graph.edge_references().nth(*edge).unwrap(),
-            ) {
-                Ok(weight) => Ok(weight),
-                Err(_) => {
-                    // Handle the error here. Since the error type is Infallible, this branch should never be reached.
-                    unreachable!()
+    let mut gi = Graph::<_, _, petgraph::Undirected>::default();
+    let mut subgraph_gi_map = HashMap::new();
+    let mut gi_subgraph_map = HashMap::new();
+    for node in subgraph.node_identifiers() {
+        let gi_node = gi.add_node(node);
+        let gi_lifted_node = gi.add_node(node);
+        gi_subgraph_map.insert(gi_node, node);
+        gi_subgraph_map.insert(gi_lifted_node, node);
+        subgraph_gi_map.insert(node, (gi_node, gi_lifted_node));
+    }
+    // # Add 2 copies of each edge in G to Gi.
+    // # If edge is in orth, add cross edge; otherwise in-plane edge
+
+    for edge in subgraph.edge_references() {
+        let u_id = edge.source();
+        let v_id = edge.target();
+        let u = NodeIndexable::to_index(&subgraph, u_id);
+        let v = NodeIndexable::to_index(&subgraph, v_id);
+        let weight = weight_fn(edge)?;
+        // For each pair of (u, v) from the subgraph, there is a corresponding double pair of (u_node, v_node) and (u_lifted_node, v_lifted_node) in the gi
+        let (u_node, u_lifted_node) = subgraph_gi_map[&u_id];
+        let (v_node, v_lifted_node) = subgraph_gi_map[&v_id];
+        if orth.contains(&(u, v)) || orth.contains(&(v, u)) {
+            // Add cross edges with weight
+            gi.add_edge(u_node, v_lifted_node, weight);
+            gi.add_edge(u_lifted_node, v_node, weight);
+        } else {
+            // Add in-plane edges with weight
+            gi.add_edge(u_node, v_node, weight);
+            gi.add_edge(u_lifted_node, v_lifted_node, weight);
+        }
+    }
+    // Instead of finding the shortest path between each node and its lifted node, store the shortest paths in a list to find the shortest paths among them
+    let mut shortest_path_map: HashMap<H::NodeId, K> = HashMap::new();
+    for subnodeid in subgraph.node_identifiers() {
+        let (gi_nodeidx, gi_lifted_nodeidx) = subgraph_gi_map[&subnodeid];
+
+        let result: Result<DictMap<NodeIndex, K>> = dijkstra(
+            &gi,
+            gi_nodeidx,
+            Some(gi_lifted_nodeidx),
+            |edge| Ok(*edge.weight()),
+            None,
+        );
+        let spl = result.unwrap()[&gi_lifted_nodeidx];
+        shortest_path_map.insert(subnodeid, spl);
+    }
+    let min_start = shortest_path_map
+        .iter()
+        .min_by(|a, b| a.1.partial_cmp(b.1).unwrap_or(Ordering::Equal))
+        .unwrap()
+        .0;
+    let min_start_node = subgraph_gi_map[min_start].0;
+    let min_start_lifted_node = subgraph_gi_map[min_start].1;
+    let result: Result<Option<(K, Vec<NodeIndex>)>> = astar(
+        &gi,
+        min_start_node,
+        |finish| Ok(finish == min_start_lifted_node),
+        |e| Ok(*e.weight()),
+        |_| Ok(K::default()),
+    );
+
+    let mut min_path: Vec<usize> = Vec::new();
+    match result {
+        Ok(Some((_cost, path))) => {
+            for node in path {
+                if let Some(&subgraph_nodeid) = gi_subgraph_map.get(&node) {
+                    let subgraph_node = NodeIndexable::to_index(&subgraph, subgraph_nodeid);
+                    min_path.push(subgraph_node.index());
                 }
             }
-        };
-        let num_cycles: Result<Vec<Vec<NodeIndex>>, Infallible> =
-            _min_cycle_basis(&subgraph, &mut subgraph_weight_fn, &node_subnode_map);
-        min_cycle_basis.extend(num_cycles.unwrap());
+        }
+        Ok(None) => {}
+        Err(_) => {}
     }
-    Ok(min_cycle_basis)
+    let edgelist = min_path
+        .windows(2)
+        .map(|w| (w[0], w[1]))
+        .collect::<Vec<_>>();
+    let mut edgeset: HashSet<(usize, usize)> = HashSet::new();
+    for e in edgelist.iter() {
+        if edgeset.contains(e) {
+            edgeset.remove(e);
+        } else if edgeset.contains(&(e.1, e.0)) {
+            edgeset.remove(&(e.1, e.0));
+        } else {
+            edgeset.insert(*e);
+        }
+    }
+    let mut min_edgelist: Vec<(usize, usize)> = Vec::new();
+    for e in edgelist.iter() {
+        if edgeset.contains(e) {
+            min_edgelist.push(*e);
+            edgeset.remove(e);
+        } else if edgeset.contains(&(e.1, e.0)) {
+            min_edgelist.push((e.1, e.0));
+            edgeset.remove(&(e.1, e.0));
+        }
+    }
+    Ok(min_edgelist)
 }
 
 fn _min_cycle_basis<H, F, K, E>(
@@ -182,7 +253,7 @@ where
     }
     while let Some(chord_pop) = set_orth.pop() {
         let base = chord_pop;
-        let cycle_edges = _min_cycle(&subgraph, base.clone(), &mut weight_fn)?;
+        let cycle_edges = _min_cycle(subgraph, base.clone(), &mut weight_fn)?;
         let mut cb_temp: Vec<usize> = Vec::new();
         for edge in cycle_edges.iter() {
             cb_temp.push(edge.1);
@@ -192,7 +263,7 @@ where
             let mut new_orth = HashSet::new();
             if cycle_edges
                 .iter()
-                .filter(|edge| orth.contains(*edge) || orth.contains(&((*edge).1, (*edge).0)))
+                .filter(|edge| orth.contains(*edge) || orth.contains(&(edge.1, edge.0)))
                 .count()
                 % 2
                 == 1
@@ -209,7 +280,8 @@ where
                 }
                 *orth = new_orth;
             } else {
-                *orth = orth.clone();
+                let orth_clone = orth.clone();
+                orth.clone_from(&orth_clone);
             }
         }
     }
@@ -235,118 +307,47 @@ where
     Ok(cb)
 }
 
-fn _min_cycle<H, F, K, E>(
-    subgraph: H,
-    orth: HashSet<(usize, usize)>,
-    mut weight_fn: F,
-) -> Result<Vec<(usize, usize)>, E>
+pub fn minimal_cycle_basis<G, F, K, E>(graph: G, mut weight_fn: F) -> Result<Vec<Vec<NodeIndex>>, E>
 where
-    H: IntoNodeReferences + IntoEdgeReferences + DataMap + NodeIndexable + EdgeIndexable,
-    H::NodeId: Eq + Hash,
-    F: FnMut(H::EdgeRef) -> Result<K, E>,
+    G: EdgeCount
+        + IntoNodeIdentifiers
+        + NodeIndexable
+        + EdgeIndexable
+        + DataMap
+        + GraphProp
+        + IntoNeighborsDirected
+        + Visitable
+        + IntoEdges,
+    G::EdgeWeight: Clone,
+    G::NodeId: Eq + Hash,
+    F: FnMut(G::EdgeRef) -> Result<K, E>,
     K: Clone + PartialOrd + Copy + Measure + Default,
 {
-    let mut gi = Graph::<_, _, petgraph::Undirected>::default();
-    let mut subgraph_gi_map = HashMap::new();
-    let mut gi_subgraph_map = HashMap::new();
-    for node in subgraph.node_identifiers() {
-        let gi_node = gi.add_node(node);
-        let gi_lifted_node = gi.add_node(node);
-        gi_subgraph_map.insert(gi_node, node);
-        gi_subgraph_map.insert(gi_lifted_node, node);
-        subgraph_gi_map.insert(node, (gi_node, gi_lifted_node));
-    }
-    // # Add 2 copies of each edge in G to Gi.
-    // # If edge is in orth, add cross edge; otherwise in-plane edge
-
-    for edge in subgraph.edge_references() {
-        let u_id = edge.source();
-        let v_id = edge.target();
-        let u = NodeIndexable::to_index(&subgraph, u_id);
-        let v = NodeIndexable::to_index(&subgraph, v_id);
-        let edge_cost = Some(weight_fn(edge)?);
-        let weight = edge_cost.clone().unwrap();
-        // For each pair of (u, v) from the subgraph, there is a corresponding double pair of (u_node, v_node) and (u_lifted_node, v_lifted_node) in the gi
-        let (u_node, u_lifted_node) = subgraph_gi_map[&u_id];
-        let (v_node, v_lifted_node) = subgraph_gi_map[&v_id];
-        if orth.contains(&(u, v)) || orth.contains(&(v, u)) {
-            // Add cross edges with weight
-            gi.add_edge(u_node, v_lifted_node, weight);
-            gi.add_edge(u_lifted_node, v_node, weight);
-        } else {
-            // Add in-plane edges with weight
-            gi.add_edge(u_node, v_node, weight);
-            gi.add_edge(u_lifted_node, v_lifted_node, weight);
-        }
-    }
-    // Instead of finding the shortest path between each node and its lifted node, store the shortest paths in a list to find the shortest paths among them
-    let mut shortest_path_map: HashMap<H::NodeId, K> = HashMap::new();
-    for subnodeid in subgraph.node_identifiers() {
-        let (gi_nodeidx, gi_lifted_nodeidx) = subgraph_gi_map[&subnodeid];
-
-        let result: Result<DictMap<NodeIndex, K>> = dijkstra(
-            &gi,
-            gi_nodeidx,
-            Some(gi_lifted_nodeidx),
-            |edge| Ok(*edge.weight()),
-            None,
-        );
-        let spl = result.unwrap()[&gi_lifted_nodeidx];
-        shortest_path_map.insert(subnodeid, spl);
-    }
-    let min_start = shortest_path_map
-        .iter()
-        .min_by(|a, b| a.1.partial_cmp(b.1).unwrap_or(Ordering::Equal))
-        .unwrap()
-        .0;
-    let min_start_node = subgraph_gi_map[min_start].0;
-    let min_start_lifted_node = subgraph_gi_map[min_start].1;
-    let result: Result<Option<(K, Vec<NodeIndex>)>> = astar(
-        &gi,
-        min_start_node.clone(),
-        |finish| Ok(finish == min_start_lifted_node.clone()),
-        |e| Ok(*e.weight()),
-        |_| Ok(K::default()),
-    );
-
-    let mut min_path: Vec<usize> = Vec::new();
-    match result {
-        Ok(Some((_cost, path))) => {
-            for node in path {
-                if let Some(&subgraph_nodeid) = gi_subgraph_map.get(&node) {
-                    let subgraph_node = NodeIndexable::to_index(&subgraph, subgraph_nodeid);
-                    min_path.push(subgraph_node.index());
+    let conn_components = connected_components(&graph);
+    let mut min_cycle_basis = Vec::new();
+    let subgraphs_with_maps =
+        create_subgraphs_from_components(&graph, conn_components, &mut weight_fn)?;
+    // Convert weight_fn to a closure that takes a subgraph edge and returns the weight of the original graph edge
+    for (subgraph, node_subnode_map, edge_subedge_map) in subgraphs_with_maps {
+        // Find the key of edge_subedge_map that corresponds to the value e.id()
+        let mut subgraph_weight_fn = |e: <&Graph<usize, K, Undirected, DefaultIx> as IntoEdgeReferences>::EdgeRef| -> Result<K, Infallible> {
+            // use the edge_subedge_map to find the key that corresponds to the value e.id()
+            let edge = edge_subedge_map.iter().find(|(_key, &value)| value == e.id()).unwrap().0;
+            match weight_fn(
+                graph.edge_references().nth(*edge).unwrap(),
+            ) {
+                Ok(weight) => Ok(weight),
+                Err(_) => {
+                    // Handle the error here. Since the error type is Infallible, this branch should never be reached.
+                    unreachable!()
                 }
             }
-        }
-        Ok(None) => {}
-        Err(_) => {}
+        };
+        let num_cycles: Result<Vec<Vec<NodeIndex>>, Infallible> =
+            _min_cycle_basis(&subgraph, &mut subgraph_weight_fn, &node_subnode_map);
+        min_cycle_basis.extend(num_cycles.unwrap());
     }
-    let edgelist = min_path
-        .windows(2)
-        .map(|w| (w[0], w[1]))
-        .collect::<Vec<_>>();
-    let mut edgeset: HashSet<(usize, usize)> = HashSet::new();
-    for e in edgelist.iter() {
-        if edgeset.contains(e) {
-            edgeset.remove(e);
-        } else if edgeset.contains(&(e.1, e.0)) {
-            edgeset.remove(&(e.1, e.0));
-        } else {
-            edgeset.insert(*e);
-        }
-    }
-    let mut min_edgelist: Vec<(usize, usize)> = Vec::new();
-    for e in edgelist.iter() {
-        if edgeset.contains(e) {
-            min_edgelist.push(*e);
-            edgeset.remove(e);
-        } else if edgeset.contains(&(e.1, e.0)) {
-            min_edgelist.push((e.1, e.0));
-            edgeset.remove(&(e.1, e.0));
-        }
-    }
-    Ok(min_edgelist)
+    Ok(min_cycle_basis)
 }
 
 #[cfg(test)]

@@ -16,9 +16,7 @@ pub fn minimum_cycle_basis_map<Ty: EdgeType + Sync>(
     graph: &StablePyGraph<Ty>,
     edge_cost_fn: PyObject,
 ) -> PyResult<Vec<Vec<NodeIndex>>> {
-    if graph.node_count() == 0 {
-        return Ok(vec![]);
-    } else if graph.edge_count() == 0 {
+    if graph.node_count() == 0 || graph.edge_count() == 0 {
         return Ok(vec![]);
     }
     let edge_cost_callable = CostFn::from(edge_cost_fn);
