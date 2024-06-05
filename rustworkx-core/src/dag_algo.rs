@@ -340,11 +340,17 @@ where
 /// ];
 ///
 /// let graph = DiGraph::<u32, u32>::from_edges(&edge_list);
-/// let layers: Vec<Vec<usize>> = layers(&graph, vec![0,1]).unwrap();
-/// let expected_layers = vec![vec![0,1], vec![1,2], vec![2,3], vec![3,4], vec![4]];
+/// let layers: Vec<Vec<NodeIndex>> = layers(&graph, vec![0.into(),1.into()]).unwrap();
+/// let expected_layers: Vec<Vec<NodeIndex>> = vec![
+///     vec![0.into(),1.into()],
+///     vec![1.into(),2.into()],
+///     vec![2.into(),3.into()],
+///     vec![3.into(),4.into()],
+///     vec![4.into()]
+/// ];
 /// assert_eq!(layers, expected_layers)
 /// ```
-pub fn layers<G>(graph: G, first_layer: Vec<usize>) -> Result<Vec<Vec<usize>>, LayersError>
+pub fn layers<G>(graph: G, first_layer: Vec<G::NodeId>) -> Result<Vec<Vec<G::NodeId>>, LayersError>
 where
     G: NodeIndexable // Used in from_index and to_index.
         + NodeCount // Used in find_cycle
@@ -355,10 +361,8 @@ where
         + IntoEdgesDirected, // Used for .edged_directed
     <G as GraphBase>::NodeId: Eq + Hash,
 {
-    let mut output_indices: Vec<Vec<usize>> = Vec::new();
-    let first_layer_index: Vec<G::NodeId> =
-        first_layer.iter().map(|x| graph.from_index(*x)).collect();
-    let mut cur_layer = first_layer_index;
+    let mut output_indices: Vec<Vec<G::NodeId>> = Vec::new();
+    let mut cur_layer = first_layer;
     let mut next_layer: Vec<G::NodeId> = Vec::new();
     let mut predecessor_count: HashMap<G::NodeId, usize> = HashMap::new();
     let node_set = graph.node_identifiers().collect::<HashSet<G::NodeId>>();
@@ -379,7 +383,7 @@ where
             ))));
         }
     }
-    output_indices.push(cur_layer.iter().map(|x| graph.to_index(*x)).collect());
+    output_indices.push(cur_layer.to_owned());
 
     // Iterate until there are no more
     while !cur_layer.is_empty() {
@@ -417,7 +421,7 @@ where
             }
         }
         if !next_layer.is_empty() {
-            output_indices.push(next_layer.iter().map(|x| graph.to_index(*x)).collect());
+            output_indices.push(next_layer.to_owned());
         }
         cur_layer = next_layer;
         next_layer = Vec::new();
@@ -746,8 +750,9 @@ mod test_layers {
         for (source, target) in [(0, 1), (0, 2), (0, 3), (0, 4), (0, 5), (6, 3)] {
             graph.add_edge(nodes[source], nodes[target], ());
         }
-        let expected: Vec<Vec<usize>> = vec![vec![0], vec![5, 4, 2, 1]];
-        let result = layers(&graph, vec![0]);
+        let expected: Vec<Vec<NodeIndex>> =
+            vec![vec![0.into()], vec![5.into(), 4.into(), 2.into(), 1.into()]];
+        let result = layers(&graph, vec![0.into()]);
         assert_eq!(result, Ok(expected));
     }
 
@@ -756,7 +761,7 @@ mod test_layers {
         let edge_list = vec![(0, 1), (1, 2), (2, 3), (3, 4)];
         let graph = DiGraph::<u32, u32>::from_edges(&edge_list);
         assert_eq!(
-            layers(&graph, vec![4, 5]),
+            layers(&graph, vec![4.into(), 5.into()]),
             Err(LayersError(Some(format!(
                 "An index input in 'first_layer' {} is not a valid node index in the graph",
                 5
@@ -782,16 +787,16 @@ mod test_layers {
         graph.add_edge(n2, n5, ());
         graph.add_edge(n4, n5, ());
 
-        let result = layers(&graph, vec![0]);
+        let result = layers(&graph, vec![0.into()]);
         assert_eq!(
             result,
             Ok(vec![
-                vec![graph.to_index(n0)],
-                vec![graph.to_index(n1)],
-                vec![graph.to_index(n2)],
-                vec![graph.to_index(n3)],
-                vec![graph.to_index(n4)],
-                vec![graph.to_index(n5)]
+                vec![n0],
+                vec![n1],
+                vec![n2],
+                vec![n3],
+                vec![n4],
+                vec![n5]
             ])
         );
     }
@@ -804,7 +809,7 @@ mod test_layers {
         graph.add_edge(n0, n1, 1);
         graph.add_edge(n1, n0, 1);
 
-        let result = layers(&graph, vec![0]);
+        let result = layers(&graph, vec![0.into()]);
         assert_eq!(
             result,
             Err(LayersError(Some(

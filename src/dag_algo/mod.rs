@@ -296,17 +296,27 @@ pub fn layers(
     first_layer: Vec<usize>,
     index_output: bool,
 ) -> PyResult<PyObject> {
-    let result = core_layers(&dag.graph, first_layer);
+    let result = core_layers(
+        &dag.graph,
+        first_layer
+            .iter()
+            .map(|x| dag.graph.from_index(*x))
+            .collect(),
+    );
     match result {
         Ok(result) => {
             if index_output {
-                Ok(PyList::new_bound(py, result).into())
+                let res: Vec<Vec<usize>> = result
+                    .iter()
+                    .map(|x| x.iter().map(|nodeid| dag.graph.to_index(*nodeid)).collect())
+                    .collect();
+                Ok(PyList::new_bound(py, res).into())
             } else {
                 Ok(PyList::new_bound(
                     py,
                     result.iter().map(|x| {
                         x.iter()
-                            .map(|index| dag.graph.node_weight(dag.graph.from_index(*index)))
+                            .map(|index| dag.graph.node_weight(*index))
                             .collect::<Vec<Option<&PyObject>>>()
                             .to_object(py)
                     }),
