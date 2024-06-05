@@ -1,5 +1,7 @@
 ---
 features:
   - |
-    Add method :meth:`~rustworkx-core.dag_algo.layers` in rustworkx-core to 
-    get the layers of a directed acyclic graph.
+    Add a function :meth:`~rustworkx-core.dag_algo.layers` in rustworkx-core to 
+    get the layers of a directed acyclic graph.  This is equivalent to the
+    :func:`.layers` function that existed in the Python API but now exposes it
+    for Rust users too.
