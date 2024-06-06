@@ -379,13 +379,12 @@ pub fn collect_bicolor_runs<G, F, C, E>(
     color_fn: C,
 ) -> Result<Option<Vec<Vec<G::NodeId>>>, E>
 where
-    F: Fn(&<G as Data>::NodeWeight) -> Result<Option<bool>, E>,
-    C: Fn(&<G as Data>::EdgeWeight) -> Result<Option<usize>, E>,
+    F: Fn(G::NodeId) -> Result<Option<bool>, E>,
+    C: Fn(G::EdgeId) -> Result<Option<usize>, E>,
     G: IntoNodeIdentifiers // Used in toposort
         + IntoNeighborsDirected // Used in toposort
         + IntoEdgesDirected // Used for .edges_directed
         + Visitable // Used in toposort
-        + DataMap, // Used for .node_weight
     <G as GraphBase>::NodeId: Eq + Hash,
 {
     let mut pending_list: Vec<Vec<G::NodeId>> = Vec::new();
