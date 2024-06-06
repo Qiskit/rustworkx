@@ -858,11 +858,11 @@ mod test_collect_bicolor_runs {
         */
         let mut graph = DiGraph::new();
         let n0 = graph.add_node(0); //q0
-        let n1 = graph.add_node(1); //q1
-        let n2 = graph.add_node(2); //cx
-        let n3 = graph.add_node(3); //cz
+        let n1 = graph.add_node(0); //q1
+        let n2 = graph.add_node(1); //cx
+        let n3 = graph.add_node(1); //cz
         let n4 = graph.add_node(0); //q0_1
-        let n5 = graph.add_node(1); //q1_1
+        let n5 = graph.add_node(0); //q1_1
         graph.add_edge(n0, n2, 0); //q0 -> cx
         graph.add_edge(n1, n2, 1); //q1 -> cx
         graph.add_edge(n2, n3, 0); //cx -> cz
