@@ -99,6 +99,7 @@ class TestCollectBicolorRuns(unittest.TestCase):
                 return None
 
         def color_function(node):
+            print("node name:", node)
             if "q" in node:
                 return int(node[1:])
             else:

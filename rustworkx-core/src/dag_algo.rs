@@ -346,26 +346,32 @@ where
 ///
 /// ```rust
 /// use rustworkx_core::dag_algo::collect_bicolor_runs;
-/// use petgraph::graph::DiGraph;
+/// use petgraph::graph::{DiGraph, NodeIndex};
+/// use std::convert::Infallible;
 /// use std::error::Error;
-///
 /// let mut graph = DiGraph::new();
 /// let n0 = graph.add_node(0);
-/// let n1 = graph.add_node(1);
-/// let n2 = graph.add_node(2);
-/// let n3 = graph.add_node(3);
+/// let n1 = graph.add_node(0);
+/// let n2 = graph.add_node(1);
+/// let n3 = graph.add_node(1);
+/// let n4 = graph.add_node(0);
+/// let n5 = graph.add_node(0);
 /// graph.add_edge(n0, n2, 0);
-/// graph.add_edge(n1, n2, 0);
+/// graph.add_edge(n1, n2, 1);
 /// graph.add_edge(n2, n3, 0);
-/// graph.add_edge(n2, n3, 0);
+/// graph.add_edge(n2, n3, 1);
+/// graph.add_edge(n3, n4, 0);
+/// graph.add_edge(n3, n5, 1);
 /// // filter_fn and color_fn must share error type
-/// fn filter_fn(node: &i32) -> Result<Option<bool>, Box<dyn Error>> {
-///  Ok(Some(*node > 1))
+/// fn filter_fn(node: &i32) -> Result<Option<bool>, Infallible> {
+///  Ok(Some(*node > 0))
 /// }
-/// fn color_fn(edge: &i32) -> Result<Option<usize>, Box<dyn Error>> {
+/// fn color_fn(edge: &i32) -> Result<Option<usize>, Infallible> {
 ///   Ok(Some(*edge as usize))
 /// }
 /// let result = collect_bicolor_runs(&graph, filter_fn, color_fn).unwrap();
+/// let expected: Vec<Vec<NodeIndex>> = vec![vec![n2, n3]];
+/// assert_eq!(result, Some(expected))
 /// ```
 pub fn collect_bicolor_runs<G, F, C, E>(
     graph: G,
@@ -578,13 +584,6 @@ mod test_longest_path {
 }
 
 // Tests for lexicographical_topological_sort
-// pub fn lexicographical_topological_sort<G, F, E>(
-//     dag: G,
-//     mut key: F,
-//     reverse: bool,
-//     initial: Option<&[G::NodeId]>,
-// ) -> Result<Option<Vec<G::NodeId>>, E>
-
 #[cfg(test)]
 mod test_lexicographical_topological_sort {
     use super::*;
@@ -861,16 +860,17 @@ mod test_collect_bicolor_runs {
         let n4 = graph.add_node(0); //q0_1
         let n5 = graph.add_node(1); //q1_1
         graph.add_edge(n0, n2, 0); //q0 -> cx
-        graph.add_edge(n1, n2, 0); //q1 -> cx
+        graph.add_edge(n1, n2, 1); //q1 -> cx
         graph.add_edge(n2, n3, 0); //cx -> cz
-        graph.add_edge(n2, n3, 0); //cx -> cz
+        graph.add_edge(n2, n3, 1); //cx -> cz
         graph.add_edge(n3, n4, 0); //cz -> q0_1
-        graph.add_edge(n3, n5, 0); //cz -> q1_1
+        graph.add_edge(n3, n5, 1); //cz -> q1_1
 
         let result = collect_bicolor_runs(&graph, test_filter_fn, test_color_fn).unwrap();
         let expected: Vec<Vec<NodeIndex>> = vec![vec![n2, n3]]; //[[cx, cz]]
         assert_eq!(result, Some(expected))
     }
+
     #[test]
     fn test_two_colors_with_pending() {
         /* Based on the following graph from the Python unit tests:
@@ -935,12 +935,12 @@ mod test_collect_bicolor_runs {
         let n7 = graph.add_node(1); //q1_1
         graph.add_edge(n0, n2, 0); //q0 -> h
         graph.add_edge(n2, n3, 0); //h -> cx
-        graph.add_edge(n1, n3, 0); //q1 -> cx
+        graph.add_edge(n1, n3, 1); //q1 -> cx
         graph.add_edge(n3, n4, 0); //cx -> cz
-        graph.add_edge(n3, n4, 0); //cx -> cz
+        graph.add_edge(n3, n4, 1); //cx -> cz
         graph.add_edge(n4, n6, 0); //cz -> q0_1
-        graph.add_edge(n4, n5, 0); //cz -> y
-        graph.add_edge(n5, n7, 0); //y -> q1_1
+        graph.add_edge(n4, n5, 1); //cz -> y
+        graph.add_edge(n5, n7, 1); //y -> q1_1
 
         let result = collect_bicolor_runs(&graph, test_filter_fn, test_color_fn).unwrap();
         let expected: Vec<Vec<NodeIndex>> = vec![vec![n2, n3, n4, n5]]; //[[h, cx, cz, y]]
