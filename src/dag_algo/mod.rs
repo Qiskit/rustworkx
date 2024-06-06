@@ -636,13 +636,15 @@ pub fn collect_bicolor_runs(
 ) -> PyResult<Vec<Vec<PyObject>>> {
     let dag = &graph.graph;
 
-    let filter_fn_wrapper = |node: &PyObject| -> PyResult<Option<bool>> {
-        let res = filter_fn.call1(py, (node,))?;
+    let filter_fn_wrapper = |node_index| -> Result<Option<bool>, PyErr> {
+        let node_weight = dag.node_weight(node_index).expect("Invalid NodeId");
+        let res = filter_fn.call1(py, (node_weight,))?;
         res.extract(py)
     };
 
-    let color_fn_wrapper = |edge: &PyObject| -> PyResult<Option<usize>> {
-        let res = color_fn.call1(py, (edge,))?;
+    let color_fn_wrapper = |edge_index| -> Result<Option<usize>, PyErr> {
+        let edge_weight = dag.edge_weight(edge_index).expect("Invalid EdgeId");
+        let res = color_fn.call1(py, (edge_weight,))?;
         res.extract(py)
     };
 
