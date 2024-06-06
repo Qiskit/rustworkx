@@ -1,0 +1,22 @@
+---
+fixes:
+  - |
+    Fix to to_dot not handling escaped characters in tooltip correctly issue, Issue #750
+    :meth:attr_map_to_string now escapes characters in tooltip using serde_json::to_string()
+    added relavant test to ensure it escapes characters correctly.
+
+        .. jupyter-execute::
+
+              import rustworkx as rx
+              from rustworkx.visualization import graphviz_draw
+
+              graphviz_draw(
+                  rx.generators.path_graph(2),
+                  filename="graph.svg",
+                  image_type="svg",
+                  node_attr_fn=lambda x: {"label": "the\nlabel", "tooltip": "the\ntooltip"},
+              )
+
+
+
+
