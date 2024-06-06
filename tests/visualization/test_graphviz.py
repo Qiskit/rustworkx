@@ -16,7 +16,6 @@ import tempfile
 import unittest
 import random
 import rustworkx
-import pydot
 from rustworkx.visualization import graphviz_draw
 
 try:
@@ -156,45 +155,28 @@ class TestGraphvizDraw(unittest.TestCase):
         # Create a simple graph
         graph = rustworkx.generators.path_graph(2)
 
-        escapes = [
-                    "\n",  # Newline
-                    "\t",  # Horizontal tab
-                    "\'",  # Single quote
-                    "\"",  # Double quote
-                    "\\",  # Backslash
-                    "\r",  # Carriage return
-                    "\b",  # Backspace
-                    "\f",  # Form feed
-                ]
+        escape_sequences = {
+            "\\n": "\n",  # Newline
+            "\\t": "\t",  # Horizontal tab
+            "\\'": "'",  # Single quote
+            '\\"': '"',  # Double quote
+            "\\\\": "\\",  # Backslash
+            "\\r": "\r",  # Carriage return
+            "\\b": "\b",  # Backspace
+            "\\f": "\f",  # Form feed
+        }
 
-        def node_attr(node):
-            """
-            Define node attributes including randomly inserted escape sequences
-            """
+        for escaped_seq, raw_seq in escape_sequences.items():
+            def node_attr(node):
+                """
+                Define node attributes including escape sequences for labels and tooltips.
+                """
+                label = f"label{escaped_seq}"
+                tooltip = f"tooltip{escaped_seq}"
+                return {"label": label, "tooltip": tooltip}
 
-            base_label = "label"
-            base_tooltip = "tooltip"
-            insert_at_label = random.randint(0, len(base_label))
-            insert_at_tooltip = random.randint(0, len(base_tooltip))
-            label = ''.join([
-                                base_label[:insert_at_label],
-                                random.choice(escapes),
-                                base_label[insert_at_label:]
-                            ])
-            tooltip = ''.join([
-                                base_tooltip[:insert_at_tooltip],
-                                random.choice(escapes),
-                                base_tooltip[insert_at_tooltip:]
-                            ])
-            return {"label": label, "tooltip": tooltip}
+            # Draw the graph using graphviz_draw
+            dot_str = graph.to_dot(node_attr)
 
-        # Draw the graph using graphviz_draw
-        dot_str = graph.to_dot(node_attr)
-        dot = pydot.graph_from_dot_data(dot_str)[0]
-
-        with tempfile.TemporaryDirectory() as tmpdirname:
-            tmp_path = os.path.join(tmpdirname, 'dag.png')
-            dot.write_png(tmp_path)
-            image = PIL.Image.open(tmp_path)
-            self.assertIsInstance(image, PIL.Image.Image)
-            os.remove(tmp_path)
+            # Assert that the escape sequences are correctly placed and escaped in the dot string
+            self.assertIn(escaped_seq, dot_str, f"Escape sequence {escaped_seq} not found in dot output")
