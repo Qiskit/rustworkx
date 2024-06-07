@@ -30,6 +30,9 @@ use super::InvalidInputError;
 /// * `bidirectional` - Whether edges are added bidirectionally. If set to
 ///     `true` then for any edge `(u, v)` an edge `(v, u)` will also be added.
 ///     If the graph is undirected this will result in a parallel edge.
+/// * `periodic` - If set to `true`, the boundaries of the lattice will be
+///     joined to form a periodic grid. Requires `cols` to be even,
+///     `rows > 1`, and `cols > 1`.
 ///
 /// # Example
 /// ```rust
@@ -90,11 +93,16 @@ where
         return Ok(G::with_capacity(0, 0));
     }
 
+    if periodic && (cols % 2 == 1 || rows < 2 || cols < 2) {
+        return Err(InvalidInputError {});
+    }
+
     // Number of nodes in each vertical chain
     let rowlen = if periodic {
         2 * rows
     } else {
-        // Note: first and last vertical chains have (2 * rows + 1) nodes
+        // Note: in the non-periodic case the first and
+        // last vertical chains have (2 * rows + 1) nodes
         2 * rows + 2
     };
 
@@ -309,5 +317,13 @@ mod tests {
             hexagonal_lattice_graph(0, 0, || (), || (), false, false).unwrap();
         assert_eq!(g.node_count(), 0);
         assert_eq!(g.edge_count(), 0);
+    }
+
+    #[test]
+    fn test_hexagonal_lattice_periodic_error() {
+        match hexagonal_lattice_graph(5, 3, || (), || (), false, false) {
+            Ok(_) => panic!("Returned a non-error"),
+            Err(e) => assert_eq!(e, InvalidInputError),
+        }
     }
 }

@@ -14,7 +14,7 @@ use petgraph::algo;
 use petgraph::prelude::*;
 use petgraph::Undirected;
 
-use pyo3::exceptions::{PyIndexError, PyOverflowError};
+use pyo3::exceptions::{PyIndexError, PyOverflowError, PyValueError};
 use pyo3::prelude::*;
 use pyo3::wrap_pyfunction;
 use pyo3::Python;
@@ -1145,7 +1145,7 @@ pub fn hexagonal_lattice_graph(
         rows, cols, default_fn, default_fn, false, periodic,
     ) {
         Ok(graph) => graph,
-        Err(_) => return Err(PyIndexError::new_err("rows and cols not specified")),
+        Err(_) => return Err(PyValueError::new_err("Invalid arguments")),
     };
     Ok(graph::PyGraph {
         graph,
@@ -1207,7 +1207,7 @@ pub fn directed_hexagonal_lattice_graph(
         periodic,
     ) {
         Ok(graph) => graph,
-        Err(_) => return Err(PyIndexError::new_err("rows and cols not specified")),
+        Err(_) => return Err(PyValueError::new_err("Invalid arguments")),
     };
     Ok(digraph::PyDiGraph {
         graph,
