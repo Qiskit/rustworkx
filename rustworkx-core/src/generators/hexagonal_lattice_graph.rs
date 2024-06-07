@@ -102,83 +102,43 @@ where
         .map(|_| graph.add_node(default_node_weight()))
         .collect();
 
+    let mut add_edge = |u, v| {
+        graph.add_edge(nodes[u], nodes[v], default_edge_weight());
+        if bidirectional {
+            graph.add_edge(nodes[v], nodes[u], default_edge_weight());
+        }
+    };
+
     // Add column edges
     for j in 0..(rowlen - 2) {
-        graph.add_edge(nodes[j], nodes[j + 1], default_edge_weight());
-        if bidirectional {
-            graph.add_edge(nodes[j + 1], nodes[j], default_edge_weight());
-        }
+        add_edge(j, j + 1);
     }
     for i in 1..(collen - 1) {
         for j in 0..(rowlen - 1) {
-            graph.add_edge(
-                nodes[i * rowlen + j - 1],
-                nodes[i * rowlen + j],
-                default_edge_weight(),
-            );
-            if bidirectional {
-                graph.add_edge(
-                    nodes[i * rowlen + j],
-                    nodes[i * rowlen + j - 1],
-                    default_edge_weight(),
-                );
-            }
+            add_edge(i * rowlen + j - 1, i * rowlen + j);
         }
     }
     for j in 0..(rowlen - 2) {
-        graph.add_edge(
-            nodes[(collen - 1) * rowlen + j - 1],
-            nodes[(collen - 1) * rowlen + j],
-            default_edge_weight(),
-        );
-        if bidirectional {
-            graph.add_edge(
-                nodes[(collen - 1) * rowlen + j],
-                nodes[(collen - 1) * rowlen + j - 1],
-                default_edge_weight(),
-            );
-        }
+        add_edge((collen - 1) * rowlen + j - 1, (collen - 1) * rowlen + j);
     }
 
     // Add row edges
     for j in (0..(rowlen - 1)).step_by(2) {
-        graph.add_edge(nodes[j], nodes[j + rowlen - 1], default_edge_weight());
-        if bidirectional {
-            graph.add_edge(nodes[j + rowlen - 1], nodes[j], default_edge_weight());
-        }
+        add_edge(j, j + rowlen - 1);
     }
     for i in 1..(collen - 2) {
         for j in 0..rowlen {
             if i % 2 == j % 2 {
-                graph.add_edge(
-                    nodes[i * rowlen + j - 1],
-                    nodes[(i + 1) * rowlen + j - 1],
-                    default_edge_weight(),
-                );
-                if bidirectional {
-                    graph.add_edge(
-                        nodes[(i + 1) * rowlen + j - 1],
-                        nodes[i * rowlen + j - 1],
-                        default_edge_weight(),
-                    );
-                }
+                add_edge(i * rowlen + j - 1, (i + 1) * rowlen + j - 1);
             }
         }
     }
     if collen > 2 {
         for j in ((collen % 2)..rowlen).step_by(2) {
-            graph.add_edge(
-                nodes[(collen - 2) * rowlen + j - 1],
-                nodes[(collen - 1) * rowlen + j - 1 - (collen % 2)],
-                default_edge_weight(),
+            add_edge(
+                (collen - 2) * rowlen + j - 1,
+                (collen - 1) * rowlen + j - 1 - (collen % 2),
             );
-            if bidirectional {
-                graph.add_edge(
-                    nodes[(collen - 1) * rowlen + j - 1 - (collen % 2)],
-                    nodes[(collen - 2) * rowlen + j - 1],
-                    default_edge_weight(),
-                );
-            }
         }
     }
     Ok(graph)
