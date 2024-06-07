@@ -14,7 +14,7 @@ use std::cmp::{Eq, Ordering};
 use std::collections::BinaryHeap;
 use std::hash::Hash;
 
-use hashbrown::HashMap;
+use hashbrown::{HashMap, HashSet};
 
 use petgraph::algo;
 use petgraph::visit::{
@@ -313,6 +313,51 @@ where
     Ok(Some((path, path_weight)))
 }
 
+pub fn collect_runs<G>(graph: G) -> Vec<Vec<<G as GraphBase>::NodeId>> // TODO: return type is a place holder
+// TODO: support a filter function on the nodes
+where
+    G: GraphProp<EdgeType = Directed> + IntoNeighborsDirected + IntoNodeIdentifiers + Visitable + NodeCount,
+    <G as GraphBase>::NodeId: Hash + Eq // TODO: what type of declaration is it? 
+{
+    let mut out_list = Vec::new();
+
+    let nodes = match algo::toposort(graph, None) { 
+        Ok(nodes) => nodes,
+        Err(_) => return Vec::new(),
+       };
+
+    let mut seen: HashSet<G::NodeId> = HashSet::with_capacity(nodes.len());
+
+    for node in nodes {
+        if seen.contains(&node) {
+            continue;
+        }
+        seen.insert(node);
+        let mut run: Vec<G::NodeId> = vec![node]; // TODO: what's the difference between NodeId and NodeIndex
+        let mut successors: Vec<G::NodeId> = graph
+            .neighbors_directed(node, petgraph::Direction::Outgoing)
+            .collect();
+        successors.dedup();
+
+        while successors.len() == 1
+            && !seen.contains(&successors[0])
+        {
+            run.push(successors[0]); // TODO: NodeId, ownership?
+            seen.insert(successors[0]);
+            successors = graph
+                .neighbors_directed(successors[0], petgraph::Direction::Outgoing)
+                .collect();
+            successors.dedup();
+        }
+
+        if !run.is_empty() {
+            out_list.push(run);
+        }
+    }
+
+    out_list
+}
+
 #[cfg(test)]
 mod test_longest_path {
     use super::*;
@@ -598,4 +643,93 @@ mod test_lexicographical_topological_sort {
         let result = lexicographical_topological_sort(&graph, sort_fn, false, Some(&initial));
         assert_eq!(result, Ok(Some(vec![nodes[7]])));
     }
+}
+
+#[cfg(test)] // # TODO: better understand this syntax. Seems like a pragma
+mod test_collect_runs {
+    use petgraph::{graph::DiGraph, visit::GraphBase};
+    
+    use super::collect_runs;
+
+    #[test]
+    fn test_empty_graph() {
+        let graph: DiGraph<(), ()> = DiGraph::new();
+
+        let runs = collect_runs(&graph);
+
+        let empty: Vec<Vec<<DiGraph<(), ()> as GraphBase>::NodeId>> = Vec::new(); // TODO: find a shorter-hand method, using vec!
+
+        assert_eq!(
+            runs, 
+            empty
+        );
+    }   
+
+    #[test]
+    fn test_simple_run() {
+        let mut graph: DiGraph<(), ()> = DiGraph::new();
+        let n1 = graph.add_node(());
+        let n2 = graph.add_node(());
+        let n3 = graph.add_node(());
+        graph.add_edge(n1, n2, ());
+        graph.add_edge(n2, n3, ());
+
+        let runs = collect_runs(&graph);
+
+        assert_eq!(runs.len(), 1); // Only 1 run
+        assert_eq!(runs[0].len(), 3); // Of length 3
+        
+        assert_eq!(
+            runs, 
+            vec![vec![n1, n2, n3]]
+        );
+    }   
+
+    #[test]
+    fn test_multiple_runs() {
+        let mut graph: DiGraph<(), ()> = DiGraph::new();
+        // TODO: change to a for loop
+        let n1 = graph.add_node(());
+        let n2 = graph.add_node(());
+        let n3 = graph.add_node(());
+        let n4 = graph.add_node(());
+        let n5 = graph.add_node(());
+        let n6 = graph.add_node(());
+        let n7 = graph.add_node(());
+    
+        graph.add_edge(n1, n2, ());
+        graph.add_edge(n2, n3, ());
+        graph.add_edge(n3, n7, ());
+        graph.add_edge(n4, n3, ());
+        graph.add_edge(n4, n7, ());
+        graph.add_edge(n5, n4, ());
+        graph.add_edge(n6, n5, ());
+    
+        let runs = collect_runs(&graph);
+
+        assert_eq!(
+            runs, 
+            vec![vec![n6, n5, n4], vec![n1, n2, n3, n7]] // TODO: would the order ever changed?
+        );
+    }
+
+    #[test]
+    fn test_singleton_runs() {
+        let mut graph: DiGraph<(), ()> = DiGraph::new();
+        // TODO: change to a for loop
+        let n1 = graph.add_node(());
+        let n2 = graph.add_node(());
+        let n3 = graph.add_node(());
+    
+        graph.add_edge(n1, n2, ());
+        graph.add_edge(n1, n3, ());
+        
+        let runs = collect_runs(&graph);
+
+        assert_eq!(
+            runs, 
+            vec![vec![n1], vec![n3], vec![n2]] // TODO: would the order ever changed?
+        );
+    }
+
 }
