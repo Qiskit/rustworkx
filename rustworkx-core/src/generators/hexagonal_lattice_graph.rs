@@ -78,6 +78,7 @@ pub fn hexagonal_lattice_graph<G, T, F, H, M>(
     mut default_node_weight: F,
     mut default_edge_weight: H,
     bidirectional: bool,
+    periodic: bool,
 ) -> Result<G, InvalidInputError>
 where
     G: Build + Create + Data<NodeWeight = T, EdgeWeight = M> + NodeIndexable,
@@ -88,13 +89,23 @@ where
     if rows == 0 || cols == 0 {
         return Ok(G::with_capacity(0, 0));
     }
-    let mut rowlen = rows;
-    let mut collen = cols;
 
-    // Needs two times the number of nodes vertically
-    rowlen = 2 * rowlen + 2;
-    collen += 1;
-    let num_nodes = rowlen * collen - 2;
+    // Number of nodes in each vertical chain
+    let rowlen = if periodic {
+        2 * rows
+    } else {
+        // Note: first and last vertical chains have (2 * rows + 1) nodes
+        2 * rows + 2
+    };
+
+    // Number of vertical chains
+    let collen = if periodic { cols } else { cols + 1 };
+
+    let num_nodes = if periodic {
+        rowlen * collen
+    } else {
+        rowlen * collen - 2
+    };
 
     let mut graph = G::with_capacity(num_nodes, num_nodes);
 
@@ -109,36 +120,54 @@ where
         }
     };
 
-    // Add column edges
-    for j in 0..(rowlen - 2) {
-        add_edge(j, j + 1);
-    }
-    for i in 1..(collen - 1) {
-        for j in 0..(rowlen - 1) {
-            add_edge(i * rowlen + j - 1, i * rowlen + j);
+    if periodic {
+        // Add column edges
+        for i in 0..collen {
+            let col_start = i * rowlen;
+            for j in col_start..(col_start + rowlen - 1) {
+                add_edge(j, j + 1);
+            }
+            add_edge(col_start + rowlen - 1, col_start);
         }
-    }
-    for j in 0..(rowlen - 2) {
-        add_edge((collen - 1) * rowlen + j - 1, (collen - 1) * rowlen + j);
-    }
-
-    // Add row edges
-    for j in (0..(rowlen - 1)).step_by(2) {
-        add_edge(j, j + rowlen - 1);
-    }
-    for i in 1..(collen - 2) {
-        for j in 0..rowlen {
-            if i % 2 == j % 2 {
-                add_edge(i * rowlen + j - 1, (i + 1) * rowlen + j - 1);
+        // Add row edges
+        for i in 0..collen {
+            let col_start = i * rowlen + i % 2;
+            for j in (col_start..(col_start + rowlen)).step_by(2) {
+                add_edge(j, (j + rowlen) % num_nodes);
             }
         }
-    }
-    if collen > 2 {
-        for j in ((collen % 2)..rowlen).step_by(2) {
-            add_edge(
-                (collen - 2) * rowlen + j - 1,
-                (collen - 1) * rowlen + j - 1 - (collen % 2),
-            );
+    } else {
+        // Add column edges
+        for j in 0..(rowlen - 2) {
+            add_edge(j, j + 1);
+        }
+        for i in 1..(collen - 1) {
+            for j in 0..(rowlen - 1) {
+                add_edge(i * rowlen + j - 1, i * rowlen + j);
+            }
+        }
+        for j in 0..(rowlen - 2) {
+            add_edge((collen - 1) * rowlen + j - 1, (collen - 1) * rowlen + j);
+        }
+
+        // Add row edges
+        for j in (0..(rowlen - 1)).step_by(2) {
+            add_edge(j, j + rowlen - 1);
+        }
+        for i in 1..(collen - 2) {
+            for j in 0..rowlen {
+                if i % 2 == j % 2 {
+                    add_edge(i * rowlen + j - 1, (i + 1) * rowlen + j - 1);
+                }
+            }
+        }
+        if collen > 2 {
+            for j in ((collen % 2)..rowlen).step_by(2) {
+                add_edge(
+                    (collen - 2) * rowlen + j - 1,
+                    (collen - 1) * rowlen + j - 1 - (collen % 2),
+                );
+            }
         }
     }
     Ok(graph)
@@ -174,7 +203,7 @@ mod tests {
             (10, 15),
         ];
         let g: petgraph::graph::UnGraph<(), ()> =
-            hexagonal_lattice_graph(2, 2, || (), || (), false).unwrap();
+            hexagonal_lattice_graph(2, 2, || (), || (), false, false).unwrap();
         assert_eq!(g.node_count(), 16);
         assert_eq!(g.edge_count(), expected_edges.len());
         assert_eq!(
@@ -209,7 +238,7 @@ mod tests {
             (10, 15),
         ];
         let g: petgraph::graph::DiGraph<(), ()> =
-            hexagonal_lattice_graph(2, 2, || (), || (), false).unwrap();
+            hexagonal_lattice_graph(2, 2, || (), || (), false, false).unwrap();
         assert_eq!(g.node_count(), 16);
         assert_eq!(g.edge_count(), expected_edges.len());
         assert_eq!(
@@ -263,7 +292,7 @@ mod tests {
             (15, 10),
         ];
         let g: petgraph::graph::DiGraph<(), ()> =
-            hexagonal_lattice_graph(2, 2, || (), || (), true).unwrap();
+            hexagonal_lattice_graph(2, 2, || (), || (), true, false).unwrap();
         assert_eq!(g.node_count(), 16);
         assert_eq!(g.edge_count(), expected_edges.len());
         assert_eq!(
@@ -277,7 +306,7 @@ mod tests {
     #[test]
     fn test_hexagonal_lattice_error() {
         let g: petgraph::graph::UnGraph<(), ()> =
-            hexagonal_lattice_graph(0, 0, || (), || (), false).unwrap();
+            hexagonal_lattice_graph(0, 0, || (), || (), false, false).unwrap();
         assert_eq!(g.node_count(), 0);
         assert_eq!(g.edge_count(), 0);
     }

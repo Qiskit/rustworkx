@@ -1111,6 +1111,9 @@ pub fn full_rary_tree(
 ///     :class:`~rustworkx.PyGraph` object will not be not be a multigraph and
 ///     won't allow parallel edges to be added. Instead
 ///     calls which would create a parallel edge will update the existing edge.
+/// :param bool periodic: When set to ``True`` the boundaries of the lattice
+///     will be joined to form a periodic grid. Requires ``cols`` to be even,
+///     ``rows > 1``, and ``cols > 1``.
 ///
 /// :returns: The generated hexagonal lattice graph.
 ///
@@ -1128,20 +1131,22 @@ pub fn full_rary_tree(
 ///
 #[pyfunction]
 #[pyo3(
-    signature=(rows, cols, multigraph=true),
+    signature=(rows, cols, multigraph=true, periodic=false),
 )]
 pub fn hexagonal_lattice_graph(
     py: Python,
     rows: usize,
     cols: usize,
     multigraph: bool,
+    periodic: bool,
 ) -> PyResult<graph::PyGraph> {
     let default_fn = || py.None();
-    let graph: StablePyGraph<Undirected> =
-        match core_generators::hexagonal_lattice_graph(rows, cols, default_fn, default_fn, false) {
-            Ok(graph) => graph,
-            Err(_) => return Err(PyIndexError::new_err("rows and cols not specified")),
-        };
+    let graph: StablePyGraph<Undirected> = match core_generators::hexagonal_lattice_graph(
+        rows, cols, default_fn, default_fn, false, periodic,
+    ) {
+        Ok(graph) => graph,
+        Err(_) => return Err(PyIndexError::new_err("rows and cols not specified")),
+    };
     Ok(graph::PyGraph {
         graph,
         node_removed: false,
@@ -1162,6 +1167,9 @@ pub fn hexagonal_lattice_graph(
 ///     :class:`~rustworkx.PyDiGraph` object will not be not be a multigraph and
 ///     won't allow parallel edges to be added. Instead
 ///     calls which would create a parallel edge will update the existing edge.
+/// :param bool periodic: When set to ``True`` the boundaries of the lattice
+///     will be joined to form a periodic grid. Requires ``cols`` to be even,
+///     ``rows > 1``, and ``cols > 1``.
 ///
 /// :returns: The generated directed hexagonal lattice graph.
 ///
@@ -1179,7 +1187,7 @@ pub fn hexagonal_lattice_graph(
 ///
 #[pyfunction]
 #[pyo3(
-    signature=(rows, cols, bidirectional=false, multigraph=true),
+    signature=(rows, cols, bidirectional=false, multigraph=true, periodic=false),
 )]
 pub fn directed_hexagonal_lattice_graph(
     py: Python,
@@ -1187,6 +1195,7 @@ pub fn directed_hexagonal_lattice_graph(
     cols: usize,
     bidirectional: bool,
     multigraph: bool,
+    periodic: bool,
 ) -> PyResult<digraph::PyDiGraph> {
     let default_fn = || py.None();
     let graph: StablePyGraph<Directed> = match core_generators::hexagonal_lattice_graph(
@@ -1195,6 +1204,7 @@ pub fn directed_hexagonal_lattice_graph(
         default_fn,
         default_fn,
         bidirectional,
+        periodic,
     ) {
         Ok(graph) => graph,
         Err(_) => return Err(PyIndexError::new_err("rows and cols not specified")),
