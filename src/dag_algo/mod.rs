@@ -296,6 +296,15 @@ pub fn layers(
     first_layer: Vec<usize>,
     index_output: bool,
 ) -> PyResult<PyObject> {
+    let node_set = dag.graph.node_indices().collect::<HashSet<NodeIndex>>();
+    for layer_node in &first_layer {
+        if !node_set.contains(&NodeIndex::new(*layer_node)) {
+            return Err(InvalidNode::new_err(format!(
+                "An index input in 'first_layer' {} is not a valid node index in the graph",
+                layer_node
+            )));
+        }
+    }
     let result = core_layers(
         &dag.graph,
         first_layer
@@ -307,21 +316,18 @@ pub fn layers(
         Ok(result) => {
             if index_output {
                 let res: Vec<Vec<usize>> = result
-                    .iter()
                     .map(|x| x.iter().map(|nodeid| dag.graph.to_index(*nodeid)).collect())
                     .collect();
                 Ok(PyList::new_bound(py, res).into())
             } else {
-                Ok(PyList::new_bound(
-                    py,
-                    result.iter().map(|x| {
+                let res: Vec<Vec<Option<&PyObject>>> = result
+                    .map(|x| {
                         x.iter()
                             .map(|index| dag.graph.node_weight(*index))
                             .collect::<Vec<Option<&PyObject>>>()
-                            .to_object(py)
-                    }),
-                )
-                .into())
+                    })
+                    .collect();
+                Ok(PyList::new_bound(py, res).into())
             }
         }
         Err(e) => Err(InvalidNode::new_err(e.0)),
