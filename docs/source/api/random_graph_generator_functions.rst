@@ -10,6 +10,8 @@ Random Graph Generator Functions
     rustworkx.undirected_gnp_random_graph
     rustworkx.directed_gnm_random_graph
     rustworkx.undirected_gnm_random_graph
+    rustworkx.directed_sbm_random_graph
+    rustworkx.undirected_sbm_random_graph
     rustworkx.random_geometric_graph
     rustworkx.hyperbolic_random_graph
     rustworkx.barabasi_albert_graph

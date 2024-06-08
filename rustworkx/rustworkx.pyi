@@ -50,6 +50,12 @@ class FailedToConverge(Exception): ...
 class InvalidMapping(Exception): ...
 class GraphNotBipartite(Exception): ...
 
+@final
+class ColoringStrategy:
+    Degree: Any
+    Saturation: Any
+    IndependentSet: Any
+
 # Cartesian product
 
 def digraph_cartesian_product(
@@ -139,9 +145,17 @@ def graph_katz_centrality(
 # Coloring
 
 def graph_greedy_color(
-    graph: PyGraph, /, preset_color_fn: Callable[[int], int | None] | None = ...
+    graph: PyGraph,
+    /,
+    preset_color_fn: Callable[[int], int | None] | None = ...,
+    strategy: int = ...,
 ) -> dict[int, int]: ...
-def graph_greedy_edge_color(graph: PyGraph, /) -> dict[int, int]: ...
+def graph_greedy_edge_color(
+    graph: PyGraph,
+    /,
+    preset_color_fn: Callable[[int], int | None] | None = ...,
+    strategy: int = ...,
+) -> dict[int, int]: ...
 def graph_is_bipartite(graph: PyGraph) -> bool: ...
 def digraph_is_bipartite(graph: PyDiGraph) -> bool: ...
 def graph_two_color(graph: PyGraph) -> dict[int, int]: ...
@@ -546,6 +560,20 @@ def directed_gnp_random_graph(
 def undirected_gnp_random_graph(
     num_nodes: int,
     probability: float,
+    /,
+    seed: int | None = ...,
+) -> PyGraph: ...
+def directed_sbm_random_graph(
+    sizes: list[int],
+    probabilities: np.ndarray,
+    loops: bool,
+    /,
+    seed: int | None = ...,
+) -> PyDiGraph: ...
+def undirected_sbm_random_graph(
+    sizes: list[int],
+    probabilities: np.ndarray,
+    loops: bool,
     /,
     seed: int | None = ...,
 ) -> PyGraph: ...

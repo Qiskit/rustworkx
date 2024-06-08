@@ -33,6 +33,7 @@ from .rustworkx import JSONSerializationError as JSONSerializationError
 from .rustworkx import FailedToConverge as FailedToConverge
 from .rustworkx import InvalidMapping as InvalidMapping
 from .rustworkx import GraphNotBipartite as GraphNotBipartite
+from .rustworkx import ColoringStrategy as ColoringStrategy
 
 from .rustworkx import digraph_cartesian_product as digraph_cartesian_product
 from .rustworkx import graph_cartesian_product as graph_cartesian_product
@@ -127,6 +128,8 @@ from .rustworkx import directed_gnm_random_graph as directed_gnm_random_graph
 from .rustworkx import undirected_gnm_random_graph as undirected_gnm_random_graph
 from .rustworkx import directed_gnp_random_graph as directed_gnp_random_graph
 from .rustworkx import undirected_gnp_random_graph as undirected_gnp_random_graph
+from .rustworkx import directed_sbm_random_graph as directed_sbm_random_graph
+from .rustworkx import undirected_sbm_random_graph as undirected_sbm_random_graph
 from .rustworkx import random_geometric_graph as random_geometric_graph
 from .rustworkx import hyperbolic_random_graph as hyperbolic_random_graph
 from .rustworkx import barabasi_albert_graph as barabasi_albert_graph
