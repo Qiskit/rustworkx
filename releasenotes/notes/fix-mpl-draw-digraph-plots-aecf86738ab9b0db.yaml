@@ -1,10 +1,29 @@
 ---
 fixes:
   - |
-    Fixes the plots of multigraphs using the `mpl_draw()` function. Refer to
-    `#12345 <https://github.com/Qiskit/rustworkx/issues/774>` for more
-    details.
-other:
+    Fixed the plots of multigraphs using :func:`.mpl_draw`. Previously, parallel edges of 
+    multigraphs were plotted on top of each other, with overlapping arrows and labels. 
+    The radius of parallel edges of the multigraph was fixed to be `0.25` for 
+    `connectionstyle` supporting this argument in :func:`.draw_edges`. The edge lables 
+    were offset to `0.25` in :func:`.draw_edge_labels` to align with their respective 
+    edges. This fix can be tested using the following code: 
+
+        .. jupyter-execute::
+
+            import rustworkx
+            from rustworkx.visualization import mpl_draw
+
+            graph = rustworkx.PyDiGraph()
+            graph.add_node('A')
+            graph.add_node('B')
+            graph.add_node('C')
+
+            graph.add_edge(1, 0, 2)
+            graph.add_edge(0, 1, 3)
+            graph.add_edge(1, 2, 4)
+
+            mpl_draw(graph, with_labels=True, labels=str, edge_labels=str, alpha=0.5)
+
   - |
-     The radius of the edges of self-loops in multigraphs is set to `0.25`. 
-     The edge labels are offset accordingly. 
+    Refer to `#774 <https://github.com/Qiskit/rustworkx/issues/774>` for more
+    details.
