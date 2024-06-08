@@ -1,8 +1,0 @@
-fixes:
-  - |
-    Fix numerical error of hyperbolic distance that lead to not creating edges with close neighbors. Return NaN distance for infinite coordinates.
-  - |
-    Swap `beta` and `r` arguments in rustworkx-core to match rustworkx api.
-upgrade:
-  - |
-    Infer time coordinate from the other provided coordinates.

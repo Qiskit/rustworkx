@@ -12,7 +12,6 @@
 
 #![allow(clippy::float_cmp)]
 
-use core::f64;
 use std::hash::Hash;
 
 use ndarray::ArrayView2;
@@ -868,9 +867,9 @@ fn hyperbolic_distance(x: &[f64], y: &[f64]) -> f64 {
         if x_i.is_infinite() || y_i.is_infinite() || x_i.is_nan() || y_i.is_nan() {
             return f64::NAN;
         }
-        sum_squared_x += x_i * x_i;
-        sum_squared_y += y_i * y_i;
-        inner_product += x_i * y_i;
+        sum_squared_x = x_i.mul_add(x_i.clone(), sum_squared_x);
+        sum_squared_y = y_i.mul_add(y_i.clone(), sum_squared_y);
+        inner_product = x_i.mul_add(y_i.clone(), inner_product);
     }
     let arg = (1. + sum_squared_x).sqrt() * (1. + sum_squared_y).sqrt() - inner_product;
     if arg < 1. {
@@ -1357,7 +1356,7 @@ mod tests {
     #[test]
     fn test_hyperbolic_dist_inf() {
         assert_eq!(
-            hyperbolic_distance(&[f64::INFINITY, 0.], &[1., 0., 0.]).is_nan(),
+            hyperbolic_distance(&[f64::INFINITY, 0.], &[0., 0.]).is_nan(),
             true
         );
     }
