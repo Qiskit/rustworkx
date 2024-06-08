@@ -867,9 +867,9 @@ fn hyperbolic_distance(x: &[f64], y: &[f64]) -> f64 {
         if x_i.is_infinite() || y_i.is_infinite() || x_i.is_nan() || y_i.is_nan() {
             return f64::NAN;
         }
-        sum_squared_x = x_i.mul_add(x_i.clone(), sum_squared_x);
-        sum_squared_y = y_i.mul_add(y_i.clone(), sum_squared_y);
-        inner_product = x_i.mul_add(y_i.clone(), inner_product);
+        sum_squared_x = x_i.mul_add(*x_i, sum_squared_x);
+        sum_squared_y = y_i.mul_add(*y_i, sum_squared_y);
+        inner_product = x_i.mul_add(*y_i, inner_product);
     }
     let arg = (1. + sum_squared_x).sqrt() * (1. + sum_squared_y).sqrt() - inner_product;
     if arg < 1. {
