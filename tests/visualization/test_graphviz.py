@@ -167,6 +167,7 @@ class TestGraphvizDraw(unittest.TestCase):
         }
 
         for escaped_seq, raw_seq in escape_sequences.items():
+
             def node_attr(node):
                 """
                 Define node attributes including escape sequences for labels and tooltips.
@@ -179,4 +180,6 @@ class TestGraphvizDraw(unittest.TestCase):
             dot_str = graph.to_dot(node_attr)
 
             # Assert that the escape sequences are correctly placed and escaped in the dot string
-            self.assertIn(escaped_seq, dot_str, f"Escape sequence {escaped_seq} not found in dot output")
+            self.assertIn(
+                escaped_seq, dot_str, f"Escape sequence {escaped_seq} not found in dot output"
+            )
