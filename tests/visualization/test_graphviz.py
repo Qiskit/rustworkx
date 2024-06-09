@@ -14,7 +14,6 @@ import os
 import subprocess
 import tempfile
 import unittest
-import random
 import rustworkx
 from rustworkx.visualization import graphviz_draw
 
