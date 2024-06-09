@@ -310,13 +310,13 @@ class TestGeometricRandomGraph(unittest.TestCase):
 class TestHyperbolicRandomGraph(unittest.TestCase):
     def test_hyperbolic_random_threshold_empty(self):
         graph = rustworkx.hyperbolic_random_graph(
-            [[math.cosh(0.5), math.sinh(0.5), 0], [math.cosh(1), -math.sinh(1), 0]], 1.0, None
+            [[math.sinh(0.5), 0], [-math.sinh(1), 0]], 1.0, None
         )
         self.assertEqual(graph.num_edges(), 0)
 
     def test_hyperbolic_random_prob_empty(self):
         graph = rustworkx.hyperbolic_random_graph(
-            [[math.cosh(0.5), math.sinh(0.5), 0], [math.cosh(1), -math.sinh(1), 0]],
+            [[math.sinh(0.5), 0], [-math.sinh(1), 0]],
             1.0,
             500.0,
             seed=10,
@@ -325,7 +325,7 @@ class TestHyperbolicRandomGraph(unittest.TestCase):
 
     def test_hyperbolic_random_threshold_complete(self):
         graph = rustworkx.hyperbolic_random_graph(
-            [[math.cosh(0.5), math.sinh(0.5), 0], [math.cosh(1), -math.sinh(1), 0]],
+            [[math.sinh(0.5), 0], [-math.sinh(1), 0]],
             1.55,
             None,
         )
@@ -333,7 +333,7 @@ class TestHyperbolicRandomGraph(unittest.TestCase):
 
     def test_hyperbolic_random_prob_complete(self):
         graph = rustworkx.hyperbolic_random_graph(
-            [[math.cosh(0.5), math.sinh(0.5), 0], [math.cosh(1), -math.sinh(1), 0]],
+            [[math.sinh(0.5), 0], [-math.sinh(1), 0]],
             1.55,
             500.0,
             seed=10,
@@ -346,19 +346,15 @@ class TestHyperbolicRandomGraph(unittest.TestCase):
 
     def test_hyperbolic_random_different_dim_pos(self):
         with self.assertRaises(ValueError):
-            rustworkx.hyperbolic_random_graph([[1, 0, 0], [1, 0, 0, 0]], 1.0, None)
-
-    def test_hyperbolic_random_outofbounds_first_dim(self):
-        with self.assertRaises(ValueError):
-            rustworkx.hyperbolic_random_graph([[1, 0, 0], [0, 0, 0]], 1.0, None)
+            rustworkx.hyperbolic_random_graph([[0, 0], [0, 0, 0]], 1.0, None)
 
     def test_hyperbolic_random_neg_r(self):
         with self.assertRaises(ValueError):
-            rustworkx.hyperbolic_random_graph([[1, 0, 0], [1, 0, 0]], -1.0, None)
+            rustworkx.hyperbolic_random_graph([[0, 0], [0, 0]], -1.0, None)
 
     def test_hyperbolic_random_neg_beta(self):
         with self.assertRaises(ValueError):
-            rustworkx.hyperbolic_random_graph([[1, 0, 0], [1, 0, 0]], 1.0, -1.0)
+            rustworkx.hyperbolic_random_graph([[0, 0], [0, 0]], 1.0, -1.0)
 
 
 class TestRandomSubGraphIsomorphism(unittest.TestCase):
