@@ -45,6 +45,7 @@ use super::InvalidInputError;
 ///     2,
 ///     || {()},
 ///     || {()},
+///     false,
 ///     false
 /// ).unwrap();
 /// let expected_edges = vec![
@@ -321,9 +322,112 @@ mod tests {
 
     #[test]
     fn test_hexagonal_lattice_periodic_error() {
-        match hexagonal_lattice_graph(5, 3, || (), || (), false, false) {
+        match hexagonal_lattice_graph::<petgraph::graph::UnGraph<(), ()>, (), _, _, ()>(
+            5,
+            3,
+            || (),
+            || (),
+            false,
+            true,
+        ) {
             Ok(_) => panic!("Returned a non-error"),
-            Err(e) => assert_eq!(e, InvalidInputError),
+            Err(e) => assert_eq!(e, crate::generators::InvalidInputError),
         }
+    }
+
+    #[test]
+    fn test_hexagonal_lattice_graph_periodic() {
+        let expected_edges = vec![
+            (0, 1),
+            (1, 2),
+            (2, 3),
+            (3, 0),
+            (4, 5),
+            (5, 6),
+            (6, 7),
+            (7, 4),
+            (0, 4),
+            (2, 6),
+            (5, 1),
+            (7, 3),
+        ];
+        let g: petgraph::graph::UnGraph<(), ()> =
+            hexagonal_lattice_graph(2, 2, || (), || (), false, true).unwrap();
+        assert_eq!(g.node_count(), 8);
+        assert_eq!(g.edge_count(), expected_edges.len());
+        assert_eq!(
+            expected_edges,
+            g.edge_references()
+                .map(|edge| (edge.source().index(), edge.target().index()))
+                .collect::<Vec<(usize, usize)>>(),
+        );
+    }
+
+    #[test]
+    fn test_directed_hexagonal_lattice_graph_periodic() {
+        let expected_edges = vec![
+            (0, 1),
+            (1, 2),
+            (2, 3),
+            (3, 0),
+            (4, 5),
+            (5, 6),
+            (6, 7),
+            (7, 4),
+            (0, 4),
+            (2, 6),
+            (5, 1),
+            (7, 3),
+        ];
+        let g: petgraph::graph::DiGraph<(), ()> =
+            hexagonal_lattice_graph(2, 2, || (), || (), false, true).unwrap();
+        assert_eq!(g.node_count(), 8);
+        assert_eq!(g.edge_count(), expected_edges.len());
+        assert_eq!(
+            expected_edges,
+            g.edge_references()
+                .map(|edge| (edge.source().index(), edge.target().index()))
+                .collect::<Vec<(usize, usize)>>(),
+        );
+    }
+
+    #[test]
+    fn test_directed_hexagonal_lattice_graph_bidirectional_periodic() {
+        let expected_edges = vec![
+            (0, 1),
+            (1, 0),
+            (1, 2),
+            (2, 1),
+            (2, 3),
+            (3, 2),
+            (3, 0),
+            (0, 3),
+            (4, 5),
+            (5, 4),
+            (5, 6),
+            (6, 5),
+            (6, 7),
+            (7, 6),
+            (7, 4),
+            (4, 7),
+            (0, 4),
+            (4, 0),
+            (2, 6),
+            (6, 2),
+            (5, 1),
+            (1, 5),
+            (7, 3),
+            (3, 7),
+        ];
+        let g: petgraph::graph::DiGraph<(), ()> =
+            hexagonal_lattice_graph(2, 2, || (), || (), true, true).unwrap();
+        assert_eq!(g.node_count(), 8);
+        assert_eq!(g.edge_count(), expected_edges.len());
+        assert_eq!(
+            expected_edges,
+            g.edge_references()
+                .map(|edge| (edge.source().index(), edge.target().index()))
+                .collect::<Vec<(usize, usize)>>(),
+        );
     }
 }
