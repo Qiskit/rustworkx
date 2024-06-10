@@ -23,8 +23,8 @@ use super::{
 use hashbrown::{HashMap, HashSet};
 
 use petgraph::algo;
-use petgraph::algo::toposort;
 use petgraph::algo::condensation;
+use petgraph::algo::toposort;
 use petgraph::graph::DiGraph;
 use petgraph::stable_graph::NodeIndex;
 use petgraph::unionfind::UnionFind;
@@ -280,11 +280,10 @@ pub fn is_weakly_connected(graph: &digraph::PyDiGraph) -> PyResult<bool> {
 #[pyfunction]
 #[pyo3(text_signature = "(graph, /)")]
 pub fn is_semi_connected(graph: &digraph::PyDiGraph) -> PyResult<bool> {
-
     if graph.graph.node_count() == 0 {
         return Err(NullGraph::new_err("Invalid operation on a NullGraph"));
     }
-    
+
     let mut temp_graph = DiGraph::new();
     let mut node_map = Vec::new();
 
@@ -300,19 +299,19 @@ pub fn is_semi_connected(graph: &digraph::PyDiGraph) -> PyResult<bool> {
     let condensed = condensation(temp_graph, false);
     let condensed_digraph = DiGraph::from(condensed);
 
-    let topo_sort = toposort(&condensed_digraph, None).map_err(|_| PyValueError::new_err("Graph has cycles"))?;
+    let topo_sort = toposort(&condensed_digraph, None)
+        .map_err(|_| PyValueError::new_err("Graph has cycles"))?;
 
-    for window in topo_sort.windows(2){
+    for window in topo_sort.windows(2) {
         let u = window[0];
         let v = window[1];
 
-        if !petgraph::algo::has_path_connecting(&condensed_digraph, u, v, None){
+        if !petgraph::algo::has_path_connecting(&condensed_digraph, u, v, None) {
             return Ok(false);
         }
     }
 
     Ok(true)
-    
 }
 
 /// Return the adjacency matrix for a PyDiGraph object
