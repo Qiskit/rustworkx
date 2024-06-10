@@ -349,6 +349,7 @@ where
 /// use petgraph::graph::{DiGraph, NodeIndex};
 /// use std::convert::Infallible;
 /// use std::error::Error;
+///
 /// let mut graph = DiGraph::new();
 /// let n0 = graph.add_node(0);
 /// let n1 = graph.add_node(0);
@@ -362,12 +363,15 @@ where
 /// graph.add_edge(n2, n3, 1);
 /// graph.add_edge(n3, n4, 0);
 /// graph.add_edge(n3, n5, 1);
+///
 /// let filter_fn = |node_id| -> Result<Option<bool>, Infallible> {
 ///     Ok(Some(*graph.node_weight(node_id).unwrap() > 0))
 /// };
+///
 /// let color_fn = |edge_id| -> Result<Option<usize>, Infallible> {
 ///     Ok(Some(*graph.edge_weight(edge_id).unwrap() as usize))
 /// };
+///
 /// let result = collect_bicolor_runs(&graph, filter_fn, color_fn).unwrap();
 /// let expected: Vec<Vec<NodeIndex>> = vec![vec![n2, n3]];
 /// assert_eq!(result, Some(expected))
