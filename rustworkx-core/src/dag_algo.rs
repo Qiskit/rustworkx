@@ -19,7 +19,7 @@ use hashbrown::HashMap;
 use petgraph::algo;
 use petgraph::data::DataMap;
 use petgraph::visit::{
-    EdgeRef, GraphBase, GraphProp, IntoEdgeReferences, IntoEdgesDirected, IntoNeighborsDirected,
+    EdgeRef, GraphBase, GraphProp, IntoEdgesDirected, IntoNeighborsDirected,
     IntoNodeIdentifiers, NodeCount, Visitable,
 };
 use petgraph::Directed;
@@ -387,7 +387,6 @@ where
     G: IntoNodeIdentifiers // Used in toposort
         + IntoNeighborsDirected // Used in toposort
         + IntoEdgesDirected // Used for .edges_directed
-        + IntoEdgeReferences
         + Visitable // Used in toposort
         + DataMap, // Used for .node_weight
     <G as GraphBase>::NodeId: Eq + Hash,
