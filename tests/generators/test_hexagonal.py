@@ -12,6 +12,7 @@
 
 import unittest
 import rustworkx
+import networkx
 
 
 class TestHexagonalLatticeGraph(unittest.TestCase):
@@ -556,3 +557,17 @@ class TestHexagonalLatticeGraph(unittest.TestCase):
         self.assertEqual(len(graph), 12)
         self.assertEqual(len(graph.edges()), len(expected_edges))
         self.assertEqual(list(graph.edge_list()), expected_edges)
+
+    def test_hexagonal_graph_periodic_networkx_equivalent(self):
+        """Networkx uses different logic to construct a periodic hexagonal
+        lattice graph, so here we check that the results from rustworkx and
+        networkx are isomorphic for a few cases."""
+        for nRows in range(2, 8):
+            for nCols in range(2, 8, 2):
+                graph = rustworkx.generators.hexagonal_lattice_graph(nRows, nCols, periodic=True)
+
+                nx_graph = rustworkx.networkx_converter(
+                    networkx.hexagonal_lattice_graph(nRows, nCols, periodic=True)
+                )
+
+                self.assertTrue(rustworkx.is_isomorphic(graph, nx_graph))
