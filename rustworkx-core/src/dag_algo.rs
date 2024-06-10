@@ -19,8 +19,8 @@ use hashbrown::HashMap;
 use petgraph::algo;
 use petgraph::data::DataMap;
 use petgraph::visit::{
-    EdgeRef, GraphBase, GraphProp, IntoEdgesDirected, IntoNeighborsDirected,
-    IntoNodeIdentifiers, NodeCount, Visitable,
+    EdgeRef, GraphBase, GraphProp, IntoEdgesDirected, IntoNeighborsDirected, IntoNodeIdentifiers,
+    NodeCount, Visitable,
 };
 use petgraph::Directed;
 
