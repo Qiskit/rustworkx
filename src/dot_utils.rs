@@ -90,7 +90,7 @@ fn attr_map_to_string<'a>(
             if key == "label" {
                 format!("{}=\"{}\"", key, escaped_value)
             } else {
-                format!("{}={}", key, escaped_value)
+                format!("{}=\"{}\"", key, escaped_value)
             }
         })
         .collect::<Vec<String>>()
