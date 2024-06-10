@@ -751,14 +751,14 @@ where
 /// that decreases as their hyperbolic distance increases.
 ///
 /// The number of nodes and the dimension are inferred from the coordinates `pos` of the
-/// hyperboloid model (at least 3-dimensional). If `beta` is `None`, all pairs of nodes
-/// with a distance smaller than ``r`` are connected.
+/// hyperboloid model. The "time" coordinates are inferred from the others, meaning that
+/// at least 2 coordinates must be provided per node. If `beta` is `None`, all pairs of
+/// nodes with a distance smaller than ``r`` are connected.
 ///
 /// Arguments:
 ///
 /// * `pos` - Hyperboloid model coordinates of the nodes `[p_1, p_2, ...]` where `p_i` is the
-///     position of node i. The first dimension corresponds to the negative term in the metric
-///     and so for each node i, `p_i[0]` must be at least 1.
+///     position of node i. The "time" coordinates are inferred.
 /// * `beta` - Sigmoid sharpness (nonnegative) of the connection probability.
 /// * `r` - Distance at which the connection probability is 0.5 for the probabilistic model.
 ///     Threshold when `beta` is `None`.
@@ -774,11 +774,11 @@ where
 /// use rustworkx_core::generators::hyperbolic_random_graph;
 ///
 /// let g: petgraph::graph::UnGraph<(), ()> = hyperbolic_random_graph(
-///     &[vec![1_f64.cosh(), 3_f64.sinh(), 0.],
-///       vec![0.5_f64.cosh(), -0.5_f64.sinh(), 0.],
-///       vec![1_f64.cosh(), -1_f64.sinh(), 0.]],
-///     None,
+///     &[vec![3_f64.sinh(), 0.],
+///       vec![-0.5_f64.sinh(), 0.],
+///       vec![-1_f64.sinh(), 0.]],
 ///     2.,
+///     None,
 ///     None,
 ///     || {()},
 ///     || {()},
@@ -788,8 +788,8 @@ where
 /// ```
 pub fn hyperbolic_random_graph<G, T, F, H, M>(
     pos: &[Vec<f64>],
-    beta: Option<f64>,
     r: f64,
+    beta: Option<f64>,
     seed: Option<u64>,
     mut default_node_weight: F,
     mut default_edge_weight: H,
@@ -804,11 +804,14 @@ where
     if num_nodes == 0 {
         return Err(InvalidInputError {});
     }
-    if pos.iter().any(|xs| xs.iter().any(|x| x.is_nan())) {
+    if pos
+        .iter()
+        .any(|xs| xs.iter().any(|x| x.is_nan() || x.is_infinite()))
+    {
         return Err(InvalidInputError {});
     }
     let dim = pos[0].len();
-    if dim < 3 || pos.iter().any(|x| x.len() != dim || x[0] < 1.) {
+    if dim < 2 || pos.iter().any(|x| x.len() != dim) {
         return Err(InvalidInputError {});
     }
     if beta.is_some_and(|b| b < 0. || b.is_nan()) {
@@ -856,17 +859,23 @@ where
 }
 
 #[inline]
-fn hyperbolic_distance(p1: &[f64], p2: &[f64]) -> f64 {
-    if p1.iter().chain(p2.iter()).any(|x| x.is_infinite()) {
-        f64::INFINITY
+fn hyperbolic_distance(x: &[f64], y: &[f64]) -> f64 {
+    let mut sum_squared_x = 0.;
+    let mut sum_squared_y = 0.;
+    let mut inner_product = 0.;
+    for (x_i, y_i) in x.iter().zip(y.iter()) {
+        if x_i.is_infinite() || y_i.is_infinite() || x_i.is_nan() || y_i.is_nan() {
+            return f64::NAN;
+        }
+        sum_squared_x = x_i.mul_add(*x_i, sum_squared_x);
+        sum_squared_y = y_i.mul_add(*y_i, sum_squared_y);
+        inner_product = x_i.mul_add(*y_i, inner_product);
+    }
+    let arg = (1. + sum_squared_x).sqrt() * (1. + sum_squared_y).sqrt() - inner_product;
+    if arg < 1. {
+        0.
     } else {
-        (p1[0] * p2[0]
-            - p1.iter()
-                .skip(1)
-                .zip(p2.iter().skip(1))
-                .map(|(&x, &y)| x * y)
-                .sum::<f64>())
-        .acosh()
+        arg.acosh()
     }
 }
 
@@ -1340,18 +1349,15 @@ mod tests {
     #[test]
     fn test_hyperbolic_dist() {
         assert_eq!(
-            hyperbolic_distance(
-                &[3_f64.cosh(), 3_f64.sinh(), 0.],
-                &[0.5_f64.cosh(), -0.5_f64.sinh(), 0.]
-            ),
+            hyperbolic_distance(&[3_f64.sinh(), 0.], &[-0.5_f64.sinh(), 0.]),
             3.5
         );
     }
     #[test]
     fn test_hyperbolic_dist_inf() {
         assert_eq!(
-            hyperbolic_distance(&[f64::INFINITY, f64::INFINITY, 0.], &[1., 0., 0.]),
-            f64::INFINITY
+            hyperbolic_distance(&[f64::INFINITY, 0.], &[0., 0.]).is_nan(),
+            true
         );
     }
 
@@ -1359,13 +1365,13 @@ mod tests {
     fn test_hyperbolic_random_graph_seeded() {
         let g = hyperbolic_random_graph::<petgraph::graph::UnGraph<(), ()>, _, _, _, _>(
             &[
-                vec![3_f64.cosh(), 3_f64.sinh(), 0.],
-                vec![0.5_f64.cosh(), -0.5_f64.sinh(), 0.],
-                vec![0.5_f64.cosh(), 0.5_f64.sinh(), 0.],
-                vec![1., 0., 0.],
+                vec![3_f64.sinh(), 0.],
+                vec![-0.5_f64.sinh(), 0.],
+                vec![0.5_f64.sinh(), 0.],
+                vec![0., 0.],
             ],
-            Some(10000.),
             0.75,
+            Some(10000.),
             Some(10),
             || (),
             || (),
@@ -1379,12 +1385,12 @@ mod tests {
     fn test_hyperbolic_random_graph_threshold() {
         let g = hyperbolic_random_graph::<petgraph::graph::UnGraph<(), ()>, _, _, _, _>(
             &[
-                vec![1_f64.cosh(), 3_f64.sinh(), 0.],
-                vec![0.5_f64.cosh(), -0.5_f64.sinh(), 0.],
-                vec![1_f64.cosh(), -1_f64.sinh(), 0.],
+                vec![3_f64.sinh(), 0.],
+                vec![-0.5_f64.sinh(), 0.],
+                vec![-1_f64.sinh(), 0.],
             ],
-            None,
             1.,
+            None,
             None,
             || (),
             || (),
@@ -1397,24 +1403,9 @@ mod tests {
     #[test]
     fn test_hyperbolic_random_graph_invalid_dim_error() {
         match hyperbolic_random_graph::<petgraph::graph::UnGraph<(), ()>, _, _, _, _>(
-            &[vec![1., 0.]],
-            None,
+            &[vec![0.]],
             1.,
             None,
-            || (),
-            || (),
-        ) {
-            Ok(_) => panic!("Returned a non-error"),
-            Err(e) => assert_eq!(e, InvalidInputError),
-        }
-    }
-
-    #[test]
-    fn test_hyperbolic_random_graph_invalid_first_coord_error() {
-        match hyperbolic_random_graph::<petgraph::graph::UnGraph<(), ()>, _, _, _, _>(
-            &[vec![0., 0., 0.]],
-            None,
-            1.,
             None,
             || (),
             || (),
@@ -1427,9 +1418,9 @@ mod tests {
     #[test]
     fn test_hyperbolic_random_graph_neg_r_error() {
         match hyperbolic_random_graph::<petgraph::graph::UnGraph<(), ()>, _, _, _, _>(
-            &[vec![1., 0., 0.], vec![1., 0., 0.]],
-            None,
+            &[vec![0., 0.], vec![0., 0.]],
             -1.,
+            None,
             None,
             || (),
             || (),
@@ -1442,9 +1433,9 @@ mod tests {
     #[test]
     fn test_hyperbolic_random_graph_neg_beta_error() {
         match hyperbolic_random_graph::<petgraph::graph::UnGraph<(), ()>, _, _, _, _>(
-            &[vec![1., 0., 0.], vec![1., 0., 0.]],
-            Some(-1.),
+            &[vec![0., 0.], vec![0., 0.]],
             1.,
+            Some(-1.),
             None,
             || (),
             || (),
@@ -1457,9 +1448,9 @@ mod tests {
     #[test]
     fn test_hyperbolic_random_graph_diff_dims_error() {
         match hyperbolic_random_graph::<petgraph::graph::UnGraph<(), ()>, _, _, _, _>(
-            &[vec![1., 0., 0.], vec![1., 0., 0., 0.]],
-            None,
+            &[vec![0., 0.], vec![0., 0., 0.]],
             1.,
+            None,
             None,
             || (),
             || (),
@@ -1473,8 +1464,8 @@ mod tests {
     fn test_hyperbolic_random_graph_empty_error() {
         match hyperbolic_random_graph::<petgraph::graph::UnGraph<(), ()>, _, _, _, _>(
             &[],
-            None,
             1.,
+            None,
             None,
             || (),
             || (),
@@ -1487,9 +1478,9 @@ mod tests {
     #[test]
     fn test_hyperbolic_random_graph_directed_error() {
         match hyperbolic_random_graph::<petgraph::graph::DiGraph<(), ()>, _, _, _, _>(
-            &[vec![1., 0., 0.], vec![1., 0., 0.]],
-            None,
+            &[vec![0., 0.], vec![0., 0.]],
             1.,
+            None,
             None,
             || (),
             || (),
