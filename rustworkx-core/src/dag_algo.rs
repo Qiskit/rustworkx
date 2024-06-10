@@ -377,6 +377,16 @@ where
             ))));
         }
     }
+    // Check that the nodes exist within the graph
+    let node_ids: HashSet<G::NodeId> = graph.node_identifiers().collect();
+    for node in cur_layer.iter() {
+        if !node_ids.contains(node) {
+            panic!(
+                "An index input in 'first_layer' {:?} is not a valid node index in the graph",
+                node
+            );
+        }
+    }
     Ok(LayersIter::new(graph, cur_layer))
 }
 
@@ -385,7 +395,6 @@ pub struct LayersIter<G, N> {
     graph: G,
     cur_layer: Vec<N>,
     next_layer: Vec<N>,
-    node_collect: HashSet<N>,
     predecessor_count: HashMap<N, usize>,
     first_iter: bool,
 }
@@ -396,7 +405,6 @@ where
         + NodeCount // Used in find_cycle
         + EdgeCount // Used in find_cycle
         + Visitable // Used in find_cycle
-        + IntoNodeIdentifiers // Used for .node_identifiers
         + IntoNeighborsDirected // Used for .neighbors_directed
         + IntoEdgesDirected // Used for .edged_directed
         + GraphBase<NodeId = N>,
@@ -407,7 +415,6 @@ where
             graph,
             cur_layer: first_layer,
             next_layer: vec![],
-            node_collect: graph.node_identifiers().collect(),
             predecessor_count: HashMap::new(),
             first_iter: true,
         }
@@ -435,12 +442,6 @@ where
             None
         } else {
             for node in &self.cur_layer {
-                if !self.node_collect.contains(node) {
-                    panic!(
-                        "An index input in 'first_layer' {:?} is not a valid node index in the graph",
-                        node
-                    );
-                }
                 let children = self
                     .graph
                     .neighbors_directed(*node, petgraph::Direction::Outgoing);
