@@ -415,3 +415,144 @@ class TestHexagonalLatticeGraph(unittest.TestCase):
         graph = rustworkx.generators.hexagonal_lattice_graph(0, 0)
         self.assertEqual(len(graph), 0)
         self.assertEqual(len(graph.edges()), 0)
+
+    def test_hexagonal_graph_periodic_subgraphs(self):
+        """Check that hexagonal subgraphs of the lattice are isomorphic
+        to C6 (idea copied from the networkx test suite)."""
+        graph = rustworkx.generators.hexagonal_lattice_graph(2, 4, periodic=True)
+        hexagons = [[0, 1, 2, 6, 5, 4], [2, 3, 0, 4, 7, 6], [5, 6, 7, 11, 10, 9]]
+        C6 = rustworkx.generators.cycle_graph(6)
+        for h in hexagons:
+            self.assertTrue(rustworkx.is_isomorphic(graph.subgraph(h), C6))
+
+        # For a periodic graph with two columns, subgraphs are not necessarily
+        # isomorphic to C6 because of the boundary connections.
+        graph2cols = rustworkx.generators.hexagonal_lattice_graph(2, 2, periodic=True)
+        subGraph = graph2cols.subgraph(hexagons[0])
+        self.assertFalse(rustworkx.is_isomorphic(subGraph, C6))
+        self.assertEqual(len(subGraph.edges()), 7)
+
+    def test_hexagonal_graph_periodic_degree(self):
+        """In a periodic hexagonal lattice, all nodes must have
+        degree 3 (idea copied from the networkx test suite)."""
+        for nRows in range(2, 8):
+            for nCols in range(2, 8, 2):
+                graph = rustworkx.generators.hexagonal_lattice_graph(nRows, nCols, periodic=True)
+                for n in range(graph.num_nodes()):
+                    self.assertEqual(graph.degree(n), 3)
+
+    def test_hexagonal_graph_periodic_3_4(self):
+        graph = rustworkx.generators.hexagonal_lattice_graph(3, 4, periodic=True)
+        expected_edges = [
+            (0, 1),
+            (1, 2),
+            (2, 3),
+            (3, 4),
+            (4, 5),
+            (5, 0),
+            (6, 7),
+            (7, 8),
+            (8, 9),
+            (9, 10),
+            (10, 11),
+            (11, 6),
+            (12, 13),
+            (13, 14),
+            (14, 15),
+            (15, 16),
+            (16, 17),
+            (17, 12),
+            (18, 19),
+            (19, 20),
+            (20, 21),
+            (21, 22),
+            (22, 23),
+            (23, 18),
+            (0, 6),
+            (2, 8),
+            (4, 10),
+            (7, 13),
+            (9, 15),
+            (11, 17),
+            (12, 18),
+            (14, 20),
+            (16, 22),
+            (19, 1),
+            (21, 3),
+            (23, 5),
+        ]
+        self.assertEqual(len(graph), 24)
+        self.assertEqual(len(graph.edges()), len(expected_edges))
+        self.assertEqual(list(graph.edge_list()), expected_edges)
+
+    def test_directed_hexagonal_graph_periodic_3_2(self):
+        graph = rustworkx.generators.directed_hexagonal_lattice_graph(3, 2, periodic=True)
+        expected_edges = [
+            (0, 1),
+            (1, 2),
+            (2, 3),
+            (3, 4),
+            (4, 5),
+            (5, 0),
+            (6, 7),
+            (7, 8),
+            (8, 9),
+            (9, 10),
+            (10, 11),
+            (11, 6),
+            (0, 6),
+            (2, 8),
+            (4, 10),
+            (7, 1),
+            (9, 3),
+            (11, 5),
+        ]
+        self.assertEqual(len(graph), 12)
+        self.assertEqual(len(graph.edges()), len(expected_edges))
+        self.assertEqual(list(graph.edge_list()), expected_edges)
+
+    def test_directed_hexagonal_graph_bidirectional_periodic_3_2(self):
+        graph = rustworkx.generators.directed_hexagonal_lattice_graph(
+            3, 2, bidirectional=True, periodic=True
+        )
+        expected_edges = [
+            (0, 1),
+            (1, 0),
+            (1, 2),
+            (2, 1),
+            (2, 3),
+            (3, 2),
+            (3, 4),
+            (4, 3),
+            (4, 5),
+            (5, 4),
+            (5, 0),
+            (0, 5),
+            (6, 7),
+            (7, 6),
+            (7, 8),
+            (8, 7),
+            (8, 9),
+            (9, 8),
+            (9, 10),
+            (10, 9),
+            (10, 11),
+            (11, 10),
+            (11, 6),
+            (6, 11),
+            (0, 6),
+            (6, 0),
+            (2, 8),
+            (8, 2),
+            (4, 10),
+            (10, 4),
+            (7, 1),
+            (1, 7),
+            (9, 3),
+            (3, 9),
+            (11, 5),
+            (5, 11),
+        ]
+        self.assertEqual(len(graph), 12)
+        self.assertEqual(len(graph.edges()), len(expected_edges))
+        self.assertEqual(list(graph.edge_list()), expected_edges)
