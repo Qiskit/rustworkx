@@ -10,7 +10,6 @@ fixes:
 
                 graphviz_draw(
                     rx.generators.path_graph(2),
-                    filename="graph.svg",
                     image_type="svg",
                     node_attr_fn=lambda x: {"label": "the\nlabel", "tooltip": "the\ntooltip"},
                 )
