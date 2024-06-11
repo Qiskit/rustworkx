@@ -85,9 +85,13 @@ fn attr_map_to_string<'a>(
     let attr_string = attrs
         .iter()
         .map(|(key, value)| {
-            let escaped_value = serde_json::to_string(value)?;
-            let escaped_value = &escaped_value.get(1..escaped_value.len() - 1)?;
-            format!("{}=\"{}\"", key, escaped_value)
+            let escaped_value = serde_json::to_string(value).map_err(|_err| {
+                pyo3::exceptions::PyValueError::new_err("could not escape character")
+            })?;
+            let escaped_value = &escaped_value.get(1..escaped_value.len() - 1).ok_or(
+                pyo3::exceptions::PyValueError::new_err("could not escape character"),
+            )?;
+            Ok(format!("{}=\"{}\"", key, escaped_value))
         })
         .collect::<PyResult<Vec<String>>>()?
         .join(", ");
