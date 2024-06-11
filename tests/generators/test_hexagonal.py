@@ -484,7 +484,7 @@ class TestHexagonalLatticeGraph(unittest.TestCase):
         ]
         self.assertEqual(len(graph), 24)
         self.assertEqual(len(graph.edges()), len(expected_edges))
-        self.assertEqual(list(graph.edge_list()), expected_edges)
+        self.assertEqual(set(graph.edge_list()), set(expected_edges))
 
     def test_directed_hexagonal_graph_periodic_3_2(self):
         graph = rustworkx.generators.directed_hexagonal_lattice_graph(3, 2, periodic=True)
@@ -510,7 +510,7 @@ class TestHexagonalLatticeGraph(unittest.TestCase):
         ]
         self.assertEqual(len(graph), 12)
         self.assertEqual(len(graph.edges()), len(expected_edges))
-        self.assertEqual(list(graph.edge_list()), expected_edges)
+        self.assertEqual(set(graph.edge_list()), set(expected_edges))
 
     def test_directed_hexagonal_graph_bidirectional_periodic_3_2(self):
         graph = rustworkx.generators.directed_hexagonal_lattice_graph(
@@ -556,7 +556,7 @@ class TestHexagonalLatticeGraph(unittest.TestCase):
         ]
         self.assertEqual(len(graph), 12)
         self.assertEqual(len(graph.edges()), len(expected_edges))
-        self.assertEqual(list(graph.edge_list()), expected_edges)
+        self.assertEqual(set(graph.edge_list()), set(expected_edges))
 
     def test_hexagonal_graph_periodic_networkx_equivalent(self):
         """Networkx uses different logic to construct a periodic hexagonal
@@ -571,3 +571,7 @@ class TestHexagonalLatticeGraph(unittest.TestCase):
                 )
 
                 self.assertTrue(rustworkx.is_isomorphic(graph, nx_graph))
+
+    def test_hexagonal_graph_periodic_odd_columns(self):
+        with self.assertRaises(ValueError):
+            rustworkx.generators.hexagonal_lattice_graph(4, 5, periodic=True)

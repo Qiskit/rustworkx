@@ -98,22 +98,17 @@ where
         return Err(InvalidInputError {});
     }
 
-    // Number of nodes in each vertical chain
-    let rowlen = if periodic {
-        2 * rows
+    // rowlen: number of nodes in each vertical chain
+    // collen: number of vertical chains
+    let (rowlen, collen, num_nodes) = if periodic {
+        let r_len = 2 * rows;
+        (r_len, cols, r_len * cols)
     } else {
-        // Note: in the non-periodic case the first and
-        // last vertical chains have (2 * rows + 1) nodes
-        2 * rows + 2
-    };
-
-    // Number of vertical chains
-    let collen = if periodic { cols } else { cols + 1 };
-
-    let num_nodes = if periodic {
-        rowlen * collen
-    } else {
-        rowlen * collen - 2
+        // Note: in the non-periodic case the first and last
+        // vertical chains have (2 * rows + 1) nodes. All
+        // others have (2 * rows + 2) nodes.
+        let r_len = 2 * rows + 2;
+        (r_len, cols + 1, r_len * (cols + 1) - 2)
     };
 
     let mut graph = G::with_capacity(num_nodes, num_nodes);
@@ -187,6 +182,48 @@ mod tests {
     use crate::generators::hexagonal_lattice_graph;
     use crate::petgraph;
     use crate::petgraph::visit::EdgeRef;
+    use std::collections::HashSet;
+
+    fn check_expected_edges_directed(
+        graph: &petgraph::graph::DiGraph<(), ()>,
+        expected_edges: &Vec<(usize, usize)>,
+    ) {
+        assert_eq!(graph.edge_count(), expected_edges.len());
+
+        let edge_set: HashSet<(usize, usize)> = graph
+            .edge_references()
+            .map(|edge| (edge.source().index(), edge.target().index()))
+            .collect();
+        let expected_set: HashSet<(usize, usize)> = expected_edges.iter().map(|&e| e).collect();
+        assert_eq!(edge_set, expected_set);
+    }
+
+    fn check_expected_edges_undirected(
+        graph: &petgraph::graph::UnGraph<(), ()>,
+        expected_edges: &Vec<(usize, usize)>,
+    ) {
+        assert_eq!(graph.edge_count(), expected_edges.len());
+
+        let sorted_pair = |(a, b)| {
+            if a > b {
+                (b, a)
+            } else {
+                (a, b)
+            }
+        };
+
+        let edge_set: HashSet<(usize, usize)> = graph
+            .edge_references()
+            .map(|edge| (edge.source().index(), edge.target().index()))
+            .map(|e| sorted_pair(e))
+            .collect();
+        let expected_set: HashSet<(usize, usize)> = expected_edges
+            .iter()
+            .map(|&e| e)
+            .map(|e| sorted_pair(e))
+            .collect();
+        assert_eq!(edge_set, expected_set);
+    }
 
     #[test]
     fn test_hexagonal_lattice_graph() {
@@ -214,13 +251,7 @@ mod tests {
         let g: petgraph::graph::UnGraph<(), ()> =
             hexagonal_lattice_graph(2, 2, || (), || (), false, false).unwrap();
         assert_eq!(g.node_count(), 16);
-        assert_eq!(g.edge_count(), expected_edges.len());
-        assert_eq!(
-            expected_edges,
-            g.edge_references()
-                .map(|edge| (edge.source().index(), edge.target().index()))
-                .collect::<Vec<(usize, usize)>>(),
-        );
+        check_expected_edges_undirected(&g, &expected_edges);
     }
 
     #[test]
@@ -249,13 +280,7 @@ mod tests {
         let g: petgraph::graph::DiGraph<(), ()> =
             hexagonal_lattice_graph(2, 2, || (), || (), false, false).unwrap();
         assert_eq!(g.node_count(), 16);
-        assert_eq!(g.edge_count(), expected_edges.len());
-        assert_eq!(
-            expected_edges,
-            g.edge_references()
-                .map(|edge| (edge.source().index(), edge.target().index()))
-                .collect::<Vec<(usize, usize)>>(),
-        );
+        check_expected_edges_directed(&g, &expected_edges);
     }
 
     #[test]
@@ -303,13 +328,7 @@ mod tests {
         let g: petgraph::graph::DiGraph<(), ()> =
             hexagonal_lattice_graph(2, 2, || (), || (), true, false).unwrap();
         assert_eq!(g.node_count(), 16);
-        assert_eq!(g.edge_count(), expected_edges.len());
-        assert_eq!(
-            expected_edges,
-            g.edge_references()
-                .map(|edge| (edge.source().index(), edge.target().index()))
-                .collect::<Vec<(usize, usize)>>(),
-        );
+        check_expected_edges_directed(&g, &expected_edges);
     }
 
     #[test]
@@ -354,13 +373,7 @@ mod tests {
         let g: petgraph::graph::UnGraph<(), ()> =
             hexagonal_lattice_graph(2, 2, || (), || (), false, true).unwrap();
         assert_eq!(g.node_count(), 8);
-        assert_eq!(g.edge_count(), expected_edges.len());
-        assert_eq!(
-            expected_edges,
-            g.edge_references()
-                .map(|edge| (edge.source().index(), edge.target().index()))
-                .collect::<Vec<(usize, usize)>>(),
-        );
+        check_expected_edges_undirected(&g, &expected_edges);
     }
 
     #[test]
@@ -382,13 +395,7 @@ mod tests {
         let g: petgraph::graph::DiGraph<(), ()> =
             hexagonal_lattice_graph(2, 2, || (), || (), false, true).unwrap();
         assert_eq!(g.node_count(), 8);
-        assert_eq!(g.edge_count(), expected_edges.len());
-        assert_eq!(
-            expected_edges,
-            g.edge_references()
-                .map(|edge| (edge.source().index(), edge.target().index()))
-                .collect::<Vec<(usize, usize)>>(),
-        );
+        check_expected_edges_directed(&g, &expected_edges);
     }
 
     #[test]
@@ -422,12 +429,6 @@ mod tests {
         let g: petgraph::graph::DiGraph<(), ()> =
             hexagonal_lattice_graph(2, 2, || (), || (), true, true).unwrap();
         assert_eq!(g.node_count(), 8);
-        assert_eq!(g.edge_count(), expected_edges.len());
-        assert_eq!(
-            expected_edges,
-            g.edge_references()
-                .map(|edge| (edge.source().index(), edge.target().index()))
-                .collect::<Vec<(usize, usize)>>(),
-        );
+        check_expected_edges_directed(&g, &expected_edges);
     }
 }
