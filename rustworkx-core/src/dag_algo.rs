@@ -17,6 +17,7 @@ use std::hash::Hash;
 use hashbrown::HashMap;
 
 use petgraph::algo;
+use petgraph::data::DataMap;
 use petgraph::visit::{
     EdgeRef, GraphBase, GraphProp, IntoEdgesDirected, IntoNeighborsDirected, IntoNodeIdentifiers,
     NodeCount, Visitable,
@@ -313,6 +314,168 @@ where
     Ok(Some((path, path_weight)))
 }
 
+/// Collect runs that match a filter function given edge colors.
+///
+/// A bicolor run is a list of groups of nodes connected by edges of exactly
+/// two colors. In addition, all nodes in the group must match the given
+/// condition. Each node in the graph can appear in only a single group
+/// in the bicolor run.
+///
+/// # Arguments:
+///
+/// * `dag`: The DAG to find bicolor runs in
+/// * `filter_fn`: The filter function to use for matching nodes. It takes
+///     in one argument, the node data payload/weight object, and will return a
+///     boolean whether the node matches the conditions or not.
+///     If it returns ``true``, it will continue the bicolor chain.
+///     If it returns ``false``, it will stop the bicolor chain.
+///     If it returns ``None`` it will skip that node.
+/// * `color_fn`: The function that gives the color of the edge. It takes
+///     in one argument, the edge data payload/weight object, and will
+///     return a non-negative integer, the edge color. If the color is None,
+///     the edge is ignored.
+///
+/// # Returns:
+///
+/// * `Vec<Vec<G::NodeId>>`: a list of groups with exactly two edge colors, where each group
+///     is a list of node data payload/weight for the nodes in the bicolor run
+/// * `None` if a cycle is found in the graph
+/// * Raises an error if found computing the bicolor runs
+///
+/// # Example:
+///
+/// ```rust
+/// use rustworkx_core::dag_algo::collect_bicolor_runs;
+/// use petgraph::graph::{DiGraph, NodeIndex};
+/// use std::convert::Infallible;
+/// use std::error::Error;
+///
+/// let mut graph = DiGraph::new();
+/// let n0 = graph.add_node(0);
+/// let n1 = graph.add_node(0);
+/// let n2 = graph.add_node(1);
+/// let n3 = graph.add_node(1);
+/// let n4 = graph.add_node(0);
+/// let n5 = graph.add_node(0);
+/// graph.add_edge(n0, n2, 0);
+/// graph.add_edge(n1, n2, 1);
+/// graph.add_edge(n2, n3, 0);
+/// graph.add_edge(n2, n3, 1);
+/// graph.add_edge(n3, n4, 0);
+/// graph.add_edge(n3, n5, 1);
+///
+/// let filter_fn = |node_id| -> Result<Option<bool>, Infallible> {
+///     Ok(Some(*graph.node_weight(node_id).unwrap() > 0))
+/// };
+///
+/// let color_fn = |edge_id| -> Result<Option<usize>, Infallible> {
+///     Ok(Some(*graph.edge_weight(edge_id).unwrap() as usize))
+/// };
+///
+/// let result = collect_bicolor_runs(&graph, filter_fn, color_fn).unwrap();
+/// let expected: Vec<Vec<NodeIndex>> = vec![vec![n2, n3]];
+/// assert_eq!(result, Some(expected))
+/// ```
+pub fn collect_bicolor_runs<G, F, C, E>(
+    graph: G,
+    filter_fn: F,
+    color_fn: C,
+) -> Result<Option<Vec<Vec<G::NodeId>>>, E>
+where
+    F: Fn(<G as GraphBase>::NodeId) -> Result<Option<bool>, E>,
+    C: Fn(<G as GraphBase>::EdgeId) -> Result<Option<usize>, E>,
+    G: IntoNodeIdentifiers // Used in toposort
+        + IntoNeighborsDirected // Used in toposort
+        + IntoEdgesDirected // Used for .edges_directed
+        + Visitable // Used in toposort
+        + DataMap, // Used for .node_weight
+    <G as GraphBase>::NodeId: Eq + Hash,
+    <G as GraphBase>::EdgeId: Eq + Hash,
+{
+    let mut pending_list: Vec<Vec<G::NodeId>> = Vec::new();
+    let mut block_id: Vec<Option<usize>> = Vec::new();
+    let mut block_list: Vec<Vec<G::NodeId>> = Vec::new();
+
+    let nodes = match algo::toposort(graph, None) {
+        Ok(nodes) => nodes,
+        Err(_) => return Ok(None), // Return None if the graph contains a cycle
+    };
+
+    // Utility for ensuring pending_list has the color index
+    macro_rules! ensure_vector_has_index {
+        ($pending_list: expr, $block_id: expr, $color: expr) => {
+            if $color >= $pending_list.len() {
+                $pending_list.resize($color + 1, Vec::new());
+                $block_id.resize($color + 1, None);
+            }
+        };
+    }
+
+    for node in nodes {
+        if let Some(is_match) = filter_fn(node)? {
+            let raw_edges = graph.edges_directed(node, petgraph::Direction::Outgoing);
+
+            // Remove all edges that yield errors from color_fn
+            let colors = raw_edges
+                .map(|edge| color_fn(edge.id()))
+                .collect::<Result<Vec<Option<usize>>, _>>()?;
+
+            // Remove null edges from color_fn
+            let colors = colors.into_iter().flatten().collect::<Vec<usize>>();
+
+            if colors.len() <= 2 && is_match {
+                if colors.len() == 1 {
+                    let c0 = colors[0];
+                    ensure_vector_has_index!(pending_list, block_id, c0);
+                    if let Some(c0_block_id) = block_id[c0] {
+                        block_list[c0_block_id].push(node);
+                    } else {
+                        pending_list[c0].push(node);
+                    }
+                } else if colors.len() == 2 {
+                    let c0 = colors[0];
+                    let c1 = colors[1];
+                    ensure_vector_has_index!(pending_list, block_id, c0);
+                    ensure_vector_has_index!(pending_list, block_id, c1);
+
+                    if block_id[c0].is_some()
+                        && block_id[c1].is_some()
+                        && block_id[c0] == block_id[c1]
+                    {
+                        block_list[block_id[c0].unwrap_or_default()].push(node);
+                    } else {
+                        let mut new_block: Vec<G::NodeId> =
+                            Vec::with_capacity(pending_list[c0].len() + pending_list[c1].len() + 1);
+
+                        // Clears pending lits and add to new block
+                        new_block.append(&mut pending_list[c0]);
+                        new_block.append(&mut pending_list[c1]);
+
+                        new_block.push(node);
+
+                        // Create new block, assign its id to color pair
+                        block_id[c0] = Some(block_list.len());
+                        block_id[c1] = Some(block_list.len());
+                        block_list.push(new_block);
+                    }
+                }
+            } else {
+                for color in colors {
+                    ensure_vector_has_index!(pending_list, block_id, color);
+                    if let Some(color_block_id) = block_id[color] {
+                        block_list[color_block_id].append(&mut pending_list[color]);
+                    }
+                    block_id[color] = None;
+                    pending_list[color].clear();
+                }
+            }
+        }
+    }
+
+    Ok(Some(block_list))
+}
+
+// Tests for longest_path
 #[cfg(test)]
 mod test_longest_path {
     use super::*;
@@ -421,13 +584,7 @@ mod test_longest_path {
     }
 }
 
-// pub fn lexicographical_topological_sort<G, F, E>(
-//     dag: G,
-//     mut key: F,
-//     reverse: bool,
-//     initial: Option<&[G::NodeId]>,
-// ) -> Result<Option<Vec<G::NodeId>>, E>
-
+// Tests for lexicographical_topological_sort
 #[cfg(test)]
 mod test_lexicographical_topological_sort {
     use super::*;
@@ -597,5 +754,221 @@ mod test_lexicographical_topological_sort {
         let initial = [nodes[7]];
         let result = lexicographical_topological_sort(&graph, sort_fn, false, Some(&initial));
         assert_eq!(result, Ok(Some(vec![nodes[7]])));
+    }
+}
+
+// Tests for collect_bicolor_runs
+#[cfg(test)]
+mod test_collect_bicolor_runs {
+
+    use super::*;
+    use petgraph::graph::{DiGraph, EdgeIndex, NodeIndex};
+    use std::error::Error;
+
+    #[test]
+    fn test_cycle() {
+        let mut graph = DiGraph::new();
+        let n0 = graph.add_node(0);
+        let n1 = graph.add_node(0);
+        let n2 = graph.add_node(0);
+        graph.add_edge(n0, n1, 1);
+        graph.add_edge(n1, n2, 1);
+        graph.add_edge(n2, n0, 1);
+
+        let test_filter_fn =
+            |_node_id: NodeIndex| -> Result<Option<bool>, Box<dyn Error>> { Ok(Some(true)) };
+        let test_color_fn =
+            |_edge_id: EdgeIndex| -> Result<Option<usize>, Box<dyn Error>> { Ok(Some(1)) };
+        let result = match collect_bicolor_runs(&graph, test_filter_fn, test_color_fn) {
+            Ok(Some(_value)) => "Not None",
+            Ok(None) => "None",
+            Err(_) => "Error",
+        };
+        assert_eq!(result, "None")
+    }
+
+    #[test]
+    fn test_filter_function_inner_exception() {
+        let mut graph = DiGraph::new();
+        graph.add_node(0);
+
+        let fail_function = |node_id: NodeIndex| -> Result<Option<bool>, Box<dyn Error>> {
+            let node_weight: &i32 = graph.node_weight(node_id).expect("Invalid NodeId");
+            if *node_weight > 0 {
+                Ok(Some(true))
+            } else {
+                Err(Box::from("Failed!"))
+            }
+        };
+        let test_color_fn = |edge_id: EdgeIndex| -> Result<Option<usize>, Box<dyn Error>> {
+            let edge_weight: &i32 = graph.edge_weight(edge_id).expect("Invalid Edge");
+            Ok(Some(*edge_weight as usize))
+        };
+        let result = match collect_bicolor_runs(&graph, fail_function, test_color_fn) {
+            Ok(Some(_value)) => "Not None",
+            Ok(None) => "None",
+            Err(_) => "Error",
+        };
+        assert_eq!(result, "Error")
+    }
+
+    #[test]
+    fn test_empty() {
+        let graph = DiGraph::new();
+        let test_filter_fn = |node_id: NodeIndex| -> Result<Option<bool>, Box<dyn Error>> {
+            let node_weight: &i32 = graph.node_weight(node_id).expect("Invalid NodeId");
+            Ok(Some(*node_weight > 1))
+        };
+        let test_color_fn = |edge_id: EdgeIndex| -> Result<Option<usize>, Box<dyn Error>> {
+            let edge_weight: &i32 = graph.edge_weight(edge_id).expect("Invalid Edge");
+            Ok(Some(*edge_weight as usize))
+        };
+        let result = collect_bicolor_runs(&graph, test_filter_fn, test_color_fn).unwrap();
+        let expected: Vec<Vec<NodeIndex>> = vec![];
+        assert_eq!(result, Some(expected))
+    }
+
+    #[test]
+    fn test_two_colors() {
+        /* Based on the following graph from the Python unit tests:
+        Input:
+                ┌─────────────┐                 ┌─────────────┐
+                │             │                 │             │
+                │    q0       │                 │    q1       │
+                │             │                 │             │
+                └───┬─────────┘                 └──────┬──────┘
+                    │          ┌─────────────┐         │
+                q0  │          │             │         │  q1
+                    │          │             │         │
+                    └─────────►│     cx      │◄────────┘
+                    ┌──────────┤             ├─────────┐
+                    │          │             │         │
+                q0  │          └─────────────┘         │  q1
+                    │                                  │
+                    │          ┌─────────────┐         │
+                    │          │             │         │
+                    └─────────►│      cz     │◄────────┘
+                     ┌─────────┤             ├─────────┐
+                     │         └─────────────┘         │
+                 q0  │                                 │ q1
+                     │                                 │
+                 ┌───▼─────────┐                ┌──────▼──────┐
+                 │             │                │             │
+                 │    q0       │                │    q1       │
+                 │             │                │             │
+                 └─────────────┘                └─────────────┘
+        Expected: [[cx, cz]]
+        */
+        let mut graph = DiGraph::new();
+        let n0 = graph.add_node(0); //q0
+        let n1 = graph.add_node(0); //q1
+        let n2 = graph.add_node(1); //cx
+        let n3 = graph.add_node(1); //cz
+        let n4 = graph.add_node(0); //q0_1
+        let n5 = graph.add_node(0); //q1_1
+        graph.add_edge(n0, n2, 0); //q0 -> cx
+        graph.add_edge(n1, n2, 1); //q1 -> cx
+        graph.add_edge(n2, n3, 0); //cx -> cz
+        graph.add_edge(n2, n3, 1); //cx -> cz
+        graph.add_edge(n3, n4, 0); //cz -> q0_1
+        graph.add_edge(n3, n5, 1); //cz -> q1_1
+
+        // Filter out q0, q1, q0_1 and q1_1
+        let test_filter_fn = |node_id: NodeIndex| -> Result<Option<bool>, Box<dyn Error>> {
+            let node_weight: &i32 = graph.node_weight(node_id).expect("Invalid NodeId");
+            Ok(Some(*node_weight > 0))
+        };
+        // The edge color will match its weight
+        let test_color_fn = |edge_id: EdgeIndex| -> Result<Option<usize>, Box<dyn Error>> {
+            let edge_weight: &i32 = graph.edge_weight(edge_id).expect("Invalid Edge");
+            Ok(Some(*edge_weight as usize))
+        };
+        let result = collect_bicolor_runs(&graph, test_filter_fn, test_color_fn).unwrap();
+        let expected: Vec<Vec<NodeIndex>> = vec![vec![n2, n3]]; //[[cx, cz]]
+        assert_eq!(result, Some(expected))
+    }
+
+    #[test]
+    fn test_two_colors_with_pending() {
+        /* Based on the following graph from the Python unit tests:
+        Input:
+                ┌─────────────┐
+                │             │
+                │    q0       │
+                │             │
+                └───┬─────────┘
+                 | q0
+                 │
+                ┌───▼─────────┐
+                │             │
+                │    h        │
+                │             │
+                └───┬─────────┘
+                    | q0
+                    │                           ┌─────────────┐
+                    │                           │             │
+                    │                           │    q1       │
+                    │                           │             │
+                    |                           └──────┬──────┘
+                    │          ┌─────────────┐         │
+                q0  │          │             │         │  q1
+                    │          │             │         │
+                    └─────────►│     cx      │◄────────┘
+                    ┌──────────┤             ├─────────┐
+                    │          │             │         │
+                q0  │          └─────────────┘         │  q1
+                    │                                  │
+                    │          ┌─────────────┐         │
+                    │          │             │         │
+                    └─────────►│      cz     │◄────────┘
+                     ┌─────────┤             ├─────────┐
+                     │         └─────────────┘         │
+                 q0  │                                 │ q1
+                     │                                 │
+                 ┌───▼─────────┐                ┌──────▼──────┐
+                 │             │                │             │
+                 │    q0       │                │    y        │
+                 │             │                │             │
+                 └─────────────┘                └─────────────┘
+                                                    | q1
+                                                    │
+                                                ┌───▼─────────┐
+                                                │             │
+                                                │    q1       │
+                                                │             │
+                                                └─────────────┘
+        Expected: [[h, cx, cz, y]]
+        */
+        let mut graph = DiGraph::new();
+        let n0 = graph.add_node(0); //q0
+        let n1 = graph.add_node(0); //q1
+        let n2 = graph.add_node(1); //h
+        let n3 = graph.add_node(1); //cx
+        let n4 = graph.add_node(1); //cz
+        let n5 = graph.add_node(1); //y
+        let n6 = graph.add_node(0); //q0_1
+        let n7 = graph.add_node(0); //q1_1
+        graph.add_edge(n0, n2, 0); //q0 -> h
+        graph.add_edge(n2, n3, 0); //h -> cx
+        graph.add_edge(n1, n3, 1); //q1 -> cx
+        graph.add_edge(n3, n4, 0); //cx -> cz
+        graph.add_edge(n3, n4, 1); //cx -> cz
+        graph.add_edge(n4, n6, 0); //cz -> q0_1
+        graph.add_edge(n4, n5, 1); //cz -> y
+        graph.add_edge(n5, n7, 1); //y -> q1_1
+
+        // Filter out q0, q1, q0_1 and q1_1
+        let test_filter_fn = |node_id: NodeIndex| -> Result<Option<bool>, Box<dyn Error>> {
+            let node_weight: &i32 = graph.node_weight(node_id).expect("Invalid NodeId");
+            Ok(Some(*node_weight > 0))
+        };
+        // The edge color will match its weight
+        let test_color_fn = |edge_id: EdgeIndex| -> Result<Option<usize>, Box<dyn Error>> {
+            let edge_weight: &i32 = graph.edge_weight(edge_id).expect("Invalid Edge");
+            Ok(Some(*edge_weight as usize))
+        };
+        let result = collect_bicolor_runs(&graph, test_filter_fn, test_color_fn).unwrap();
+        let expected: Vec<Vec<NodeIndex>> = vec![vec![n2, n3, n4, n5]]; //[[h, cx, cz, y]]
+        assert_eq!(result, Some(expected))
     }
 }
