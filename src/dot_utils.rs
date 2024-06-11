@@ -85,8 +85,8 @@ fn attr_map_to_string<'a>(
     let attr_string = attrs
         .iter()
         .map(|(key, value)| {
-            let escaped_value = serde_json::to_string(value).unwrap();
-            let escaped_value = &escaped_value[1..escaped_value.len() - 1];
+            let escaped_value = serde_json::to_string(value)?;
+            let escaped_value = &escaped_value.get(1..escaped_value.len() - 1)?;
             format!("{}=\"{}\"", key, escaped_value)
         })
         .collect::<Vec<String>>()
