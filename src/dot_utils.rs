@@ -87,11 +87,7 @@ fn attr_map_to_string<'a>(
         .map(|(key, value)| {
             let escaped_value = serde_json::to_string(value).unwrap();
             let escaped_value = &escaped_value[1..escaped_value.len() - 1];
-            if key == "label" {
-                format!("{}=\"{}\"", key, escaped_value)
-            } else {
-                format!("{}=\"{}\"", key, escaped_value)
-            }
+            format!("{}=\"{}\"", key, escaped_value)
         })
         .collect::<Vec<String>>()
         .join(", ");
