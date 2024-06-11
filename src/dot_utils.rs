@@ -89,7 +89,7 @@ fn attr_map_to_string<'a>(
             let escaped_value = &escaped_value.get(1..escaped_value.len() - 1)?;
             format!("{}=\"{}\"", key, escaped_value)
         })
-        .collect::<Vec<String>>()
+        .collect::<PyResult<Vec<String>>>()?
         .join(", ");
     Ok(format!("[{}]", attr_string))
 }
