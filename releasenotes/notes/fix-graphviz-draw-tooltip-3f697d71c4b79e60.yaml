@@ -1,9 +1,7 @@
 ---
 fixes:
   - |
-      Fix to `attr_map_to_string` method not handling escaped characters in tooltip correctly issue, Issue #750
-      :meth:`attr_map_to_string` now escapes characters in tooltip using `serde_json::to_string()`
-      Added relevant test to ensure it escapes characters correctly.
+      :func:`.graphviz_draw` can now handle special characters
 
           .. jupyter-execute::
 
