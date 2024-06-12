@@ -636,7 +636,9 @@ def draw_edges(
         edge_color = "k"
 
     # set edge positions
-    edge_pos = np.asarray([(pos[e[0]], pos[e[1]]) for e in edge_list])
+    edge_pos = set()
+    for e in edge_list:
+        edge_pos.add((tuple(pos[e[0]]), tuple(pos[e[1]])))
 
     # Check if edge_color is an array of floats and map to edge_cmap.
     # This is the only case handled differently from matplotlib
@@ -670,6 +672,74 @@ def draw_edges(
     arrow_collection = []
     mutation_scale = arrow_size  # scale factor of arrow head
 
+    base_connectionstyle = mpl.patches.ConnectionStyle(connectionstyle)
+
+    # Fallback for self-loop scale. Left outside of _connectionstyle so it is
+    # only computed once
+    max_nodesize = np.array(node_size).max()
+
+    # FancyArrowPatch doesn't handle color strings
+    arrow_colors = mpl.colors.colorConverter.to_rgba_array(edge_color, alpha)
+    for i, edge in enumerate(edge_pos):
+        x1, y1 = edge[0][0], edge[0][1]
+        x2, y2 = edge[1][0], edge[1][1]
+        shrink_source = 0  # space from source to tail
+        shrink_target = 0  # space from  head to target
+        if np.iterable(node_size):  # many node sizes
+            source, target = edge_list[i][:2]
+            source_node_size = node_size[node_list.index(source)]
+            target_node_size = node_size[node_list.index(target)]
+            shrink_source = to_marker_edge(source_node_size, node_shape)
+            shrink_target = to_marker_edge(target_node_size, node_shape)
+        else:
+            shrink_source = shrink_target = to_marker_edge(node_size, node_shape)
+
+        if shrink_source < min_source_margin:
+            shrink_source = min_source_margin
+
+        if shrink_target < min_target_margin:
+            shrink_target = min_target_margin
+
+        if len(arrow_colors) == len(edge_pos):
+            arrow_color = arrow_colors[i]
+        elif len(arrow_colors) == 1:
+            arrow_color = arrow_colors[0]
+        else:  # Cycle through colors
+            arrow_color = arrow_colors[i % len(arrow_colors)]
+
+        if np.iterable(width):
+            if len(width) == len(edge_pos):
+                line_width = width[i]
+            else:
+                line_width = width[i % len(width)]
+        else:
+            line_width = width
+
+        # radius of edges
+        if tuple(reversed(edge)) in edge_pos:
+            rad = 0.25
+        else:
+            rad = 0.0
+
+        arrow = mpl.patches.FancyArrowPatch(
+            (x1, y1),
+            (x2, y2),
+            arrowstyle=arrowstyle,
+            shrinkA=shrink_source,
+            shrinkB=shrink_target,
+            mutation_scale=mutation_scale,
+            color=arrow_color,
+            linewidth=line_width,
+            connectionstyle=connectionstyle + f", rad = {rad}",
+            linestyle=style,
+            zorder=1,
+        )  # arrows go behind nodes
+
+        arrow_collection.append(arrow)
+        ax.add_patch(arrow)
+
+    edge_pos = np.asarray(tuple(edge_pos))
+
     # compute view
     mirustworkx = np.amin(np.ravel(edge_pos[:, :, 0]))
     maxx = np.amax(np.ravel(edge_pos[:, :, 0]))
@@ -677,12 +747,6 @@ def draw_edges(
     maxy = np.amax(np.ravel(edge_pos[:, :, 1]))
     w = maxx - mirustworkx
     h = maxy - miny
-
-    base_connectionstyle = mpl.patches.ConnectionStyle(connectionstyle)
-
-    # Fallback for self-loop scale. Left outside of _connectionstyle so it is
-    # only computed once
-    max_nodesize = np.array(node_size).max()
 
     def _connectionstyle(posA, posB, *args, **kwargs):
         # check if we need to do a self-loop
@@ -716,60 +780,6 @@ def draw_edges(
             ret = base_connectionstyle(posA, posB, *args, **kwargs)
 
         return ret
-
-    # FancyArrowPatch doesn't handle color strings
-    arrow_colors = mpl.colors.colorConverter.to_rgba_array(edge_color, alpha)
-    for i, (src, dst) in enumerate(edge_pos):
-        x1, y1 = src
-        x2, y2 = dst
-        shrink_source = 0  # space from source to tail
-        shrink_target = 0  # space from  head to target
-        if np.iterable(node_size):  # many node sizes
-            source, target = edge_list[i][:2]
-            source_node_size = node_size[node_list.index(source)]
-            target_node_size = node_size[node_list.index(target)]
-            shrink_source = to_marker_edge(source_node_size, node_shape)
-            shrink_target = to_marker_edge(target_node_size, node_shape)
-        else:
-            shrink_source = shrink_target = to_marker_edge(node_size, node_shape)
-
-        if shrink_source < min_source_margin:
-            shrink_source = min_source_margin
-
-        if shrink_target < min_target_margin:
-            shrink_target = min_target_margin
-
-        if len(arrow_colors) == len(edge_pos):
-            arrow_color = arrow_colors[i]
-        elif len(arrow_colors) == 1:
-            arrow_color = arrow_colors[0]
-        else:  # Cycle through colors
-            arrow_color = arrow_colors[i % len(arrow_colors)]
-
-        if np.iterable(width):
-            if len(width) == len(edge_pos):
-                line_width = width[i]
-            else:
-                line_width = width[i % len(width)]
-        else:
-            line_width = width
-
-        arrow = mpl.patches.FancyArrowPatch(
-            (x1, y1),
-            (x2, y2),
-            arrowstyle=arrowstyle,
-            shrinkA=shrink_source,
-            shrinkB=shrink_target,
-            mutation_scale=mutation_scale,
-            color=arrow_color,
-            linewidth=line_width,
-            connectionstyle=_connectionstyle,
-            linestyle=style,
-            zorder=1,
-        )  # arrows go behind nodes
-
-        arrow_collection.append(arrow)
-        ax.add_patch(arrow)
 
     # update view
     padx, pady = 0.05 * w, 0.05 * h
@@ -1001,6 +1011,12 @@ def draw_edge_labels(
             x1 * label_pos + x2 * (1.0 - label_pos),
             y1 * label_pos + y2 * (1.0 - label_pos),
         )
+        if (n2, n1) in labels.keys():  # loop
+            dy = np.abs(y2 - y1)
+            if n2 > n1:
+                y -= 0.25 * dy
+            else:
+                y += 0.25 * dy
 
         if rotate:
             # in degrees
