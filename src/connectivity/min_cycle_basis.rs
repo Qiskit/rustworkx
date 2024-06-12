@@ -4,18 +4,17 @@ use pyo3::exceptions::PyIndexError;
 use pyo3::prelude::*;
 use pyo3::Python;
 
-use petgraph::graph::NodeIndex;
+use crate::iterators::NodeIndices;
+use crate::{CostFn, StablePyGraph};
 use petgraph::prelude::*;
 use petgraph::visit::EdgeIndexable;
 use petgraph::EdgeType;
 
-use crate::{CostFn, StablePyGraph};
-
-pub fn minimum_cycle_basis_map<Ty: EdgeType + Sync>(
+pub fn minimum_cycle_basis<Ty: EdgeType + Sync>(
     py: Python,
     graph: &StablePyGraph<Ty>,
     edge_cost_fn: PyObject,
-) -> PyResult<Vec<Vec<NodeIndex>>> {
+) -> PyResult<Vec<Vec<NodeIndices>>> {
     if graph.node_count() == 0 || graph.edge_count() == 0 {
         return Ok(vec![]);
     }
@@ -35,5 +34,17 @@ pub fn minimum_cycle_basis_map<Ty: EdgeType + Sync>(
         }
     };
     let cycle_basis = minimal_cycle_basis(graph, |e| edge_cost(e.id())).unwrap();
-    Ok(cycle_basis)
+    // Convert the cycle basis to a list of lists of node indices
+    let result: Vec<Vec<NodeIndices>> = cycle_basis
+        .into_iter()
+        .map(|cycle| {
+            cycle
+                .into_iter()
+                .map(|node| NodeIndices {
+                    nodes: vec![node.index()],
+                })
+                .collect()
+        })
+        .collect();
+    Ok(result)
 }

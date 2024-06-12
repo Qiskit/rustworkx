@@ -14,7 +14,7 @@
 
 mod all_pairs_all_simple_paths;
 mod johnson_simple_cycles;
-mod minimum_cycle_basis;
+mod min_cycle_basis;
 mod subgraphs;
 
 use super::{
@@ -919,6 +919,20 @@ pub fn stoer_wagner_min_cut(
     }))
 }
 
+/// Find a minimum cycle basis of an undirected graph.
+/// All weights must be nonnegative. If the input graph does not have
+/// any nodes or edges, this function returns ``None``.
+/// If the input graph does not any weight, this function will find the
+/// minimum cycle basis with the weight of 1.0 for all edges.
+///
+/// :param PyGraph: The undirected graph to be used
+/// :param Callable edge_cost_fn:  An optional callable object (function, lambda, etc) which
+///    will be passed the edge object and expected to return a ``float``.
+///   Edges with ``NaN`` weights will be considered to have 1.0 weight.
+///  If ``edge_cost_fn`` is not specified a default value of ``1.0`` will be used for all edges.
+///
+/// :returns: A list of cycles, where each cycle is a list of node indices
+/// :rtype: list
 #[pyfunction]
 #[pyo3(text_signature = "(graph, edge_cost_fn, /)")]
 pub fn graph_minimum_cycle_basis(
@@ -926,18 +940,33 @@ pub fn graph_minimum_cycle_basis(
     graph: &graph::PyGraph,
     edge_cost_fn: PyObject,
 ) -> PyResult<Vec<Vec<NodeIndices>>> {
-    let basis = minimum_cycle_basis::minimum_cycle_basis_map(py, &graph.graph, edge_cost_fn);
-    Ok(basis
-        .into_iter()
-        .map(|cycle| {
-            cycle
-                .into_iter()
-                .map(|node| NodeIndices {
-                    nodes: node.iter().map(|nx| nx.index()).collect(),
-                })
-                .collect()
-        })
-        .collect())
+    min_cycle_basis::minimum_cycle_basis(py, &graph.graph, edge_cost_fn)
+}
+
+/// Find a minimum cycle basis of a directed graph (which is not of interest in the context
+/// of minimum cycle basis). This function will return the minimum cycle basis of the
+/// underlying undirected graph of the input directed graph.
+/// All weights must be nonnegative. If the input graph does not have
+/// any nodes or edges, this function returns ``None``.
+/// If the input graph does not any weight, this function will find the
+/// minimum cycle basis with the weight of 1.0 for all edges.
+///
+/// :param PyDiGraph: The directed graph to be used
+/// :param Callable edge_cost_fn:  An optional callable object (function, lambda, etc) which
+///   will be passed the edge object and expected to return a ``float``.
+///  Edges with ``NaN`` weights will be considered to have 1.0 weight.
+/// If ``edge_cost_fn`` is not specified a default value of ``1.0`` will be used for all edges.
+///
+/// :returns: A list of cycles, where each cycle is a list of node indices
+/// :rtype: list
+#[pyfunction]
+#[pyo3(text_signature = "(graph, edge_cost_fn, /)")]
+pub fn digraph_minimum_cycle_basis(
+    py: Python,
+    graph: &digraph::PyDiGraph,
+    edge_cost_fn: PyObject,
+) -> PyResult<Vec<Vec<NodeIndices>>> {
+    min_cycle_basis::minimum_cycle_basis(py, &graph.graph, edge_cost_fn)
 }
 
 /// Return the articulation points of an undirected graph.

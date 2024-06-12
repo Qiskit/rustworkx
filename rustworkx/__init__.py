@@ -570,15 +570,14 @@ def minimum_cycle_basis(graph, edge_cost_fn):
         [2] de Pina, J. 1995. Applications of shortest path methods.
         Ph.D. thesis, University of Amsterdam, Netherlands
 
-    :param graph: The input graph to use. Can either be a
+    :param graph: The input graph to use. Can be either a
         :class:`~rustworkx.PyGraph` or :class:`~rustworkx.PyDiGraph`
     :param edge_cost_fn: A callable object that acts as a weight function for
         an edge. It will accept a single positional argument, the edge's weight
         object and will return a float which will be used to represent the
         weight/cost of the edge
 
-    :return: A list of cycles where each cycle is a list of node indices
-
+    :returns: A list of cycles where each cycle is a list of node indices
     :rtype: list
     """
     raise TypeError("Invalid Input Type %s for graph" % type(graph))
