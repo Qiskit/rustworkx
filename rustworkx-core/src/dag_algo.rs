@@ -313,18 +313,24 @@ where
     Ok(Some((path, path_weight)))
 }
 
-pub fn collect_runs<G>(graph: G) -> Vec<Vec<<G as GraphBase>::NodeId>> // TODO: return type is a place holder
-// TODO: support a filter function on the nodes
+pub fn collect_runs<G>(graph: G, filter_fn: impl Fn(G::NodeId) ->  bool) -> Vec<Vec<<G as GraphBase>::NodeId>>
+// TODO: return type is a place holder
+// TODO: should the filter function defined as a generic or like this?
 where
-    G: GraphProp<EdgeType = Directed> + IntoNeighborsDirected + IntoNodeIdentifiers + Visitable + NodeCount,
-    <G as GraphBase>::NodeId: Hash + Eq // TODO: what type of declaration is it? 
+    G: GraphProp<EdgeType = Directed>
+        + IntoNeighborsDirected
+        + IntoNodeIdentifiers
+        + Visitable
+        + NodeCount,
+    <G as GraphBase>::NodeId: Hash + Eq, // TODO: what type of declaration is it?
 {
+    println!("collect_runs2");
     let mut out_list = Vec::new();
 
-    let nodes = match algo::toposort(graph, None) { 
+    let nodes = match algo::toposort(graph, None) {
         Ok(nodes) => nodes,
         Err(_) => return Vec::new(),
-       };
+    };
 
     let mut seen: HashSet<G::NodeId> = HashSet::with_capacity(nodes.len());
 
@@ -332,22 +338,31 @@ where
         if seen.contains(&node) {
             continue;
         }
-        seen.insert(node);
-        let mut run: Vec<G::NodeId> = vec![node]; // TODO: what's the difference between NodeId and NodeIndex
-        let mut successors: Vec<G::NodeId> = graph
-            .neighbors_directed(node, petgraph::Direction::Outgoing)
-            .collect();
-        successors.dedup();
 
-        while successors.len() == 1
-            && !seen.contains(&successors[0])
-        {
-            run.push(successors[0]); // TODO: NodeId, ownership?
-            seen.insert(successors[0]);
-            successors = graph
-                .neighbors_directed(successors[0], petgraph::Direction::Outgoing)
+        seen.insert(node);
+
+        if !filter_fn(node) { 
+            continue; 
+        }
+
+        let mut run: Vec<G::NodeId> = vec![node];
+        loop {
+            let mut successors: Vec<G::NodeId> = graph
+                .neighbors_directed(*run.last().unwrap(), petgraph::Direction::Outgoing)
                 .collect();
             successors.dedup();
+
+            if successors.len() != 1 || seen.contains(&successors[0]) {
+                break;
+            }
+
+            seen.insert(successors[0]);
+            
+            if !filter_fn(successors[0]) {
+                continue;
+            }
+
+            run.push(successors[0]);
         }
 
         if !run.is_empty() {
@@ -645,49 +660,53 @@ mod test_lexicographical_topological_sort {
     }
 }
 
-#[cfg(test)] // # TODO: better understand this syntax. Seems like a pragma
+#[cfg(test)]
 mod test_collect_runs {
     use petgraph::{graph::DiGraph, visit::GraphBase};
-    
+
     use super::collect_runs;
+    type BareDiGraph = DiGraph<(), ()>;
 
     #[test]
     fn test_empty_graph() {
-        let graph: DiGraph<(), ()> = DiGraph::new();
-
-        let runs = collect_runs(&graph);
-
-        let empty: Vec<Vec<<DiGraph<(), ()> as GraphBase>::NodeId>> = Vec::new(); // TODO: find a shorter-hand method, using vec!
+        let graph: BareDiGraph = DiGraph::new();
 
         assert_eq!(
-            runs, 
-            empty
+            collect_runs(&graph, |_| false), 
+            Vec::<Vec::<<BareDiGraph as GraphBase>::NodeId>>::new()
         );
-    }   
+    }
 
     #[test]
-    fn test_simple_run() {
-        let mut graph: DiGraph<(), ()> = DiGraph::new();
+    fn test_simple_run_w_filter() {
+        let mut graph: BareDiGraph = DiGraph::new();
         let n1 = graph.add_node(());
         let n2 = graph.add_node(());
         let n3 = graph.add_node(());
         graph.add_edge(n1, n2, ());
         graph.add_edge(n2, n3, ());
 
-        let runs = collect_runs(&graph);
+        let runs = collect_runs(&graph, |_| false);
 
         assert_eq!(runs.len(), 1); // Only 1 run
         assert_eq!(runs[0].len(), 3); // Of length 3
-        
+
+        assert_eq!(runs, vec![vec![n1, n2, n3]]);
+
         assert_eq!(
-            runs, 
-            vec![vec![n1, n2, n3]]
+            collect_runs(&graph, |_| true), 
+            Vec::<Vec::<<BareDiGraph as GraphBase>::NodeId>>::new()
         );
-    }   
+
+        assert_eq!(
+            collect_runs(&graph, |n| n == n2), 
+            vec![[n1], [n3]]
+        );
+    }
 
     #[test]
-    fn test_multiple_runs() {
-        let mut graph: DiGraph<(), ()> = DiGraph::new();
+    fn test_multiple_runs_w_filter() {
+        let mut graph: BareDiGraph = DiGraph::new();
         // TODO: change to a for loop
         let n1 = graph.add_node(());
         let n2 = graph.add_node(());
@@ -696,7 +715,7 @@ mod test_collect_runs {
         let n5 = graph.add_node(());
         let n6 = graph.add_node(());
         let n7 = graph.add_node(());
-    
+
         graph.add_edge(n1, n2, ());
         graph.add_edge(n2, n3, ());
         graph.add_edge(n3, n7, ());
@@ -704,32 +723,37 @@ mod test_collect_runs {
         graph.add_edge(n4, n7, ());
         graph.add_edge(n5, n4, ());
         graph.add_edge(n6, n5, ());
-    
-        let runs = collect_runs(&graph);
 
         assert_eq!(
-            runs, 
-            vec![vec![n6, n5, n4], vec![n1, n2, n3, n7]] // TODO: would the order ever changed?
+            collect_runs(&graph, |_| false),
+            vec![vec![n6, n5, n4], vec![n1, n2, n3, n7]] 
+        );
+
+        assert_eq!(
+            collect_runs(&graph, |n| n == n4 || n == n2),
+            vec![vec![n6, n5], vec![n1], vec![n3, n7]]
         );
     }
 
     #[test]
-    fn test_singleton_runs() {
-        let mut graph: DiGraph<(), ()> = DiGraph::new();
+    fn test_singleton_runs_w_filter() {
+        let mut graph: BareDiGraph = DiGraph::new();
         // TODO: change to a for loop
         let n1 = graph.add_node(());
         let n2 = graph.add_node(());
         let n3 = graph.add_node(());
-    
+
         graph.add_edge(n1, n2, ());
         graph.add_edge(n1, n3, ());
-        
-        let runs = collect_runs(&graph);
 
         assert_eq!(
-            runs, 
-            vec![vec![n1], vec![n3], vec![n2]] // TODO: would the order ever changed?
+            collect_runs(&graph, |_| false),
+            vec![vec![n1], vec![n3], vec![n2]] 
+        );
+
+        assert_eq!(
+            collect_runs(&graph, |n| n == n1),
+            vec![vec![n3], vec![n2]]
         );
     }
-
 }
