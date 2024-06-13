@@ -505,19 +505,20 @@ pub fn random_geometric_graph(
 ///
 /// .. math::
 ///
-///     d(u,v) = \text{arccosh}\left[x_u^0 x_v^0 - \sum_{j=1}^D x_u^j x_v^j \right],
+///     d(u,v) = \text{arccosh}\left[x_0(u) x_0(v) - \sum_{j=1}^D x_j(u) x_j(v) \right],
 ///
-/// where :math:`D` is the dimension of the hyperbolic space and :math:`x_u^d` is the
+/// where :math:`D` is the dimension of the hyperbolic space and :math:`x_d(u)` is the
 /// :math:`d` th-dimension coordinate of node :math:`u` in the hyperboloid model. The
-/// number of nodes and the dimension are inferred from the coordinates ``pos``.
+/// number of nodes and the dimension are inferred from the coordinates ``pos``. The
+/// 0-dimension "time" coordinate is inferred from the others.
 ///
 /// If ``beta`` is ``None``, all pairs of nodes with a distance smaller than ``r`` are connected.
 ///
 /// This algorithm has a time complexity of :math:`O(n^2)` for :math:`n` nodes.
 ///
 /// :param list[list[float]] pos: Hyperboloid coordinates of the nodes
-///     [[:math:`x_1^0`, ..., :math:`x_1^D`], ...]. Since the first dimension is associated to
-///     the positive term in the metric, each :math:`x_u^0` must be at least 1.
+///     [[:math:`x_1(1)`, ..., :math:`x_D(1)`], [:math:`x_1(2)`, ..., :math:`x_D(2)`], ...].
+///     The "time" coordinate :math:`x_0` is inferred from the other coordinates.
 /// :param float beta: Sigmoid sharpness (nonnegative) of the connection probability.
 /// :param float r: Distance at which the connection probability is 0.5 for the probabilistic model.
 ///     Threshold when ``beta`` is ``None``.
@@ -536,7 +537,7 @@ pub fn hyperbolic_random_graph(
 ) -> PyResult<graph::PyGraph> {
     let default_fn = || py.None();
     let graph: StablePyGraph<Undirected> =
-        match core_generators::hyperbolic_random_graph(&pos, beta, r, seed, default_fn, default_fn)
+        match core_generators::hyperbolic_random_graph(&pos, r, beta, seed, default_fn, default_fn)
         {
             Ok(graph) => graph,
             Err(_) => return Err(PyValueError::new_err("invalid positions or parameters")),
