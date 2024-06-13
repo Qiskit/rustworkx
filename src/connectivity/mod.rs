@@ -28,12 +28,13 @@ use petgraph::algo::toposort;
 use petgraph::graph::DiGraph;
 use petgraph::stable_graph::NodeIndex;
 use petgraph::unionfind::UnionFind;
-use petgraph::visit::{EdgeRef, IntoEdgeReferences, NodeCount, NodeIndexable, Visitable};
+use petgraph::visit::{EdgeRef, IntoEdgeReferences, NodeCount, NodeIndexable, Visitable, DfsPostOrder};
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use pyo3::types::PyDict;
 use pyo3::Python;
 use rayon::prelude::*;
+use std::sync::RwLock;
 
 use ndarray::prelude::*;
 use numpy::IntoPyArray;
@@ -299,19 +300,31 @@ pub fn is_semi_connected(graph: &digraph::PyDiGraph) -> PyResult<bool> {
     let condensed = condensation(temp_graph, false);
     let condensed_digraph = DiGraph::from(condensed);
 
-    let topo_sort = toposort(&condensed_digraph, None)
-        .map_err(|_| PyValueError::new_err("Graph has cycles"))?;
+    let found_path: RwLock<bool> = RwLock::new(true);
+    
+    let topo_sort = match toposort(&condensed_digraph, None){
+        Ok(topo_sort) => topo_sort,
+        Err(_) => {
+            let mut dfs = DfsPostOrder::new(&condensed_digraph, NodeIndex::new(0));
+            let mut nodes = Vec::new();
+            while let Some(node) = dfs.next(&condensed_digraph){
+                nodes.push(node);
+            }
+            nodes.reverse();
+            nodes
+        },
+    };
 
-    for window in topo_sort.windows(2) {
-        let u = window[0];
-        let v = window[1];
-
-        if !petgraph::algo::has_path_connecting(&condensed_digraph, u, v, None) {
-            return Ok(false);
+    let pairs: Vec<_> = topo_sort.windows(2).map(|window| (window[0], window[1])).collect();
+    pairs.into_par_iter().for_each(|(u,v)| {
+        if !(petgraph::algo::has_path_connecting(&condensed_digraph, u, v, None)){
+            let mut path = found_path.write().unwrap();
+            *path = false;
         }
-    }
+    });
 
-    Ok(true)
+    let path = *found_path.read().unwrap();
+    Ok(path)
 }
 
 /// Return the adjacency matrix for a PyDiGraph object
