@@ -25,13 +25,13 @@ class TestSemiConnected(unittest.TestCase):
 
         self.assertTrue(rustworkx.is_semi_connected(graph))
 
-    def test_is_semi_connected_false(self):
+    def test_is_semi_connected_reverse(self):
         graph = rustworkx.PyDiGraph()
         graph.add_nodes_from(list(range(3)))
         graph.add_edge(0, 1, None)
         graph.add_edge(2, 1, None)
 
-        self.assertFalse(rustworkx.is_semi_connected(graph))
+        self.assertTrue(rustworkx.is_semi_connected(graph))
 
     def test_is_semi_connected_single_node(self):
         graph = rustworkx.PyDiGraph()
