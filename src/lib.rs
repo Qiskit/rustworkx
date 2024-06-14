@@ -84,6 +84,7 @@ use petgraph::visit::{
 };
 use petgraph::EdgeType;
 
+use rustworkx_core::dag_algo::TopologicalSortError;
 use std::convert::TryFrom;
 
 use rustworkx_core::dictmap::*;
@@ -141,6 +142,19 @@ impl From<ContractSimpleError<PyErr>> for RxPyErr {
     }
 }
 
+impl From<TopologicalSortError<PyErr>> for RxPyErr {
+    fn from(value: TopologicalSortError<PyErr>) -> Self {
+        RxPyErr {
+            pyerr: match value {
+                TopologicalSortError::CycleOrBadInitialState => {
+                    PyValueError::new_err(format!("{:?}", value))
+                }
+                TopologicalSortError::KeyError(e) => e,
+            },
+        }
+    }
+}
+
 impl IntoPy<PyObject> for RxPyErr {
     fn into_py(self, py: Python<'_>) -> PyObject {
         self.pyerr.into_value(py).into()
@@ -150,6 +164,12 @@ impl IntoPy<PyObject> for RxPyErr {
 impl From<RxPyErr> for PyErr {
     fn from(value: RxPyErr) -> Self {
         value.pyerr
+    }
+}
+
+impl From<PyErr> for RxPyErr {
+    fn from(value: PyErr) -> Self {
+        RxPyErr { pyerr: value }
     }
 }
 

@@ -16,7 +16,7 @@ use indexmap::IndexSet;
 use rustworkx_core::dictmap::InitWithHasher;
 
 use super::iterators::NodeIndices;
-use crate::{digraph, DAGHasCycle, InvalidNode, StablePyGraph};
+use crate::{digraph, DAGHasCycle, InvalidNode, RxPyResult, StablePyGraph};
 
 use rustworkx_core::dag_algo::collect_bicolor_runs as core_collect_bicolor_runs;
 use rustworkx_core::dag_algo::lexicographical_topological_sort as core_lexico_topo_sort;
@@ -432,7 +432,7 @@ pub fn lexicographical_topological_sort(
     key: PyObject,
     reverse: bool,
     initial: Option<&Bound<PyAny>>,
-) -> PyResult<PyObject> {
+) -> RxPyResult<PyObject> {
     let key_callable = |a: NodeIndex| -> PyResult<String> {
         let weight = &dag.graph[a];
         let res: String = key.call1(py, (weight,))?.extract(py)?;
@@ -450,18 +450,13 @@ pub fn lexicographical_topological_sort(
         None => None,
     };
     let out_list = core_lexico_topo_sort(&dag.graph, key_callable, reverse, initial.as_deref())?;
-    match out_list {
-        Some(out_list) => Ok(PyList::new_bound(
-            py,
-            out_list
-                .into_iter()
-                .map(|node| dag.graph[node].clone_ref(py)),
-        )
-        .into()),
-        None => Err(PyValueError::new_err(
-            "at least one initial node is reachable from another",
-        )),
-    }
+    Ok(PyList::new_bound(
+        py,
+        out_list
+            .into_iter()
+            .map(|node| dag.graph[node].clone_ref(py)),
+    )
+    .into())
 }
 
 /// Return the topological generations of a DAG
