@@ -315,9 +315,11 @@ pub fn is_semi_connected(graph: &digraph::PyDiGraph) -> PyResult<bool> {
         },
     };
 
+    // petgraph::algo::has_path_connecting(&condensed_digraph, u, v, None
+
     let pairs: Vec<_> = topo_sort.windows(2).map(|window| (window[0], window[1])).collect();
     pairs.into_par_iter().for_each(|(u,v)| {
-        if !(petgraph::algo::has_path_connecting(&condensed_digraph, u, v, None)){
+        if !(graph.has_edge(u.index(), v.index())) || !(graph.has_edge(v.index(), u.index())){
             let mut path = found_path.write().unwrap();
             *path = false;
         }
