@@ -567,15 +567,22 @@ pub fn collect_runs(
     //     res.extract(py)
     // };
 
-    let filter_node2 = |node_id| -> bool { // TODO: type node_id
+    let filter_node2 = |node_id| -> Result<bool, PyErr> { // TODO: type node_id
         let py_node = graph.graph.node_weight(node_id);
-        match filter_fn.call1(py, (py_node,)) {
-            Ok(res) => res.extract(py).unwrap_or(false),
-            Err(_) => false
+        let res = filter_fn.call1(py, (py_node,))?;
+        return match res.extract::<bool>(py) {
+            Ok(f) => Ok(f),
+            Err(e) => Err(e)
         }
     };
 
-    let out_list = core_collect_runs(&graph.graph, filter_node2);
+    let out_list = match core_collect_runs(&graph.graph, filter_node2) {
+        Ok(runs) => match runs {
+            Some(runs) => runs,
+            None => return Err(DAGHasCycle::new_err("DAG has cycle"))
+            },
+        Err(e) => return Err(e),
+    };
 
     // TODO: convert this is a more idiomatic Rust (using map and collect)
     let mut result: Vec<Vec<PyObject>> = Vec::new();
