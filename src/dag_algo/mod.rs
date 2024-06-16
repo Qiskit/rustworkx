@@ -564,28 +564,22 @@ pub fn collect_runs(
 ) -> PyResult<Vec<Vec<PyObject>>> {
     let filter_node = |node_id| -> Result<bool, PyErr> { 
         let py_node = graph.graph.node_weight(node_id);
-        let res = filter_fn.call1(py, (py_node,))?;
-        return match res.extract::<bool>(py) {
-            Ok(f) => Ok(f),
-            Err(e) => Err(e)
-        }
+        filter_fn.call1(py, (py_node,))?.extract::<bool>(py)
     };
 
-    let out_list = match core_collect_runs(&graph.graph, filter_node) {
+    let core_runs = match core_collect_runs(&graph.graph, filter_node) {
         Some(runs) => runs,
         None => return Err(DAGHasCycle::new_err("DAG has cycle")),
     };
 
-    // TODO: convert this to a more idiomatic Rust
     let mut result: Vec<Vec<PyObject>> = Vec::new();
+    for run_result in core_runs {
+        // This is where a filter function error will be returned, otherwise Result is stripped away
+        let py_run: Vec<PyObject> = run_result? 
+            .iter()
+            .map(|node| return graph.graph.node_weight(*node).into_py(py))
+            .collect();
 
-    for run_result in out_list {
-        let mut py_run: Vec<PyObject> = Vec::new();
-        let run = run_result?;
-
-        for node in run {
-            py_run.push(graph.graph.node_weight(node).into_py(py)); 
-        }
         result.push(py_run)
     }
 
