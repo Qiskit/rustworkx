@@ -569,7 +569,7 @@ pub fn collect_runs(
 
     let core_runs = match core_collect_runs(&graph.graph, filter_node) {
         Some(runs) => runs,
-        None => return Err(DAGHasCycle::new_err("DAG has cycle")),
+        None => return Err(DAGHasCycle::new_err("The DAG contains a cycle")),
     };
 
     let mut result: Vec<Vec<PyObject>> = Vec::new();
