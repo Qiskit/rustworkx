@@ -562,12 +562,7 @@ pub fn collect_runs(
     graph: &digraph::PyDiGraph,
     filter_fn: PyObject,
 ) -> PyResult<Vec<Vec<PyObject>>> {
-    // let filter_node = |node: &PyObject| -> PyResult<bool> {
-    //     let res = filter_fn.call1(py, (node,))?;
-    //     res.extract(py)
-    // };
-
-    let filter_node2 = |node_id| -> Result<bool, PyErr> { // TODO: type node_id
+    let filter_node = |node_id| -> Result<bool, PyErr> { 
         let py_node = graph.graph.node_weight(node_id);
         let res = filter_fn.call1(py, (py_node,))?;
         return match res.extract::<bool>(py) {
@@ -576,22 +571,20 @@ pub fn collect_runs(
         }
     };
 
-    let out_list = match core_collect_runs(&graph.graph, filter_node2) {
-        Ok(runs) => match runs {
-            Some(runs) => runs,
-            None => return Err(DAGHasCycle::new_err("DAG has cycle"))
-            },
-        Err(e) => return Err(e),
+    let out_list = match core_collect_runs(&graph.graph, filter_node) {
+        Some(runs) => runs,
+        None => return Err(DAGHasCycle::new_err("DAG has cycle")),
     };
 
-    // TODO: convert this is a more idiomatic Rust (using map and collect)
+    // TODO: convert this to a more idiomatic Rust
     let mut result: Vec<Vec<PyObject>> = Vec::new();
 
-    for run in out_list {
+    for run_result in out_list {
         let mut py_run: Vec<PyObject> = Vec::new();
+        let run = run_result?;
 
         for node in run {
-            py_run.push(graph.graph.node_weight(node).into_py(py)); //TODO: handle errors
+            py_run.push(graph.graph.node_weight(node).into_py(py)); 
         }
         result.push(py_run)
     }

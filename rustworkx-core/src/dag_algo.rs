@@ -502,7 +502,8 @@ where
     F: Fn(G::NodeId) ->  Result<bool, E>,
     <G as GraphBase>::NodeId: Hash + Eq,
 {
-    type Item = Vec<G::NodeId>; // This is a run
+    // This is a run, wrapped in Result for catching filter function errors
+    type Item = Result<Vec<G::NodeId>, E>;
 
     fn next(&mut self) -> Option<Self::Item> {
         while let Some(node) = self.sorted_nodes.pop() {
@@ -511,11 +512,12 @@ where
             }
             self.seen.insert(node);
 
-            // TODO: what should we do in case of an error?
-            if let Ok(false) = (self.include_node_fn)(node) {
-                continue;
+            match (self.include_node_fn)(node) {
+                Ok(false) => continue,
+                Err(e) => return Some(Err(e)),
+                _ => (),
             }
-
+      
             let mut run: Vec<G::NodeId> = vec![node];
             loop {
                 let mut successors: Vec<G::NodeId> = self.graph
@@ -529,27 +531,28 @@ where
 
                 self.seen.insert(successors[0]);
             
-                // TODO: what should we do in case of an error?
-                if let Ok(false) = (self.include_node_fn)(successors[0]) {
-                    continue;
+                match (self.include_node_fn)(successors[0]) {
+                    Ok(false) => continue,
+                    Err(e) => return Some(Err(e)),
+                    _ => ()
                 }
-    
+        
                 run.push(successors[0]);
             }
 
             if !run.is_empty() {
-                return Some(run);
+                return Some(Ok(run));
             }
         }
 
-        None 
+        None
     }
 }
 
 pub fn collect_runs<G, F, E>(
     graph: G, 
     include_node_fn: F
-) -> Result<Option<Runs<G, F, E>>, E>
+) -> Option<Runs<G, F, E>>
 where
     G: GraphProp<EdgeType = Directed>
         + IntoNeighborsDirected
@@ -561,10 +564,10 @@ where
 {
     let mut nodes = match algo::toposort(graph, None) {
         Ok(nodes) => nodes,
-        Err(_) => return Ok(None),
+        Err(_) => return None,
     };
 
-    nodes.reverse(); // reversing so that we can use pop() in Runs
+    nodes.reverse(); // reversing so that pop() in Runs::next obeys the topo order
 
     let runs = Runs{
         graph: graph,
@@ -573,7 +576,7 @@ where
         include_node_fn: include_node_fn,
     };
 
-    Ok(Some(runs))
+    Some(runs)
 }
 
 // Tests for longest_path
@@ -1076,12 +1079,11 @@ mod test_collect_bicolor_runs {
 
 #[cfg(test)]
 mod test_collect_runs {
-    use std::error::Error;
-
     use petgraph::{graph::DiGraph, visit::GraphBase};
-
     use super::collect_runs;
+    
     type BareDiGraph = DiGraph<(), ()>;
+    type RunResult = Result<Vec<<BareDiGraph as GraphBase>::NodeId>, ()>;
 
     #[test]
     fn test_empty_graph() {
@@ -1089,22 +1091,22 @@ mod test_collect_runs {
 
         let mut runs = collect_runs(
             &graph,
-            |_| -> Result<bool, Box<dyn Error>> {Ok(true)}
-        ).unwrap().unwrap();
+            |_| -> Result<bool, ()> {Ok(true)}
+        ).expect("Some");
 
         let run = runs.next();
-        assert_eq!(run, None);
+        assert!(run == None); 
 
         let runs = collect_runs(
             &graph,
-            |_| -> Result<bool, Box<dyn Error>> {Ok(true)}
-        ).unwrap().unwrap();
+            |_| -> Result<bool, ()> {Ok(true)}
+        ).expect("Some");
 
-        let runs: Vec<Vec<<BareDiGraph as GraphBase>::NodeId>> = runs.collect();
+        let runs: Vec<RunResult> = runs.collect();
 
         assert_eq!(
             runs,
-            Vec::<Vec::<<BareDiGraph as GraphBase>::NodeId>>::new()
+            Vec::<RunResult>::new()           
         );
     }
 
@@ -1119,10 +1121,10 @@ mod test_collect_runs {
 
         let mut runs = collect_runs(
             &graph,
-            |_| -> Result<bool, Box<dyn Error>> {Ok(true)}
-        ).unwrap().unwrap();
+            |_| -> Result<bool, ()> {Ok(true)}
+        ).expect("Some");
 
-        let the_run = runs.next().expect("3 nodes");
+        let the_run = runs.next().expect("Some").expect("3 nodes");
         assert_eq!(the_run.len(), 3); 
         assert_eq!(runs.next(), None); 
 
@@ -1131,24 +1133,23 @@ mod test_collect_runs {
         // Now with some filters
         let mut runs = collect_runs(
             &graph,
-            |_| -> Result<bool, Box<dyn Error>> {Ok(false)}
-        ).unwrap().unwrap();
+            |_| -> Result<bool, ()> {Ok(false)}
+        ).expect("Some");
 
         assert_eq!(runs.next(), None);
 
         let mut runs = collect_runs(
             &graph,
-            |n| -> Result<bool, Box<dyn Error>> {Ok(n != n2)}
-        ).unwrap().unwrap();
+            |n| -> Result<bool, ()> {Ok(n != n2)}
+        ).expect("Some");
 
-        assert_eq!(runs.next().expect("n1"), vec![n1]);
-        assert_eq!(runs.next().expect("n3"), vec![n3]);
+        assert_eq!(runs.next(), Some(Ok(vec![n1])));
+        assert_eq!(runs.next(), Some(Ok(vec![n3])));
     }
 
     #[test]
     fn test_multiple_runs_w_filter() {
         let mut graph: BareDiGraph = DiGraph::new();
-        // TODO: change to a for loop
         let n1 = graph.add_node(());
         let n2 = graph.add_node(());
         let n3 = graph.add_node(());
@@ -1165,32 +1166,31 @@ mod test_collect_runs {
         graph.add_edge(n5, n4, ());
         graph.add_edge(n6, n5, ());
 
-        let runs: Vec<Vec<<BareDiGraph as GraphBase>::NodeId>> = collect_runs(
+        let runs: Vec<RunResult> = collect_runs(
             &graph,
-            |_| -> Result<bool, Box<dyn Error>> {Ok(true)}
-        ).unwrap().unwrap().collect();
+            |_| -> Result<bool, ()> {Ok(true)}
+        ).expect("Some").collect();
         
         assert_eq!(
             runs,            
-            vec![vec![n6, n5, n4], vec![n1, n2, n3, n7]] 
+            vec![Ok(vec![n6, n5, n4]), Ok(vec![n1, n2, n3, n7])] 
         );
 
         // And now with some filter
-        let runs: Vec<Vec<<BareDiGraph as GraphBase>::NodeId>> = collect_runs(
+        let runs: Vec<RunResult> = collect_runs(
             &graph,
-            |n| -> Result<bool, Box<dyn Error>> {Ok(n != n4 && n != n2)}
-        ).unwrap().unwrap().collect();
+            |n| -> Result<bool, ()> {Ok(n != n4 && n != n2)}
+        ).expect("Some").collect();
 
         assert_eq!(
             runs,
-            vec![vec![n6, n5], vec![n1], vec![n3, n7]]
+            vec![Ok(vec![n6, n5]), Ok(vec![n1]), Ok(vec![n3, n7])]
         );
     }
 
     #[test]
     fn test_singleton_runs_w_filter() {
         let mut graph: BareDiGraph = DiGraph::new();
-        // TODO: change to a for loop
         let n1 = graph.add_node(());
         let n2 = graph.add_node(());
         let n3 = graph.add_node(());
@@ -1200,23 +1200,23 @@ mod test_collect_runs {
 
         let mut runs = collect_runs(&
             graph,
-            |_| -> Result<bool, Box<dyn Error>> {Ok(true)}
-        ).unwrap().unwrap();
+            |_| -> Result<bool, ()> {Ok(true)}
+        ).expect("Some");
 
 
-        assert_eq!(runs.next().expect("n1"), vec![n1]);
-        assert_eq!(runs.next().expect("n3"), vec![n3]);
-        assert_eq!(runs.next().expect("n2"), vec![n2]);
+        assert_eq!(runs.next().expect("n1"), Ok(vec![n1]));
+        assert_eq!(runs.next().expect("n3"), Ok(vec![n3]));
+        assert_eq!(runs.next().expect("n2"), Ok(vec![n2]));
 
         // And now with some filter
-        let runs: Vec<Vec<<BareDiGraph as GraphBase>::NodeId>> = collect_runs(
+        let runs: Vec<RunResult> = collect_runs(
             &graph,
-            |n| -> Result<bool, Box<dyn Error>> {Ok(n != n1)}
-        ).unwrap().unwrap().collect();
+            |n| -> Result<bool, ()> {Ok(n != n1)}
+        ).expect("Some").collect();
 
         assert_eq!(
             runs,
-            vec![vec![n3], vec![n2]]
+            vec![Ok(vec![n3]), Ok(vec![n2])]
         );
     }
 }
