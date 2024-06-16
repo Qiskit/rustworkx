@@ -476,12 +476,80 @@ where
     Ok(Some(block_list))
 }
 
+// Auxiliary struct to make the output of collect_runs iteratable  
+pub struct Runs<G, F, E>
+where
+    G: GraphProp<EdgeType = Directed>
+    + IntoNeighborsDirected
+    + IntoNodeIdentifiers
+    + Visitable
+    + NodeCount,
+    F: Fn(G::NodeId) ->  Result<bool, E>,
+ { 
+    graph: G,
+    sorted_nodes: Vec<G::NodeId>, // topologically-sorted nodes
+    seen: HashSet<G::NodeId>, 
+    include_node_fn: F, // filtering function of the nodes
+}
+
+impl<G, F, E> Iterator for Runs<G, F, E>
+where
+    G: GraphProp<EdgeType = Directed>
+    + IntoNeighborsDirected
+    + IntoNodeIdentifiers
+    + Visitable
+    + NodeCount,
+    F: Fn(G::NodeId) ->  Result<bool, E>,
+    <G as GraphBase>::NodeId: Hash + Eq,
+{
+    type Item = Vec<G::NodeId>; // This is a run
+
+    fn next(&mut self) -> Option<Self::Item> {
+        while let Some(node) = self.sorted_nodes.pop() {
+            if self.seen.contains(&node) {
+                continue;
+            }
+            self.seen.insert(node);
+
+            // TODO: what should we do in case of an error?
+            if let Ok(false) = (self.include_node_fn)(node) {
+                continue;
+            }
+
+            let mut run: Vec<G::NodeId> = vec![node];
+            loop {
+                let mut successors: Vec<G::NodeId> = self.graph
+                    .neighbors_directed(*run.last().unwrap(), petgraph::Direction::Outgoing)
+                    .collect();
+                successors.dedup();
+
+                if successors.len() != 1 || self.seen.contains(&successors[0]) {
+                    break;
+                }
+
+                self.seen.insert(successors[0]);
+            
+                // TODO: what should we do in case of an error?
+                if let Ok(false) = (self.include_node_fn)(successors[0]) {
+                    continue;
+                }
+    
+                run.push(successors[0]);
+            }
+
+            if !run.is_empty() {
+                return Some(run);
+            }
+        }
+
+        None 
+    }
+}
+
 pub fn collect_runs<G, F, E>(
     graph: G, 
     include_node_fn: F
-) -> Result<Option<Vec<Vec<<G as GraphBase>::NodeId>>>, E>
-// TODO: return type is a place holder
-// TODO: should the filter function defined as a generic or like this?
+) -> Result<Option<Runs<G, F, E>>, E>
 where
     G: GraphProp<EdgeType = Directed>
         + IntoNeighborsDirected
@@ -489,53 +557,23 @@ where
         + Visitable
         + NodeCount,
     F: Fn(G::NodeId) ->  Result<bool, E>,
-    <G as GraphBase>::NodeId: Hash + Eq, // TODO: what type of declaration is it?
+    <G as GraphBase>::NodeId: Hash + Eq, 
 {
-    let mut out_list = Vec::new();
-
-    let nodes = match algo::toposort(graph, None) {
+    let mut nodes = match algo::toposort(graph, None) {
         Ok(nodes) => nodes,
         Err(_) => return Ok(None),
     };
 
-    let mut seen: HashSet<G::NodeId> = HashSet::with_capacity(nodes.len());
+    nodes.reverse(); // reversing so that we can use pop() in Runs
 
-    for node in nodes {
-        if seen.contains(&node) {
-            continue;
-        }
-        seen.insert(node);
+    let runs = Runs{
+        graph: graph,
+        seen: HashSet::with_capacity(nodes.len()),
+        sorted_nodes: nodes, 
+        include_node_fn: include_node_fn,
+    };
 
-        if !include_node_fn(node)? {
-            continue;
-        }
-
-        let mut run: Vec<G::NodeId> = vec![node];
-        loop {
-            let mut successors: Vec<G::NodeId> = graph
-                .neighbors_directed(*run.last().unwrap(), petgraph::Direction::Outgoing)
-                .collect();
-            successors.dedup();
-
-            if successors.len() != 1 || seen.contains(&successors[0]) {
-                break;
-            }
-
-            seen.insert(successors[0]);
-            
-            if !include_node_fn(successors[0])? {
-                continue;
-            }
-    
-            run.push(successors[0]);
-        }
-
-        if !run.is_empty() {
-            out_list.push(run);
-        }
-    }
-
-    Ok(Some(out_list))
+    Ok(Some(runs))
 }
 
 // Tests for longest_path
@@ -1049,8 +1087,23 @@ mod test_collect_runs {
     fn test_empty_graph() {
         let graph: BareDiGraph = DiGraph::new();
 
+        let mut runs = collect_runs(
+            &graph,
+            |_| -> Result<bool, Box<dyn Error>> {Ok(true)}
+        ).unwrap().unwrap();
+
+        let run = runs.next();
+        assert_eq!(run, None);
+
+        let runs = collect_runs(
+            &graph,
+            |_| -> Result<bool, Box<dyn Error>> {Ok(true)}
+        ).unwrap().unwrap();
+
+        let runs: Vec<Vec<<BareDiGraph as GraphBase>::NodeId>> = runs.collect();
+
         assert_eq!(
-            collect_runs(&graph, |_| -> Result<bool, Box<dyn Error>> {Ok(true)}).unwrap().unwrap(), 
+            runs,
             Vec::<Vec::<<BareDiGraph as GraphBase>::NodeId>>::new()
         );
     }
@@ -1064,22 +1117,32 @@ mod test_collect_runs {
         graph.add_edge(n1, n2, ());
         graph.add_edge(n2, n3, ());
 
-        let runs = collect_runs(&graph, |_| -> Result<bool, Box<dyn Error>> {Ok(true)}).unwrap().unwrap();
+        let mut runs = collect_runs(
+            &graph,
+            |_| -> Result<bool, Box<dyn Error>> {Ok(true)}
+        ).unwrap().unwrap();
 
-        assert_eq!(runs.len(), 1); // Only 1 run
-        assert_eq!(runs[0].len(), 3); // Of length 3
+        let the_run = runs.next().expect("3 nodes");
+        assert_eq!(the_run.len(), 3); 
+        assert_eq!(runs.next(), None); 
 
-        assert_eq!(runs, vec![vec![n1, n2, n3]]);
+        assert_eq!(the_run, vec![n1, n2, n3]);
 
-        assert_eq!(
-            collect_runs(&graph, |_| -> Result<bool, Box<dyn Error>> {Ok(false)}).unwrap().unwrap(), 
-            Vec::<Vec::<<BareDiGraph as GraphBase>::NodeId>>::new()
-        );
+        // Now with some filters
+        let mut runs = collect_runs(
+            &graph,
+            |_| -> Result<bool, Box<dyn Error>> {Ok(false)}
+        ).unwrap().unwrap();
 
-        assert_eq!(
-            collect_runs(&graph, |n| -> Result<bool, Box<dyn Error>> {Ok(n != n2)}).unwrap().unwrap(), 
-            vec![[n1], [n3]]
-        );
+        assert_eq!(runs.next(), None);
+
+        let mut runs = collect_runs(
+            &graph,
+            |n| -> Result<bool, Box<dyn Error>> {Ok(n != n2)}
+        ).unwrap().unwrap();
+
+        assert_eq!(runs.next().expect("n1"), vec![n1]);
+        assert_eq!(runs.next().expect("n3"), vec![n3]);
     }
 
     #[test]
@@ -1102,13 +1165,24 @@ mod test_collect_runs {
         graph.add_edge(n5, n4, ());
         graph.add_edge(n6, n5, ());
 
+        let runs: Vec<Vec<<BareDiGraph as GraphBase>::NodeId>> = collect_runs(
+            &graph,
+            |_| -> Result<bool, Box<dyn Error>> {Ok(true)}
+        ).unwrap().unwrap().collect();
+        
         assert_eq!(
-            collect_runs(&graph, |_| -> Result<bool, Box<dyn Error>> {Ok(true)}).unwrap().unwrap(),
+            runs,            
             vec![vec![n6, n5, n4], vec![n1, n2, n3, n7]] 
         );
 
+        // And now with some filter
+        let runs: Vec<Vec<<BareDiGraph as GraphBase>::NodeId>> = collect_runs(
+            &graph,
+            |n| -> Result<bool, Box<dyn Error>> {Ok(n != n4 && n != n2)}
+        ).unwrap().unwrap().collect();
+
         assert_eq!(
-            collect_runs(&graph, |n| -> Result<bool, Box<dyn Error>> {Ok(n != n4 && n != n2)}).unwrap().unwrap(),
+            runs,
             vec![vec![n6, n5], vec![n1], vec![n3, n7]]
         );
     }
@@ -1124,13 +1198,24 @@ mod test_collect_runs {
         graph.add_edge(n1, n2, ());
         graph.add_edge(n1, n3, ());
 
-        assert_eq!(
-            collect_runs(&graph, |_| -> Result<bool, Box<dyn Error>> {Ok(true)}).unwrap().unwrap(),
-            vec![vec![n1], vec![n3], vec![n2]] 
-        );
+        let mut runs = collect_runs(&
+            graph,
+            |_| -> Result<bool, Box<dyn Error>> {Ok(true)}
+        ).unwrap().unwrap();
+
+
+        assert_eq!(runs.next().expect("n1"), vec![n1]);
+        assert_eq!(runs.next().expect("n3"), vec![n3]);
+        assert_eq!(runs.next().expect("n2"), vec![n2]);
+
+        // And now with some filter
+        let runs: Vec<Vec<<BareDiGraph as GraphBase>::NodeId>> = collect_runs(
+            &graph,
+            |n| -> Result<bool, Box<dyn Error>> {Ok(n != n1)}
+        ).unwrap().unwrap().collect();
 
         assert_eq!(
-            collect_runs(&graph, |n| -> Result<bool, Box<dyn Error>> {Ok(n != n1)}).unwrap().unwrap(),
+            runs,
             vec![vec![n3], vec![n2]]
         );
     }
