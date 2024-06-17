@@ -21,10 +21,8 @@ mod utils {
     use super::*;
 
     pub struct HexagonalLatticeBuilder {
-        rows: usize,   // Number of rows of hexagons
-        cols: usize,   // Number of columns of hexagons
-        rowlen: usize, // Number of nodes in each vertical chain
-        collen: usize, // Number of veritcal chains
+        rowlen: usize,    // Number of nodes in each vertical chain
+        collen: usize,    // Number of vertical chains
         num_nodes: usize, // Total number of nodes
         bidirectional: bool,
         periodic: bool,
@@ -53,8 +51,6 @@ mod utils {
             };
 
             Ok(HexagonalLatticeBuilder {
-                rows,
-                cols,
                 rowlen,
                 collen,
                 num_nodes,
@@ -66,7 +62,8 @@ mod utils {
         pub fn build_with_default_node_weight<G, T, F, H, M>(
             self,
             mut default_node_weight: F,
-        ) -> (G, Vec<G::NodeId>)
+            default_edge_weight: H,
+        ) -> G
         where
             G: Build + Create + Data<NodeWeight = T, EdgeWeight = M> + NodeIndexable,
             F: FnMut() -> T,
@@ -78,8 +75,81 @@ mod utils {
             let nodes: Vec<G::NodeId> = (0..self.num_nodes)
                 .map(|_| graph.add_node(default_node_weight()))
                 .collect();
+            self.add_edges(&mut graph, nodes, default_edge_weight);
 
-            (graph, nodes)
+            graph
+        }
+
+        fn add_edges<G, H, M>(
+            &self,
+            graph: &mut G,
+            nodes: Vec<G::NodeId>,
+            mut default_edge_weight: H,
+        ) -> ()
+        where
+            G: Build + NodeIndexable + Data<EdgeWeight = M>,
+            H: FnMut() -> M,
+        {
+            let mut add_edge = |u, v| {
+                graph.add_edge(nodes[u], nodes[v], default_edge_weight());
+                if self.bidirectional {
+                    graph.add_edge(nodes[v], nodes[u], default_edge_weight());
+                }
+            };
+
+            if self.periodic {
+                // Add column edges
+                for i in 0..self.collen {
+                    let col_start = i * self.rowlen;
+                    for j in col_start..(col_start + self.rowlen - 1) {
+                        add_edge(j, j + 1);
+                    }
+                    add_edge(col_start + self.rowlen - 1, col_start);
+                }
+                // Add row edges
+                for i in 0..self.collen {
+                    let col_start = i * self.rowlen + i % 2;
+                    for j in (col_start..(col_start + self.rowlen)).step_by(2) {
+                        add_edge(j, (j + self.rowlen) % self.num_nodes);
+                    }
+                }
+            } else {
+                // Add column edges
+                for j in 0..(self.rowlen - 2) {
+                    add_edge(j, j + 1);
+                }
+                for i in 1..(self.collen - 1) {
+                    for j in 0..(self.rowlen - 1) {
+                        add_edge(i * self.rowlen + j - 1, i * self.rowlen + j);
+                    }
+                }
+                for j in 0..(self.rowlen - 2) {
+                    add_edge(
+                        (self.collen - 1) * self.rowlen + j - 1,
+                        (self.collen - 1) * self.rowlen + j,
+                    );
+                }
+
+                // Add row edges
+                for j in (0..(self.rowlen - 1)).step_by(2) {
+                    add_edge(j, j + self.rowlen - 1);
+                }
+                for i in 1..(self.collen - 2) {
+                    for j in 0..self.rowlen {
+                        if i % 2 == j % 2 {
+                            add_edge(i * self.rowlen + j - 1, (i + 1) * self.rowlen + j - 1);
+                        }
+                    }
+                }
+                if self.collen > 2 {
+                    for j in ((self.collen % 2)..self.rowlen).step_by(2) {
+                        add_edge(
+                            (self.collen - 2) * self.rowlen + j - 1,
+                            (self.collen - 1) * self.rowlen + j - 1 - (self.collen % 2),
+                        );
+                    }
+                }
+            }
         }
     }
 }
@@ -91,7 +161,7 @@ mod utils {
 /// * `rows` - The number of rows to generate the graph with.
 /// * `cols` - The number of columns to generate the graph with.
 /// * `default_node_weight` - A callable that will return the weight to use
-///     for newly created nodes. This is ignored if `weights` is specified.
+///     for newly created nodes.
 /// * `default_edge_weight` - A callable that will return the weight object
 ///     to use for newly created edges.
 /// * `bidirectional` - Whether edges are added bidirectionally. If set to
@@ -147,7 +217,7 @@ pub fn hexagonal_lattice_graph<G, T, F, H, M>(
     rows: usize,
     cols: usize,
     default_node_weight: F,
-    mut default_edge_weight: H,
+    default_edge_weight: H,
     bidirectional: bool,
     periodic: bool,
 ) -> Result<G, InvalidInputError>
@@ -161,81 +231,11 @@ where
         return Ok(G::with_capacity(0, 0));
     }
 
-    // rowlen: number of nodes in each vertical chain
-    // collen: number of vertical chains
-    let (rowlen, collen, num_nodes) = if periodic {
-        let r_len = 2 * rows;
-        (r_len, cols, r_len * cols)
-    } else {
-        // Note: in the non-periodic case the first and last
-        // vertical chains have (2 * rows + 1) nodes. All
-        // others have (2 * rows + 2) nodes.
-        let r_len = 2 * rows + 2;
-        (r_len, cols + 1, r_len * (cols + 1) - 2)
-    };
-
     let builder = utils::HexagonalLatticeBuilder::new(rows, cols, bidirectional, periodic)?;
 
-    let (mut graph, nodes): (G, Vec<G::NodeId>) =
-        builder.build_with_default_node_weight::<G, T, F, H, M>(default_node_weight);
+    let graph = builder
+        .build_with_default_node_weight::<G, T, F, H, M>(default_node_weight, default_edge_weight);
 
-    let mut add_edge = |u, v| {
-        graph.add_edge(nodes[u], nodes[v], default_edge_weight());
-        if bidirectional {
-            graph.add_edge(nodes[v], nodes[u], default_edge_weight());
-        }
-    };
-
-    if periodic {
-        // Add column edges
-        for i in 0..collen {
-            let col_start = i * rowlen;
-            for j in col_start..(col_start + rowlen - 1) {
-                add_edge(j, j + 1);
-            }
-            add_edge(col_start + rowlen - 1, col_start);
-        }
-        // Add row edges
-        for i in 0..collen {
-            let col_start = i * rowlen + i % 2;
-            for j in (col_start..(col_start + rowlen)).step_by(2) {
-                add_edge(j, (j + rowlen) % num_nodes);
-            }
-        }
-    } else {
-        // Add column edges
-        for j in 0..(rowlen - 2) {
-            add_edge(j, j + 1);
-        }
-        for i in 1..(collen - 1) {
-            for j in 0..(rowlen - 1) {
-                add_edge(i * rowlen + j - 1, i * rowlen + j);
-            }
-        }
-        for j in 0..(rowlen - 2) {
-            add_edge((collen - 1) * rowlen + j - 1, (collen - 1) * rowlen + j);
-        }
-
-        // Add row edges
-        for j in (0..(rowlen - 1)).step_by(2) {
-            add_edge(j, j + rowlen - 1);
-        }
-        for i in 1..(collen - 2) {
-            for j in 0..rowlen {
-                if i % 2 == j % 2 {
-                    add_edge(i * rowlen + j - 1, (i + 1) * rowlen + j - 1);
-                }
-            }
-        }
-        if collen > 2 {
-            for j in ((collen % 2)..rowlen).step_by(2) {
-                add_edge(
-                    (collen - 2) * rowlen + j - 1,
-                    (collen - 1) * rowlen + j - 1 - (collen % 2),
-                );
-            }
-        }
-    }
     Ok(graph)
 }
 
