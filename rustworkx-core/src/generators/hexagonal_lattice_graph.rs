@@ -43,9 +43,6 @@ mod utils {
                 let r_len = 2 * rows;
                 (r_len, cols, r_len * cols)
             } else {
-                // Note: in the non-periodic case the first and last
-                // vertical chains have (2 * rows + 1) nodes. All
-                // others have (2 * rows + 2) nodes.
                 let r_len = 2 * rows + 2;
                 (r_len, cols + 1, r_len * (cols + 1) - 2)
             };
@@ -74,6 +71,45 @@ mod utils {
             let mut graph = G::with_capacity(self.num_nodes, self.num_nodes);
             let nodes: Vec<G::NodeId> = (0..self.num_nodes)
                 .map(|_| graph.add_node(default_node_weight()))
+                .collect();
+            self.add_edges(&mut graph, nodes, default_edge_weight);
+
+            graph
+        }
+
+        pub fn build_with_position_dependent_node_weight<G, T, F, H, M>(
+            self,
+            mut node_weight: F,
+            default_edge_weight: H,
+        ) -> G
+        where
+            G: Build + Create + Data<NodeWeight = T, EdgeWeight = M> + NodeIndexable,
+            F: FnMut(usize, usize) -> T,
+            H: FnMut() -> M,
+            G::NodeId: Eq + Hash,
+        {
+            // ToDo: be more precise about the number of edges
+            let mut graph = G::with_capacity(self.num_nodes, self.num_nodes);
+
+            let lattice_position = |n| -> (usize, usize) {
+                if self.periodic {
+                    (n / self.rowlen, n % self.rowlen)
+                } else {
+                    // In the non-periodic case the first and last vertical
+                    // chains have rowlen - 1 = 2 * rows + 1 nodes. All others
+                    // have rowlen = 2 * rows + 2 nodes.
+                    if n < self.rowlen - 1 {
+                        (0, n)
+                    } else {
+                        let k = n - (self.rowlen - 1);
+                        (k / self.rowlen + 1, k % self.rowlen)
+                    }
+                }
+            };
+
+            let nodes: Vec<G::NodeId> = (0..self.num_nodes)
+                .map(|n| lattice_position(n))
+                .map(|(u, v)| graph.add_node(node_weight(u, v)))
                 .collect();
             self.add_edges(&mut graph, nodes, default_edge_weight);
 
@@ -239,15 +275,43 @@ where
     Ok(graph)
 }
 
+pub fn hexagonal_lattice_graph_weighted<G, T, F, H, M>(
+    rows: usize,
+    cols: usize,
+    node_weight: F,
+    default_edge_weight: H,
+    bidirectional: bool,
+    periodic: bool,
+) -> Result<G, InvalidInputError>
+where
+    G: Build + Create + Data<NodeWeight = T, EdgeWeight = M> + NodeIndexable,
+    F: FnMut(usize, usize) -> T,
+    H: FnMut() -> M,
+    G::NodeId: Eq + Hash,
+{
+    if rows == 0 || cols == 0 {
+        return Ok(G::with_capacity(0, 0));
+    }
+
+    let builder = utils::HexagonalLatticeBuilder::new(rows, cols, bidirectional, periodic)?;
+
+    let graph = builder.build_with_position_dependent_node_weight::<G, T, F, H, M>(
+        node_weight,
+        default_edge_weight,
+    );
+
+    Ok(graph)
+}
+
 #[cfg(test)]
 mod tests {
-    use crate::generators::hexagonal_lattice_graph;
+    use crate::generators::{hexagonal_lattice_graph, hexagonal_lattice_graph_weighted};
     use crate::petgraph;
     use crate::petgraph::visit::EdgeRef;
     use std::collections::HashSet;
 
-    fn check_expected_edges_directed(
-        graph: &petgraph::graph::DiGraph<(), ()>,
+    fn check_expected_edges_directed<T>(
+        graph: &petgraph::graph::DiGraph<T, ()>,
         expected_edges: &Vec<(usize, usize)>,
     ) {
         assert_eq!(graph.edge_count(), expected_edges.len());
@@ -343,6 +407,11 @@ mod tests {
             hexagonal_lattice_graph(2, 2, || (), || (), false, false).unwrap();
         assert_eq!(g.node_count(), 16);
         check_expected_edges_directed(&g, &expected_edges);
+
+        let g_weighted: petgraph::graph::DiGraph<(usize, usize), ()> =
+            hexagonal_lattice_graph_weighted(2, 2, |u, v| (u, v), || (), false, false).unwrap();
+        assert_eq!(g_weighted.node_count(), 16);
+        check_expected_edges_directed(&g_weighted, &expected_edges);
     }
 
     #[test]
@@ -458,6 +527,11 @@ mod tests {
             hexagonal_lattice_graph(2, 2, || (), || (), false, true).unwrap();
         assert_eq!(g.node_count(), 8);
         check_expected_edges_directed(&g, &expected_edges);
+
+        let g_weighted: petgraph::graph::DiGraph<(usize, usize), ()> =
+            hexagonal_lattice_graph_weighted(2, 2, |u, v| (u, v), || (), false, true).unwrap();
+        assert_eq!(g_weighted.node_count(), 8);
+        check_expected_edges_directed(&g_weighted, &expected_edges);
     }
 
     #[test]
