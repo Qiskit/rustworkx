@@ -297,6 +297,7 @@ pub fn is_semi_connected(graph: &digraph::PyDiGraph) -> PyResult<bool> {
     }
 
     let condensed = condensation(temp_graph, true);
+    let condensed = condensation(temp_graph, true);
     let condensed_digraph = DiGraph::from(condensed);
 
     let found_path: RwLock<bool> = RwLock::new(true);
