@@ -21,7 +21,6 @@ use super::{
 };
 
 use hashbrown::{HashMap, HashSet};
-use pyo3::exceptions::PyValueError;
 use petgraph::algo;
 use petgraph::algo::condensation;
 use petgraph::algo::toposort;
@@ -29,6 +28,7 @@ use petgraph::graph::DiGraph;
 use petgraph::stable_graph::NodeIndex;
 use petgraph::unionfind::UnionFind;
 use petgraph::visit::{EdgeRef, IntoEdgeReferences, NodeCount, NodeIndexable, Visitable};
+use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use pyo3::types::PyDict;
 use pyo3::Python;
@@ -300,17 +300,17 @@ pub fn is_semi_connected(graph: &digraph::PyDiGraph) -> PyResult<bool> {
     let condensed_digraph = DiGraph::from(condensed);
 
     let found_path: RwLock<bool> = RwLock::new(true);
-    
-    let topo_sort = match toposort(&condensed_digraph, None){
+    let topo_sort = match toposort(&condensed_digraph, None) {
         Ok(topo_sort) => topo_sort,
-        Err(_) => return Err(PyValueError::new_err(
-            "toposort failed",
-        ))
+        Err(_) => return Err(PyValueError::new_err("toposort failed")),
     };
 
-    let pairs: Vec<_> = topo_sort.windows(2).map(|window| (window[0], window[1])).collect();
-    pairs.into_par_iter().for_each(|(u,v)| {
-        if !graph.has_edge(u.index(), v.index()){
+    let pairs: Vec<_> = topo_sort
+        .windows(2)
+        .map(|window| (window[0], window[1]))
+        .collect();
+    pairs.into_par_iter().for_each(|(u, v)| {
+        if !graph.has_edge(u.index(), v.index()) {
             let mut path = found_path.write().unwrap();
             *path = false;
         }
