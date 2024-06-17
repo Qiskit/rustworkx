@@ -19,9 +19,9 @@ use super::iterators::NodeIndices;
 use crate::{digraph, DAGHasCycle, InvalidNode, StablePyGraph};
 
 use rustworkx_core::dag_algo::collect_bicolor_runs as core_collect_bicolor_runs;
+use rustworkx_core::dag_algo::collect_runs as core_collect_runs;
 use rustworkx_core::dag_algo::lexicographical_topological_sort as core_lexico_topo_sort;
 use rustworkx_core::dag_algo::longest_path as core_longest_path;
-use rustworkx_core::dag_algo::collect_runs as core_collect_runs;
 use rustworkx_core::traversal::dfs_edges;
 
 use pyo3::exceptions::PyValueError;
@@ -562,7 +562,7 @@ pub fn collect_runs(
     graph: &digraph::PyDiGraph,
     filter_fn: PyObject,
 ) -> PyResult<Vec<Vec<PyObject>>> {
-    let filter_node = |node_id| -> Result<bool, PyErr> { 
+    let filter_node = |node_id| -> Result<bool, PyErr> {
         let py_node = graph.graph.node_weight(node_id);
         filter_fn.call1(py, (py_node,))?.extract::<bool>(py)
     };
@@ -575,7 +575,7 @@ pub fn collect_runs(
     let mut result: Vec<Vec<PyObject>> = Vec::new();
     for run_result in core_runs {
         // This is where a filter function error will be returned, otherwise Result is stripped away
-        let py_run: Vec<PyObject> = run_result? 
+        let py_run: Vec<PyObject> = run_result?
             .iter()
             .map(|node| return graph.graph.node_weight(*node).into_py(py))
             .collect();
