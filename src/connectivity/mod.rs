@@ -21,15 +21,14 @@ use super::{
 };
 
 use hashbrown::{HashMap, HashSet};
-
+use pyo3::exceptions::PyValueError;
 use petgraph::algo;
 use petgraph::algo::condensation;
 use petgraph::algo::toposort;
 use petgraph::graph::DiGraph;
 use petgraph::stable_graph::NodeIndex;
 use petgraph::unionfind::UnionFind;
-use petgraph::visit::{EdgeRef, IntoEdgeReferences, NodeCount, NodeIndexable, Visitable, DfsPostOrder};
-use pyo3::exceptions::PyValueError;
+use petgraph::visit::{EdgeRef, IntoEdgeReferences, NodeCount, NodeIndexable, Visitable};
 use pyo3::prelude::*;
 use pyo3::types::PyDict;
 use pyo3::Python;
@@ -297,29 +296,21 @@ pub fn is_semi_connected(graph: &digraph::PyDiGraph) -> PyResult<bool> {
         temp_graph.add_edge(node_map[source.index()], node_map[target.index()], ());
     }
 
-    let condensed = condensation(temp_graph, false);
+    let condensed = condensation(temp_graph, true);
     let condensed_digraph = DiGraph::from(condensed);
 
     let found_path: RwLock<bool> = RwLock::new(true);
     
     let topo_sort = match toposort(&condensed_digraph, None){
         Ok(topo_sort) => topo_sort,
-        Err(_) => {
-            let mut dfs = DfsPostOrder::new(&condensed_digraph, NodeIndex::new(0));
-            let mut nodes = Vec::new();
-            while let Some(node) = dfs.next(&condensed_digraph){
-                nodes.push(node);
-            }
-            nodes.reverse();
-            nodes
-        },
+        Err(_) => return Err(PyValueError::new_err(
+            "toposort failed",
+        ))
     };
-
-    // petgraph::algo::has_path_connecting(&condensed_digraph, u, v, None
 
     let pairs: Vec<_> = topo_sort.windows(2).map(|window| (window[0], window[1])).collect();
     pairs.into_par_iter().for_each(|(u,v)| {
-        if !(graph.has_edge(u.index(), v.index())) && !(graph.has_edge(v.index(), u.index())){
+        if !graph.has_edge(u.index(), v.index()){
             let mut path = found_path.write().unwrap();
             *path = false;
         }
