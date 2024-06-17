@@ -319,7 +319,7 @@ pub fn is_semi_connected(graph: &digraph::PyDiGraph) -> PyResult<bool> {
 
     let pairs: Vec<_> = topo_sort.windows(2).map(|window| (window[0], window[1])).collect();
     pairs.into_par_iter().for_each(|(u,v)| {
-        if !(graph.has_edge(u.index(), v.index())) && !(graph.has_edge(v.index(), u.index())){
+        if !graph.has_edge(u.index(), v.index()){
             let mut path = found_path.write().unwrap();
             *path = false;
         }
