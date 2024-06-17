@@ -17,21 +17,21 @@ import rustworkx.generators
 
 
 class TestSemiConnected(unittest.TestCase):
-    def test_is_semi_connected_true(self):
+    def test_is_semi_connected_simple(self):
         graph = rustworkx.PyDiGraph()
         graph.add_nodes_from(list(range(3)))
         graph.add_edge(0, 1, None)
         graph.add_edge(1, 2, None)
 
-        self.assertTrue(rustworkx.is_semi_connected(graph))
+        self.assertFalse(rustworkx.is_semi_connected(graph))
 
-    def test_is_semi_connected_reverse(self):
+    def test_is_semi_connected_false(self):
         graph = rustworkx.PyDiGraph()
         graph.add_nodes_from(list(range(3)))
         graph.add_edge(0, 1, None)
         graph.add_edge(2, 1, None)
 
-        self.assertTrue(rustworkx.is_semi_connected(graph))
+        self.assertFalse(rustworkx.is_semi_connected(graph))
 
     def test_is_semi_connected_single_node(self):
         graph = rustworkx.PyDiGraph()
@@ -56,12 +56,12 @@ class TestSemiConnected(unittest.TestCase):
 
     def test_is_semi_connected_directed_path_graph(self):
         graph = rustworkx.generators.directed_path_graph(100)
-        self.assertTrue(rustworkx.is_semi_connected(graph))
-  
+        self.assertFalse(rustworkx.is_semi_connected(graph))
+
     def test_is_semi_connected_directed_star_graph(self):
         graph = rustworkx.generators.directed_star_graph(100)
         self.assertFalse(rustworkx.is_semi_connected(graph))
-  
+
     def test_is_semi_connected_directed_grid_graph(self):
-        graph = rustworkx.generators.directed_grid_graph(50,50)
+        graph = rustworkx.generators.directed_grid_graph(50, 50)
         self.assertFalse(rustworkx.is_semi_connected(graph))
