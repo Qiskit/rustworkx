@@ -17,6 +17,73 @@ use petgraph::visit::{Data, NodeIndexable};
 
 use super::InvalidInputError;
 
+mod utils {
+    use super::*;
+
+    pub struct HexagonalLatticeBuilder {
+        rows: usize,   // Number of rows of hexagons
+        cols: usize,   // Number of columns of hexagons
+        rowlen: usize, // Number of nodes in each vertical chain
+        collen: usize, // Number of veritcal chains
+        num_nodes: usize, // Total number of nodes
+        bidirectional: bool,
+        periodic: bool,
+    }
+
+    impl HexagonalLatticeBuilder {
+        pub fn new(
+            rows: usize,
+            cols: usize,
+            bidirectional: bool,
+            periodic: bool,
+        ) -> Result<HexagonalLatticeBuilder, InvalidInputError> {
+            if periodic && (cols % 2 == 1 || rows < 2 || cols < 2) {
+                return Err(InvalidInputError {});
+            }
+
+            let (rowlen, collen, num_nodes) = if periodic {
+                let r_len = 2 * rows;
+                (r_len, cols, r_len * cols)
+            } else {
+                // Note: in the non-periodic case the first and last
+                // vertical chains have (2 * rows + 1) nodes. All
+                // others have (2 * rows + 2) nodes.
+                let r_len = 2 * rows + 2;
+                (r_len, cols + 1, r_len * (cols + 1) - 2)
+            };
+
+            Ok(HexagonalLatticeBuilder {
+                rows,
+                cols,
+                rowlen,
+                collen,
+                num_nodes,
+                bidirectional,
+                periodic,
+            })
+        }
+
+        pub fn build_with_default_node_weight<G, T, F, H, M>(
+            self,
+            mut default_node_weight: F,
+        ) -> (G, Vec<G::NodeId>)
+        where
+            G: Build + Create + Data<NodeWeight = T, EdgeWeight = M> + NodeIndexable,
+            F: FnMut() -> T,
+            H: FnMut() -> M,
+            G::NodeId: Eq + Hash,
+        {
+            // ToDo: be more precise about the number of edges
+            let mut graph = G::with_capacity(self.num_nodes, self.num_nodes);
+            let nodes: Vec<G::NodeId> = (0..self.num_nodes)
+                .map(|_| graph.add_node(default_node_weight()))
+                .collect();
+
+            (graph, nodes)
+        }
+    }
+}
+
 /// Generate a hexagonal lattice graph
 ///
 /// Arguments:
@@ -79,7 +146,7 @@ use super::InvalidInputError;
 pub fn hexagonal_lattice_graph<G, T, F, H, M>(
     rows: usize,
     cols: usize,
-    mut default_node_weight: F,
+    default_node_weight: F,
     mut default_edge_weight: H,
     bidirectional: bool,
     periodic: bool,
@@ -92,10 +159,6 @@ where
 {
     if rows == 0 || cols == 0 {
         return Ok(G::with_capacity(0, 0));
-    }
-
-    if periodic && (cols % 2 == 1 || rows < 2 || cols < 2) {
-        return Err(InvalidInputError {});
     }
 
     // rowlen: number of nodes in each vertical chain
@@ -111,11 +174,10 @@ where
         (r_len, cols + 1, r_len * (cols + 1) - 2)
     };
 
-    let mut graph = G::with_capacity(num_nodes, num_nodes);
+    let builder = utils::HexagonalLatticeBuilder::new(rows, cols, bidirectional, periodic)?;
 
-    let nodes: Vec<G::NodeId> = (0..num_nodes)
-        .map(|_| graph.add_node(default_node_weight()))
-        .collect();
+    let (mut graph, nodes): (G, Vec<G::NodeId>) =
+        builder.build_with_default_node_weight::<G, T, F, H, M>(default_node_weight);
 
     let mut add_edge = |u, v| {
         graph.add_edge(nodes[u], nodes[v], default_edge_weight());
