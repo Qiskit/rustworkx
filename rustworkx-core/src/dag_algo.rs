@@ -324,7 +324,7 @@ where
 ///
 /// # Arguments:
 ///
-/// * `dag`: The DAG to find bicolor runs in
+/// * `graph`: The DAG to find bicolor runs in
 /// * `filter_fn`: The filter function to use for matching nodes. It takes
 ///     in one argument, the node data payload/weight object, and will return a
 ///     boolean whether the node matches the conditions or not.
@@ -476,7 +476,80 @@ where
     Ok(Some(block_list))
 }
 
-// Auxiliary struct to make the output of collect_runs iteratable  
+/// Collect runs that match a filter function
+///
+/// A run is a path of nodes where there is only a single successor and all
+/// nodes in the path match the given condition. Each node in the graph can
+/// appear in only a single run.
+///
+/// # Arguments:
+///
+/// * `graph`: The DAG to collect runs from
+/// * `include_node_fn`: A filter function used for matching nodes. It takes
+///     in one argument, the node data payload/weight object, and returns a
+///     boolean whether the node matches the conditions or not.
+///     If it returns ``false``, the node will be skipped, cutting the run it's part of.
+///
+/// # Returns:
+///
+/// * [`Runs`]`<G, F, E>`: A struct implementing the Iterator for extracting the runs one by one. Each run is 
+/// * of type `Vec<G::NodeId>`.
+/// * `None` if a cycle is found in the graph
+/// 
+/// # Example
+/// 
+/// ```rust
+/// let mut graph: DiGraph<i32, ()> = DiGraph::new();
+/// let n1 = graph.add_node(-1);
+/// let n2 = graph.add_node(2);
+/// let n3 = graph.add_node(3);
+/// graph.add_edge(n1, n2, ());
+/// graph.add_edge(n1, n3, ());
+/// 
+/// let positive_payload = |n| -> Result<bool, ()> {Ok(*graph.node_weight(n).expect("i32") > 0)};
+/// let mut runs = collect_runs(&graph, positive_payload).expect("Some");
+/// 
+/// assert_eq!(runs.next(), Some(Ok(vec![n3])));
+/// assert_eq!(runs.next(), Some(Ok(vec![n2])));
+/// assert_eq!(runs.next(), None);
+/// ```
+/// 
+pub fn collect_runs<G, F, E>(
+    graph: G, 
+    include_node_fn: F
+) -> Option<Runs<G, F, E>>
+where
+    G: GraphProp<EdgeType = Directed>
+        + IntoNeighborsDirected
+        + IntoNodeIdentifiers
+        + Visitable
+        + NodeCount,
+    F: Fn(G::NodeId) ->  Result<bool, E>,
+    <G as GraphBase>::NodeId: Hash + Eq, 
+{
+    let mut nodes = match algo::toposort(graph, None) {
+        Ok(nodes) => nodes,
+        Err(_) => return None,
+    };
+
+    nodes.reverse(); // reversing so that pop() in Runs::next obeys the topo order
+
+    let runs = Runs{
+        graph,
+        seen: HashSet::with_capacity(nodes.len()),
+        sorted_nodes: nodes, 
+        include_node_fn,
+    };
+
+    Some(runs)
+}
+
+/// Auxiliary struct to make the output of [`collect_runs`] iteratable
+/// 
+/// If the filtering function passed to [`collect_runs`] returns an error, it is propagated 
+/// through `next` as `Err`. In this case the run in which the error occured will be skipped
+/// but the iterator can be used further until consumed. 
+/// 
 pub struct Runs<G, F, E>
 where
     G: GraphProp<EdgeType = Directed>
@@ -547,36 +620,6 @@ where
 
         None
     }
-}
-
-pub fn collect_runs<G, F, E>(
-    graph: G, 
-    include_node_fn: F
-) -> Option<Runs<G, F, E>>
-where
-    G: GraphProp<EdgeType = Directed>
-        + IntoNeighborsDirected
-        + IntoNodeIdentifiers
-        + Visitable
-        + NodeCount,
-    F: Fn(G::NodeId) ->  Result<bool, E>,
-    <G as GraphBase>::NodeId: Hash + Eq, 
-{
-    let mut nodes = match algo::toposort(graph, None) {
-        Ok(nodes) => nodes,
-        Err(_) => return None,
-    };
-
-    nodes.reverse(); // reversing so that pop() in Runs::next obeys the topo order
-
-    let runs = Runs{
-        graph: graph,
-        seen: HashSet::with_capacity(nodes.len()),
-        sorted_nodes: nodes, 
-        include_node_fn: include_node_fn,
-    };
-
-    Some(runs)
 }
 
 // Tests for longest_path
@@ -1218,5 +1261,19 @@ mod test_collect_runs {
             runs,
             vec![Ok(vec![n3]), Ok(vec![n2])]
         );
+    }
+
+    #[test]
+    fn test_error_propagation() {
+        let mut graph: BareDiGraph = DiGraph::new();
+        graph.add_node(());
+
+        let mut runs = collect_runs(
+            &graph,
+            |_| -> Result<bool, ()> {Err(())}
+        ).expect("Some");
+
+        assert!(runs.next().expect("Some").is_err());
+        assert_eq!(runs.next(), None);
     }
 }
