@@ -108,7 +108,7 @@ where
     }
 
     if probability > 0.0 {
-        if (probability - 1.0).abs() < std::f64::EPSILON {
+        if (probability - 1.0).abs() < f64::EPSILON {
             for u in 0..num_nodes {
                 let start_node = if directed { 0 } else { u + 1 };
                 for v in start_node..num_nodes {
@@ -433,7 +433,7 @@ fn symmetric_array<T: std::cmp::PartialEq>(mat: &ArrayView2<T>) -> bool {
 
 #[inline]
 fn pnorm(x: f64, p: f64) -> f64 {
-    if p == 1.0 || p == std::f64::INFINITY {
+    if p == 1.0 || p == f64::INFINITY {
         x.abs()
     } else if p == 2.0 {
         x * x
@@ -445,7 +445,7 @@ fn pnorm(x: f64, p: f64) -> f64 {
 fn distance(x: &[f64], y: &[f64], p: f64) -> f64 {
     let it = x.iter().zip(y.iter()).map(|(xi, yi)| pnorm(xi - yi, p));
 
-    if p == std::f64::INFINITY {
+    if p == f64::INFINITY {
         it.fold(-1.0, |max, x| if x > max { x } else { max })
     } else {
         it.sum()
