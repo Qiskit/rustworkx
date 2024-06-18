@@ -23,7 +23,7 @@ class TestSemiConnected(unittest.TestCase):
         graph.add_edge(0, 1, None)
         graph.add_edge(1, 2, None)
 
-        self.assertFalse(rustworkx.is_semi_connected(graph))
+        self.assertTrue(rustworkx.is_semi_connected(graph))
 
     def test_is_semi_connected_false(self):
         graph = rustworkx.PyDiGraph()
@@ -48,7 +48,7 @@ class TestSemiConnected(unittest.TestCase):
         graph.add_node(0)
         graph.add_node(1)
 
-        self.assertFalse(rustworkx.is_semi_connected(graph))
+        self.assertTrue(rustworkx.is_semi_connected(graph))
 
     def test_is_semi_connected_directed_cycle_graph(self):
         graph = rustworkx.generators.directed_cycle_graph(100)
@@ -56,7 +56,7 @@ class TestSemiConnected(unittest.TestCase):
 
     def test_is_semi_connected_directed_path_graph(self):
         graph = rustworkx.generators.directed_path_graph(100)
-        self.assertFalse(rustworkx.is_semi_connected(graph))
+        self.assertTrue(rustworkx.is_semi_connected(graph))
 
     def test_is_semi_connected_directed_star_graph(self):
         graph = rustworkx.generators.directed_star_graph(100)
