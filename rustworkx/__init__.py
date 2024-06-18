@@ -1875,6 +1875,7 @@ def longest_simple_path(graph):
     """
     raise TypeError("Invalid Input Type %s for graph" % type(graph))
 
+
 @_rustworkx_dispatch
 def densest_subgraph_of_size(graph, num_nodes, weight_callback=None):
     """Find a connected and dense subgraph of a given size in a graph.
@@ -1897,6 +1898,7 @@ def densest_subgraph_of_size(graph, num_nodes, weight_callback=None):
     :rtype: (subgraph, node_map)
     """
     raise TypeError("Invalid Input Type %s for graph" % type(graph))
+
 
 @_rustworkx_dispatch
 def isolates(graph):
