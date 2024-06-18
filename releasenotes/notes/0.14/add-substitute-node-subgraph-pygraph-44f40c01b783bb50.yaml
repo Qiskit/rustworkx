@@ -1,0 +1,21 @@
+---
+features:
+  - |
+    Added method substitute_node_with_subgraph to the PyGraph class.
+
+    .. jupyter-execute::
+
+      import rustworkx
+      from rustworkx.visualization import * # Needs matplotlib/
+
+      graph = rustworkx.generators.complete_graph(5)
+      sub_graph = rustworkx.generators.path_graph(3)
+
+      # Replace node 4 in this graph with sub_graph
+      # Make sure to connect the graphs at node 2 of the sub_graph
+      # This is done by passing a function that returns 2
+
+      graph.substitute_node_with_subgraph(4, sub_graph, lambda _, __, ___: 2)
+
+      # Draw the updated graph
+      mpl_draw(graph, with_labels=True)

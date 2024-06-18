@@ -1,0 +1,5 @@
+---
+features:
+  - |
+    Added a new function, ``greedy_node_color``, to ``rustworkx-core`` in a new 
+    ``coloring`` module. It colors a graph using a greedy graph coloring algorithm.

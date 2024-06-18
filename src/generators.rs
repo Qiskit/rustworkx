@@ -50,7 +50,6 @@ use rustworkx_core::generators as core_generators;
 #[pyfunction]
 #[pyo3(
     signature=(num_nodes=None, weights=None, multigraph=true),
-    text_signature = "(/, num_nodes=None, weights=None, multigraph=True)"
 )]
 pub fn cycle_graph(
     py: Python,
@@ -106,7 +105,6 @@ pub fn cycle_graph(
 #[pyfunction]
 #[pyo3(
     signature=(num_nodes=None, weights=None, bidirectional=false, multigraph=true),
-    text_signature = "(/, num_nodes=None, weights=None, bidirectional=False, multigraph=True)"
 )]
 pub fn directed_cycle_graph(
     py: Python,
@@ -168,7 +166,6 @@ pub fn directed_cycle_graph(
 #[pyfunction]
 #[pyo3(
     signature=(num_nodes=None, weights=None, multigraph=true),
-    text_signature = "(/, num_nodes=None, weights=None, multigraph=True)"
 )]
 pub fn path_graph(
     py: Python,
@@ -224,7 +221,6 @@ pub fn path_graph(
 #[pyfunction]
 #[pyo3(
     signature=(num_nodes=None, weights=None, bidirectional=false, multigraph=true),
-    text_signature = "(/, num_nodes=None, weights=None, bidirectional=False, multigraph=True)"
 )]
 pub fn directed_path_graph(
     py: Python,
@@ -287,7 +283,6 @@ pub fn directed_path_graph(
 #[pyfunction]
 #[pyo3(
     signature=(num_nodes=None, weights=None, multigraph=true),
-    text_signature = "(/, num_nodes=None, weights=None, multigraph=True)"
 )]
 pub fn star_graph(
     py: Python,
@@ -355,7 +350,6 @@ pub fn star_graph(
 #[pyfunction]
 #[pyo3(
     signature=(num_nodes=None, weights=None, inward=false, bidirectional=false, multigraph=true),
-    text_signature = "(/, num_nodes=None, weights=None, inward=False, bidirectional=False, multigraph=True)"
 )]
 pub fn directed_star_graph(
     py: Python,
@@ -418,7 +412,6 @@ pub fn directed_star_graph(
 #[pyfunction]
 #[pyo3(
     signature=(num_nodes=None, weights=None, multigraph=true),
-    text_signature = "(/, num_nodes=None, weights=None, multigraph=True)"
 )]
 pub fn mesh_graph(
     py: Python,
@@ -456,7 +449,6 @@ pub fn mesh_graph(
 #[pyfunction]
 #[pyo3(
     signature=(num_nodes=None, weights=None, multigraph=true),
-    text_signature = "(/, num_nodes=None, weights=None, multigraph=True)"
 )]
 pub fn directed_mesh_graph(
     py: Python,
@@ -502,7 +494,6 @@ pub fn directed_mesh_graph(
 #[pyfunction]
 #[pyo3(
     signature=(rows=None, cols=None, weights=None, multigraph=true),
-    text_signature = "(/, rows=None, cols=None, weights=None, multigraph=True)"
 )]
 pub fn grid_graph(
     py: Python,
@@ -564,7 +555,6 @@ pub fn grid_graph(
 #[pyfunction]
 #[pyo3(
     signature=(rows=None, cols=None, weights=None, bidirectional=false, multigraph=true),
-    text_signature = "(/, rows=None, cols=None, weights=None, bidirectional=False, multigraph=True)"
 )]
 pub fn directed_grid_graph(
     py: Python,
@@ -653,7 +643,6 @@ pub fn directed_grid_graph(
 #[pyfunction]
 #[pyo3(
     signature=(d, multigraph=true),
-    text_signature = "(d, /, multigraph=True)"
 )]
 pub fn heavy_square_graph(py: Python, d: usize, multigraph: bool) -> PyResult<graph::PyGraph> {
     let default_fn = || py.None();
@@ -726,7 +715,6 @@ pub fn heavy_square_graph(py: Python, d: usize, multigraph: bool) -> PyResult<gr
 #[pyfunction]
 #[pyo3(
     signature=(d, bidirectional=false, multigraph=true),
-    text_signature = "(d, /, bidirectional=False, multigraph=True)"
 )]
 pub fn directed_heavy_square_graph(
     py: Python,
@@ -814,7 +802,6 @@ pub fn directed_heavy_square_graph(
 #[pyfunction]
 #[pyo3(
     signature=(d, multigraph=true),
-    text_signature = "(d, /, multigraph=True)"
 )]
 pub fn heavy_hex_graph(py: Python, d: usize, multigraph: bool) -> PyResult<graph::PyGraph> {
     let default_fn = || py.None();
@@ -893,7 +880,6 @@ pub fn heavy_hex_graph(py: Python, d: usize, multigraph: bool) -> PyResult<graph
 #[pyfunction]
 #[pyo3(
     signature=(d, bidirectional=false, multigraph=true),
-    text_signature = "(d, /, bidirectional=False, multigraph=True)"
 )]
 pub fn directed_heavy_hex_graph(
     py: Python,
@@ -953,7 +939,6 @@ const MAX_ORDER: u32 = 29;
 #[pyfunction]
 #[pyo3(
     signature=(order, weights=None, multigraph=true),
-    text_signature = "(order, /,  weights=None, multigraph=True)"
 )]
 pub fn binomial_tree_graph(
     py: Python,
@@ -1019,7 +1004,6 @@ pub fn binomial_tree_graph(
 #[pyfunction]
 #[pyo3(
     signature=(order, weights=None, bidirectional=false, multigraph=true),
-    text_signature = "(order, /,  weights=None, bidirectional=False, multigraph=True)"
 )]
 pub fn directed_binomial_tree_graph(
     py: Python,
@@ -1088,7 +1072,6 @@ pub fn directed_binomial_tree_graph(
 #[pyfunction]
 #[pyo3(
     signature=(branching_factor, num_nodes, weights=None, multigraph=true),
-    text_signature = "(branching_factor, num_nodes, /, weights=None, multigraph=True)"
 )]
 pub fn full_rary_tree(
     py: Python,
@@ -1146,7 +1129,6 @@ pub fn full_rary_tree(
 #[pyfunction]
 #[pyo3(
     signature=(rows, cols, multigraph=true),
-    text_signature = "(rows, cols, /, multigraph=True)"
 )]
 pub fn hexagonal_lattice_graph(
     py: Python,
@@ -1198,7 +1180,6 @@ pub fn hexagonal_lattice_graph(
 #[pyfunction]
 #[pyo3(
     signature=(rows, cols, bidirectional=false, multigraph=true),
-    text_signature = "(rows, cols, /, bidirectional=False, multigraph=True)"
 )]
 pub fn directed_hexagonal_lattice_graph(
     py: Python,
@@ -1269,7 +1250,6 @@ pub fn directed_hexagonal_lattice_graph(
 #[pyfunction]
 #[pyo3(
     signature=(num_mesh_nodes=None, num_path_nodes=None, mesh_weights=None, path_weights=None, multigraph=true),
-    text_signature = "(/, num_mesh_nodes=None, num_path_nodes=None, mesh_weights=None, path_weights=None, multigraph=True)"
 )]
 pub fn lollipop_graph(
     py: Python,
@@ -1425,7 +1405,6 @@ pub fn barbell_graph(
 #[pyfunction]
 #[pyo3(
     signature=(n, k, multigraph=true),
-    text_signature = "(n, k, /, multigraph=True)"
 )]
 pub fn generalized_petersen_graph(
     py: Python,
@@ -1469,7 +1448,6 @@ pub fn generalized_petersen_graph(
 #[pyfunction]
 #[pyo3(
     signature=(n, multigraph=true),
-    text_signature = "(/, n, multigraph=True)"
 )]
 pub fn empty_graph(py: Python, n: usize, multigraph: bool) -> PyResult<graph::PyGraph> {
     let mut graph = StableUnGraph::<PyObject, PyObject>::default();
@@ -1502,7 +1480,6 @@ pub fn empty_graph(py: Python, n: usize, multigraph: bool) -> PyResult<graph::Py
 #[pyfunction]
 #[pyo3(
     signature=(n, multigraph=true),
-    text_signature = "(/, n, multigraph=True)"
 )]
 pub fn directed_empty_graph(
     py: Python,
@@ -1556,7 +1533,6 @@ pub fn directed_empty_graph(
 #[pyfunction]
 #[pyo3(
     signature=(num_nodes=None, weights=None, multigraph=true),
-    text_signature = "(/, num_nodes=None, weights=None, multigraph=True)"
 )]
 pub fn complete_graph(
     py: Python,
@@ -1615,7 +1591,6 @@ pub fn complete_graph(
 #[pyfunction]
 #[pyo3(
     signature=(num_nodes=None, weights=None, multigraph=true),
-    text_signature = "(/, num_nodes=None, weights=None, multigraph=True)"
 )]
 pub fn directed_complete_graph(
     py: Python,
@@ -1643,8 +1618,49 @@ pub fn directed_complete_graph(
     })
 }
 
+/// Generate a Dorogovtsev-Goltsev-Mendes graph.
+///
+/// Generate a graph following the recursive procedure in [1]_ .
+/// Starting from the two-node, one-edge graph, iterating `n` times generates
+/// a graph with `(3**n + 3) // 2` nodes and `3**n` edges.
+///
+/// :param int n: The number of iterations to perform.
+///
+/// :returns: The generated Dorogovtsev-Goltsev-Mendes graph
+///
+/// :rtype: PyGraph
+///
+/// .. jupyter-execute::
+///   
+///   import rustworkx.generators
+///   from rustworkx.visualization import mpl_draw
+///   
+///   graph = rustworkx.generators.dorogovtsev_goltsev_mendes_graph(2)
+///   mpl_draw(graph)
+///
+/// .. [1] S. N. Dorogovtsev, A. V. Goltsev and J. F. F. Mendes
+///    "Pseudofractal scale-free web"
+///    Physical Review E 65, 066122, 2002
+///    https://arxiv.org/abs/cond-mat/0112143
+///
+#[pyfunction]
+#[pyo3(signature=(n,))]
+pub fn dorogovtsev_goltsev_mendes_graph(py: Python, n: usize) -> PyResult<graph::PyGraph> {
+    let default_fn = || py.None();
+    let graph = match core_generators::dorogovtsev_goltsev_mendes_graph(n, default_fn, default_fn) {
+        Ok(graph) => graph,
+        Err(_) => return Err(PyIndexError::new_err("t must be >= -1")),
+    };
+    Ok(graph::PyGraph {
+        graph,
+        node_removed: false,
+        multigraph: false,
+        attrs: py.None(),
+    })
+}
+
 #[pymodule]
-pub fn generators(_py: Python, m: &PyModule) -> PyResult<()> {
+pub fn generators(_py: Python, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(cycle_graph))?;
     m.add_wrapped(wrap_pyfunction!(directed_cycle_graph))?;
     m.add_wrapped(wrap_pyfunction!(path_graph))?;
@@ -1671,5 +1687,6 @@ pub fn generators(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(directed_empty_graph))?;
     m.add_wrapped(wrap_pyfunction!(complete_graph))?;
     m.add_wrapped(wrap_pyfunction!(directed_complete_graph))?;
+    m.add_wrapped(wrap_pyfunction!(dorogovtsev_goltsev_mendes_graph))?;
     Ok(())
 }

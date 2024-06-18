@@ -1,0 +1,7 @@
+---
+fixes:
+  - |
+    Fixed the :attr:`~.PyDiGraph.check_cycle` attribute not being preserved
+    when copying :class:`~.PyDiGraph` with ``copy.copy()`` and
+    ``copy.deepcopy()``.
+    Fixed `#836 <https://github.com/Qiskit/rustworkx/issues/836>`__

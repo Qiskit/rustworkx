@@ -1,6 +1,0 @@
----
-features:
-  - |
-    The function ``core_number``has been added to the ``rustworkx-core``
-    crate in the ``connectivity`` module. It computes the k-core number
-    for the nodes in a graph.

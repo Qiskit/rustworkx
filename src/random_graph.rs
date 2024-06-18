@@ -23,9 +23,13 @@ use petgraph::algo;
 use petgraph::graph::NodeIndex;
 use petgraph::prelude::*;
 
+use numpy::PyReadonlyArray2;
+
 use rand::distributions::{Distribution, Uniform};
 use rand::prelude::*;
 use rand_pcg::Pcg64;
+
+use rustworkx_core::generators as core_generators;
 
 /// Return a :math:`G_{np}` directed random graph, also known as an
 /// Erdős-Rényi graph or a binomial graph.
@@ -57,83 +61,42 @@ use rand_pcg::Pcg64;
 ///    Phys. Rev. E, 71, 036113, 2005.
 /// .. [2] https://github.com/networkx/networkx/blob/networkx-2.4/networkx/generators/random_graphs.py#L49-L120
 #[pyfunction]
-#[pyo3(text_signature = "(num_nodes, probability, seed=None, /)")]
+#[pyo3(text_signature = "(num_nodes, probability, /, seed=None)")]
 pub fn directed_gnp_random_graph(
     py: Python,
-    num_nodes: isize,
+    num_nodes: usize,
     probability: f64,
     seed: Option<u64>,
 ) -> PyResult<digraph::PyDiGraph> {
-    if num_nodes <= 0 {
-        return Err(PyValueError::new_err("num_nodes must be > 0"));
-    }
-    let mut rng: Pcg64 = match seed {
-        Some(seed) => Pcg64::seed_from_u64(seed),
-        None => Pcg64::from_entropy(),
-    };
-    let mut inner_graph = StablePyGraph::<Directed>::new();
-    for x in 0..num_nodes {
-        inner_graph.add_node(x.to_object(py));
-    }
-    if !(0.0..=1.0).contains(&probability) {
-        return Err(PyValueError::new_err(
-            "Probability out of range, must be 0 <= p <= 1",
-        ));
-    }
-    if probability > 0.0 {
-        if (probability - 1.0).abs() < std::f64::EPSILON {
-            for u in 0..num_nodes {
-                for v in 0..num_nodes {
-                    if u != v {
-                        // exclude self-loops
-                        let u_index = NodeIndex::new(u as usize);
-                        let v_index = NodeIndex::new(v as usize);
-                        inner_graph.add_edge(u_index, v_index, py.None());
-                    }
-                }
-            }
-        } else {
-            let mut v: isize = 0;
-            let mut w: isize = -1;
-            let lp: f64 = (1.0 - probability).ln();
-
-            let between = Uniform::new(0.0, 1.0);
-            while v < num_nodes {
-                let random: f64 = between.sample(&mut rng);
-                let lr: f64 = (1.0 - random).ln();
-                let ratio: isize = (lr / lp) as isize;
-                w = w + 1 + ratio;
-                // avoid self loops
-                if v == w {
-                    w += 1;
-                }
-                while v < num_nodes && num_nodes <= w {
-                    w -= v;
-                    v += 1;
-                    // avoid self loops
-                    if v == w {
-                        w -= v;
-                        v += 1;
-                    }
-                }
-                if v < num_nodes {
-                    let v_index = NodeIndex::new(v as usize);
-                    let w_index = NodeIndex::new(w as usize);
-                    inner_graph.add_edge(v_index, w_index, py.None());
-                }
-            }
+    let default_fn = || py.None();
+    let mut graph: StablePyGraph<Directed> = match core_generators::gnp_random_graph(
+        num_nodes,
+        probability,
+        seed,
+        default_fn,
+        default_fn,
+    ) {
+        Ok(graph) => graph,
+        Err(_) => {
+            return Err(PyValueError::new_err(
+                "num_nodes or probability invalid input",
+            ))
         }
-    }
-
-    let graph = digraph::PyDiGraph {
-        graph: inner_graph,
-        cycle_state: algo::DfsSpace::default(),
-        check_cycle: false,
-        node_removed: false,
-        multigraph: true,
-        attrs: py.None(),
     };
-    Ok(graph)
+    // Core function does not put index into node payload, so for backwards compat
+    // in the python interface, we do it here.
+    let nodes: Vec<NodeIndex> = graph.node_indices().collect();
+    for node in nodes.iter() {
+        graph[*node] = node.index().to_object(py);
+    }
+    Ok(digraph::PyDiGraph {
+        graph,
+        node_removed: false,
+        check_cycle: false,
+        cycle_state: algo::DfsSpace::default(),
+        multigraph: false,
+        attrs: py.None(),
+    })
 }
 
 /// Return a :math:`G_{np}` random undirected graph, also known as an
@@ -166,69 +129,40 @@ pub fn directed_gnp_random_graph(
 ///    Phys. Rev. E, 71, 036113, 2005.
 /// .. [2] https://github.com/networkx/networkx/blob/networkx-2.4/networkx/generators/random_graphs.py#L49-L120
 #[pyfunction]
-#[pyo3(text_signature = "(num_nodes, probability, seed=None, /)")]
+#[pyo3(text_signature = "(num_nodes, probability, /, seed=None)")]
 pub fn undirected_gnp_random_graph(
     py: Python,
-    num_nodes: isize,
+    num_nodes: usize,
     probability: f64,
     seed: Option<u64>,
 ) -> PyResult<graph::PyGraph> {
-    if num_nodes <= 0 {
-        return Err(PyValueError::new_err("num_nodes must be > 0"));
-    }
-    let mut rng: Pcg64 = match seed {
-        Some(seed) => Pcg64::seed_from_u64(seed),
-        None => Pcg64::from_entropy(),
-    };
-    let mut inner_graph = StablePyGraph::<Undirected>::default();
-    for x in 0..num_nodes {
-        inner_graph.add_node(x.to_object(py));
-    }
-    if !(0.0..=1.0).contains(&probability) {
-        return Err(PyValueError::new_err(
-            "Probability out of range, must be 0 <= p <= 1",
-        ));
-    }
-    if probability > 0.0 {
-        if (probability - 1.0).abs() < std::f64::EPSILON {
-            for u in 0..num_nodes {
-                for v in u + 1..num_nodes {
-                    let u_index = NodeIndex::new(u as usize);
-                    let v_index = NodeIndex::new(v as usize);
-                    inner_graph.add_edge(u_index, v_index, py.None());
-                }
-            }
-        } else {
-            let mut v: isize = 1;
-            let mut w: isize = -1;
-            let lp: f64 = (1.0 - probability).ln();
-
-            let between = Uniform::new(0.0, 1.0);
-            while v < num_nodes {
-                let random: f64 = between.sample(&mut rng);
-                let lr = (1.0 - random).ln();
-                let ratio: isize = (lr / lp) as isize;
-                w = w + 1 + ratio;
-                while w >= v && v < num_nodes {
-                    w -= v;
-                    v += 1;
-                }
-                if v < num_nodes {
-                    let v_index = NodeIndex::new(v as usize);
-                    let w_index = NodeIndex::new(w as usize);
-                    inner_graph.add_edge(v_index, w_index, py.None());
-                }
-            }
+    let default_fn = || py.None();
+    let mut graph: StablePyGraph<Undirected> = match core_generators::gnp_random_graph(
+        num_nodes,
+        probability,
+        seed,
+        default_fn,
+        default_fn,
+    ) {
+        Ok(graph) => graph,
+        Err(_) => {
+            return Err(PyValueError::new_err(
+                "num_nodes or probability invalid input",
+            ))
         }
+    };
+    // Core function does not put index into node payload, so for backwards compat
+    // in the python interface, we do it here.
+    let nodes: Vec<NodeIndex> = graph.node_indices().collect();
+    for node in nodes.iter() {
+        graph[*node] = node.index().to_object(py);
     }
-
-    let graph = graph::PyGraph {
-        graph: inner_graph,
+    Ok(graph::PyGraph {
+        graph,
         node_removed: false,
         multigraph: true,
         attrs: py.None(),
-    };
-    Ok(graph)
+    })
 }
 
 /// Return a :math:`G_{nm}` directed graph, also known as an
@@ -256,61 +190,35 @@ pub fn undirected_gnp_random_graph(
 #[pyo3(text_signature = "(num_nodes, num_edges, /, seed=None)")]
 pub fn directed_gnm_random_graph(
     py: Python,
-    num_nodes: isize,
-    num_edges: isize,
+    num_nodes: usize,
+    num_edges: usize,
     seed: Option<u64>,
 ) -> PyResult<digraph::PyDiGraph> {
-    if num_nodes <= 0 {
-        return Err(PyValueError::new_err("num_nodes must be > 0"));
-    }
-    if num_edges < 0 {
-        return Err(PyValueError::new_err("num_edges must be >= 0"));
-    }
-    let mut rng: Pcg64 = match seed {
-        Some(seed) => Pcg64::seed_from_u64(seed),
-        None => Pcg64::from_entropy(),
-    };
-    let mut inner_graph = StablePyGraph::<Directed>::new();
-    for x in 0..num_nodes {
-        inner_graph.add_node(x.to_object(py));
-    }
-    // if number of edges to be created is >= max,
-    // avoid randomly missed trials and directly add edges between every node
-    if num_edges >= num_nodes * (num_nodes - 1) {
-        for u in 0..num_nodes {
-            for v in 0..num_nodes {
-                // avoid self-loops
-                if u != v {
-                    let u_index = NodeIndex::new(u as usize);
-                    let v_index = NodeIndex::new(v as usize);
-                    inner_graph.add_edge(u_index, v_index, py.None());
-                }
+    let default_fn = || py.None();
+    let mut graph: StablePyGraph<Directed> =
+        match core_generators::gnm_random_graph(num_nodes, num_edges, seed, default_fn, default_fn)
+        {
+            Ok(graph) => graph,
+            Err(_) => {
+                return Err(PyValueError::new_err(
+                    "num_nodes or num_edges invalid input",
+                ))
             }
-        }
-    } else {
-        let mut created_edges: isize = 0;
-        let between = Uniform::new(0, num_nodes);
-        while created_edges < num_edges {
-            let u = between.sample(&mut rng);
-            let v = between.sample(&mut rng);
-            let u_index = NodeIndex::new(u as usize);
-            let v_index = NodeIndex::new(v as usize);
-            // avoid self-loops and multi-graphs
-            if u != v && inner_graph.find_edge(u_index, v_index).is_none() {
-                inner_graph.add_edge(u_index, v_index, py.None());
-                created_edges += 1;
-            }
-        }
+        };
+    // Core function does not put index into node payload, so for backwards compat
+    // in the python interface, we do it here.
+    let nodes: Vec<NodeIndex> = graph.node_indices().collect();
+    for node in nodes.iter() {
+        graph[*node] = node.index().to_object(py);
     }
-    let graph = digraph::PyDiGraph {
-        graph: inner_graph,
-        cycle_state: algo::DfsSpace::default(),
-        check_cycle: false,
+    Ok(digraph::PyDiGraph {
+        graph,
         node_removed: false,
-        multigraph: true,
+        check_cycle: false,
+        cycle_state: algo::DfsSpace::default(),
+        multigraph: false,
         attrs: py.None(),
-    };
-    Ok(graph)
+    })
 }
 
 /// Return a :math:`G_{nm}` undirected graph, also known as an
@@ -338,61 +246,148 @@ pub fn directed_gnm_random_graph(
 #[pyo3(text_signature = "(num_nodes, num_edges, /, seed=None)")]
 pub fn undirected_gnm_random_graph(
     py: Python,
-    num_nodes: isize,
-    num_edges: isize,
+    num_nodes: usize,
+    num_edges: usize,
     seed: Option<u64>,
 ) -> PyResult<graph::PyGraph> {
-    if num_nodes <= 0 {
-        return Err(PyValueError::new_err("num_nodes must be > 0"));
-    }
-    if num_edges < 0 {
-        return Err(PyValueError::new_err("num_edges must be >= 0"));
-    }
-    let mut rng: Pcg64 = match seed {
-        Some(seed) => Pcg64::seed_from_u64(seed),
-        None => Pcg64::from_entropy(),
-    };
-    let mut inner_graph = StablePyGraph::<Undirected>::default();
-    for x in 0..num_nodes {
-        inner_graph.add_node(x.to_object(py));
-    }
-    // if number of edges to be created is >= max,
-    // avoid randomly missed trials and directly add edges between every node
-    if num_edges >= num_nodes * (num_nodes - 1) / 2 {
-        for u in 0..num_nodes {
-            for v in u + 1..num_nodes {
-                let u_index = NodeIndex::new(u as usize);
-                let v_index = NodeIndex::new(v as usize);
-                inner_graph.add_edge(u_index, v_index, py.None());
+    let default_fn = || py.None();
+    let mut graph: StablePyGraph<Undirected> =
+        match core_generators::gnm_random_graph(num_nodes, num_edges, seed, default_fn, default_fn)
+        {
+            Ok(graph) => graph,
+            Err(_) => {
+                return Err(PyValueError::new_err(
+                    "num_nodes or num_edges invalid input",
+                ))
             }
-        }
-    } else {
-        let mut created_edges: isize = 0;
-        let between = Uniform::new(0, num_nodes);
-        while created_edges < num_edges {
-            let u = between.sample(&mut rng);
-            let v = between.sample(&mut rng);
-            let u_index = NodeIndex::new(u as usize);
-            let v_index = NodeIndex::new(v as usize);
-            // avoid self-loops and multi-graphs
-            if u != v && inner_graph.find_edge(u_index, v_index).is_none() {
-                inner_graph.add_edge(u_index, v_index, py.None());
-                created_edges += 1;
-            }
-        }
+        };
+    // Core function does not put index into node payload, so for backwards compat
+    // in the python interface, we do it here.
+    let nodes: Vec<NodeIndex> = graph.node_indices().collect();
+    for node in nodes.iter() {
+        graph[*node] = node.index().to_object(py);
     }
-    let graph = graph::PyGraph {
-        graph: inner_graph,
+    Ok(graph::PyGraph {
+        graph,
         node_removed: false,
         multigraph: true,
         attrs: py.None(),
+    })
+}
+
+/// Return a directed graph from the stochastic block model.
+///
+/// The stochastic block model is a generalization of the :math:`G(n,p)` random graph
+/// (see :func:`~rustworkx.directed_gnp_random_graph`). The connection probability of
+/// nodes ``u`` and ``v`` depends on their block (or community) and is given by
+/// ``probabilities[blocks[u]][blocks[v]]``, where ``blocks[u]`` is the block
+/// membership of node ``u``. The number of nodes and the number of blocks are
+/// inferred from ``sizes``.
+///
+/// This algorithm has a time complexity of :math:`O(n^2)` for :math:`n` nodes.
+///
+/// Arguments:
+///
+/// :param list[int] sizes: Number of nodes in each block.
+/// :param np.ndarray probabilities: B x B array that contains the connection
+///     probability between nodes of different blocks.
+/// :param bool loops: Determines whether the graph can have loops or not.
+/// :param int seed:  An optional seed to use for the random number generator.
+///
+/// :return: A PyDiGraph object
+/// :rtype: PyDiGraph
+#[pyfunction]
+#[pyo3(text_signature = "(sizes, probabilities, loops, /, seed=None)")]
+pub fn directed_sbm_random_graph<'p>(
+    py: Python<'p>,
+    sizes: Vec<usize>,
+    probabilities: PyReadonlyArray2<'p, f64>,
+    loops: bool,
+    seed: Option<u64>,
+) -> PyResult<digraph::PyDiGraph> {
+    let default_fn = || py.None();
+    let graph: StablePyGraph<Directed> = match core_generators::sbm_random_graph(
+        &sizes,
+        &probabilities.as_array(),
+        loops,
+        seed,
+        default_fn,
+        default_fn,
+    ) {
+        Ok(graph) => graph,
+        Err(_) => {
+            return Err(PyValueError::new_err(
+                "invalid blocks or probabilities input",
+            ))
+        }
     };
-    Ok(graph)
+    Ok(digraph::PyDiGraph {
+        graph,
+        node_removed: false,
+        check_cycle: false,
+        cycle_state: algo::DfsSpace::default(),
+        multigraph: false,
+        attrs: py.None(),
+    })
+}
+
+/// Return an undirected graph from the stochastic block model.
+///
+/// The stochastic block model is a generalization of the :math:`G(n,p)` random graph
+/// (see :func:`~rustworkx.undirected_gnp_random_graph`). The connection probability of
+/// nodes ``u`` and ``v`` depends on their block (or community) and is given by
+/// ``probabilities[blocks[u]][blocks[v]]``, where ``blocks[u]`` is the block membership
+/// of node ``u``. The number of nodes and the number of blocks are inferred from
+/// ``sizes``.
+///
+/// This algorithm has a time complexity of :math:`O(n^2)` for :math:`n` nodes.
+///
+/// Arguments:
+///
+/// :param list[int] sizes: Number of nodes in each block.
+/// :param np.ndarray probabilities: Symmetric B x B array that contains the
+///     connection probability between nodes of different blocks.
+/// :param bool loops: Determines whether the graph can have loops or not.
+/// :param int seed:  An optional seed to use for the random number generator.
+///
+/// :return: A PyGraph object
+/// :rtype: PyGraph
+#[pyfunction]
+#[pyo3(text_signature = "(sizes, probabilities, loops, /, seed=None)")]
+pub fn undirected_sbm_random_graph<'p>(
+    py: Python<'p>,
+    sizes: Vec<usize>,
+    probabilities: PyReadonlyArray2<'p, f64>,
+    loops: bool,
+    seed: Option<u64>,
+) -> PyResult<graph::PyGraph> {
+    let default_fn = || py.None();
+    let graph: StablePyGraph<Undirected> = match core_generators::sbm_random_graph(
+        &sizes,
+        &probabilities.as_array(),
+        loops,
+        seed,
+        default_fn,
+        default_fn,
+    ) {
+        Ok(graph) => graph,
+        Err(_) => {
+            return Err(PyValueError::new_err(
+                "invalid blocks or probabilities input",
+            ))
+        }
+    };
+    Ok(graph::PyGraph {
+        graph,
+        node_removed: false,
+        multigraph: false,
+        attrs: py.None(),
+    })
 }
 
 #[inline]
 fn pnorm(x: f64, p: f64) -> f64 {
-    if p == 1.0 || p == std::f64::INFINITY {
+    if p == 1.0 || p == f64::INFINITY {
         x.abs()
     } else if p == 2.0 {
         x * x
@@ -404,7 +399,7 @@ fn pnorm(x: f64, p: f64) -> f64 {
 fn distance(x: &[f64], y: &[f64], p: f64) -> f64 {
     let it = x.iter().zip(y.iter()).map(|(xi, yi)| pnorm(xi - yi, p));
 
-    if p == std::f64::INFINITY {
+    if p == f64::INFINITY {
         it.fold(-1.0, |max, x| if x > max { x } else { max })
     } else {
         it.sum()
@@ -474,7 +469,7 @@ pub fn random_geometric_graph(
     }
 
     for pval in pos.iter() {
-        let pos_dict = PyDict::new(py);
+        let pos_dict = PyDict::new_bound(py);
         pos_dict.set_item("pos", pval.to_object(py))?;
 
         inner_graph.add_node(pos_dict.into());
@@ -495,4 +490,288 @@ pub fn random_geometric_graph(
         attrs: py.None(),
     };
     Ok(graph)
+}
+
+/// Return a hyperbolic random undirected graph (also called hyperbolic geometric graph).
+///
+/// The usual hyperbolic random graph model connects pairs of nodes with probability
+///
+/// .. math::
+///
+///     P[(u,v) \in E] = \frac{1}{1+\exp(\beta(d(u,v) - R)/2)},
+///
+/// a sigmoid function that decreases as the hyperbolic distance between nodes :math:`u`
+/// and :math:`v` increases. The hyperbolic distance is given by
+///
+/// .. math::
+///
+///     d(u,v) = \text{arccosh}\left[x_0(u) x_0(v) - \sum_{j=1}^D x_j(u) x_j(v) \right],
+///
+/// where :math:`D` is the dimension of the hyperbolic space and :math:`x_d(u)` is the
+/// :math:`d` th-dimension coordinate of node :math:`u` in the hyperboloid model. The
+/// number of nodes and the dimension are inferred from the coordinates ``pos``. The
+/// 0-dimension "time" coordinate is inferred from the others.
+///
+/// If ``beta`` is ``None``, all pairs of nodes with a distance smaller than ``r`` are connected.
+///
+/// This algorithm has a time complexity of :math:`O(n^2)` for :math:`n` nodes.
+///
+/// :param list[list[float]] pos: Hyperboloid coordinates of the nodes
+///     [[:math:`x_1(1)`, ..., :math:`x_D(1)`], [:math:`x_1(2)`, ..., :math:`x_D(2)`], ...].
+///     The "time" coordinate :math:`x_0` is inferred from the other coordinates.
+/// :param float beta: Sigmoid sharpness (nonnegative) of the connection probability.
+/// :param float r: Distance at which the connection probability is 0.5 for the probabilistic model.
+///     Threshold when ``beta`` is ``None``.
+/// :param int seed: An optional seed to use for the random number generator.
+///
+/// :return: A PyGraph object
+/// :rtype: PyGraph
+#[pyfunction]
+#[pyo3(text_signature = "(pos, beta, r, /, seed=None)")]
+pub fn hyperbolic_random_graph(
+    py: Python,
+    pos: Vec<Vec<f64>>,
+    r: f64,
+    beta: Option<f64>,
+    seed: Option<u64>,
+) -> PyResult<graph::PyGraph> {
+    let default_fn = || py.None();
+    let graph: StablePyGraph<Undirected> =
+        match core_generators::hyperbolic_random_graph(&pos, r, beta, seed, default_fn, default_fn)
+        {
+            Ok(graph) => graph,
+            Err(_) => return Err(PyValueError::new_err("invalid positions or parameters")),
+        };
+    Ok(graph::PyGraph {
+        graph,
+        node_removed: false,
+        multigraph: false,
+        attrs: py.None(),
+    })
+}
+
+/// Generate a random graph using Barabási–Albert preferential attachment
+///
+/// A graph is grown to $n$ nodes by adding new nodes each with $m$ edges that
+/// are preferentially attached to existing nodes with high degree. All the edges
+/// and nodes added to this graph will have weights of ``None``.
+///
+/// The algorithm performed by this function is described in:
+///
+/// A. L. Barabási and R. Albert "Emergence of scaling in random networks",
+/// Science 286, pp 509-512, 1999.
+///
+/// :param int n: The number of nodes to extend the graph to.
+/// :param int m: The number of edges to attach from a new node to existing nodes.
+/// :param int seed: An optional seed to use for the random number generator.
+/// :param PyGraph initial_graph: An optional initial graph to use as a starting
+///     point. :func:`.star_graph` is used to create an ``m`` node star graph
+///     to use as a starting point. If specified the input graph will be
+///     modified in place.
+///
+/// :return: A PyGraph object
+/// :rtype: PyGraph
+#[pyfunction]
+pub fn barabasi_albert_graph(
+    py: Python,
+    n: usize,
+    m: usize,
+    seed: Option<u64>,
+    initial_graph: Option<graph::PyGraph>,
+) -> PyResult<graph::PyGraph> {
+    let default_fn = || py.None();
+    if m < 1 {
+        return Err(PyValueError::new_err("m must be > 0"));
+    }
+    if m >= n {
+        return Err(PyValueError::new_err("m must be < n"));
+    }
+    let graph = match core_generators::barabasi_albert_graph(
+        n,
+        m,
+        seed,
+        initial_graph.map(|x| x.graph),
+        default_fn,
+        default_fn,
+    ) {
+        Ok(graph) => graph,
+        Err(_) => {
+            return Err(PyValueError::new_err(
+                "initial_graph has either less nodes than m, or more nodes than n",
+            ))
+        }
+    };
+    Ok(graph::PyGraph {
+        graph,
+        node_removed: false,
+        multigraph: true,
+        attrs: py.None(),
+    })
+}
+
+/// Generate a random graph using Barabási–Albert preferential attachment
+///
+/// A graph is grown to $n$ nodes by adding new nodes each with $m$ edges that
+/// are preferentially attached to existing nodes with high degree. All the edges
+/// and nodes added to this graph will have weights of ``None``. For the purposes
+/// of the extension algorithm all edges are treated as weak (meaning directionality
+/// isn't considered).
+///
+/// The algorithm performed by this function is described in:
+///
+/// A. L. Barabási and R. Albert "Emergence of scaling in random networks",
+/// Science 286, pp 509-512, 1999.
+///
+/// :param int n: The number of nodes to extend the graph to.
+/// :param int m: The number of edges to attach from a new node to existing nodes.
+/// :param int seed: An optional seed to use for the random number generator
+/// :param PyDiGraph initial_graph: An optional initial graph to use as a starting
+///     point. :func:`.star_graph` is used to create an ``m`` node star graph
+///     to use as a starting point. If specified the input graph will be
+///     modified in place.
+///
+/// :return: A PyDiGraph object
+/// :rtype: PyDiGraph
+#[pyfunction]
+pub fn directed_barabasi_albert_graph(
+    py: Python,
+    n: usize,
+    m: usize,
+    seed: Option<u64>,
+    initial_graph: Option<digraph::PyDiGraph>,
+) -> PyResult<digraph::PyDiGraph> {
+    let default_fn = || py.None();
+    if m < 1 {
+        return Err(PyValueError::new_err("m must be > 0"));
+    }
+    if m >= n {
+        return Err(PyValueError::new_err("m must be < n"));
+    }
+    let graph = match core_generators::barabasi_albert_graph(
+        n,
+        m,
+        seed,
+        initial_graph.map(|x| x.graph),
+        default_fn,
+        default_fn,
+    ) {
+        Ok(graph) => graph,
+        Err(_) => {
+            return Err(PyValueError::new_err(
+                "initial_graph has either less nodes than m, or more nodes than n",
+            ))
+        }
+    };
+    Ok(digraph::PyDiGraph {
+        graph,
+        node_removed: false,
+        check_cycle: false,
+        cycle_state: algo::DfsSpace::default(),
+        multigraph: false,
+        attrs: py.None(),
+    })
+}
+
+/// Generate a directed random bipartite graph.
+///
+/// A bipartite graph is a graph whose nodes can be divided into two disjoint sets,
+/// informally called "left nodes" and "right nodes", so that every edge connects
+/// some left node and some right node.
+///
+/// Given a number `n` of left nodes, a number `m` of right nodes, and a probability `p`,
+/// the algorithm creates a graph with `n + m` nodes. For all the `n * m` possible
+/// directed edges from a left node to a right node, each edge is created independently
+/// with probability `p`.
+///
+/// :param int num_l_nodes: The number of "left" nodes in the random bipartite graph.
+/// :param int num_r_nodes: The number of "right" nodes in the random bipartite graph.
+/// :param float probability: The probability of creating an edge between two nodes as a float.
+/// :param int seed: An optional seed to use for the random number generator.
+///
+/// :return: A PyDiGraph object
+/// :rtype: PyDiGraph
+#[pyfunction]
+#[pyo3(text_signature = "(num_l_nodes, num_r_nodes, probability, /, seed=None)")]
+pub fn directed_random_bipartite_graph(
+    py: Python,
+    num_l_nodes: usize,
+    num_r_nodes: usize,
+    probability: f64,
+    seed: Option<u64>,
+) -> PyResult<digraph::PyDiGraph> {
+    let default_fn = || py.None();
+    let graph: StablePyGraph<Directed> = match core_generators::random_bipartite_graph(
+        num_l_nodes,
+        num_r_nodes,
+        probability,
+        seed,
+        default_fn,
+        default_fn,
+    ) {
+        Ok(graph) => graph,
+        Err(_) => {
+            return Err(PyValueError::new_err(
+                "invalid number of nodes num_l_nodes + num_r_nodes or invalid probability",
+            ))
+        }
+    };
+    Ok(digraph::PyDiGraph {
+        graph,
+        node_removed: false,
+        check_cycle: false,
+        cycle_state: algo::DfsSpace::default(),
+        multigraph: false,
+        attrs: py.None(),
+    })
+}
+
+/// Generate an undirected random bipartite graph.
+///
+/// A bipartite graph is a graph whose nodes can be divided into two disjoint sets,
+/// informally called "left nodes" and "right nodes", so that every edge connects
+/// some left node and some right node.
+///
+/// Given a number `n` of left nodes, a number `m` of right nodes, and a probability `p`,
+/// the algorithm creates a graph with `n + m` nodes. For all the `n * m` possible
+/// undirected edges connecting a left node and a right node, each edge is created
+/// independently with probability `p`.
+///
+/// :param int num_l_nodes: The number of "left" nodes in the random bipartite graph.
+/// :param int num_r_nodes: The number of "right" nodes in the random bipartite graph.
+/// :param float probability: The probability of creating an edge between two nodes as a float.
+/// :param int seed: An optional seed to use for the random number generator.
+///
+/// :return: A PyGraph object
+/// :rtype: PyGraph
+#[pyfunction]
+#[pyo3(text_signature = "(num_l_nodes, num_r_nodes, probability, /, seed=None)")]
+pub fn undirected_random_bipartite_graph(
+    py: Python,
+    num_l_nodes: usize,
+    num_r_nodes: usize,
+    probability: f64,
+    seed: Option<u64>,
+) -> PyResult<graph::PyGraph> {
+    let default_fn = || py.None();
+    let graph: StablePyGraph<Undirected> = match core_generators::random_bipartite_graph(
+        num_l_nodes,
+        num_r_nodes,
+        probability,
+        seed,
+        default_fn,
+        default_fn,
+    ) {
+        Ok(graph) => graph,
+        Err(_) => {
+            return Err(PyValueError::new_err(
+                "invalid number of nodes num_l_nodes + num_r_nodes or invalid probability",
+            ))
+        }
+    };
+    Ok(graph::PyGraph {
+        graph,
+        node_removed: false,
+        multigraph: true,
+        attrs: py.None(),
+    })
 }

@@ -1,54 +1,73 @@
 [package]
 name = "rustworkx"
 description = "A python graph library implemented in Rust"
-version = "0.13.0"
-authors = ["Matthew Treinish <mtreinish@kortar.org>"]
-license = "Apache-2.0"
 readme = "README.md"
-repository = "https://github.com/Qiskit/rustworkx"
 keywords = ["python", "graph"]
-edition = "2021"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+repository.workspace = true
+license.workspace = true
 
 [workspace]
 members = [
     "rustworkx-core",
 ]
 
+[workspace.package]
+version = "0.15.0"
+edition = "2021"
+rust-version = "1.70"
+authors = ["Matthew Treinish <mtreinish@kortar.org>"]
+repository = "https://github.com/Qiskit/rustworkx"
+license = "Apache-2.0"
+
+[workspace.dependencies]
+ahash = "0.8.6"
+fixedbitset = "0.4.2"
+hashbrown = { version = ">=0.13, <0.15", features = ["rayon"] }
+indexmap = { version = ">=1.9, <3", features = ["rayon"] }
+ndarray = { version = "0.15.6", features = ["rayon"] }
+num-traits = "0.2"
+numpy = "0.21.0"
+petgraph = "0.6.5"
+rand = "0.8"
+rand_pcg = "0.3"
+rayon = "1.10"
+
 [lib]
 name = "rustworkx"
 crate-type = ["cdylib"]
 
 [dependencies]
-ahash = "0.8.0"
-petgraph = "0.6.3"
-fixedbitset = "0.4.2"
-numpy = "0.18.0"
-rand = "0.8"
-rand_pcg = "0.3"
-rayon = "1.6"
-num-traits = "0.2"
+ahash.workspace = true
+fixedbitset.workspace = true
+hashbrown.workspace = true
+indexmap.workspace = true
+ndarray.workspace = true
+ndarray-stats = "0.5.1"
 num-bigint = "0.4"
 num-complex = "0.4"
-quick-xml = "0.28"
+num-traits.workspace = true
+numpy.workspace = true
+petgraph.workspace = true
+quick-xml = "0.32"
+rand.workspace = true
+rand_pcg.workspace = true
+rayon.workspace = true
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-rustworkx-core = { path = "rustworkx-core", version = "=0.13.0" }
+smallvec = { version = "1.0", features = ["union"] }
+rustworkx-core = { path = "rustworkx-core", version = "=0.15.0" }
 
 [dependencies.pyo3]
-version = "0.18.3"
-features = ["extension-module", "hashbrown", "num-bigint", "num-complex", "indexmap"]
+version = "0.21.2"
+features = ["abi3-py38", "extension-module", "hashbrown", "num-bigint", "num-complex", "indexmap"]
 
-[dependencies.hashbrown]
-version = "0.12"
-features = ["rayon"]
-
-[dependencies.ndarray]
-version = "^0.15.6"
-features = ["rayon"]
-
-[dependencies.indexmap]
-version = "1.9"
-features = ["rayon"]
+[dependencies.sprs]
+version = "^0.11"
+features = ["multi_thread"]
 
 [profile.release]
 lto = 'fat'

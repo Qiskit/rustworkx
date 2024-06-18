@@ -11,6 +11,7 @@ docs/apiref/
 docs/source/apiref/
 docs/source/stubs/
 .tox/
+.nox/
 retworkx/*.so
 retworkx/*pyd
 *.stestr/
@@ -19,4 +20,5 @@ retworkx/*pyd
 *.svg
 !/docs/source/images/*.svg
 *.jpg
+**/*.so
 retworkx-core/Cargo.lock

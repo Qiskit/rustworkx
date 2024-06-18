@@ -50,11 +50,11 @@ where
     let node_indices: Vec<NodeIndex> = graph.node_indices().collect();
     let float_callback =
         |callback: &PyObject, source_node: usize, target_node: usize| -> PyResult<f64> {
-            let res = callback.as_ref(py).call1((source_node, target_node))?;
+            let res = callback.bind(py).call1((source_node, target_node))?;
             res.extract()
         };
     let node_callback = |callback: &PyObject, node_index: usize| -> PyResult<f64> {
-        let res = callback.as_ref(py).call1((node_index,))?;
+        let res = callback.bind(py).call1((node_index,))?;
         res.extract()
     };
     let mut edge_weight_map: Option<HashMap<[NodeIndex; 2], f64>> = None;
@@ -93,7 +93,7 @@ where
         SubsetResult {
             count: 0,
             map: Vec::new(),
-            error: std::f64::INFINITY,
+            error: f64::INFINITY,
             subgraph: Vec::new(),
         }
     };

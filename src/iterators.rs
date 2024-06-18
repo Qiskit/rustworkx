@@ -13,8 +13,9 @@
 // There are two useful macros to quickly define a new custom return type:
 //
 // :`custom_vec_iter_impl` holds a `Vec<T>` and can be used as a
-//  read-only sequence/list. To use it, you should specify the name of the new type,
-//  the name of the vector that holds the data, the type `T` and a docstring.
+//  read-only sequence/list. To use it, you should specify the name of the new type for the
+//  iterable, a name for that new type's iterator, a name for the new type's reversed iterator, the
+//  name of the vector that holds the data, the type `T` and a docstring.
 //
 //  e.g `custom_vec_iter_impl!(MyReadOnlyType, data, (usize, f64), "Docs");`
 //      defines a new type named `MyReadOnlyType` that holds a vector called `data`
@@ -45,11 +46,11 @@ use num_bigint::BigUint;
 use rustworkx_core::dictmap::*;
 
 use ndarray::prelude::*;
-use numpy::{IntoPyArray, PyArrayDescr};
-use pyo3::class::iter::IterNextOutput;
-use pyo3::exceptions::{PyIndexError, PyKeyError, PyNotImplementedError};
+use numpy::IntoPyArray;
+use pyo3::exceptions::{PyIndexError, PyKeyError, PyNotImplementedError, PyValueError};
 use pyo3::gc::PyVisit;
 use pyo3::prelude::*;
+use pyo3::types::IntoPyDict;
 use pyo3::types::PySlice;
 use pyo3::PyTraverseError;
 
@@ -66,7 +67,7 @@ trait PyHash {
 impl PyHash for PyObject {
     #[inline]
     fn hash<H: Hasher>(&self, py: Python, state: &mut H) -> PyResult<()> {
-        state.write_isize(self.as_ref(py).hash()?);
+        state.write_isize(self.bind(py).hash()?);
         Ok(())
     }
 }
@@ -185,7 +186,7 @@ trait PyEq<Rhs: ?Sized = Self> {
 impl PyEq for PyObject {
     #[inline]
     fn eq(&self, other: &Self, py: Python) -> PyResult<bool> {
-        Ok(self.as_ref(py).compare(other)? == std::cmp::Ordering::Equal)
+        Ok(self.bind(py).compare(other)? == std::cmp::Ordering::Equal)
     }
 }
 
@@ -282,31 +283,31 @@ where
     }
 }
 
-impl<T> PyEq<PyAny> for T
+impl<'py, T> PyEq<Bound<'py, PyAny>> for T
 where
     for<'p> T: PyEq<T> + Clone + FromPyObject<'p>,
 {
     #[inline]
-    fn eq(&self, other: &PyAny, py: Python) -> PyResult<bool> {
+    fn eq(&self, other: &Bound<PyAny>, py: Python) -> PyResult<bool> {
         let other_value: T = other.extract()?;
         PyEq::eq(self, &other_value, py)
     }
 }
 
-impl<K, V> PyEq<PyAny> for DictMap<K, V>
+impl<'py, K, V> PyEq<Bound<'py, PyAny>> for DictMap<K, V>
 where
     for<'p> K: PyEq<K> + Clone + pyo3::ToPyObject,
-    for<'p> V: PyEq<PyAny>,
+    for<'p> V: PyEq<Bound<'py, PyAny>>,
 {
     #[inline]
-    fn eq(&self, other: &PyAny, py: Python) -> PyResult<bool> {
+    fn eq(&self, other: &Bound<'py, PyAny>, py: Python) -> PyResult<bool> {
         if other.len()? != self.len() {
             return Ok(false);
         }
         for (key, value) in self {
             match other.get_item(key) {
                 Ok(other_raw) => {
-                    if !PyEq::eq(value, other_raw, py)? {
+                    if !PyEq::eq(value, &other_raw, py)? {
                         return Ok(false);
                     }
                 }
@@ -326,7 +327,7 @@ trait PyDisplay {
 
 impl PyDisplay for PyObject {
     fn str(&self, py: Python) -> PyResult<String> {
-        Ok(format!("{}", self.as_ref(py).str()?))
+        Ok(format!("{}", self.bind(py).str()?))
     }
 }
 
@@ -411,8 +412,8 @@ trait PyGCProtocol {
 
 #[derive(FromPyObject)]
 enum SliceOrInt<'a> {
-    Slice(&'a PySlice),
     Int(isize),
+    Slice(&'a PySlice),
 }
 
 trait PyConvertToPyArray {
@@ -423,7 +424,7 @@ macro_rules! py_convert_to_py_array_impl {
     ($($t:ty)*) => ($(
         impl PyConvertToPyArray for Vec<$t> {
             fn convert_to_pyarray(&self, py: Python) -> PyResult<PyObject> {
-                Ok(self.clone().into_pyarray(py).into())
+                Ok(self.clone().into_pyarray_bound(py).into())
             }
         }
     )*)
@@ -434,7 +435,7 @@ macro_rules! py_convert_to_py_array_obj_impl {
         impl PyConvertToPyArray for Vec<$t> {
             fn convert_to_pyarray(&self, py: Python) -> PyResult<PyObject> {
                 let pyobj_vec: Vec<PyObject> = self.iter().map(|x| x.clone().into_py(py)).collect();
-                Ok(pyobj_vec.into_pyarray(py).into())
+                Ok(pyobj_vec.into_pyarray_bound(py).into())
             }
         }
     };
@@ -454,7 +455,7 @@ impl PyConvertToPyArray for Vec<(usize, usize)> {
             mat[[index, 1]] = element.1;
         }
 
-        Ok(mat.into_pyarray(py).into())
+        Ok(mat.into_pyarray_bound(py).into())
     }
 }
 
@@ -468,12 +469,12 @@ impl PyConvertToPyArray for Vec<(usize, usize, PyObject)> {
             mat[[index, 2]] = element.2.clone();
         }
 
-        Ok(mat.into_pyarray(py).into())
+        Ok(mat.into_pyarray_bound(py).into())
     }
 }
 
 macro_rules! custom_vec_iter_impl {
-    ($name:ident, $data:ident, $T:ty, $doc:literal) => {
+    ($name:ident, $iter:ident, $reversed:ident, $data:ident, $T:ty, $doc:literal) => {
         #[doc = $doc]
         #[pyclass(module = "rustworkx", sequence)]
         #[derive(Clone)]
@@ -496,8 +497,12 @@ macro_rules! custom_vec_iter_impl {
                 self.$data = state;
             }
 
-            fn __richcmp__(&self, other: &PyAny, op: pyo3::basic::CompareOp) -> PyResult<bool> {
-                let compare = |other: &PyAny| -> PyResult<bool> {
+            fn __richcmp__(
+                &self,
+                other: &Bound<PyAny>,
+                op: pyo3::basic::CompareOp,
+            ) -> PyResult<bool> {
+                let compare = |other: &Bound<PyAny>| -> PyResult<bool> {
                     Python::with_gil(|py| {
                         if other.len()? as usize != self.$data.len() {
                             return Ok(false);
@@ -505,7 +510,7 @@ macro_rules! custom_vec_iter_impl {
 
                         for (i, item) in self.$data.iter().enumerate() {
                             let other_raw = other.get_item(i)?;
-                            if !PyEq::eq(item, other_raw, py)? {
+                            if !PyEq::eq(item, &other_raw, py)? {
                                 return Ok(false);
                             }
                         }
@@ -572,7 +577,7 @@ macro_rules! custom_vec_iter_impl {
                             Err(PyIndexError::new_err(format!("Invalid index, {}", idx)))
                         } else if idx < 0 {
                             let len = self.$data.len();
-                            Ok(self.$data[len - idx.abs() as usize].clone().into_py(py))
+                            Ok(self.$data[len - idx.unsigned_abs()].clone().into_py(py))
                         } else {
                             Ok(self.$data[idx as usize].clone().into_py(py))
                         }
@@ -580,10 +585,43 @@ macro_rules! custom_vec_iter_impl {
                 }
             }
 
-            fn __array__(&self, py: Python, _dt: Option<&PyArrayDescr>) -> PyResult<PyObject> {
-                // Note: we accept the dtype argument on the signature but
-                // effictively do nothing with it to let Numpy handle the conversion itself
-                self.$data.convert_to_pyarray(py)
+            fn __iter__(self_: Py<Self>, py: Python) -> $iter {
+                $iter {
+                    inner: Some(self_.clone_ref(py)),
+                    index: 0,
+                }
+            }
+
+            fn __reversed__(self_: Py<Self>, py: Python) -> $reversed {
+                $reversed {
+                    inner: Some(self_.clone_ref(py)),
+                    index: 0,
+                }
+            }
+
+            fn __array__(
+                &self,
+                py: Python,
+                dtype: Option<PyObject>,
+                copy: Option<bool>,
+            ) -> PyResult<PyObject> {
+                if copy == Some(false) {
+                    return Err(PyValueError::new_err(
+                        "A copy is needed to return an array from this object.",
+                    ));
+                }
+                let res = self.$data.convert_to_pyarray(py)?;
+                Ok(match dtype {
+                    Some(dtype) => {
+                        let numpy_mod = py.import_bound("numpy")?;
+                        let args = (res,);
+                        let kwargs = [("dtype", dtype)].into_py_dict_bound(py);
+                        numpy_mod
+                            .call_method("asarray", args, Some(&kwargs))?
+                            .into()
+                    }
+                    None => res,
+                })
             }
 
             fn __traverse__(&self, vis: PyVisit) -> Result<(), PyTraverseError> {
@@ -594,11 +632,114 @@ macro_rules! custom_vec_iter_impl {
                 PyGCProtocol::__clear__(self)
             }
         }
+
+        #[doc = concat!("Custom iterator class for :class:`.", stringify!($name), "`")]
+        // No module because this isn't constructable from Python space, and is only exposed as an
+        // implementation detail.
+        #[pyclass]
+        pub struct $iter {
+            inner: Option<Py<$name>>,
+            index: usize,
+        }
+
+        #[pymethods]
+        impl $iter {
+            fn __next__(&mut self, py: Python) -> Option<Py<PyAny>> {
+                let data = self.inner.as_ref().unwrap().borrow(py);
+                if self.index < data.$data.len() {
+                    let out = data.$data[self.index].clone().into_py(py);
+                    self.index += 1;
+                    Some(out)
+                } else {
+                    None
+                }
+            }
+
+            fn __iter__(self_: Py<Self>) -> Py<Self> {
+                // Python iterators typically just return themselves from this, though in principle
+                // we could return a separate object that iterates starting from the same point.
+                self_
+            }
+
+            fn __length_hint__(&self, py: Python) -> usize {
+                self.inner
+                    .as_ref()
+                    .unwrap()
+                    .borrow(py)
+                    .$data
+                    .len()
+                    .saturating_sub(self.index)
+            }
+
+            fn __traverse__(&self, vis: PyVisit) -> Result<(), PyTraverseError> {
+                if let Some(obj) = self.inner.as_ref() {
+                    vis.call(obj)?
+                }
+                Ok(())
+            }
+
+            fn __clear__(&mut self) {
+                self.inner = None;
+            }
+        }
+
+        #[doc = concat!("Custom reversed iterator class for :class:`.", stringify!($name), "`")]
+        // No module because this isn't constructable from Python space, and is only exposed as an
+        // implementation detail.
+        #[pyclass]
+        pub struct $reversed {
+            inner: Option<Py<$name>>,
+            index: usize,
+        }
+
+        #[pymethods]
+        impl $reversed {
+            fn __next__(&mut self, py: Python) -> Option<Py<PyAny>> {
+                let data = self.inner.as_ref().unwrap().borrow(py);
+                let len = data.$data.len();
+                if self.index < len {
+                    let out = data.$data[len - self.index - 1].clone().into_py(py);
+                    self.index += 1;
+                    Some(out)
+                } else {
+                    None
+                }
+            }
+
+            fn __iter__(self_: Py<Self>) -> Py<Self> {
+                // Python iterators typically just return themselves from this, though in principle
+                // we could return a separate object that iterates starting from the same point.
+                self_
+            }
+
+            fn __length_hint__(&self, py: Python) -> usize {
+                self.inner
+                    .as_ref()
+                    .unwrap()
+                    .borrow(py)
+                    .$data
+                    .len()
+                    .saturating_sub(self.index)
+            }
+
+            fn __traverse__(&self, vis: PyVisit) -> Result<(), PyTraverseError> {
+                if let Some(obj) = self.inner.as_ref() {
+                    vis.call(obj)?
+                }
+                Ok(())
+            }
+
+            fn __clear__(&mut self) {
+                self.inner = None;
+            }
+        }
     };
 }
 
 custom_vec_iter_impl!(
     BFSSuccessors,
+    BFSSuccessorsIter,
+    BFSSuccessorsRev,
     bfs_successors,
     (PyObject, Vec<PyObject>),
     "A custom class for the return from :func:`rustworkx.bfs_successors`
@@ -651,6 +792,8 @@ impl PyGCProtocol for BFSSuccessors {
 
 custom_vec_iter_impl!(
     BFSPredecessors,
+    BFSPredecessorsIter,
+    BFSPredecessorsRev,
     bfs_predecessors,
     (PyObject, Vec<PyObject>),
     "A custom class for the return from :func:`rustworkx.bfs_predecessors`
@@ -703,6 +846,8 @@ impl PyGCProtocol for BFSPredecessors {
 
 custom_vec_iter_impl!(
     NodeIndices,
+    NodeIndicesIter,
+    NodeIndicesRev,
     nodes,
     usize,
     "A custom class for the return of node indices
@@ -721,11 +866,11 @@ custom_vec_iter_impl!(
         import rustworkx as rx
 
         graph = rx.generators.directed_path_graph(5)
-        nodes = rx.node_indices(0)
+        nodes = graph.node_indices()
         # Index based access
         third_element = nodes[2]
         # Use as iterator
-        nodes_iter = iter(node)
+        nodes_iter = iter(nodes)
         first_element = next(nodes_iter)
         second_element = next(nodes_iter)
 
@@ -735,6 +880,8 @@ impl PyGCProtocol for NodeIndices {}
 
 custom_vec_iter_impl!(
     EdgeList,
+    EdgeListIter,
+    EdgeListRev,
     edges,
     (usize, usize),
     "A custom class for the return of edge lists
@@ -773,6 +920,8 @@ impl PyGCProtocol for EdgeList {}
 
 custom_vec_iter_impl!(
     WeightedEdgeList,
+    WeightedEdgeListIter,
+    WeightedEdgeListRev,
     edges,
     (usize, usize, PyObject),
     "A custom class for the return of edge lists with weights
@@ -823,6 +972,8 @@ impl PyGCProtocol for WeightedEdgeList {
 
 custom_vec_iter_impl!(
     EdgeIndices,
+    EdgeIndicesIter,
+    EdgeIndicesRev,
     edges,
     usize,
     "A custom class for the return of edge indices
@@ -860,9 +1011,9 @@ impl PyHash for EdgeList {
     }
 }
 
-impl PyEq<PyAny> for EdgeList {
+impl<'py> PyEq<Bound<'py, PyAny>> for EdgeList {
     #[inline]
-    fn eq(&self, other: &PyAny, py: Python) -> PyResult<bool> {
+    fn eq(&self, other: &Bound<PyAny>, py: Python) -> PyResult<bool> {
         PyEq::eq(&self.edges, other, py)
     }
 }
@@ -875,6 +1026,8 @@ impl PyDisplay for EdgeList {
 
 custom_vec_iter_impl!(
     Chains,
+    ChainsIter,
+    ChainsRev,
     chains,
     EdgeList,
     "A custom class for the return of a list of list of edges.
@@ -918,13 +1071,13 @@ macro_rules! py_iter_protocol_impl {
             fn __iter__(slf: PyRef<Self>) -> Py<$name> {
                 slf.into()
             }
-            fn __next__(mut slf: PyRefMut<Self>) -> IterNextOutput<$T, &'static str> {
+            fn __next__(mut slf: PyRefMut<Self>) -> Option<$T> {
                 if slf.iter_pos < slf.$data.len() {
-                    let res = IterNextOutput::Yield(slf.$data[slf.iter_pos].clone());
+                    let res = Some(slf.$data[slf.iter_pos].clone());
                     slf.iter_pos += 1;
                     res
                 } else {
-                    IterNextOutput::Return("Ended")
+                    None
                 }
             }
         }
@@ -984,8 +1137,12 @@ macro_rules! custom_hash_map_iter_impl {
                 }
             }
 
-            fn __richcmp__(&self, other: &PyAny, op: pyo3::basic::CompareOp) -> PyResult<bool> {
-                let compare = |other: &PyAny| -> PyResult<bool> {
+            fn __richcmp__(
+                &self,
+                other: &Bound<PyAny>,
+                op: pyo3::basic::CompareOp,
+            ) -> PyResult<bool> {
+                let compare = |other: &Bound<PyAny>| -> PyResult<bool> {
                     Python::with_gil(|py| PyEq::eq(&self.$data, other, py))
                 };
                 match op {
@@ -1189,8 +1346,8 @@ impl PathMapping {
         }
     }
 
-    fn __richcmp__(&self, other: &PyAny, op: pyo3::basic::CompareOp) -> PyResult<bool> {
-        let compare = |other: &PyAny| -> PyResult<bool> {
+    fn __richcmp__(&self, other: &Bound<PyAny>, op: pyo3::basic::CompareOp) -> PyResult<bool> {
+        let compare = |other: &Bound<PyAny>| -> PyResult<bool> {
             Python::with_gil(|py| PyEq::eq(&self.paths, other, py))
         };
         match op {
@@ -1256,9 +1413,9 @@ impl PyHash for PathMapping {
     }
 }
 
-impl PyEq<PyAny> for PathMapping {
+impl<'py> PyEq<Bound<'py, PyAny>> for PathMapping {
     #[inline]
-    fn eq(&self, other: &PyAny, py: Python) -> PyResult<bool> {
+    fn eq(&self, other: &Bound<PyAny>, py: Python) -> PyResult<bool> {
         PyEq::eq(&self.paths, other, py)
     }
 }
@@ -1347,8 +1504,8 @@ impl MultiplePathMapping {
         }
     }
 
-    fn __richcmp__(&self, other: &PyAny, op: pyo3::basic::CompareOp) -> PyResult<bool> {
-        let compare = |other: &PyAny| -> PyResult<bool> {
+    fn __richcmp__(&self, other: &Bound<PyAny>, op: pyo3::basic::CompareOp) -> PyResult<bool> {
+        let compare = |other: &Bound<PyAny>| -> PyResult<bool> {
             Python::with_gil(|py| PyEq::eq(&self.paths, other, py))
         };
         match op {
@@ -1420,9 +1577,9 @@ impl PyHash for MultiplePathMapping {
     }
 }
 
-impl PyEq<PyAny> for MultiplePathMapping {
+impl<'py> PyEq<Bound<'py, PyAny>> for MultiplePathMapping {
     #[inline]
-    fn eq(&self, other: &PyAny, py: Python) -> PyResult<bool> {
+    fn eq(&self, other: &Bound<PyAny>, py: Python) -> PyResult<bool> {
         PyEq::eq(&self.paths, other, py)
     }
 }
@@ -1484,9 +1641,9 @@ impl PyHash for PathLengthMapping {
     }
 }
 
-impl PyEq<PyAny> for PathLengthMapping {
+impl<'py> PyEq<Bound<'py, PyAny>> for PathLengthMapping {
     #[inline]
-    fn eq(&self, other: &PyAny, py: Python) -> PyResult<bool> {
+    fn eq(&self, other: &Bound<PyAny>, py: Python) -> PyResult<bool> {
         PyEq::eq(&self.path_lengths, other, py)
     }
 }

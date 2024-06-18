@@ -1,0 +1,34 @@
+---
+features:
+  - |
+    Added a new exception class :class:`~.InvalidMapping` which is raised when a function receives an invalid
+    mapping. The sole user of this exception is the :func:`~.graph_token_swapper` which will raise it when
+    the user provided mapping is not feasible on the provided graph.
+upgrade:
+  - |
+    The rustworkx function :func:`~.graph_token_swapper` now will raise an :class:`~.InvalidMapping` exception
+    instead of a ``PanicException`` when an invalid mapping is requested. This was done because a
+    ``PanicException`` is difficult to catch by design as it is used to indicate an unhandled error. Using
+  - |
+    The return type of the ``rustworkx-core`` function ``token_swapper()`` has been changed
+    from ``Vec<(NodeIndex, NodeIndex)>`` to be ``Result<Vec<(NodeIndex, NodeIndex)>, MapNotPossible>``.
+    This change was necessary to return an expected error condition if a mapping is requested for a graph
+    that is not possible. For example is if you have a disjoint graph and you're trying to map
+    nodes without any connectivity:
+
+      .. code-block:: rust
+
+          use rustworkx_core::token_swapper;
+          use rustworkx_core::petgraph;
+
+          let g = petgraph::graph::UnGraph::<(), ()>::from_edges(&[(0, 1), (2, 3) ]);
+          let mapping = HashMap::from([
+              (NodeIndex::new(2), NodeIndex::new(0)),
+              (NodeIndex::new(1), NodeIndex::new(1)),
+              (NodeIndex::new(0), NodeIndex::new(2)),
+              (NodeIndex::new(3), NodeIndex::new(3)),
+          ]);
+          token_swapper(&g, mapping, Some(10), Some(4), Some(50));
+
+    will now return ``Err(MapNotPossible)`` instead of panicking. If you were using this
+    funciton before you'll need to handle the result type.

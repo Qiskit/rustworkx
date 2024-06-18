@@ -7,6 +7,7 @@
 # that they have been altered from the originals.
 
 
+import importlib
 import sys
 import functools
 
@@ -15,7 +16,8 @@ from .rustworkx import *
 # flake8: noqa
 import rustworkx.visit
 
-sys.modules["rustworkx.generators"] = generators
+__rustworkx_mod__ = importlib.import_module(".rustworkx", package="rustworkx")
+sys.modules["rustworkx.generators"] = __rustworkx_mod__.generators
 
 
 class PyDAG(PyDiGraph):
@@ -130,7 +132,19 @@ class PyDAG(PyDiGraph):
     pass
 
 
-@functools.singledispatch
+def _rustworkx_dispatch(func):
+    """Decorator to dispatch rustworkx universal functions to the correct typed function"""
+
+    func_name = func.__name__
+    wrapped_func = functools.singledispatch(func)
+
+    wrapped_func.register(PyDiGraph, vars(__rustworkx_mod__)[f"digraph_{func_name}"])
+    wrapped_func.register(PyGraph, vars(__rustworkx_mod__)[f"graph_{func_name}"])
+
+    return wrapped_func
+
+
+@_rustworkx_dispatch
 def distance_matrix(graph, parallel_threshold=300, as_undirected=False, null_value=0.0):
     """Get the distance matrix for a graph
 
@@ -162,24 +176,7 @@ def distance_matrix(graph, parallel_threshold=300, as_undirected=False, null_val
     raise TypeError("Invalid Input Type %s for graph" % type(graph))
 
 
-@distance_matrix.register(PyDiGraph)
-def _digraph_distance_matrix(graph, parallel_threshold=300, as_undirected=False, null_value=0.0):
-    return digraph_distance_matrix(
-        graph,
-        parallel_threshold=parallel_threshold,
-        as_undirected=as_undirected,
-        null_value=null_value,
-    )
-
-
-@distance_matrix.register(PyGraph)
-def _graph_distance_matrix(graph, parallel_threshold=300, null_value=0.0):
-    return graph_distance_matrix(
-        graph, parallel_threshold=parallel_threshold, null_value=null_value
-    )
-
-
-@functools.singledispatch
+@_rustworkx_dispatch
 def unweighted_average_shortest_path_length(graph, parallel_threshold=300, disconnected=False):
     r"""Return the average shortest path length with unweighted edges.
 
@@ -221,26 +218,7 @@ def unweighted_average_shortest_path_length(graph, parallel_threshold=300, disco
     raise TypeError("Invalid Input Type %s for graph" % type(graph))
 
 
-@unweighted_average_shortest_path_length.register(PyDiGraph)
-def _digraph_unweighted_average_shortest_path_length(
-    graph, parallel_threshold=300, as_undirected=False, disconnected=False
-):
-    return digraph_unweighted_average_shortest_path_length(
-        graph,
-        parallel_threshold=parallel_threshold,
-        as_undirected=as_undirected,
-        disconnected=disconnected,
-    )
-
-
-@unweighted_average_shortest_path_length.register(PyGraph)
-def _graph_unweighted_shortest_path_length(graph, parallel_threshold=300, disconnected=False):
-    return graph_unweighted_average_shortest_path_length(
-        graph, parallel_threshold=parallel_threshold, disconnected=disconnected
-    )
-
-
-@functools.singledispatch
+@_rustworkx_dispatch
 def adjacency_matrix(graph, weight_fn=None, default_weight=1.0, null_value=0.0):
     """Return the adjacency matrix for a graph object
 
@@ -276,27 +254,7 @@ def adjacency_matrix(graph, weight_fn=None, default_weight=1.0, null_value=0.0):
     raise TypeError("Invalid Input Type %s for graph" % type(graph))
 
 
-@adjacency_matrix.register(PyDiGraph)
-def _digraph_adjacency_matrix(graph, weight_fn=None, default_weight=1.0, null_value=0.0):
-    return digraph_adjacency_matrix(
-        graph,
-        weight_fn=weight_fn,
-        default_weight=default_weight,
-        null_value=null_value,
-    )
-
-
-@adjacency_matrix.register(PyGraph)
-def _graph_adjacency_matrix(graph, weight_fn=None, default_weight=1.0, null_value=0.0):
-    return graph_adjacency_matrix(
-        graph,
-        weight_fn=weight_fn,
-        default_weight=default_weight,
-        null_value=null_value,
-    )
-
-
-@functools.singledispatch
+@_rustworkx_dispatch
 def all_simple_paths(graph, from_, to, min_depth=None, cutoff=None):
     """Return all simple paths between 2 nodes in a PyGraph object
 
@@ -319,17 +277,7 @@ def all_simple_paths(graph, from_, to, min_depth=None, cutoff=None):
     raise TypeError("Invalid Input Type %s for graph" % type(graph))
 
 
-@all_simple_paths.register(PyDiGraph)
-def _digraph_all_simple_paths(graph, from_, to, min_depth=None, cutoff=None):
-    return digraph_all_simple_paths(graph, from_, to, min_depth=min_depth, cutoff=cutoff)
-
-
-@all_simple_paths.register(PyGraph)
-def _graph_all_simple_paths(graph, from_, to, min_depth=None, cutoff=None):
-    return graph_all_simple_paths(graph, from_, to, min_depth=min_depth, cutoff=cutoff)
-
-
-@functools.singledispatch
+@_rustworkx_dispatch
 def floyd_warshall(
     graph,
     weight_fn=None,
@@ -385,37 +333,7 @@ def floyd_warshall(
     raise TypeError("Invalid Input Type %s for graph" % type(graph))
 
 
-@floyd_warshall.register(PyDiGraph)
-def _digraph_floyd_warshall(
-    graph,
-    weight_fn=None,
-    default_weight=1.0,
-    parallel_threshold=300,
-):
-    return digraph_floyd_warshall(
-        graph,
-        weight_fn=weight_fn,
-        default_weight=default_weight,
-        parallel_threshold=parallel_threshold,
-    )
-
-
-@floyd_warshall.register(PyGraph)
-def _graph_floyd_warshall(
-    graph,
-    weight_fn=None,
-    default_weight=1.0,
-    parallel_threshold=300,
-):
-    return graph_floyd_warshall(
-        graph,
-        weight_fn=weight_fn,
-        default_weight=default_weight,
-        parallel_threshold=parallel_threshold,
-    )
-
-
-@functools.singledispatch
+@_rustworkx_dispatch
 def floyd_warshall_numpy(
     graph,
     weight_fn=None,
@@ -464,29 +382,7 @@ def floyd_warshall_numpy(
     raise TypeError("Invalid Input Type %s for graph" % type(graph))
 
 
-@floyd_warshall_numpy.register(PyDiGraph)
-def _digraph_floyd_warshall_numpy(
-    graph, weight_fn=None, default_weight=1.0, parallel_threshold=300
-):
-    return digraph_floyd_warshall_numpy(
-        graph,
-        weight_fn=weight_fn,
-        default_weight=default_weight,
-        parallel_threshold=parallel_threshold,
-    )
-
-
-@floyd_warshall_numpy.register(PyGraph)
-def _graph_floyd_warshall_numpy(graph, weight_fn=None, default_weight=1.0, parallel_threshold=300):
-    return graph_floyd_warshall_numpy(
-        graph,
-        weight_fn=weight_fn,
-        default_weight=default_weight,
-        parallel_threshold=parallel_threshold,
-    )
-
-
-@functools.singledispatch
+@_rustworkx_dispatch
 def astar_shortest_path(graph, node, goal_fn, edge_cost_fn, estimate_cost_fn):
     """Compute the A* shortest path for a graph
 
@@ -513,17 +409,7 @@ def astar_shortest_path(graph, node, goal_fn, edge_cost_fn, estimate_cost_fn):
     raise TypeError("Invalid Input Type %s for graph" % type(graph))
 
 
-@astar_shortest_path.register(PyDiGraph)
-def _digraph_astar_shortest_path(graph, node, goal_fn, edge_cost_fn, estimate_cost_fn):
-    return digraph_astar_shortest_path(graph, node, goal_fn, edge_cost_fn, estimate_cost_fn)
-
-
-@astar_shortest_path.register(PyGraph)
-def _graph_astar_shortest_path(graph, node, goal_fn, edge_cost_fn, estimate_cost_fn):
-    return graph_astar_shortest_path(graph, node, goal_fn, edge_cost_fn, estimate_cost_fn)
-
-
-@functools.singledispatch
+@_rustworkx_dispatch
 def dijkstra_shortest_paths(
     graph,
     source,
@@ -557,37 +443,30 @@ def dijkstra_shortest_paths(
     raise TypeError("Invalid Input Type %s for graph" % type(graph))
 
 
-@dijkstra_shortest_paths.register(PyDiGraph)
-def _digraph_dijkstra_shortest_path(
+@_rustworkx_dispatch
+def has_path(
     graph,
     source,
-    target=None,
-    weight_fn=None,
-    default_weight=1.0,
+    target,
     as_undirected=False,
 ):
-    return digraph_dijkstra_shortest_paths(
-        graph,
-        source,
-        target=target,
-        weight_fn=weight_fn,
-        default_weight=default_weight,
-        as_undirected=as_undirected,
-    )
+    """Checks if a path exists between a source and target node
+
+    :param graph: The input graph to use. Can either be a
+        :class:`~rustworkx.PyGraph` or :class:`~rustworkx.PyDiGraph`
+    :param int source: The node index to find paths from
+    :param int target: The index of the target node
+    :param bool as_undirected: If set to true the graph will be treated as
+        undirected for finding existence of a path. This only works with a
+        :class:`~rustworkx.PyDiGraph` input for ``graph``
+
+    :return: True if a path exists, False if not
+    :rtype: bool
+    """
+    raise TypeError("Invalid Input Type %s for graph" % type(graph))
 
 
-@dijkstra_shortest_paths.register(PyGraph)
-def _graph_dijkstra_shortest_path(graph, source, target=None, weight_fn=None, default_weight=1.0):
-    return graph_dijkstra_shortest_paths(
-        graph,
-        source,
-        target=target,
-        weight_fn=weight_fn,
-        default_weight=default_weight,
-    )
-
-
-@functools.singledispatch
+@_rustworkx_dispatch
 def all_pairs_dijkstra_shortest_paths(graph, edge_cost_fn):
     """For each node in the graph, finds the shortest paths to all others.
 
@@ -620,17 +499,7 @@ def all_pairs_dijkstra_shortest_paths(graph, edge_cost_fn):
     raise TypeError("Invalid Input Type %s for graph" % type(graph))
 
 
-@all_pairs_dijkstra_shortest_paths.register(PyDiGraph)
-def _digraph_all_pairsdijkstra_shortest_path(graph, edge_cost_fn):
-    return digraph_all_pairs_dijkstra_shortest_paths(graph, edge_cost_fn)
-
-
-@all_pairs_dijkstra_shortest_paths.register(PyGraph)
-def _graph_all_pairs_dijkstra_shortest_path(graph, edge_cost_fn):
-    return graph_all_pairs_dijkstra_shortest_paths(graph, edge_cost_fn)
-
-
-@functools.singledispatch
+@_rustworkx_dispatch
 def all_pairs_all_simple_paths(graph, min_depth=None, cutoff=None):
     """Return all the simple paths between all pairs of nodes in the graph
 
@@ -655,17 +524,7 @@ def all_pairs_all_simple_paths(graph, min_depth=None, cutoff=None):
     raise TypeError("Invalid Input Type %s for graph" % type(graph))
 
 
-@all_pairs_all_simple_paths.register(PyDiGraph)
-def _digraph_all_pairs_all_simple_paths(graph, min_depth=None, cutoff=None):
-    return digraph_all_pairs_all_simple_paths(graph, min_depth=min_depth, cutoff=cutoff)
-
-
-@all_pairs_all_simple_paths.register(PyGraph)
-def _graph_all_pairs_all_simple_paths(graph, min_depth=None, cutoff=None):
-    return graph_all_pairs_all_simple_paths(graph, min_depth=min_depth, cutoff=cutoff)
-
-
-@functools.singledispatch
+@_rustworkx_dispatch
 def all_pairs_dijkstra_path_lengths(graph, edge_cost_fn):
     """For each node in the graph, calculates the lengths of the shortest paths to all others.
 
@@ -698,17 +557,7 @@ def all_pairs_dijkstra_path_lengths(graph, edge_cost_fn):
     raise TypeError("Invalid Input Type %s for graph" % type(graph))
 
 
-@all_pairs_dijkstra_path_lengths.register(PyDiGraph)
-def _digraph_all_pairs_dijkstra_path_lengths(graph, edge_cost_fn):
-    return digraph_all_pairs_dijkstra_path_lengths(graph, edge_cost_fn)
-
-
-@all_pairs_dijkstra_path_lengths.register(PyGraph)
-def _graph_all_pairs_dijkstra_path_lengths(graph, edge_cost_fn):
-    return graph_all_pairs_dijkstra_path_lengths(graph, edge_cost_fn)
-
-
-@functools.singledispatch
+@_rustworkx_dispatch
 def dijkstra_shortest_path_lengths(graph, node, edge_cost_fn, goal=None):
     """Compute the lengths of the shortest paths for a graph object using
     Dijkstra's algorithm.
@@ -733,17 +582,7 @@ def dijkstra_shortest_path_lengths(graph, node, edge_cost_fn, goal=None):
     raise TypeError("Invalid Input Type %s for graph" % type(graph))
 
 
-@dijkstra_shortest_path_lengths.register(PyDiGraph)
-def _digraph_dijkstra_shortest_path_lengths(graph, node, edge_cost_fn, goal=None):
-    return digraph_dijkstra_shortest_path_lengths(graph, node, edge_cost_fn, goal=goal)
-
-
-@dijkstra_shortest_path_lengths.register(PyGraph)
-def _graph_dijkstra_shortest_path_lengths(graph, node, edge_cost_fn, goal=None):
-    return graph_dijkstra_shortest_path_lengths(graph, node, edge_cost_fn, goal=goal)
-
-
-@functools.singledispatch
+@_rustworkx_dispatch
 def k_shortest_path_lengths(graph, start, k, edge_cost, goal=None):
     """Compute the length of the kth shortest path
 
@@ -768,17 +607,7 @@ def k_shortest_path_lengths(graph, start, k, edge_cost, goal=None):
     raise TypeError("Invalid Input Type %s for graph" % type(graph))
 
 
-@k_shortest_path_lengths.register(PyDiGraph)
-def _digraph_k_shortest_path_lengths(graph, start, k, edge_cost, goal=None):
-    return digraph_k_shortest_path_lengths(graph, start, k, edge_cost, goal=goal)
-
-
-@k_shortest_path_lengths.register(PyGraph)
-def _graph_k_shortest_path_lengths(graph, start, k, edge_cost, goal=None):
-    return graph_k_shortest_path_lengths(graph, start, k, edge_cost, goal=goal)
-
-
-@functools.singledispatch
+@_rustworkx_dispatch
 def dfs_edges(graph, source=None):
     """Get an edge list of the tree edges from a depth-first traversal
 
@@ -822,17 +651,7 @@ def dfs_edges(graph, source=None):
     raise TypeError("Invalid Input Type %s for graph" % type(graph))
 
 
-@dfs_edges.register(PyDiGraph)
-def _digraph_dfs_edges(graph, source=None):
-    return digraph_dfs_edges(graph, source=source)
-
-
-@dfs_edges.register(PyGraph)
-def _graph_dfs_edges(graph, source=None):
-    return graph_dfs_edges(graph, source=source)
-
-
-@functools.singledispatch
+@_rustworkx_dispatch
 def is_isomorphic(
     first,
     second,
@@ -888,31 +707,6 @@ def is_isomorphic(
     raise TypeError("Invalid Input Type %s for graph" % type(first))
 
 
-@is_isomorphic.register(PyDiGraph)
-def _digraph_is_isomorphic(
-    first,
-    second,
-    node_matcher=None,
-    edge_matcher=None,
-    id_order=True,
-    call_limit=None,
-):
-    return digraph_is_isomorphic(first, second, node_matcher, edge_matcher, id_order, call_limit)
-
-
-@is_isomorphic.register(PyGraph)
-def _graph_is_isomorphic(
-    first,
-    second,
-    node_matcher=None,
-    edge_matcher=None,
-    id_order=True,
-    call_limit=None,
-):
-    return graph_is_isomorphic(first, second, node_matcher, edge_matcher, id_order, call_limit)
-
-
-@functools.singledispatch
 def is_isomorphic_node_match(first, second, matcher, id_order=True):
     """Determine if 2 graphs are isomorphic
 
@@ -948,20 +742,10 @@ def is_isomorphic_node_match(first, second, matcher, id_order=True):
         not.
     :rtype: bool
     """
-    raise TypeError("Invalid Input Type %s for graph" % type(first))
+    return is_isomorphic(first, second, matcher, None, id_order)
 
 
-@is_isomorphic_node_match.register(PyDiGraph)
-def _digraph_is_isomorphic_node_match(first, second, matcher, id_order=True):
-    return digraph_is_isomorphic(first, second, matcher, id_order=id_order)
-
-
-@is_isomorphic_node_match.register(PyGraph)
-def _graph_is_isomorphic_node_match(first, second, matcher, id_order=True):
-    return graph_is_isomorphic(first, second, matcher, id_order=id_order)
-
-
-@functools.singledispatch
+@_rustworkx_dispatch
 def is_subgraph_isomorphic(
     first,
     second,
@@ -1018,37 +802,7 @@ def is_subgraph_isomorphic(
     raise TypeError("Invalid Input Type %s for graph" % type(first))
 
 
-@is_subgraph_isomorphic.register(PyDiGraph)
-def _digraph_is_subgraph_isomorphic(
-    first,
-    second,
-    node_matcher=None,
-    edge_matcher=None,
-    id_order=False,
-    induced=True,
-    call_limit=None,
-):
-    return digraph_is_subgraph_isomorphic(
-        first, second, node_matcher, edge_matcher, id_order, induced, call_limit
-    )
-
-
-@is_subgraph_isomorphic.register(PyGraph)
-def _graph_is_subgraph_isomorphic(
-    first,
-    second,
-    node_matcher=None,
-    edge_matcher=None,
-    id_order=False,
-    induced=True,
-    call_limit=None,
-):
-    return graph_is_subgraph_isomorphic(
-        first, second, node_matcher, edge_matcher, id_order, induced, call_limit
-    )
-
-
-@functools.singledispatch
+@_rustworkx_dispatch
 def transitivity(graph):
     """Compute the transitivity of a graph.
 
@@ -1074,17 +828,7 @@ def transitivity(graph):
     raise TypeError("Invalid Input Type %s for graph" % type(graph))
 
 
-@transitivity.register(PyDiGraph)
-def _digraph_transitivity(graph):
-    return digraph_transitivity(graph)
-
-
-@transitivity.register(PyGraph)
-def _graph_transitivity(graph):
-    return graph_transitivity(graph)
-
-
-@functools.singledispatch
+@_rustworkx_dispatch
 def core_number(graph):
     """Return the core number for each node in the graph.
 
@@ -1106,17 +850,7 @@ def core_number(graph):
     raise TypeError("Invalid Input Type %s for graph" % type(graph))
 
 
-@core_number.register(PyDiGraph)
-def _digraph_core_number(graph):
-    return digraph_core_number(graph)
-
-
-@core_number.register(PyGraph)
-def _graph_core_number(graph):
-    return graph_core_number(graph)
-
-
-@functools.singledispatch
+@_rustworkx_dispatch
 def complement(graph):
     """Compute the complement of a graph.
 
@@ -1133,17 +867,7 @@ def complement(graph):
     raise TypeError("Invalid Input Type %s for graph" % type(graph))
 
 
-@complement.register(PyDiGraph)
-def _digraph_complement(graph):
-    return digraph_complement(graph)
-
-
-@complement.register(PyGraph)
-def _graph_complement(graph):
-    return graph_complement(graph)
-
-
-@functools.singledispatch
+@_rustworkx_dispatch
 def random_layout(graph, center=None, seed=None):
     """Generate a random layout
 
@@ -1158,17 +882,7 @@ def random_layout(graph, center=None, seed=None):
     raise TypeError("Invalid Input Type %s for graph" % type(graph))
 
 
-@random_layout.register(PyDiGraph)
-def _digraph_random_layout(graph, center=None, seed=None):
-    return digraph_random_layout(graph, center=center, seed=seed)
-
-
-@random_layout.register(PyGraph)
-def _graph_random_layout(graph, center=None, seed=None):
-    return graph_random_layout(graph, center=center, seed=seed)
-
-
-@functools.singledispatch
+@_rustworkx_dispatch
 def spring_layout(
     graph,
     pos=None,
@@ -1233,72 +947,6 @@ def spring_layout(
     raise TypeError("Invalid Input Type %s for graph" % type(graph))
 
 
-@spring_layout.register(PyDiGraph)
-def _digraph_spring_layout(
-    graph,
-    pos=None,
-    fixed=None,
-    k=None,
-    repulsive_exponent=2,
-    adaptive_cooling=True,
-    num_iter=50,
-    tol=1e-6,
-    weight_fn=None,
-    default_weight=1,
-    scale=1,
-    center=None,
-    seed=None,
-):
-    return digraph_spring_layout(
-        graph,
-        pos,
-        fixed,
-        k,
-        repulsive_exponent,
-        adaptive_cooling,
-        num_iter,
-        tol,
-        weight_fn,
-        default_weight,
-        scale,
-        center,
-        seed,
-    )
-
-
-@spring_layout.register(PyGraph)
-def _graph_spring_layout(
-    graph,
-    pos=None,
-    fixed=None,
-    k=None,
-    repulsive_exponent=2,
-    adaptive_cooling=True,
-    num_iter=50,
-    tol=1e-6,
-    weight_fn=None,
-    default_weight=1,
-    scale=1,
-    center=None,
-    seed=None,
-):
-    return graph_spring_layout(
-        graph,
-        pos,
-        fixed,
-        k,
-        repulsive_exponent,
-        adaptive_cooling,
-        num_iter,
-        tol,
-        weight_fn,
-        default_weight,
-        scale,
-        center,
-        seed,
-    )
-
-
 def networkx_converter(graph, keep_attributes: bool = False):
     """Convert a networkx graph object into a rustworkx graph object.
 
@@ -1341,7 +989,7 @@ def networkx_converter(graph, keep_attributes: bool = False):
     return new_graph
 
 
-@functools.singledispatch
+@_rustworkx_dispatch
 def bipartite_layout(
     graph,
     first_nodes,
@@ -1370,45 +1018,7 @@ def bipartite_layout(
     raise TypeError("Invalid Input Type %s for graph" % type(graph))
 
 
-@bipartite_layout.register(PyDiGraph)
-def _digraph_bipartite_layout(
-    graph,
-    first_nodes,
-    horizontal=False,
-    scale=1,
-    center=None,
-    aspect_ratio=4 / 3,
-):
-    return digraph_bipartite_layout(
-        graph,
-        first_nodes,
-        horizontal=horizontal,
-        scale=scale,
-        center=center,
-        aspect_ratio=aspect_ratio,
-    )
-
-
-@bipartite_layout.register(PyGraph)
-def _graph_bipartite_layout(
-    graph,
-    first_nodes,
-    horizontal=False,
-    scale=1,
-    center=None,
-    aspect_ratio=4 / 3,
-):
-    return graph_bipartite_layout(
-        graph,
-        first_nodes,
-        horizontal=horizontal,
-        scale=scale,
-        center=center,
-        aspect_ratio=aspect_ratio,
-    )
-
-
-@functools.singledispatch
+@_rustworkx_dispatch
 def circular_layout(graph, scale=1, center=None):
     """Generate a circular layout of the graph
 
@@ -1424,17 +1034,7 @@ def circular_layout(graph, scale=1, center=None):
     raise TypeError("Invalid Input Type %s for graph" % type(graph))
 
 
-@circular_layout.register(PyDiGraph)
-def _digraph_circular_layout(graph, scale=1, center=None):
-    return digraph_circular_layout(graph, scale=scale, center=center)
-
-
-@circular_layout.register(PyGraph)
-def _graph_circular_layout(graph, scale=1, center=None):
-    return graph_circular_layout(graph, scale=scale, center=center)
-
-
-@functools.singledispatch
+@_rustworkx_dispatch
 def shell_layout(graph, nlist=None, rotate=None, scale=1, center=None):
     """
     Generate a shell layout of the graph
@@ -1455,17 +1055,7 @@ def shell_layout(graph, nlist=None, rotate=None, scale=1, center=None):
     raise TypeError("Invalid Input Type %s for graph" % type(graph))
 
 
-@shell_layout.register(PyDiGraph)
-def _digraph_shell_layout(graph, nlist=None, rotate=None, scale=1, center=None):
-    return digraph_shell_layout(graph, nlist=nlist, rotate=rotate, scale=scale, center=center)
-
-
-@shell_layout.register(PyGraph)
-def _graph_shell_layout(graph, nlist=None, rotate=None, scale=1, center=None):
-    return graph_shell_layout(graph, nlist=nlist, rotate=rotate, scale=scale, center=center)
-
-
-@functools.singledispatch
+@_rustworkx_dispatch
 def spiral_layout(graph, scale=1, center=None, resolution=0.35, equidistant=False):
     """
     Generate a spiral layout of the graph
@@ -1486,29 +1076,7 @@ def spiral_layout(graph, scale=1, center=None, resolution=0.35, equidistant=Fals
     raise TypeError("Invalid Input Type %s for graph" % type(graph))
 
 
-@spiral_layout.register(PyDiGraph)
-def _digraph_spiral_layout(graph, scale=1, center=None, resolution=0.35, equidistant=False):
-    return digraph_spiral_layout(
-        graph,
-        scale=scale,
-        center=center,
-        resolution=resolution,
-        equidistant=equidistant,
-    )
-
-
-@spiral_layout.register(PyGraph)
-def _graph_spiral_layout(graph, scale=1, center=None, resolution=0.35, equidistant=False):
-    return graph_spiral_layout(
-        graph,
-        scale=scale,
-        center=center,
-        resolution=resolution,
-        equidistant=equidistant,
-    )
-
-
-@functools.singledispatch
+@_rustworkx_dispatch
 def num_shortest_paths_unweighted(graph, source):
     """Get the number of unweighted shortest paths from a source node
 
@@ -1523,17 +1091,7 @@ def num_shortest_paths_unweighted(graph, source):
     raise TypeError("Invalid input type %s for graph" % type(graph))
 
 
-@num_shortest_paths_unweighted.register(PyDiGraph)
-def _digraph_num_shortest_paths_unweighted(graph, source):
-    return digraph_num_shortest_paths_unweighted(graph, source)
-
-
-@num_shortest_paths_unweighted.register(PyGraph)
-def _graph_num_shortest_paths_unweighted(graph, source):
-    return graph_num_shortest_paths_unweighted(graph, source)
-
-
-@functools.singledispatch
+@_rustworkx_dispatch
 def betweenness_centrality(graph, normalized=True, endpoints=False, parallel_threshold=50):
     r"""Returns the betweenness centrality of each node in the graph.
 
@@ -1580,27 +1138,7 @@ def betweenness_centrality(graph, normalized=True, endpoints=False, parallel_thr
     raise TypeError("Invalid input type %s for graph" % type(graph))
 
 
-@betweenness_centrality.register(PyDiGraph)
-def _digraph_betweenness_centrality(graph, normalized=True, endpoints=False, parallel_threshold=50):
-    return digraph_betweenness_centrality(
-        graph,
-        normalized=normalized,
-        endpoints=endpoints,
-        parallel_threshold=parallel_threshold,
-    )
-
-
-@betweenness_centrality.register(PyGraph)
-def _graph_betweenness_centrality(graph, normalized=True, endpoints=False, parallel_threshold=50):
-    return graph_betweenness_centrality(
-        graph,
-        normalized=normalized,
-        endpoints=endpoints,
-        parallel_threshold=parallel_threshold,
-    )
-
-
-@functools.singledispatch
+@_rustworkx_dispatch
 def closeness_centrality(graph, wf_improved=True):
     r"""Compute the closeness centrality of each node in a graph object.
 
@@ -1646,17 +1184,7 @@ def closeness_centrality(graph, wf_improved=True):
     raise TypeError("Invalid input type %s for graph" % type(graph))
 
 
-@closeness_centrality.register(PyDiGraph)
-def _digraph_closeness_centrality(graph, wf_improved=True):
-    return digraph_closeness_centrality(graph, wf_improved=wf_improved)
-
-
-@closeness_centrality.register(PyGraph)
-def _graph_closeness_centrality(graph, wf_improved=True):
-    return graph_closeness_centrality(graph, wf_improved=wf_improved)
-
-
-@functools.singledispatch
+@_rustworkx_dispatch
 def edge_betweenness_centrality(graph, normalized=True, parallel_threshold=50):
     r"""Compute the edge betweenness centrality of all edges in a graph.
 
@@ -1700,25 +1228,7 @@ def edge_betweenness_centrality(graph, normalized=True, parallel_threshold=50):
     raise TypeError("Invalid input type %s for graph" % type(graph))
 
 
-@edge_betweenness_centrality.register(PyDiGraph)
-def _digraph_edge_betweenness_centrality(graph, normalized=True, parallel_threshold=50):
-    return digraph_edge_betweenness_centrality(
-        graph,
-        normalized=normalized,
-        parallel_threshold=parallel_threshold,
-    )
-
-
-@edge_betweenness_centrality.register(PyGraph)
-def _graph_edge_betweenness_centrality(graph, normalized=True, parallel_threshold=50):
-    return graph_edge_betweenness_centrality(
-        graph,
-        normalized=normalized,
-        parallel_threshold=parallel_threshold,
-    )
-
-
-@functools.singledispatch
+@_rustworkx_dispatch
 def eigenvector_centrality(graph, weight_fn=None, default_weight=1.0, max_iter=100, tol=1e-6):
     """Compute the eigenvector centrality of a graph.
 
@@ -1756,27 +1266,57 @@ def eigenvector_centrality(graph, weight_fn=None, default_weight=1.0, max_iter=1
          centrality score for that node.
     :rtype: CentralityMapping
     """
+    raise TypeError("Invalid input type %s for graph" % type(graph))
 
 
-@eigenvector_centrality.register(PyDiGraph)
-def _digraph_eigenvector_centrality(
-    graph, weight_fn=None, default_weight=1.0, max_iter=100, tol=1e-6
+@_rustworkx_dispatch
+def katz_centrality(
+    graph, alpha=0.1, beta=1.0, weight_fn=None, default_weight=1.0, max_iter=100, tol=1e-6
 ):
-    return digraph_eigenvector_centrality(
-        graph, weight_fn=weight_fn, default_weight=default_weight, max_iter=max_iter, tol=tol
-    )
+    """Compute the Katz centrality of a graph.
+
+    For details on the Katz centrality refer to:
+
+    Leo Katz. “A New Status Index Derived from Sociometric Index.”
+    Psychometrika 18(1):39–43, 1953
+    <https://link.springer.com/content/pdf/10.1007/BF02289026.pdf>
+
+    This function uses a power iteration method to compute the eigenvector
+    and convergence is not guaranteed. The function will stop when `max_iter`
+    iterations is reached or when the computed vector between two iterations
+    is smaller than the error tolerance multiplied by the number of nodes.
+    The implementation of this algorithm is based on the NetworkX
+    `katz_centrality() <https://networkx.org/documentation/stable/reference/algorithms/generated/networkx.algorithms.centrality.katz_centrality.html>`__
+    function.
+
+    In the case of multigraphs the weights of any parallel edges will be
+    summed when computing the Katz centrality.
+
+    :param graph: Graph to be used. Can either be a
+        :class:`~rustworkx.PyGraph` or :class:`~rustworkx.PyDiGraph`.
+    :param float alpha: Attenuation factor. If this is not specified default value of 0.1 is used.
+    :param float | dict beta: Immediate neighbourhood weights. If a float is provided, the neighbourhood
+        weight is used for all nodes. If a dictionary is provided, it must contain all node indices.
+        If beta is not specified, a default value of 1.0 is used.
+    :param weight_fn: An optional input callable that will be passed the edge's
+        payload object and is expected to return a `float` weight for that edge.
+        If this is not specified ``default_weight`` will be used as the weight
+        for every edge in ``graph``
+    :param float default_weight: If ``weight_fn`` is not set the default weight
+        value to use for the weight of all edges
+    :param int max_iter: The maximum number of iterations in the power method. If
+        not specified a default value of 100 is used.
+    :param float tol: The error tolerance used when checking for convergence in the
+        power method. If this is not specified default value of 1e-6 is used.
+
+    :returns: a read-only dict-like object whose keys are the node indices and values are the
+         centrality score for that node.
+    :rtype: CentralityMapping
+    """
+    raise TypeError("Invalid input type %s for graph" % type(graph))
 
 
-@eigenvector_centrality.register(PyGraph)
-def _graph_eigenvector_centrality(
-    graph, weight_fn=None, default_weight=1.0, max_iter=100, tol=1e-6
-):
-    return graph_eigenvector_centrality(
-        graph, weight_fn=weight_fn, default_weight=default_weight, max_iter=max_iter, tol=tol
-    )
-
-
-@functools.singledispatch
+@_rustworkx_dispatch
 def vf2_mapping(
     first,
     second,
@@ -1834,53 +1374,7 @@ def vf2_mapping(
     raise TypeError("Invalid Input Type %s for graph" % type(first))
 
 
-@vf2_mapping.register(PyDiGraph)
-def _digraph_vf2_mapping(
-    first,
-    second,
-    node_matcher=None,
-    edge_matcher=None,
-    id_order=True,
-    subgraph=False,
-    induced=True,
-    call_limit=None,
-):
-    return digraph_vf2_mapping(
-        first,
-        second,
-        node_matcher=node_matcher,
-        edge_matcher=edge_matcher,
-        id_order=id_order,
-        subgraph=subgraph,
-        induced=induced,
-        call_limit=call_limit,
-    )
-
-
-@vf2_mapping.register(PyGraph)
-def _graph_vf2_mapping(
-    first,
-    second,
-    node_matcher=None,
-    edge_matcher=None,
-    id_order=True,
-    subgraph=False,
-    induced=True,
-    call_limit=None,
-):
-    return graph_vf2_mapping(
-        first,
-        second,
-        node_matcher=node_matcher,
-        edge_matcher=edge_matcher,
-        id_order=id_order,
-        subgraph=subgraph,
-        induced=induced,
-        call_limit=call_limit,
-    )
-
-
-@functools.singledispatch
+@_rustworkx_dispatch
 def union(
     first,
     second,
@@ -1921,27 +1415,7 @@ def union(
     raise TypeError("Invalid Input Type %s for graph" % type(first))
 
 
-@union.register(PyDiGraph)
-def _digraph_union(
-    first,
-    second,
-    merge_nodes=False,
-    merge_edges=False,
-):
-    return digraph_union(first, second, merge_nodes=merge_nodes, merge_edges=merge_edges)
-
-
-@union.register(PyGraph)
-def _graph_union(
-    first,
-    second,
-    merge_nodes=False,
-    merge_edges=False,
-):
-    return graph_union(first, second, merge_nodes=merge_nodes, merge_edges=merge_edges)
-
-
-@functools.singledispatch
+@_rustworkx_dispatch
 def tensor_product(
     first,
     second,
@@ -1971,23 +1445,7 @@ def tensor_product(
     raise TypeError("Invalid Input Type %s for graph" % type(first))
 
 
-@tensor_product.register(PyDiGraph)
-def _digraph_tensor_product(
-    first,
-    second,
-):
-    return digraph_tensor_product(first, second)
-
-
-@tensor_product.register(PyGraph)
-def _graph_tensor_product(
-    first,
-    second,
-):
-    return graph_tensor_product(first, second)
-
-
-@functools.singledispatch
+@_rustworkx_dispatch
 def cartesian_product(
     first,
     second,
@@ -2017,23 +1475,7 @@ def cartesian_product(
     raise TypeError("Invalid Input Type %s for graph" % type(first))
 
 
-@cartesian_product.register(PyDiGraph)
-def _digraph_cartesian_product(
-    first,
-    second,
-):
-    return digraph_cartesian_product(first, second)
-
-
-@cartesian_product.register(PyGraph)
-def _graph_cartesian_product(
-    first,
-    second,
-):
-    return graph_cartesian_product(first, second)
-
-
-@functools.singledispatch
+@_rustworkx_dispatch
 def bfs_search(graph, source, visitor):
     """Breadth-first traversal of a directed/undirected graph.
 
@@ -2107,17 +1549,7 @@ def bfs_search(graph, source, visitor):
     raise TypeError("Invalid Input Type %s for graph" % type(graph))
 
 
-@bfs_search.register(PyDiGraph)
-def _digraph_bfs_search(graph, source, visitor):
-    return digraph_bfs_search(graph, source, visitor)
-
-
-@bfs_search.register(PyGraph)
-def _graph_bfs_search(graph, source, visitor):
-    return graph_bfs_search(graph, source, visitor)
-
-
-@functools.singledispatch
+@_rustworkx_dispatch
 def dfs_search(graph, source, visitor):
     """Depth-first traversal of a directed/undirected graph.
 
@@ -2187,17 +1619,7 @@ def dfs_search(graph, source, visitor):
     raise TypeError("Invalid Input Type %s for graph" % type(graph))
 
 
-@dfs_search.register(PyDiGraph)
-def _digraph_dfs_search(graph, source, visitor):
-    return digraph_dfs_search(graph, source, visitor)
-
-
-@dfs_search.register(PyGraph)
-def _graph_dfs_search(graph, source, visitor):
-    return graph_dfs_search(graph, source, visitor)
-
-
-@functools.singledispatch
+@_rustworkx_dispatch
 def dijkstra_search(graph, source, weight_fn, visitor):
     """Dijkstra traversal of a graph.
 
@@ -2254,17 +1676,7 @@ def dijkstra_search(graph, source, weight_fn, visitor):
     raise TypeError("Invalid Input Type %s for graph" % type(graph))
 
 
-@dijkstra_search.register(PyDiGraph)
-def _digraph_dijkstra_search(graph, source, weight_fn, visitor):
-    return digraph_dijkstra_search(graph, source, weight_fn, visitor)
-
-
-@dijkstra_search.register(PyGraph)
-def _graph_dijkstra_search(graph, source, weight_fn, visitor):
-    return graph_dijkstra_search(graph, source, weight_fn, visitor)
-
-
-@functools.singledispatch
+@_rustworkx_dispatch
 def bellman_ford_shortest_paths(
     graph,
     source,
@@ -2301,39 +1713,7 @@ def bellman_ford_shortest_paths(
     raise TypeError("Invalid Input Type %s for graph" % type(graph))
 
 
-@bellman_ford_shortest_paths.register(PyDiGraph)
-def _digraph_bellman_ford_shortest_path(
-    graph,
-    source,
-    target=None,
-    weight_fn=None,
-    default_weight=1.0,
-    as_undirected=False,
-):
-    return digraph_bellman_ford_shortest_paths(
-        graph,
-        source,
-        target=target,
-        weight_fn=weight_fn,
-        default_weight=default_weight,
-        as_undirected=as_undirected,
-    )
-
-
-@bellman_ford_shortest_paths.register(PyGraph)
-def _graph_bellman_ford_shortest_path(
-    graph, source, target=None, weight_fn=None, default_weight=1.0
-):
-    return graph_bellman_ford_shortest_paths(
-        graph,
-        source,
-        target=target,
-        weight_fn=weight_fn,
-        default_weight=default_weight,
-    )
-
-
-@functools.singledispatch
+@_rustworkx_dispatch
 def bellman_ford_shortest_path_lengths(graph, node, edge_cost_fn, goal=None):
     """Compute the lengths of the shortest paths for a graph object using
     the Bellman-Ford algorithm with the SPFA heuristic.
@@ -2360,17 +1740,7 @@ def bellman_ford_shortest_path_lengths(graph, node, edge_cost_fn, goal=None):
     raise TypeError("Invalid Input Type %s for graph" % type(graph))
 
 
-@bellman_ford_shortest_path_lengths.register(PyDiGraph)
-def _digraph_bellman_ford_shortest_path_lengths(graph, node, edge_cost_fn, goal=None):
-    return digraph_bellman_ford_shortest_path_lengths(graph, node, edge_cost_fn, goal=goal)
-
-
-@bellman_ford_shortest_path_lengths.register(PyGraph)
-def _graph_bellman_ford_shortest_path_lengths(graph, node, edge_cost_fn, goal=None):
-    return graph_bellman_ford_shortest_path_lengths(graph, node, edge_cost_fn, goal=goal)
-
-
-@functools.singledispatch
+@_rustworkx_dispatch
 def all_pairs_bellman_ford_path_lengths(graph, edge_cost_fn):
     """For each node in the graph, calculates the lengths of the shortest paths to all others.
 
@@ -2406,17 +1776,7 @@ def all_pairs_bellman_ford_path_lengths(graph, edge_cost_fn):
     raise TypeError("Invalid Input Type %s for graph" % type(graph))
 
 
-@all_pairs_bellman_ford_path_lengths.register(PyDiGraph)
-def _digraph_all_pairs_bellman_ford_path_lengths(graph, edge_cost_fn):
-    return digraph_all_pairs_bellman_ford_path_lengths(graph, edge_cost_fn)
-
-
-@all_pairs_bellman_ford_path_lengths.register(PyGraph)
-def _graph_all_pairs_bellman_ford_path_lengths(graph, edge_cost_fn):
-    return graph_all_pairs_bellman_ford_path_lengths(graph, edge_cost_fn)
-
-
-@functools.singledispatch
+@_rustworkx_dispatch
 def all_pairs_bellman_ford_shortest_paths(graph, edge_cost_fn):
     """For each node in the graph, finds the shortest paths to all others.
 
@@ -2452,17 +1812,7 @@ def all_pairs_bellman_ford_shortest_paths(graph, edge_cost_fn):
     raise TypeError("Invalid Input Type %s for graph" % type(graph))
 
 
-@all_pairs_bellman_ford_shortest_paths.register(PyDiGraph)
-def _digraph_all_pairs_bellman_ford_shortest_path(graph, edge_cost_fn):
-    return digraph_all_pairs_bellman_ford_shortest_paths(graph, edge_cost_fn)
-
-
-@all_pairs_bellman_ford_shortest_paths.register(PyGraph)
-def _graph_all_pairs_bellman_ford_shortest_path(graph, edge_cost_fn):
-    return graph_all_pairs_bellman_ford_shortest_paths(graph, edge_cost_fn)
-
-
-@functools.singledispatch
+@_rustworkx_dispatch
 def node_link_json(graph, path=None, graph_attrs=None, node_attrs=None, edge_attrs=None):
     """Generate a JSON object representing a graph in a node-link format
 
@@ -2492,21 +1842,40 @@ def node_link_json(graph, path=None, graph_attrs=None, node_attrs=None, edge_att
     raise TypeError("Invalid Input Type %s for graph" % type(graph))
 
 
-@node_link_json.register(PyDiGraph)
-def _digraph_node_link_json(graph, path=None, graph_attrs=None, node_attrs=None, edge_attrs=None):
-    return digraph_node_link_json(
-        graph, path=path, graph_attrs=graph_attrs, node_attrs=node_attrs, edge_attrs=edge_attrs
-    )
+@_rustworkx_dispatch
+def longest_simple_path(graph):
+    """Return a longest simple path in the graph
 
+    This function searches computes all pairs of all simple paths and returns
+    a path of the longest length from that set. It is roughly equivalent to
+    running something like::
 
-@node_link_json.register(PyGraph)
-def _graph_node_link_json(graph, path=None, graph_attrs=None, node_attrs=None, edge_attrs=None):
-    return graph_node_link_json(
-        graph, path=path, graph_attrs=graph_attrs, node_attrs=node_attrs, edge_attrs=edge_attrs
-    )
+        from rustworkx import all_pairs_all_simple_paths
 
+        max((y.values for y in all_pairs_all_simple_paths(graph).values()), key=lambda x: len(x))
 
-@functools.singledispatch
+    but this function will be more efficient than using ``max()`` as the search
+    is evaluated in parallel before returning to Python. In the case of multiple
+    paths of the same maximum length being present in the graph only one will be
+    provided. There are no guarantees on which of the multiple longest paths
+    will be returned (as it is determined by the parallel execution order). This
+    is a tradeoff to improve runtime performance. If a stable return is required
+    in such case consider using the ``max()`` equivalent above instead.
+
+    This function is multithreaded and will launch a thread pool with threads
+    equal to the number of CPUs by default. You can tune the number of threads
+    with the ``RAYON_NUM_THREADS`` environment variable. For example, setting
+    ``RAYON_NUM_THREADS=4`` would limit the thread pool to 4 threads.
+
+    :param PyGraph graph: The graph to find the longest path in
+
+    :returns: A sequence of node indices that represent the longest simple graph
+        found in the graph. If the graph is empty ``None`` will be returned instead.
+    :rtype: NodeIndices
+    """
+    raise TypeError("Invalid Input Type %s for graph" % type(graph))
+
+@_rustworkx_dispatch
 def densest_subgraph_of_size(graph, num_nodes, weight_callback=None):
     """Find a connected and dense subgraph of a given size in a graph.
 
@@ -2529,12 +1898,134 @@ def densest_subgraph_of_size(graph, num_nodes, weight_callback=None):
     """
     raise TypeError("Invalid Input Type %s for graph" % type(graph))
 
+@_rustworkx_dispatch
+def isolates(graph):
+    """Return a list of isolates in a graph object
 
-@densest_subgraph_of_size.register(PyDiGraph)
-def _digraph_densest_subgraph_of_size(graph, num_nodes, weight_callback=None):
-    return digraph_densest_subgraph_of_size(graph, num_nodes, weight_callback=weight_callback)
+    An isolate is a node without any neighbors meaning it has a degree of 0. For
+    directed graphs this means the in-degree and out-degree are both 0.
+
+    :param graph: The input graph to find isolates in
+    :returns: A list of node indices for isolates in the graph
+    :rtype: NodeIndices
+    """
 
 
-@densest_subgraph_of_size.register(PyGraph)
-def _graph_densest_subgraph_of_size(graph, num_nodes, weight_callback=None):
-    return graph_densest_subgraph_of_size(graph, num_nodes, weight_callback=weight_callback)
+@_rustworkx_dispatch
+def two_color(graph):
+    """Compute a two-coloring of a directed graph
+
+    If a two coloring is not possible for the input graph (meaning it is not
+    bipartite), ``None`` is returned.
+
+    :param graph: The graph to find the coloring for
+    :returns: If a coloring is possible return a dictionary of node indices to the color as an integer (0 or 1)
+    :rtype: dict
+    """
+
+
+@_rustworkx_dispatch
+def is_bipartite(graph):
+    """Determine if a given graph is bipartite
+
+    :param graph: The graph to check if it's bipartite
+    :returns: ``True`` if the graph is bipartite and ``False`` if it is not
+    :rtype: bool
+    """
+
+
+@_rustworkx_dispatch
+def floyd_warshall_successor_and_distance(
+    graph,
+    weight_fn=None,
+    default_weight=1.0,
+    parallel_threshold=300,
+):
+    """
+    Find all-pairs shortest path lengths using Floyd's algorithm.
+
+    Floyd's algorithm is used for finding shortest paths in dense graphs
+    or graphs with negative weights (where Dijkstra's algorithm fails).
+
+    This function is multithreaded and will launch a pool with threads equal
+    to the number of CPUs by default if the number of nodes in the graph is
+    above the value of ``parallel_threshold`` (it defaults to 300).
+    You can tune the number of threads with the ``RAYON_NUM_THREADS``
+    environment variable. For example, setting ``RAYON_NUM_THREADS=4`` would
+    limit the thread pool to 4 threads if parallelization was enabled.
+
+    :param PyDiGraph graph: The directed graph to run Floyd's algorithm on
+    :param weight_fn: A callable object (function, lambda, etc) which
+        will be passed the edge object and expected to return a ``float``. This
+        tells rustworkx/rust how to extract a numerical weight as a ``float``
+        for edge object. Some simple examples are::
+
+            floyd_warshall_successor_and_distance(graph, weight_fn=lambda _: 1)
+
+        to return a weight of 1 for all edges. Also:
+
+            floyd_warshall_successor_and_distance(graph, weight_fn=float)
+
+        to cast the edge object as a float as the weight.
+    :param as_undirected: If set to true each directed edge will be treated as
+        bidirectional/undirected.
+    :param int parallel_threshold: The number of nodes to execute
+        the algorithm in parallel at. It defaults to 300, but this can
+        be tuned
+
+    :returns: A tuple of two matrices.
+        First one is a matrix of shortest path distances between nodes. If there is no
+        path between two nodes then the corresponding matrix entry will be
+        ``np.inf``.
+        Second one is a matrix of **next** nodes for given source and target. If there is no
+        path between two nodes then the corresponding matrix entry will be the same as
+        a target node. To reconstruct the shortest path among nodes::
+
+            def reconstruct_path(source, target, successors):
+                path = []
+                if source == target:
+                    return path
+                curr = source
+                while curr != target:
+                    path.append(curr)
+                    curr = successors[curr, target]
+                path.append(target)
+                return path
+
+    :rtype: (numpy.ndarray, numpy.ndarray)
+    """
+    raise TypeError("Invalid Input Type %s for graph" % type(graph))
+
+
+@_rustworkx_dispatch
+def all_shortest_paths(
+    graph,
+    source,
+    target,
+    weight_fn=None,
+    default_weight=1.0,
+    as_undirected=False,
+):
+    """
+    Find all shortest paths between two nodes
+
+    This function will generate all possible shortest paths from a source node to a
+    target using Dijkstra's algorithm.
+
+    :param graph: The input graph to find the shortest paths for
+    :param int source: The node index to find paths from
+    :param int target: A target to find paths to
+    :param weight_fn: An optional weight function for an edge. It will accept
+        a single argument, the edge's weight object and will return a float which
+        will be used to represent the weight/cost of the edge
+    :param float default_weight: If ``weight_fn`` isn't specified this optional
+        float value will be used for the weight/cost of each edge.
+
+    :return: List of paths. Each paths are lists of node indices,
+        starting at ``source`` and ending at ``target``.
+    :rtype: list
+    :raises ValueError: when an edge weight with NaN or negative value
+        is provided.
+
+    """
+    raise TypeError("Invalid Input Type %s for graph" % type(graph))

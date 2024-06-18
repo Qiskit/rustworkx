@@ -25,7 +25,6 @@ use petgraph::visit::IntoNodeReferences;
 use petgraph::visit::NodeFiltered;
 use petgraph::Directed;
 
-use pyo3::iter::IterNextOutput;
 use pyo3::prelude::*;
 
 use crate::iterators::NodeIndices;
@@ -103,7 +102,7 @@ impl SimpleCycleIter {
             closed: HashSet::new(),
             block: HashMap::new(),
             stack: Vec::new(),
-            start_node: NodeIndex::new(std::u32::MAX as usize),
+            start_node: NodeIndex::new(u32::MAX as usize),
             node_map: HashMap::new(),
             reverse_node_map: HashMap::new(),
             subgraph: StableDiGraph::new(),
@@ -149,7 +148,7 @@ fn process_stack(
     block: &mut HashMap<NodeIndex, HashSet<NodeIndex>>,
     subgraph: &StableDiGraph<(), ()>,
     reverse_node_map: &HashMap<NodeIndex, NodeIndex>,
-) -> Option<IterNextOutput<NodeIndices, &'static str>> {
+) -> Option<NodeIndices> {
     while let Some((this_node, neighbors)) = stack.last_mut() {
         if let Some(next_node) = neighbors.pop() {
             if next_node == start_node {
@@ -159,7 +158,7 @@ fn process_stack(
                     out_path.push(reverse_node_map[n].index());
                     closed.insert(*n);
                 }
-                return Some(IterNextOutput::Yield(NodeIndices { nodes: out_path }));
+                return Some(NodeIndices { nodes: out_path });
             } else if blocked.insert(next_node) {
                 path.push(next_node);
                 stack.push((
@@ -195,14 +194,14 @@ impl SimpleCycleIter {
         slf.into()
     }
 
-    fn __next__(mut slf: PyRefMut<Self>) -> PyResult<IterNextOutput<NodeIndices, &'static str>> {
+    fn __next__(mut slf: PyRefMut<Self>) -> PyResult<Option<NodeIndices>> {
         if slf.self_cycles.is_some() {
             let self_cycles = slf.self_cycles.as_mut().unwrap();
             let cycle_node = self_cycles.pop().unwrap();
             if self_cycles.is_empty() {
                 slf.self_cycles = None;
             }
-            return Ok(IterNextOutput::Yield(NodeIndices {
+            return Ok(Some(NodeIndices {
                 nodes: vec![cycle_node.index()],
             }));
         }
@@ -237,7 +236,7 @@ impl SimpleCycleIter {
             slf.subgraph = subgraph;
             slf.reverse_node_map = reverse_node_map;
             slf.node_map = node_map;
-            return Ok(res);
+            return Ok(Some(res));
         } else {
             subgraph.remove_node(slf.start_node);
             slf.scc
@@ -290,7 +289,7 @@ impl SimpleCycleIter {
                 slf.subgraph = subgraph;
                 slf.reverse_node_map = reverse_node_map;
                 slf.node_map = node_map;
-                return Ok(res);
+                return Ok(Some(res));
             }
             subgraph.remove_node(slf.start_node);
             slf.scc
@@ -306,6 +305,6 @@ impl SimpleCycleIter {
                     }
                 }));
         }
-        Ok(IterNextOutput::Return("Ended"))
+        Ok(None)
     }
 }
