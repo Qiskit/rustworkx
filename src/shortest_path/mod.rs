@@ -1476,7 +1476,7 @@ pub fn digraph_unweighted_average_shortest_path_length(
 ) -> f64 {
     let n = graph.node_count();
     if n <= 1 {
-        return std::f64::NAN;
+        return f64::NAN;
     }
 
     let (sum, conn_pairs) =
@@ -1484,11 +1484,11 @@ pub fn digraph_unweighted_average_shortest_path_length(
 
     let tot_pairs = n * (n - 1);
     if disconnected && conn_pairs == 0 {
-        return std::f64::NAN;
+        return f64::NAN;
     }
 
     if !disconnected && conn_pairs < tot_pairs {
-        return std::f64::INFINITY;
+        return f64::INFINITY;
     }
 
     (sum as f64) / (conn_pairs as f64)
@@ -1539,7 +1539,7 @@ pub fn graph_unweighted_average_shortest_path_length(
 ) -> f64 {
     let n = graph.node_count();
     if n <= 1 {
-        return std::f64::NAN;
+        return f64::NAN;
     }
 
     let (sum, conn_pairs) =
@@ -1547,11 +1547,11 @@ pub fn graph_unweighted_average_shortest_path_length(
 
     let tot_pairs = n * (n - 1);
     if disconnected && conn_pairs == 0 {
-        return std::f64::NAN;
+        return f64::NAN;
     }
 
     if !disconnected && conn_pairs < tot_pairs {
-        return std::f64::INFINITY;
+        return f64::INFINITY;
     }
 
     (sum as f64) / (conn_pairs as f64)
