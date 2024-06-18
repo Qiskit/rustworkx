@@ -186,7 +186,7 @@ where
             (Some(l_low), Some(r_low)) => lr_state.lowpt[l_low].min(lr_state.lowpt[r_low]),
             (Some(l_low), None) => lr_state.lowpt[l_low],
             (None, Some(r_low)) => lr_state.lowpt[r_low],
-            (None, None) => std::usize::MAX,
+            (None, None) => usize::MAX,
         }
     }
 }
