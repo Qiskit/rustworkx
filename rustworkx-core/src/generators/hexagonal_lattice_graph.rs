@@ -102,13 +102,19 @@ mod utils {
                         (0, n)
                     } else {
                         let k = n - (self.rowlen - 1);
-                        (k / self.rowlen + 1, k % self.rowlen)
+                        let u = k / self.rowlen + 1;
+                        let v = k % self.rowlen;
+                        if u == self.collen - 1 {
+                            (u, v + 1)
+                        } else {
+                            (u, v)
+                        }
                     }
                 }
             };
 
             let nodes: Vec<G::NodeId> = (0..self.num_nodes)
-                .map(|n| lattice_position(n))
+                .map(lattice_position)
                 .map(|(u, v)| graph.add_node(node_weight(u, v)))
                 .collect();
             self.add_edges(&mut graph, nodes, default_edge_weight);
@@ -121,8 +127,7 @@ mod utils {
             graph: &mut G,
             nodes: Vec<G::NodeId>,
             mut default_edge_weight: H,
-        ) -> ()
-        where
+        ) where
             G: Build + NodeIndexable + Data<EdgeWeight = M>,
             H: FnMut() -> M,
         {
@@ -275,6 +280,65 @@ where
     Ok(graph)
 }
 
+/// Generate a hexagonal lattice graph where each node is assigned a weight
+/// depending on its position in the lattice.
+///
+/// Arguments:
+///
+/// * `rows` - The number of rows to generate the graph with.
+/// * `cols` - The number of columns to generate the graph with.
+/// * `node_weight` - A callable that will return the weight to use
+///     for newly created nodes. Must take two arguments `i` and `j` of
+///     type `usize`, where `(i, j)` gives the position of the node
+///     in the lattice.
+/// * `default_edge_weight` - A callable that will return the weight object
+///     to use for newly created edges.
+/// * `bidirectional` - Whether edges are added bidirectionally. If set to
+///     `true` then for any edge `(u, v)` an edge `(v, u)` will also be added.
+///     If the graph is undirected this will result in a parallel edge.
+/// * `periodic` - If set to `true`, the boundaries of the lattice will be
+///     joined to form a periodic grid. Requires `cols` to be even,
+///     `rows > 1`, and `cols > 1`.
+///
+/// # Example
+/// ```rust
+/// use rustworkx_core::petgraph;
+/// use rustworkx_core::generators::hexagonal_lattice_graph_weighted;
+/// use rustworkx_core::petgraph::visit::{IntoNodeReferences, NodeRef};
+///
+/// let g: petgraph::graph::UnGraph<(usize, usize), ()> = hexagonal_lattice_graph_weighted(
+///     2,
+///     2,
+///     |u, v| {(u, v)},
+///     || {()},
+///     false,
+///     false
+/// ).unwrap();
+/// let expected_node_weights = vec![
+///     (0, 0),
+///     (0, 1),
+///     (0, 2),
+///     (0, 3),
+///     (0, 4),
+///     (1, 0),
+///     (1, 1),
+///     (1, 2),
+///     (1, 3),
+///     (1, 4),
+///     (1, 5),
+///     (2, 1),
+///     (2, 2),
+///     (2, 3),
+///     (2, 4),
+///     (2, 5),
+/// ];
+/// assert_eq!(
+///     expected_node_weights,
+///     g.node_references()
+///         .map(|node| *node.weight())
+///         .collect::<Vec<(usize, usize)>>(),
+/// )
+/// ```
 pub fn hexagonal_lattice_graph_weighted<G, T, F, H, M>(
     rows: usize,
     cols: usize,
@@ -307,7 +371,7 @@ where
 mod tests {
     use crate::generators::{hexagonal_lattice_graph, hexagonal_lattice_graph_weighted};
     use crate::petgraph;
-    use crate::petgraph::visit::EdgeRef;
+    use crate::petgraph::visit::{EdgeRef, IntoNodeReferences};
     use std::collections::HashSet;
 
     fn check_expected_edges_directed<T>(
@@ -532,6 +596,33 @@ mod tests {
             hexagonal_lattice_graph_weighted(2, 2, |u, v| (u, v), || (), false, true).unwrap();
         assert_eq!(g_weighted.node_count(), 8);
         check_expected_edges_directed(&g_weighted, &expected_edges);
+
+        let g: petgraph::graph::UnGraph<(usize, usize), ()> =
+            hexagonal_lattice_graph_weighted(2, 2, |u, v| (u, v), || (), false, false).unwrap();
+        let expected_node_weights = vec![
+            (0, 0),
+            (0, 1),
+            (0, 2),
+            (0, 3),
+            (0, 4),
+            (1, 0),
+            (1, 1),
+            (1, 2),
+            (1, 3),
+            (1, 4),
+            (1, 5),
+            (2, 1),
+            (2, 2),
+            (2, 3),
+            (2, 4),
+            (2, 5),
+        ];
+        assert_eq!(
+            expected_node_weights,
+            g.node_references()
+                .map(|node| *node.1)
+                .collect::<Vec<(usize, usize)>>(),
+        )
     }
 
     #[test]

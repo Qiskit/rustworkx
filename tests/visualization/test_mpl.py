@@ -192,3 +192,15 @@ class TestMPLDraw(unittest.TestCase):
         )
         fig = plt.gcf()
         _save_images(fig, "test_labels_and_colors.png")
+
+    def test_hexagonal_lattice_undirected(self):
+        graph = rustworkx.generators.hexagonal_lattice_graph(3, 4, with_positions=True)
+        plt.close("all")
+        mpl_draw(graph, pos=[graph.get_node_data(n) for n in range(len(graph))])
+        _save_images(plt.gcf(), "test_hexagonal_lattice.png")
+
+    def test_hexagonal_lattice_directed(self):
+        graph = rustworkx.generators.directed_hexagonal_lattice_graph(3, 4, with_positions=True)
+        plt.close("all")
+        mpl_draw(graph, pos=[graph.get_node_data(n) for n in range(len(graph))])
+        _save_images(plt.gcf(), "test_hexagonal_lattice_directed.png")
