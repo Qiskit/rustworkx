@@ -70,6 +70,12 @@ jobs:
             python-version: 3.8
             platform: { os: "ubuntu-latest", python-architecture: "x64", rust-target: "x86_64-unknown-linux-gnu" }
             msrv: "MSRV"
+        include:
+          # Test minimal supported Rust version
+          - rust: beta
+            python-version:3.13.0-beta.2
+            platform: { os: "ubuntu-latest", python-architecture: "x64", rust-target: "x86_64-unknown-linux-gnu" }
+            msrv: "Beta"
         # Exclude python 3.8 and 3.9 on arm64 until actions/setup-python#808 is resolved
         exclude:
           - platform: {os: "macOS-14", python-architecture: "arm64", rust-target: "aarch64-apple-darwin" }
