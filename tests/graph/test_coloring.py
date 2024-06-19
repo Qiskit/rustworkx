@@ -214,7 +214,6 @@ class TestGraphEdgeColoring(unittest.TestCase):
 
         with self.subTest():
             edge_colors = rustworkx.graph_greedy_edge_color(graph, preset_color_fn=preset)
-            print(f"{edge_colors = }")
             self.assertEqual({0: 1, 1: 2, 2: 0, 3: 0, 4: 2, 5: 1}, edge_colors)
 
         with self.subTest(strategy=rustworkx.ColoringStrategy.Degree):
