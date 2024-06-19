@@ -121,7 +121,7 @@ impl AdaptiveCoolingScheme {
         AdaptiveCoolingScheme {
             _step: step,
             _tau: 0.9,
-            _cost: std::f64::INFINITY,
+            _cost: f64::INFINITY,
             _progress: 0,
         }
     }
@@ -184,7 +184,7 @@ pub fn rescale(pos: &mut [Point], scale: Nt, indices: Vec<usize>) {
     mu[1] /= n as Nt;
 
     // substract mean and find max coordinate for all axes
-    let mut lim = std::f64::NEG_INFINITY;
+    let mut lim = f64::NEG_INFINITY;
     for n in indices {
         let [px, py] = pos.get_mut(n).unwrap();
         *px -= mu[0];
@@ -232,7 +232,7 @@ where
     Fr: Force,
     C: CoolingScheme,
 {
-    let mut step = cs.update_step(std::f64::INFINITY);
+    let mut step = cs.update_step(f64::INFINITY);
 
     for _ in 0..num_iter {
         let mut energy = 0.0;
