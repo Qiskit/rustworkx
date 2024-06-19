@@ -23,7 +23,6 @@ use super::{
 use hashbrown::{HashMap, HashSet};
 use petgraph::algo;
 use petgraph::algo::condensation;
-use petgraph::algo::toposort;
 use petgraph::graph::DiGraph;
 use petgraph::stable_graph::NodeIndex;
 use petgraph::unionfind::UnionFind;
@@ -33,7 +32,6 @@ use pyo3::prelude::*;
 use pyo3::types::PyDict;
 use pyo3::Python;
 use rayon::prelude::*;
-use std::sync::RwLock;
 
 use ndarray::prelude::*;
 use numpy::IntoPyArray;
@@ -46,6 +44,7 @@ use crate::{EdgeType, StablePyGraph};
 use crate::graph::PyGraph;
 use rustworkx_core::coloring::two_color;
 use rustworkx_core::connectivity;
+use rustworkx_core::dag_algo::longest_path;
 
 /// Return a list of cycles which form a basis for cycles of a given PyGraph
 ///
@@ -297,27 +296,22 @@ pub fn is_semi_connected(graph: &digraph::PyDiGraph) -> PyResult<bool> {
     }
 
     let condensed = condensation(temp_graph, true);
-    let condensed_digraph = DiGraph::from(condensed);
+    let n = condensed.node_count();
+    let weight_fn =
+        |_: petgraph::graph::EdgeReference<()>| Ok::<usize, std::convert::Infallible>(1usize);
 
-    let found_path: RwLock<bool> = RwLock::new(true);
-    let topo_sort = match toposort(&condensed_digraph, None) {
-        Ok(topo_sort) => topo_sort,
-        Err(_) => return Err(PyValueError::new_err("toposort failed")),
-    };
-
-    let pairs: Vec<_> = topo_sort
-        .windows(2)
-        .map(|window| (window[0], window[1]))
-        .collect();
-    pairs.into_par_iter().for_each(|(u, v)| {
-        if !graph.has_edge(u.index(), v.index()) {
-            let mut path = found_path.write().unwrap();
-            *path = false;
+    match longest_path(&condensed, weight_fn) {
+        Ok(path_len) => {
+            if let Some(path_len) = path_len {
+                Ok(path_len.1 == n - 1)
+            } else {
+                Ok(false)
+            }
         }
-    });
-
-    let path = *found_path.read().unwrap();
-    Ok(path)
+        Err(_) => {
+            Err(PyValueError::new_err("Graph could not be condensed"))
+        }
+    }
 }
 
 /// Return the adjacency matrix for a PyDiGraph object
