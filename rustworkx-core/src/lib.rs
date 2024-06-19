@@ -109,6 +109,7 @@ pub mod planar;
 pub mod shortest_path;
 pub mod traversal;
 // These modules define additional data structures
+pub mod dense_subgraph;
 pub mod dictmap;
 pub mod distancemap;
 mod min_scored;
