@@ -167,6 +167,7 @@ class TestGraphvizDraw(unittest.TestCase):
 
         for escaped_seq, raw_seq in escape_sequences.items():
             with self.subTest(chr=ord(raw_seq)):
+
                 def node_attr(node):
                     """
                     Define node attributes including escape sequences for labels and tooltips.
