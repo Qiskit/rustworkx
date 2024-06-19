@@ -512,7 +512,10 @@ where
 /// assert_eq!(runs.next(), None);
 /// ```
 ///
-pub fn collect_runs<G, F, E>(graph: G, include_node_fn: F) -> Option<impl Iterator<Item=Result<Vec<G::NodeId>, E>>>
+pub fn collect_runs<G, F, E>(
+    graph: G,
+    include_node_fn: F,
+) -> Option<impl Iterator<Item = Result<Vec<G::NodeId>, E>>>
 where
     G: GraphProp<EdgeType = Directed>
         + IntoNeighborsDirected
