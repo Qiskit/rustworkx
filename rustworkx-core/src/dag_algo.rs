@@ -316,7 +316,7 @@ where
     Ok(Some((path, path_weight)))
 }
 
-/// Return a list of graph layers
+/// Return an iterator of graph layers
 ///
 /// A layer is a subgraph whose nodes are disjoint, i.e.,
 /// a layer has depth 1. The layers are constructed using a greedy algorithm.
