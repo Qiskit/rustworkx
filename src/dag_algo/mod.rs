@@ -30,10 +30,8 @@ use pyo3::types::PyList;
 use pyo3::Python;
 
 use petgraph::algo;
-// use petgraph::graph::NodeIndex;
 use petgraph::prelude::*;
 use petgraph::stable_graph::EdgeReference;
-// use petgraph::visit::NodeCount;
 
 use num_traits::{Num, Zero};
 
@@ -572,7 +570,7 @@ pub fn collect_runs(
         None => return Err(DAGHasCycle::new_err("The DAG contains a cycle")),
     };
 
-    let mut result: Vec<Vec<PyObject>> = Vec::new();
+    let mut result: Vec<Vec<PyObject>> = Vec::with_capacity(core_runs.size_hint().1.unwrap_or(0));
     for run_result in core_runs {
         // This is where a filter function error will be returned, otherwise Result is stripped away
         let py_run: Vec<PyObject> = run_result?

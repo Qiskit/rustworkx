@@ -513,7 +513,7 @@ where
 /// assert_eq!(runs.next(), None);
 /// ```
 ///
-pub fn collect_runs<G, F, E>(graph: G, include_node_fn: F) -> Option<Runs<G, F, E>>
+pub fn collect_runs<G, F, E>(graph: G, include_node_fn: F) -> Option<impl Iterator<Item=Result<Vec<G::NodeId>, E>>>
 where
     G: GraphProp<EdgeType = Directed>
         + IntoNeighborsDirected
@@ -546,7 +546,7 @@ where
 /// through `next` as `Err`. In this case the run in which the error occured will be skipped
 /// but the iterator can be used further until consumed.
 ///
-pub struct Runs<G, F, E>
+struct Runs<G, F, E>
 where
     G: GraphProp<EdgeType = Directed>
         + IntoNeighborsDirected
@@ -616,6 +616,12 @@ where
         }
 
         None
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        // Lower bound is 0 in case all remaining nodes are filtered out
+        // Upper bound is the remaining unprocessed nodes (some of which may be seen already)
+        (0, Some(self.sorted_nodes.len()))
     }
 }
 
