@@ -308,9 +308,7 @@ pub fn is_semi_connected(graph: &digraph::PyDiGraph) -> PyResult<bool> {
                 Ok(false)
             }
         }
-        Err(_) => {
-            Err(PyValueError::new_err("Graph could not be condensed"))
-        }
+        Err(_) => Err(PyValueError::new_err("Graph could not be condensed")),
     }
 }
 
