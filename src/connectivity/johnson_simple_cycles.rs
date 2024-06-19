@@ -102,7 +102,7 @@ impl SimpleCycleIter {
             closed: HashSet::new(),
             block: HashMap::new(),
             stack: Vec::new(),
-            start_node: NodeIndex::new(std::u32::MAX as usize),
+            start_node: NodeIndex::new(u32::MAX as usize),
             node_map: HashMap::new(),
             reverse_node_map: HashMap::new(),
             subgraph: StableDiGraph::new(),

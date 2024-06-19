@@ -426,6 +426,7 @@ fn rustworkx(py: Python<'_>, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(number_weakly_connected_components))?;
     m.add_wrapped(wrap_pyfunction!(weakly_connected_components))?;
     m.add_wrapped(wrap_pyfunction!(is_weakly_connected))?;
+    m.add_wrapped(wrap_pyfunction!(is_semi_connected))?;
     m.add_wrapped(wrap_pyfunction!(is_directed_acyclic_graph))?;
     m.add_wrapped(wrap_pyfunction!(digraph_is_isomorphic))?;
     m.add_wrapped(wrap_pyfunction!(graph_is_isomorphic))?;
