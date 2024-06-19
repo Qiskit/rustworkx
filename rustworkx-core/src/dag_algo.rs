@@ -21,15 +21,12 @@ use std::mem::swap;
 use petgraph::algo;
 use petgraph::data::DataMap;
 use petgraph::visit::{
-    EdgeCount, EdgeRef, GraphBase, GraphProp, IntoEdgesDirected, IntoNeighborsDirected,
-    IntoNodeIdentifiers, NodeCount, NodeIndexable, Visitable,
+    EdgeRef, GraphBase, GraphProp, IntoEdgesDirected, IntoNeighborsDirected, IntoNodeIdentifiers,
+    NodeCount, NodeIndexable, Visitable,
 };
 use petgraph::Directed;
 
 use num_traits::{Num, Zero};
-
-use crate::connectivity::find_cycle;
-use crate::err::LayersError;
 
 /// Return a pair of [`petgraph::Direction`] values corresponding to the "forwards" and "backwards"
 /// direction of graph traversal, based on whether the graph is being traved forwards (following
@@ -343,7 +340,7 @@ where
 /// ];
 ///
 /// let graph = DiGraph::<u32, u32>::from_edges(&edge_list);
-/// let layers: Vec<Vec<NodeIndex>> = layers(&graph, vec![0.into(),1.into()]).unwrap().collect();
+/// let layers: Vec<Vec<NodeIndex>> = layers(&graph, vec![0.into(),1.into()]).collect();
 /// let expected_layers: Vec<Vec<NodeIndex>> = vec![
 ///     vec![0.into(),1.into()],
 ///     vec![1.into(),2.into()],
@@ -353,81 +350,37 @@ where
 /// ];
 /// assert_eq!(layers, expected_layers)
 /// ```
-pub fn layers<G>(
-    graph: G,
-    first_layer: Vec<G::NodeId>,
-) -> Result<LayersIter<G, G::NodeId>, LayersError>
+pub fn layers<G>(graph: G, first_layer: Vec<G::NodeId>) -> impl Iterator<Item = Vec<G::NodeId>>
 where
     G: NodeIndexable // Used in from_index and to_index.
-        + NodeCount // Used in find_cycle
-        + EdgeCount // Used in find_cycle
-        + Visitable // Used in find_cycle
         + IntoNodeIdentifiers // Used for .node_identifiers
         + IntoNeighborsDirected // Used for .neighbors_directed
         + IntoEdgesDirected, // Used for .edged_directed
     <G as GraphBase>::NodeId: Debug + Copy + Eq + Hash,
 {
-    let cur_layer = first_layer;
-    // Throw error if a cycle is found at the current node
-    if let Some(node) = &cur_layer.first() {
-        let check_cycle = find_cycle(&graph, Some(**node));
-        if !check_cycle.is_empty() {
-            return Err(LayersError(Some(format!(
-                "Found cycle at {:?}",
-                check_cycle
-            ))));
-        }
+    LayersIter {
+        graph,
+        cur_layer: first_layer,
+        next_layer: vec![],
+        predecessor_count: HashMap::new(),
+        first_iter: true,
+        cycle_check: HashSet::default(),
     }
-    // Check that the nodes exist within the graph
-    let node_ids: HashSet<G::NodeId> = graph.node_identifiers().collect();
-    for node in cur_layer.iter() {
-        if !node_ids.contains(node) {
-            panic!(
-                "An index input in 'first_layer' {:?} is not a valid node index in the graph",
-                node
-            );
-        }
-    }
-    Ok(LayersIter::new(graph, cur_layer))
 }
 
 #[derive(Debug, Clone)]
-pub struct LayersIter<G, N> {
+struct LayersIter<G, N> {
     graph: G,
     cur_layer: Vec<N>,
     next_layer: Vec<N>,
     predecessor_count: HashMap<N, usize>,
     first_iter: bool,
-}
-
-impl<G, N> LayersIter<G, N>
-where
-    G: NodeIndexable // Used in from_index and to_index.
-        + NodeCount // Used in find_cycle
-        + EdgeCount // Used in find_cycle
-        + Visitable // Used in find_cycle
-        + IntoNeighborsDirected // Used for .neighbors_directed
-        + IntoEdgesDirected // Used for .edged_directed
-        + GraphBase<NodeId = N>,
-    N: Debug + Copy + Eq + Hash,
-{
-    fn new(graph: G, first_layer: Vec<N>) -> Self {
-        Self {
-            graph,
-            cur_layer: first_layer,
-            next_layer: vec![],
-            predecessor_count: HashMap::new(),
-            first_iter: true,
-        }
-    }
+    cycle_check: HashSet<Vec<N>>,
 }
 
 impl<G, N> Iterator for LayersIter<G, N>
 where
     G: NodeIndexable // Used in from_index and to_index.
-        + NodeCount // Used in find_cycle
-        + EdgeCount // Used in find_cycle
-        + Visitable // Used in find_cycle
         + IntoNodeIdentifiers // Used for .node_identifiers
         + IntoNeighborsDirected // Used for .neighbors_directed
         + IntoEdgesDirected // Used for .edged_directed
@@ -438,11 +391,15 @@ where
     fn next(&mut self) -> Option<Self::Item> {
         if self.first_iter {
             self.first_iter = false;
+            self.cycle_check.insert(self.cur_layer.clone());
             Some(self.cur_layer.to_owned())
         } else if self.cur_layer.is_empty() {
             None
         } else {
             for node in &self.cur_layer {
+                if self.graph.to_index(*node) >= self.graph.node_bound() {
+                    panic!("Node {:#?} is not present in the graph.", node);
+                }
                 let children = self
                     .graph
                     .neighbors_directed(*node, petgraph::Direction::Outgoing);
@@ -479,6 +436,10 @@ where
                 }
             }
             swap(&mut self.cur_layer, &mut self.next_layer);
+            if self.cycle_check.contains(&self.cur_layer) {
+                panic!("The layers algorithm doesn't support graphs with cycles.")
+            }
+            self.cycle_check.insert(self.cur_layer.to_owned());
             self.next_layer.clear();
             if self.cur_layer.is_empty() {
                 None
@@ -943,15 +904,15 @@ mod test_layers {
     #[test]
     fn test_empty_graph() {
         let graph: DiGraph<(), ()> = DiGraph::new();
-        let result = layers(&graph, vec![]).map(|x| x.collect());
-        assert_eq!(result, Ok(vec![vec![]]));
+        let result: Vec<Vec<NodeIndex>> = layers(&graph, vec![]).collect();
+        assert_eq!(result, vec![vec![]]);
     }
 
     #[test]
     fn test_empty_stable_graph() {
         let graph: StableDiGraph<(), ()> = StableDiGraph::new();
-        let result = layers(&graph, vec![]).map(|x| x.collect());
-        assert_eq!(result, Ok(vec![vec![]]));
+        let result: Vec<Vec<NodeIndex>> = layers(&graph, vec![]).collect();
+        assert_eq!(result, vec![vec![]]);
     }
 
     #[test]
@@ -968,8 +929,8 @@ mod test_layers {
         }
         let expected: Vec<Vec<NodeIndex>> =
             vec![vec![0.into()], vec![5.into(), 4.into(), 2.into(), 1.into()]];
-        let result = layers(&graph, vec![0.into()]).map(|x| x.collect());
-        assert_eq!(result, Ok(expected));
+        let result: Vec<Vec<NodeIndex>> = layers(&graph, vec![0.into()]).collect();
+        assert_eq!(result, expected);
     }
 
     #[test]
@@ -977,7 +938,7 @@ mod test_layers {
     fn test_missing_node() {
         let edge_list = vec![(0, 1), (1, 2), (2, 3), (3, 4)];
         let graph = DiGraph::<u32, u32>::from_edges(&edge_list);
-        let _ = layers(&graph, vec![4.into(), 5.into()]);
+        layers(&graph, vec![4.into(), 5.into()]).for_each(drop);
     }
 
     #[test]
@@ -998,21 +959,15 @@ mod test_layers {
         graph.add_edge(n2, n5, ());
         graph.add_edge(n4, n5, ());
 
-        let result = layers(&graph, vec![0.into()]);
+        let result: Vec<Vec<NodeIndex>> = layers(&graph, vec![0.into()]).collect();
         assert_eq!(
-            result.map(|x| x.collect()),
-            Ok(vec![
-                vec![n0],
-                vec![n1],
-                vec![n2],
-                vec![n3],
-                vec![n4],
-                vec![n5]
-            ])
+            result,
+            vec![vec![n0], vec![n1], vec![n2], vec![n3], vec![n4], vec![n5]]
         );
     }
 
     #[test]
+    #[should_panic]
     fn test_graph_with_cycle() {
         let mut graph: DiGraph<(), i32> = DiGraph::new();
         let n0 = graph.add_node(());
@@ -1020,15 +975,7 @@ mod test_layers {
         graph.add_edge(n0, n1, 1);
         graph.add_edge(n1, n0, 1);
 
-        let result: Result<Vec<Vec<NodeIndex>>, LayersError> =
-            layers(&graph, vec![0.into()]).map(|x| x.collect());
-        assert_eq!(
-            result,
-            Err(LayersError(Some(
-                "Found cycle at [(NodeIndex(0), NodeIndex(1)), (NodeIndex(1), NodeIndex(0))]"
-                    .to_string()
-            )))
-        );
+        layers(&graph, vec![0.into()]).for_each(drop);
     }
 }
 

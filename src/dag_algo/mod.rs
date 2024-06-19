@@ -313,28 +313,22 @@ pub fn layers(
             .map(|x| dag.graph.from_index(*x))
             .collect(),
     );
-    match result {
-        Ok(result) => {
-            if index_output {
-                let res: Vec<Vec<usize>> = result
-                    .map(|x| x.iter().map(|nodeid| dag.graph.to_index(*nodeid)).collect())
-                    .collect();
-                Ok(PyList::new_bound(py, res).into())
-            } else {
-                let res: Vec<Vec<Option<&PyObject>>> = result
-                    .map(|x| {
-                        x.iter()
-                            .map(|index| dag.graph.node_weight(*index))
-                            .collect::<Vec<Option<&PyObject>>>()
-                    })
-                    .collect();
-                Ok(PyList::new_bound(py, res).into())
-            }
-        }
-        Err(e) => Err(InvalidNode::new_err(e.0)),
+    if index_output {
+        let res: Vec<Vec<usize>> = result
+            .map(|x| x.iter().map(|nodeid| dag.graph.to_index(*nodeid)).collect())
+            .collect();
+        Ok(PyList::new_bound(py, res).into())
+    } else {
+        let res: Vec<Vec<Option<&PyObject>>> = result
+            .map(|x| {
+                x.iter()
+                    .map(|index| dag.graph.node_weight(*index))
+                    .collect::<Vec<Option<&PyObject>>>()
+            })
+            .collect();
+        Ok(PyList::new_bound(py, res).into())
     }
 }
-
 /// Get the lexicographical topological sorted nodes from the provided DAG
 ///
 /// This function returns a list of nodes data in a graph lexicographically
