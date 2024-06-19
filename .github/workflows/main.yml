@@ -71,7 +71,7 @@ jobs:
             platform: { os: "ubuntu-latest", python-architecture: "x64", rust-target: "x86_64-unknown-linux-gnu" }
             msrv: "MSRV"
         include:
-          # Test minimal supported Rust version
+          # Test future versions of Rust and Python
           - rust: beta
             python-version:3.13.0-beta.2
             platform: { os: "ubuntu-latest", python-architecture: "x64", rust-target: "x86_64-unknown-linux-gnu" }
