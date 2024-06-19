@@ -70,7 +70,6 @@ jobs:
             python-version: 3.8
             platform: { os: "ubuntu-latest", python-architecture: "x64", rust-target: "x86_64-unknown-linux-gnu" }
             msrv: "MSRV"
-        include:
           # Test future versions of Rust and Python
           - rust: beta
             python-version: "3.13.0-beta"
