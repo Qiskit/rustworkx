@@ -83,8 +83,6 @@ from .rustworkx import graph_longest_simple_path as graph_longest_simple_path
 from .rustworkx import digraph_core_number as digraph_core_number
 from .rustworkx import graph_core_number as graph_core_number
 from .rustworkx import stoer_wagner_min_cut as stoer_wagner_min_cut
-from .rustworkx import graph_minimum_cycle_basis as graph_minimum_cycle_basis
-from .rustworkx import digraph_minimum_cycle_basis as digraph_minimum_cycle_basis
 from .rustworkx import simple_cycles as simple_cycles
 from .rustworkx import digraph_isolates as digraph_isolates
 from .rustworkx import graph_isolates as graph_isolates

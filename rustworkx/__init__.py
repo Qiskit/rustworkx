@@ -558,32 +558,6 @@ def all_pairs_dijkstra_path_lengths(graph, edge_cost_fn):
 
 
 @_rustworkx_dispatch
-def minimum_cycle_basis(graph, edge_cost_fn):
-    """Find the minimum cycle basis of a graph.
-
-    This function will find the minimum cycle basis of a graph based on the
-    following papers
-    References:
-        [1] Kavitha, Telikepalli, et al. "An O(m^2n) Algorithm for
-        Minimum Cycle Basis of Graphs."
-        http://link.springer.com/article/10.1007/s00453-007-9064-z
-        [2] de Pina, J. 1995. Applications of shortest path methods.
-        Ph.D. thesis, University of Amsterdam, Netherlands
-
-    :param graph: The input graph to use. Can be either a
-        :class:`~rustworkx.PyGraph` or :class:`~rustworkx.PyDiGraph`
-    :param edge_cost_fn: A callable object that acts as a weight function for
-        an edge. It will accept a single positional argument, the edge's weight
-        object and will return a float which will be used to represent the
-        weight/cost of the edge
-
-    :returns: A list of cycles where each cycle is a list of node indices
-    :rtype: list
-    """
-    raise TypeError("Invalid Input Type %s for graph" % type(graph))
-
-
-@_rustworkx_dispatch
 def dijkstra_shortest_path_lengths(graph, node, edge_cost_fn, goal=None):
     """Compute the lengths of the shortest paths for a graph object using
     Dijkstra's algorithm.
