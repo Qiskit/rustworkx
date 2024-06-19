@@ -491,9 +491,8 @@ where
 ///
 /// # Returns:
 ///
-/// * [`Runs`]`<G, F, E>`: A struct implementing the Iterator for extracting the runs one by one. Each run is
-/// * of type `Vec<G::NodeId>`.
-/// * `None` if a cycle is found in the graph
+/// * An Iterator object for extracting the runs one by one. Each run is of type `Result<Vec<G::NodeId>>`.
+/// * `None` if a cycle is found in the graph.
 ///
 /// # Example
 ///
@@ -528,7 +527,7 @@ where
         Err(_) => return None,
     };
 
-    nodes.reverse(); // reversing so that pop() in Runs::next obeys the topo order
+    nodes.reverse(); // reversing so that pop() in Runs::next obeys the topological order
 
     let runs = Runs {
         graph,
@@ -543,7 +542,7 @@ where
 /// Auxiliary struct to make the output of [`collect_runs`] iteratable
 ///
 /// If the filtering function passed to [`collect_runs`] returns an error, it is propagated
-/// through `next` as `Err`. In this case the run in which the error occured will be skipped
+/// through `next` as `Err`. In this case the run in which the error occurred will be skipped
 /// but the iterator can be used further until consumed.
 ///
 struct Runs<G, F, E>
@@ -620,7 +619,7 @@ where
 
     fn size_hint(&self) -> (usize, Option<usize>) {
         // Lower bound is 0 in case all remaining nodes are filtered out
-        // Upper bound is the remaining unprocessed nodes (some of which may be seen already)
+        // Upper bound is the remaining unprocessed nodes (some of which may be seen already), potentially all resulting with singleton runs
         (0, Some(self.sorted_nodes.len()))
     }
 }
