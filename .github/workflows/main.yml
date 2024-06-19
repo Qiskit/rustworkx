@@ -72,7 +72,7 @@ jobs:
             msrv: "MSRV"
           # Test future versions of Rust and Python
           - rust: beta
-            python-version: "3.13.0-beta"
+            python-version: "3.13-dev"
             platform: { os: "ubuntu-latest", python-architecture: "x64", rust-target: "x86_64-unknown-linux-gnu" }
             msrv: "Beta"
         # Exclude python 3.8 and 3.9 on arm64 until actions/setup-python#808 is resolved
