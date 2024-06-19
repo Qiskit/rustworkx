@@ -499,7 +499,7 @@ where
 /// ```rust
 /// use petgraph::graph::DiGraph;
 /// use rustworkx_core::dag_algo::collect_runs;
-/// 
+///
 /// let mut graph: DiGraph<i32, ()> = DiGraph::new();
 /// let n1 = graph.add_node(-1);
 /// let n2 = graph.add_node(2);
