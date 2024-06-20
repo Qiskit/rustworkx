@@ -127,7 +127,7 @@ jobs:
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
         with:
-          python-version: 3.8
+          python-version: "3.10"
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
         with:
