@@ -1,0 +1,5 @@
+---
+features:
+  - |
+    Added a new function, :func: `~rustworkx.is_semi_connected()` which will 
+    check if a :class: `~rustworkx.PyDiGraph` object is semi connected
