@@ -15,7 +15,6 @@ from typing import (
     Callable,
     Iterable,
     Iterator,
-    Union,
     final,
     Sequence,
     Any,
