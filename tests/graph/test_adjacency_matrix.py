@@ -165,10 +165,10 @@ class TestGraphAdjacencyMatrix(unittest.TestCase):
 
     def test_non_zero_null(self):
         input_matrix = np.array(
-            [[np.Inf, 1, np.Inf], [1, np.Inf, 1], [np.Inf, 1, np.Inf]],
+            [[np.inf, 1, np.inf], [1, np.inf, 1], [np.inf, 1, np.inf]],
             dtype=np.float64,
         )
-        graph = rustworkx.PyGraph.from_adjacency_matrix(input_matrix, null_value=np.Inf)
+        graph = rustworkx.PyGraph.from_adjacency_matrix(input_matrix, null_value=np.inf)
         adj_matrix = rustworkx.adjacency_matrix(graph, float)
         expected_matrix = np.array([[0, 1, 0], [1, 0, 1], [0, 1, 0]], dtype=np.float64)
         self.assertTrue(np.array_equal(adj_matrix, expected_matrix))
@@ -231,10 +231,10 @@ class TestFromComplexAdjacencyMatrix(unittest.TestCase):
 
     def test_non_zero_null(self):
         input_matrix = np.array(
-            [[np.Inf, 1, np.Inf], [1, np.Inf, 1], [np.Inf, 1, np.Inf]],
+            [[np.inf, 1, np.inf], [1, np.inf, 1], [np.inf, 1, np.inf]],
             dtype=np.complex128,
         )
-        graph = rustworkx.PyGraph.from_complex_adjacency_matrix(input_matrix, null_value=np.Inf)
+        graph = rustworkx.PyGraph.from_complex_adjacency_matrix(input_matrix, null_value=np.inf)
         expected = [
             (0, 1, 1 + 0j),
             (1, 2, 1 + 0j),

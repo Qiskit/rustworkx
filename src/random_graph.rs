@@ -23,6 +23,8 @@ use petgraph::algo;
 use petgraph::graph::NodeIndex;
 use petgraph::prelude::*;
 
+use numpy::PyReadonlyArray2;
+
 use rand::distributions::{Distribution, Uniform};
 use rand::prelude::*;
 use rand_pcg::Pcg64;
@@ -273,9 +275,119 @@ pub fn undirected_gnm_random_graph(
     })
 }
 
+/// Return a directed graph from the stochastic block model.
+///
+/// The stochastic block model is a generalization of the :math:`G(n,p)` random graph
+/// (see :func:`~rustworkx.directed_gnp_random_graph`). The connection probability of
+/// nodes ``u`` and ``v`` depends on their block (or community) and is given by
+/// ``probabilities[blocks[u]][blocks[v]]``, where ``blocks[u]`` is the block
+/// membership of node ``u``. The number of nodes and the number of blocks are
+/// inferred from ``sizes``.
+///
+/// This algorithm has a time complexity of :math:`O(n^2)` for :math:`n` nodes.
+///
+/// Arguments:
+///
+/// :param list[int] sizes: Number of nodes in each block.
+/// :param np.ndarray probabilities: B x B array that contains the connection
+///     probability between nodes of different blocks.
+/// :param bool loops: Determines whether the graph can have loops or not.
+/// :param int seed:  An optional seed to use for the random number generator.
+///
+/// :return: A PyDiGraph object
+/// :rtype: PyDiGraph
+#[pyfunction]
+#[pyo3(text_signature = "(sizes, probabilities, loops, /, seed=None)")]
+pub fn directed_sbm_random_graph<'p>(
+    py: Python<'p>,
+    sizes: Vec<usize>,
+    probabilities: PyReadonlyArray2<'p, f64>,
+    loops: bool,
+    seed: Option<u64>,
+) -> PyResult<digraph::PyDiGraph> {
+    let default_fn = || py.None();
+    let graph: StablePyGraph<Directed> = match core_generators::sbm_random_graph(
+        &sizes,
+        &probabilities.as_array(),
+        loops,
+        seed,
+        default_fn,
+        default_fn,
+    ) {
+        Ok(graph) => graph,
+        Err(_) => {
+            return Err(PyValueError::new_err(
+                "invalid blocks or probabilities input",
+            ))
+        }
+    };
+    Ok(digraph::PyDiGraph {
+        graph,
+        node_removed: false,
+        check_cycle: false,
+        cycle_state: algo::DfsSpace::default(),
+        multigraph: false,
+        attrs: py.None(),
+    })
+}
+
+/// Return an undirected graph from the stochastic block model.
+///
+/// The stochastic block model is a generalization of the :math:`G(n,p)` random graph
+/// (see :func:`~rustworkx.undirected_gnp_random_graph`). The connection probability of
+/// nodes ``u`` and ``v`` depends on their block (or community) and is given by
+/// ``probabilities[blocks[u]][blocks[v]]``, where ``blocks[u]`` is the block membership
+/// of node ``u``. The number of nodes and the number of blocks are inferred from
+/// ``sizes``.
+///
+/// This algorithm has a time complexity of :math:`O(n^2)` for :math:`n` nodes.
+///
+/// Arguments:
+///
+/// :param list[int] sizes: Number of nodes in each block.
+/// :param np.ndarray probabilities: Symmetric B x B array that contains the
+///     connection probability between nodes of different blocks.
+/// :param bool loops: Determines whether the graph can have loops or not.
+/// :param int seed:  An optional seed to use for the random number generator.
+///
+/// :return: A PyGraph object
+/// :rtype: PyGraph
+#[pyfunction]
+#[pyo3(text_signature = "(sizes, probabilities, loops, /, seed=None)")]
+pub fn undirected_sbm_random_graph<'p>(
+    py: Python<'p>,
+    sizes: Vec<usize>,
+    probabilities: PyReadonlyArray2<'p, f64>,
+    loops: bool,
+    seed: Option<u64>,
+) -> PyResult<graph::PyGraph> {
+    let default_fn = || py.None();
+    let graph: StablePyGraph<Undirected> = match core_generators::sbm_random_graph(
+        &sizes,
+        &probabilities.as_array(),
+        loops,
+        seed,
+        default_fn,
+        default_fn,
+    ) {
+        Ok(graph) => graph,
+        Err(_) => {
+            return Err(PyValueError::new_err(
+                "invalid blocks or probabilities input",
+            ))
+        }
+    };
+    Ok(graph::PyGraph {
+        graph,
+        node_removed: false,
+        multigraph: false,
+        attrs: py.None(),
+    })
+}
+
 #[inline]
 fn pnorm(x: f64, p: f64) -> f64 {
-    if p == 1.0 || p == std::f64::INFINITY {
+    if p == 1.0 || p == f64::INFINITY {
         x.abs()
     } else if p == 2.0 {
         x * x
@@ -287,7 +399,7 @@ fn pnorm(x: f64, p: f64) -> f64 {
 fn distance(x: &[f64], y: &[f64], p: f64) -> f64 {
     let it = x.iter().zip(y.iter()).map(|(xi, yi)| pnorm(xi - yi, p));
 
-    if p == std::f64::INFINITY {
+    if p == f64::INFINITY {
         it.fold(-1.0, |max, x| if x > max { x } else { max })
     } else {
         it.sum()
@@ -357,7 +469,7 @@ pub fn random_geometric_graph(
     }
 
     for pval in pos.iter() {
-        let pos_dict = PyDict::new(py);
+        let pos_dict = PyDict::new_bound(py);
         pos_dict.set_item("pos", pval.to_object(py))?;
 
         inner_graph.add_node(pos_dict.into());
@@ -378,6 +490,64 @@ pub fn random_geometric_graph(
         attrs: py.None(),
     };
     Ok(graph)
+}
+
+/// Return a hyperbolic random undirected graph (also called hyperbolic geometric graph).
+///
+/// The usual hyperbolic random graph model connects pairs of nodes with probability
+///
+/// .. math::
+///
+///     P[(u,v) \in E] = \frac{1}{1+\exp(\beta(d(u,v) - R)/2)},
+///
+/// a sigmoid function that decreases as the hyperbolic distance between nodes :math:`u`
+/// and :math:`v` increases. The hyperbolic distance is given by
+///
+/// .. math::
+///
+///     d(u,v) = \text{arccosh}\left[x_0(u) x_0(v) - \sum_{j=1}^D x_j(u) x_j(v) \right],
+///
+/// where :math:`D` is the dimension of the hyperbolic space and :math:`x_d(u)` is the
+/// :math:`d` th-dimension coordinate of node :math:`u` in the hyperboloid model. The
+/// number of nodes and the dimension are inferred from the coordinates ``pos``. The
+/// 0-dimension "time" coordinate is inferred from the others.
+///
+/// If ``beta`` is ``None``, all pairs of nodes with a distance smaller than ``r`` are connected.
+///
+/// This algorithm has a time complexity of :math:`O(n^2)` for :math:`n` nodes.
+///
+/// :param list[list[float]] pos: Hyperboloid coordinates of the nodes
+///     [[:math:`x_1(1)`, ..., :math:`x_D(1)`], [:math:`x_1(2)`, ..., :math:`x_D(2)`], ...].
+///     The "time" coordinate :math:`x_0` is inferred from the other coordinates.
+/// :param float beta: Sigmoid sharpness (nonnegative) of the connection probability.
+/// :param float r: Distance at which the connection probability is 0.5 for the probabilistic model.
+///     Threshold when ``beta`` is ``None``.
+/// :param int seed: An optional seed to use for the random number generator.
+///
+/// :return: A PyGraph object
+/// :rtype: PyGraph
+#[pyfunction]
+#[pyo3(text_signature = "(pos, beta, r, /, seed=None)")]
+pub fn hyperbolic_random_graph(
+    py: Python,
+    pos: Vec<Vec<f64>>,
+    r: f64,
+    beta: Option<f64>,
+    seed: Option<u64>,
+) -> PyResult<graph::PyGraph> {
+    let default_fn = || py.None();
+    let graph: StablePyGraph<Undirected> =
+        match core_generators::hyperbolic_random_graph(&pos, r, beta, seed, default_fn, default_fn)
+        {
+            Ok(graph) => graph,
+            Err(_) => return Err(PyValueError::new_err("invalid positions or parameters")),
+        };
+    Ok(graph::PyGraph {
+        graph,
+        node_removed: false,
+        multigraph: false,
+        attrs: py.None(),
+    })
 }
 
 /// Generate a random graph using Barabási–Albert preferential attachment

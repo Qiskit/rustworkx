@@ -1,0 +1,7 @@
+---
+features:
+  - |
+    Added a method :meth:`~rustworkx.PyGraph.has_node`
+    to the
+    :class:`~rustworkx.PyGraph` and :class:`~rustworkx.PyDiGraph`
+    classes to check if a node is in the graph.

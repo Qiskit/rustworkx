@@ -78,6 +78,12 @@ pub fn graph_dijkstra_shortest_paths(
     default_weight: f64,
 ) -> PyResult<PathMapping> {
     let start = NodeIndex::new(source);
+    if !graph.graph.contains_node(start) {
+        return Err(PyIndexError::new_err(format!(
+            "Node source index \"{source}\" out of graph bound"
+        )));
+    }
+
     let goal_index: Option<NodeIndex> = target.map(NodeIndex::new);
     let mut paths: DictMap<NodeIndex, Vec<NodeIndex>> = DictMap::with_capacity(graph.node_count());
 
@@ -217,6 +223,12 @@ pub fn digraph_dijkstra_shortest_paths(
     as_undirected: bool,
 ) -> PyResult<PathMapping> {
     let start = NodeIndex::new(source);
+    if !graph.graph.contains_node(start) {
+        return Err(PyIndexError::new_err(format!(
+            "Node source index \"{source}\" out of graph bound"
+        )));
+    }
+
     let goal_index: Option<NodeIndex> = target.map(NodeIndex::new);
     let mut paths: DictMap<NodeIndex, Vec<NodeIndex>> = DictMap::with_capacity(graph.node_count());
     let cost_fn = CostFn::try_from((weight_fn, default_weight))?;
@@ -371,9 +383,15 @@ pub fn graph_dijkstra_shortest_path_lengths(
     edge_cost_fn: PyObject,
     goal: Option<usize>,
 ) -> PyResult<PathLengthMapping> {
-    let edge_cost_callable = CostFn::from(edge_cost_fn);
     let start = NodeIndex::new(node);
+    let edge_cost_callable = CostFn::from(edge_cost_fn);
     let goal_index: Option<NodeIndex> = goal.map(NodeIndex::new);
+
+    if !graph.graph.contains_node(start) {
+        return Err(PyIndexError::new_err(format!(
+            "Node source index \"{node}\" out of graph bound"
+        )));
+    }
 
     let res: Vec<Option<f64>> = dijkstra(
         &graph.graph,
@@ -444,6 +462,12 @@ pub fn digraph_dijkstra_shortest_path_lengths(
 
     let start = NodeIndex::new(node);
     let goal_index: Option<NodeIndex> = goal.map(NodeIndex::new);
+
+    if !graph.graph.contains_node(start) {
+        return Err(PyIndexError::new_err(format!(
+            "Node source index \"{node}\" out of graph bound"
+        )));
+    }
 
     let res: Vec<Option<f64>> = dijkstra(
         &graph.graph,
@@ -671,6 +695,12 @@ pub fn digraph_astar_shortest_path(
     let estimate_cost_callable = CostFn::from(estimate_cost_fn);
     let start = NodeIndex::new(node);
 
+    if !graph.graph.contains_node(start) {
+        return Err(PyIndexError::new_err(format!(
+            "Node source index \"{node}\" out of graph bound"
+        )));
+    }
+
     let astar_res = astar(
         &graph.graph,
         start,
@@ -728,6 +758,12 @@ pub fn graph_astar_shortest_path(
     let edge_cost_callable = CostFn::from(edge_cost_fn);
     let estimate_cost_callable = CostFn::from(estimate_cost_fn);
     let start = NodeIndex::new(node);
+
+    if !graph.graph.contains_node(start) {
+        return Err(PyIndexError::new_err(format!(
+            "Node source index \"{node}\" out of graph bound"
+        )));
+    }
 
     let astar_res = astar(
         &graph.graph,
@@ -1047,7 +1083,7 @@ pub fn graph_floyd_warshall_numpy(
         false,
         parallel_threshold,
     )?;
-    Ok(matrix.into_pyarray(py).into())
+    Ok(matrix.into_pyarray_bound(py).into())
 }
 
 /// Find all-pairs shortest path lengths using Floyd's algorithm
@@ -1121,8 +1157,8 @@ pub fn graph_floyd_warshall_successor_and_distance(
         parallel_threshold,
     )?;
     Ok((
-        matrix.into_pyarray(py).into(),
-        next.unwrap().into_pyarray(py).into(),
+        matrix.into_pyarray_bound(py).into(),
+        next.unwrap().into_pyarray_bound(py).into(),
     ))
 }
 
@@ -1183,7 +1219,7 @@ pub fn digraph_floyd_warshall_numpy(
         false,
         parallel_threshold,
     )?;
-    Ok(matrix.into_pyarray(py).into())
+    Ok(matrix.into_pyarray_bound(py).into())
 }
 
 /// Find all-pairs shortest path lengths using Floyd's algorithm
@@ -1260,8 +1296,8 @@ pub fn digraph_floyd_warshall_successor_and_distance(
         parallel_threshold,
     )?;
     Ok((
-        matrix.into_pyarray(py).into(),
-        next.unwrap().into_pyarray(py).into(),
+        matrix.into_pyarray_bound(py).into(),
+        next.unwrap().into_pyarray_bound(py).into(),
     ))
 }
 
@@ -1347,7 +1383,7 @@ pub fn digraph_distance_matrix(
         as_undirected,
         null_value,
     );
-    matrix.into_pyarray(py).into()
+    matrix.into_pyarray_bound(py).into()
 }
 
 /// Get the distance matrix for an undirected graph
@@ -1388,7 +1424,7 @@ pub fn graph_distance_matrix(
         true,
         null_value,
     );
-    matrix.into_pyarray(py).into()
+    matrix.into_pyarray_bound(py).into()
 }
 
 /// Return the average shortest path length for a :class:`~rustworkx.PyDiGraph`
@@ -1440,7 +1476,7 @@ pub fn digraph_unweighted_average_shortest_path_length(
 ) -> f64 {
     let n = graph.node_count();
     if n <= 1 {
-        return std::f64::NAN;
+        return f64::NAN;
     }
 
     let (sum, conn_pairs) =
@@ -1448,11 +1484,11 @@ pub fn digraph_unweighted_average_shortest_path_length(
 
     let tot_pairs = n * (n - 1);
     if disconnected && conn_pairs == 0 {
-        return std::f64::NAN;
+        return f64::NAN;
     }
 
     if !disconnected && conn_pairs < tot_pairs {
-        return std::f64::INFINITY;
+        return f64::INFINITY;
     }
 
     (sum as f64) / (conn_pairs as f64)
@@ -1503,7 +1539,7 @@ pub fn graph_unweighted_average_shortest_path_length(
 ) -> f64 {
     let n = graph.node_count();
     if n <= 1 {
-        return std::f64::NAN;
+        return f64::NAN;
     }
 
     let (sum, conn_pairs) =
@@ -1511,11 +1547,11 @@ pub fn graph_unweighted_average_shortest_path_length(
 
     let tot_pairs = n * (n - 1);
     if disconnected && conn_pairs == 0 {
-        return std::f64::NAN;
+        return f64::NAN;
     }
 
     if !disconnected && conn_pairs < tot_pairs {
-        return std::f64::INFINITY;
+        return f64::INFINITY;
     }
 
     (sum as f64) / (conn_pairs as f64)
@@ -1560,6 +1596,12 @@ pub fn digraph_bellman_ford_shortest_path_lengths(
     };
 
     let start = NodeIndex::new(node);
+
+    if !graph.graph.contains_node(start) {
+        return Err(PyIndexError::new_err(format!(
+            "Node source index \"{node}\" out of graph bound"
+        )));
+    }
 
     let res: Option<Vec<Option<f64>>> =
         bellman_ford(&graph.graph, start, |e| edge_cost(e.id()), None)?;
@@ -1640,6 +1682,12 @@ pub fn graph_bellman_ford_shortest_path_lengths(
 
     let start = NodeIndex::new(node);
 
+    if !graph.graph.contains_node(start) {
+        return Err(PyIndexError::new_err(format!(
+            "Node source index \"{node}\" out of graph bound"
+        )));
+    }
+
     let res: Option<Vec<Option<f64>>> =
         bellman_ford(&graph.graph, start, |e| edge_cost(e.id()), None)?;
 
@@ -1715,6 +1763,13 @@ pub fn graph_bellman_ford_shortest_paths(
     default_weight: f64,
 ) -> PyResult<PathMapping> {
     let start = NodeIndex::new(source);
+
+    if !graph.graph.contains_node(start) {
+        return Err(PyIndexError::new_err(format!(
+            "Node source index \"{source}\" out of graph bound"
+        )));
+    }
+
     let mut paths: DictMap<NodeIndex, Vec<NodeIndex>> = DictMap::with_capacity(graph.node_count());
 
     let edge_weights: Vec<Option<f64>> =
@@ -1801,6 +1856,13 @@ pub fn digraph_bellman_ford_shortest_paths(
     }
 
     let start = NodeIndex::new(source);
+
+    if !graph.graph.contains_node(start) {
+        return Err(PyIndexError::new_err(format!(
+            "Node source index \"{source}\" out of graph bound"
+        )));
+    }
+
     let mut paths: DictMap<NodeIndex, Vec<NodeIndex>> = DictMap::with_capacity(graph.node_count());
 
     let edge_weights: Vec<Option<f64>> =

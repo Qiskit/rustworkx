@@ -65,7 +65,6 @@ use tree::*;
 use union::*;
 
 use hashbrown::HashMap;
-use indexmap::map::Entry::{Occupied, Vacant};
 use numpy::Complex64;
 
 use pyo3::create_exception;
@@ -86,9 +85,73 @@ use petgraph::visit::{
 use petgraph::EdgeType;
 
 use std::convert::TryFrom;
-use std::hash::Hash;
 
 use rustworkx_core::dictmap::*;
+use rustworkx_core::err::{ContractError, ContractSimpleError};
+
+/// An ergonomic error type used to map Rustworkx core errors to
+/// [PyErr] automatically, via [From::from].
+///
+/// It is constructable from both [PyErr] and core errors and implements
+/// [IntoPy], so it can be returned directly from PyO3 methods and
+/// functions. Additionally, a [PyErr] can be constructed from this
+/// type, since it's just a wrapper around one, so you can even go
+/// from a core error => [RxPyErr] => [PyErr].
+///
+/// # Usage
+/// When calling Rustworkx core functions from PyO3 code, use
+/// [RxPyResult] as the return type of the calling function and use
+/// the `?` operator to unwrap the result with error propagation.
+/// Since Rust automatically applies [From::from] to unwrapped error
+/// values, a core error will be automatically converted to a
+/// Python-friendly error and stored in [RxPyErr], assuming you've
+/// added an implementation of [From] for it below. The standard
+/// [PyErr] type will be converted to [RxPyErr] using the same
+/// mechanism, allowing Rustworkx core and PyO3 API usage to be
+/// intermixed within the same calling function.
+pub struct RxPyErr {
+    pyerr: PyErr,
+}
+
+/// Type alias for a [Result] with error type [RxPyErr].
+pub type RxPyResult<T> = Result<T, RxPyErr>;
+
+fn map_dag_would_cycle<E: std::error::Error>(value: E) -> PyErr {
+    DAGWouldCycle::new_err(format!("{:?}", value))
+}
+
+impl From<ContractError> for RxPyErr {
+    fn from(value: ContractError) -> Self {
+        RxPyErr {
+            pyerr: match value {
+                ContractError::DAGWouldCycle => map_dag_would_cycle(value),
+            },
+        }
+    }
+}
+
+impl From<ContractSimpleError<PyErr>> for RxPyErr {
+    fn from(value: ContractSimpleError<PyErr>) -> Self {
+        RxPyErr {
+            pyerr: match value {
+                ContractSimpleError::DAGWouldCycle => map_dag_would_cycle(value),
+                ContractSimpleError::MergeError(e) => e,
+            },
+        }
+    }
+}
+
+impl IntoPy<PyObject> for RxPyErr {
+    fn into_py(self, py: Python<'_>) -> PyObject {
+        self.pyerr.into_value(py).into()
+    }
+}
+
+impl From<RxPyErr> for PyErr {
+    fn from(value: RxPyErr) -> Self {
+        value.pyerr
+    }
+}
 
 trait IsNan {
     fn is_nan(&self) -> bool;
@@ -178,7 +241,7 @@ where
 {
     match weight_fn {
         Some(weight_fn) => {
-            let res = weight_fn.as_ref(py).call1((weight,))?;
+            let res = weight_fn.bind(py).call1((weight,))?;
             res.extract()
         }
         None => Ok(default),
@@ -278,34 +341,15 @@ fn find_node_by_weight<Ty: EdgeType>(
     for node in graph.node_indices() {
         let weight = graph.node_weight(node).unwrap();
         if obj
-            .as_ref(py)
+            .bind(py)
             .rich_compare(weight, pyo3::basic::CompareOp::Eq)?
-            .is_true()?
+            .is_truthy()?
         {
             index = Some(node);
             break;
         }
     }
     Ok(index)
-}
-
-fn merge_duplicates<K, V, F, E>(xs: Vec<(K, V)>, mut merge_fn: F) -> Result<Vec<(K, V)>, E>
-where
-    K: Hash + Eq,
-    F: FnMut(&V, &V) -> Result<V, E>,
-{
-    let mut kvs = DictMap::with_capacity(xs.len());
-    for (k, v) in xs {
-        match kvs.entry(k) {
-            Occupied(entry) => {
-                *entry.into_mut() = merge_fn(&v, entry.get())?;
-            }
-            Vacant(entry) => {
-                entry.insert(v);
-            }
-        }
-    }
-    Ok(kvs.into_iter().collect::<Vec<_>>())
 }
 
 // The provided node is invalid.
@@ -340,27 +384,36 @@ create_exception!(rustworkx, FailedToConverge, PyException);
 create_exception!(rustworkx, GraphNotBipartite, PyException);
 
 #[pymodule]
-fn rustworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
+fn rustworkx(py: Python<'_>, m: &Bound<PyModule>) -> PyResult<()> {
     m.add("__version__", env!("CARGO_PKG_VERSION"))?;
-    m.add("InvalidNode", py.get_type::<InvalidNode>())?;
-    m.add("DAGWouldCycle", py.get_type::<DAGWouldCycle>())?;
-    m.add("NoEdgeBetweenNodes", py.get_type::<NoEdgeBetweenNodes>())?;
-    m.add("DAGHasCycle", py.get_type::<DAGHasCycle>())?;
-    m.add("NoSuitableNeighbors", py.get_type::<NoSuitableNeighbors>())?;
-    m.add("NoPathFound", py.get_type::<NoPathFound>())?;
-    m.add("InvalidMapping", py.get_type::<InvalidMapping>())?;
-    m.add("NullGraph", py.get_type::<NullGraph>())?;
-    m.add("NegativeCycle", py.get_type::<NegativeCycle>())?;
+    m.add("InvalidNode", py.get_type_bound::<InvalidNode>())?;
+    m.add("DAGWouldCycle", py.get_type_bound::<DAGWouldCycle>())?;
+    m.add(
+        "NoEdgeBetweenNodes",
+        py.get_type_bound::<NoEdgeBetweenNodes>(),
+    )?;
+    m.add("DAGHasCycle", py.get_type_bound::<DAGHasCycle>())?;
+    m.add(
+        "NoSuitableNeighbors",
+        py.get_type_bound::<NoSuitableNeighbors>(),
+    )?;
+    m.add("NoPathFound", py.get_type_bound::<NoPathFound>())?;
+    m.add("InvalidMapping", py.get_type_bound::<InvalidMapping>())?;
+    m.add("NullGraph", py.get_type_bound::<NullGraph>())?;
+    m.add("NegativeCycle", py.get_type_bound::<NegativeCycle>())?;
     m.add(
         "JSONSerializationError",
-        py.get_type::<JSONSerializationError>(),
+        py.get_type_bound::<JSONSerializationError>(),
+    )?;
+    m.add("FailedToConverge", py.get_type_bound::<FailedToConverge>())?;
+    m.add(
+        "GraphNotBipartite",
+        py.get_type_bound::<GraphNotBipartite>(),
     )?;
     m.add(
         "JSONDeserializationError",
-        py.get_type::<JSONDeserializationError>(),
+        py.get_type_bound::<JSONDeserializationError>(),
     )?;
-    m.add("FailedToConverge", py.get_type::<FailedToConverge>())?;
-    m.add("GraphNotBipartite", py.get_type::<GraphNotBipartite>())?;
     m.add_wrapped(wrap_pyfunction!(bfs_successors))?;
     m.add_wrapped(wrap_pyfunction!(bfs_predecessors))?;
     m.add_wrapped(wrap_pyfunction!(graph_bfs_search))?;
@@ -379,6 +432,7 @@ fn rustworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(number_weakly_connected_components))?;
     m.add_wrapped(wrap_pyfunction!(weakly_connected_components))?;
     m.add_wrapped(wrap_pyfunction!(is_weakly_connected))?;
+    m.add_wrapped(wrap_pyfunction!(is_semi_connected))?;
     m.add_wrapped(wrap_pyfunction!(is_directed_acyclic_graph))?;
     m.add_wrapped(wrap_pyfunction!(digraph_is_isomorphic))?;
     m.add_wrapped(wrap_pyfunction!(graph_is_isomorphic))?;
@@ -473,7 +527,10 @@ fn rustworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(undirected_gnp_random_graph))?;
     m.add_wrapped(wrap_pyfunction!(directed_gnm_random_graph))?;
     m.add_wrapped(wrap_pyfunction!(undirected_gnm_random_graph))?;
+    m.add_wrapped(wrap_pyfunction!(undirected_sbm_random_graph))?;
+    m.add_wrapped(wrap_pyfunction!(directed_sbm_random_graph))?;
     m.add_wrapped(wrap_pyfunction!(random_geometric_graph))?;
+    m.add_wrapped(wrap_pyfunction!(hyperbolic_random_graph))?;
     m.add_wrapped(wrap_pyfunction!(barabasi_albert_graph))?;
     m.add_wrapped(wrap_pyfunction!(directed_barabasi_albert_graph))?;
     m.add_wrapped(wrap_pyfunction!(directed_random_bipartite_graph))?;
@@ -529,6 +586,7 @@ fn rustworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(chain_decomposition))?;
     m.add_wrapped(wrap_pyfunction!(graph_isolates))?;
     m.add_wrapped(wrap_pyfunction!(digraph_isolates))?;
+    m.add_wrapped(wrap_pyfunction!(connected_subgraphs))?;
     m.add_wrapped(wrap_pyfunction!(is_planar))?;
     m.add_wrapped(wrap_pyfunction!(read_graphml))?;
     m.add_wrapped(wrap_pyfunction!(digraph_node_link_json))?;
@@ -561,6 +619,7 @@ fn rustworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_class::<iterators::NodeMap>()?;
     m.add_class::<iterators::ProductNodeMap>()?;
     m.add_class::<iterators::BiconnectedComponents>()?;
+    m.add_class::<ColoringStrategy>()?;
     m.add_wrapped(wrap_pymodule!(generators::generators))?;
     Ok(())
 }

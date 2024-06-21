@@ -95,6 +95,16 @@ class TestBFSSuccessorsComparisons(unittest.TestCase):
         slice_return = successors[0:3:2]
         self.assertEqual([("a", ["c", "b"])], slice_return)
 
+    def test_iter(self):
+        self.dag.add_child(self.node_a, "c", "edge")
+        successors = rustworkx.bfs_successors(self.dag, 0)
+        self.assertEqual(list(successors), list(iter(successors)))
+
+    def test_reversed(self):
+        self.dag.add_child(self.node_a, "c", "edge")
+        successors = rustworkx.bfs_successors(self.dag, 0)
+        self.assertEqual(list(successors)[::-1], list(reversed(successors)))
+
 
 class TestNodeIndicesComparisons(unittest.TestCase):
     def setUp(self):
@@ -174,6 +184,10 @@ class TestNodeIndicesComparisons(unittest.TestCase):
         self.assertEqual([2, 3], slice_return)
         self.assertEqual([], indices[-1:-2])
 
+    def test_iter(self):
+        indices = self.dag.node_indices()
+        self.assertEqual(list(indices), list(iter(indices)))
+
     def test_reversed(self):
         indices = self.dag.node_indices()
         reversed_slice = indices[::-1]
@@ -183,6 +197,16 @@ class TestNodeIndicesComparisons(unittest.TestCase):
     def test_numpy_conversion(self):
         res = self.dag.node_indexes()
         np.testing.assert_array_equal(np.asarray(res, dtype=np.uintp), np.array([0, 1]))
+
+    def test_numpy_conversion_copy_false(self):
+        res = self.dag.node_indices()
+        with self.assertRaises(ValueError):
+            res.__array__(copy=False)
+
+    def test_numpy_conversion_dtype_complex(self):
+        res = self.dag.node_indices()
+        array = res.__array__(dtype=complex)
+        self.assertEqual(np.dtype(complex), array.dtype)
 
 
 class TestNodesCountMapping(unittest.TestCase):
@@ -352,6 +376,14 @@ class TestEdgeIndicesComparisons(unittest.TestCase):
         slice_return = edges[0:-1]
         self.assertEqual([0, 1], slice_return)
 
+    def test_iter(self):
+        indices = self.dag.edge_indices()
+        self.assertEqual(list(indices), list(iter(indices)))
+
+    def test_reversed(self):
+        indices = self.dag.edge_indices()
+        self.assertEqual(list(indices)[::-1], list(reversed(indices)))
+
 
 class TestEdgeListComparisons(unittest.TestCase):
     def setUp(self):
@@ -424,6 +456,14 @@ class TestEdgeListComparisons(unittest.TestCase):
         np.testing.assert_array_equal(
             np.asarray(res, dtype=np.uintp), np.array([[0, 1], [0, 2], [0, 3], [0, 4]])
         )
+
+    def test_iter(self):
+        edges = self.dag.edge_list()
+        self.assertEqual(list(edges), list(iter(edges)))
+
+    def test_reversed(self):
+        edges = self.dag.edge_list()
+        self.assertEqual(list(edges)[::-1], list(reversed(edges)))
 
 
 class TestWeightedEdgeListComparisons(unittest.TestCase):
@@ -499,6 +539,14 @@ class TestWeightedEdgeListComparisons(unittest.TestCase):
         np.testing.assert_array_equal(
             np.asarray(self.dag.weighted_edge_list()), np.array([(0, 1, "Edgy")], dtype=object)
         )
+
+    def test_iter(self):
+        edges = self.dag.weighted_edge_list()
+        self.assertEqual(list(edges), list(iter(edges)))
+
+    def test_reversed(self):
+        edges = self.dag.weighted_edge_list()
+        self.assertEqual(list(edges)[::-1], list(reversed(edges)))
 
 
 class TestPathMapping(unittest.TestCase):
@@ -1386,6 +1434,12 @@ class TestChainsComparisons(unittest.TestCase):
     def test_numpy_conversion(self):
         # this test assumes the array is 1-dimensional which avoids issues with jagged arrays
         self.assertTrue(np.asarray(self.chains).shape, (1,))
+
+    def test_iter(self):
+        self.assertEqual(list(self.chains), list(iter(self.chains)))
+
+    def test_reversed(self):
+        self.assertEqual(list(self.chains)[::-1], list(reversed(self.chains)))
 
 
 class TestProductNodeMap(unittest.TestCase):

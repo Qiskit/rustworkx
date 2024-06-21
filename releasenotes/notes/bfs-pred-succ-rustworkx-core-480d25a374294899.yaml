@@ -1,0 +1,12 @@
+---
+features:
+  - |
+    Added a new function ``bfs_predecessors()`` to the
+    ``rustworkx_core::traversal`` module. That is a generic Rust implementation
+    for the core rust library that provides the
+    :func:`.bfs_predecessors` function to Rust users.
+  - |
+    Added a new function ``bfs_successors()`` to the
+    ``rustworkx_core::traversal`` module. That is a generic Rust implementation
+    for the core rust library that provides the
+    :func:`.bfs_successors` function to Rust users.

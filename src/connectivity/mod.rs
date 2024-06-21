@@ -14,14 +14,16 @@
 
 mod all_pairs_all_simple_paths;
 mod johnson_simple_cycles;
+mod subgraphs;
 
 use super::{
     digraph, get_edge_iter_with_weights, graph, score, weight_callable, InvalidNode, NullGraph,
 };
 
 use hashbrown::{HashMap, HashSet};
-
 use petgraph::algo;
+use petgraph::algo::condensation;
+use petgraph::graph::DiGraph;
 use petgraph::stable_graph::NodeIndex;
 use petgraph::unionfind::UnionFind;
 use petgraph::visit::{EdgeRef, IntoEdgeReferences, NodeCount, NodeIndexable, Visitable};
@@ -39,8 +41,10 @@ use crate::iterators::{
 };
 use crate::{EdgeType, StablePyGraph};
 
+use crate::graph::PyGraph;
 use rustworkx_core::coloring::two_color;
 use rustworkx_core::connectivity;
+use rustworkx_core::dag_algo::longest_path;
 
 /// Return a list of cycles which form a basis for cycles of a given PyGraph
 ///
@@ -264,6 +268,50 @@ pub fn is_weakly_connected(graph: &digraph::PyDiGraph) -> PyResult<bool> {
     Ok(weakly_connected_components(graph)[0].len() == graph.graph.node_count())
 }
 
+/// Check if the graph is semi connected
+///
+/// :param PyDiGraph graph: The graph to check if it is semi connected
+///
+/// :returns: Whether the graph is semi connected or not
+/// :rtype: bool
+///
+/// :raises NullGraph: If an empty graph is passed in
+#[pyfunction]
+#[pyo3(text_signature = "(graph, /)")]
+pub fn is_semi_connected(graph: &digraph::PyDiGraph) -> PyResult<bool> {
+    if graph.graph.node_count() == 0 {
+        return Err(NullGraph::new_err("Invalid operation on a NullGraph"));
+    }
+
+    let mut temp_graph = DiGraph::new();
+    let mut node_map = Vec::new();
+
+    for _node in graph.graph.node_indices() {
+        node_map.push(temp_graph.add_node(()));
+    }
+
+    for edge in graph.graph.edge_indices() {
+        let (source, target) = graph.graph.edge_endpoints(edge).unwrap();
+        temp_graph.add_edge(node_map[source.index()], node_map[target.index()], ());
+    }
+
+    let condensed = condensation(temp_graph, true);
+    let n = condensed.node_count();
+    let weight_fn =
+        |_: petgraph::graph::EdgeReference<()>| Ok::<usize, std::convert::Infallible>(1usize);
+
+    match longest_path(&condensed, weight_fn) {
+        Ok(path_len) => {
+            if let Some(path_len) = path_len {
+                Ok(path_len.1 == n - 1)
+            } else {
+                Ok(false)
+            }
+        }
+        Err(_) => Err(PyValueError::new_err("Graph could not be condensed")),
+    }
+}
+
 /// Return the adjacency matrix for a PyDiGraph object
 ///
 /// In the case where there are multiple edges between nodes the value in the
@@ -347,7 +395,7 @@ pub fn digraph_adjacency_matrix(
             }
         }
     }
-    Ok(matrix.into_pyarray(py).into())
+    Ok(matrix.into_pyarray_bound(py).into())
 }
 
 /// Return the adjacency matrix for a PyGraph class
@@ -440,7 +488,7 @@ pub fn graph_adjacency_matrix(
             }
         }
     }
-    Ok(matrix.into_pyarray(py).into())
+    Ok(matrix.into_pyarray_bound(py).into())
 }
 
 /// Compute the complement of an undirected graph.
@@ -659,6 +707,27 @@ pub fn digraph_all_pairs_all_simple_paths(
     ))
 }
 
+/// Return all the connected subgraphs (as a list of node indices) with exactly k nodes
+///
+///
+/// :param PyGraph graph: The graph to find all connected subgraphs in
+/// :param int k: The maximum number of nodes in a returned connected subgraph.
+///
+/// :returns: A list of connected subgraphs with k nodes, represented by their node indices
+///
+/// :raises ValueError: If ``k`` is larger than the number of nodes in ``graph``
+#[pyfunction]
+#[pyo3(text_signature = "(graph, k, /)")]
+pub fn connected_subgraphs(graph: &PyGraph, k: usize) -> PyResult<Vec<Vec<usize>>> {
+    if k > graph.node_count() {
+        return Err(PyValueError::new_err(
+            "Value for k must be < node count in input graph",
+        ));
+    }
+
+    Ok(subgraphs::k_connected_subgraphs(&graph.graph, k))
+}
+
 /// Return all the simple paths between all pairs of nodes in the graph
 ///
 /// This function is multithreaded and will launch a thread pool with threads
@@ -816,7 +885,7 @@ pub fn graph_longest_simple_path(graph: &graph::PyGraph) -> Option<NodeIndices> 
 #[pyo3(text_signature = "(graph, /)")]
 pub fn graph_core_number(py: Python, graph: &graph::PyGraph) -> PyResult<PyObject> {
     let cores = connectivity::core_number(&graph.graph);
-    let out_dict = PyDict::new(py);
+    let out_dict = PyDict::new_bound(py);
     for (k, v) in cores {
         out_dict.set_item(k.index(), v)?;
     }
@@ -842,7 +911,7 @@ pub fn graph_core_number(py: Python, graph: &graph::PyGraph) -> PyResult<PyObjec
 #[pyo3(text_signature = "(graph, /)")]
 pub fn digraph_core_number(py: Python, graph: &digraph::PyDiGraph) -> PyResult<PyObject> {
     let cores = connectivity::core_number(&graph.graph);
-    let out_dict = PyDict::new(py);
+    let out_dict = PyDict::new_bound(py);
     for (k, v) in cores {
         out_dict.set_item(k.index(), v)?;
     }

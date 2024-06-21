@@ -98,9 +98,9 @@ class TestCollectBicolorRuns(unittest.TestCase):
             else:
                 return None
 
-        def color_function(node):
-            if "q" in node:
-                return int(node[1:])
+        def color_function(edge):
+            if "q" in edge:
+                return int(edge[1:])
             else:
                 return None
 
@@ -187,9 +187,9 @@ class TestCollectBicolorRuns(unittest.TestCase):
             else:
                 return None
 
-        def color_function(node):
-            if "q" in node:
-                return int(node[1:])
+        def color_function(edge):
+            if "q" in edge:
+                return int(edge[1:])
             else:
                 return None
 
@@ -264,9 +264,9 @@ class TestCollectBicolorRuns(unittest.TestCase):
             else:
                 return None
 
-        def color_function(node):
-            if "q" in node:
-                return int(node[1:])
+        def color_function(edge):
+            if "q" in edge:
+                return int(edge[1:])
             else:
                 return None
 
@@ -338,9 +338,9 @@ class TestCollectBicolorRuns(unittest.TestCase):
             else:
                 return None
 
-        def color_function(node):
-            if "q" in node:
-                return int(node[1:])
+        def color_function(edge):
+            if "q" in edge:
+                return int(edge[1:])
             else:
                 return None
 
