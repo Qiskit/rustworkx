@@ -12,6 +12,8 @@
 
 mod bipartite;
 mod circular;
+mod embedding;
+mod planar;
 mod random;
 mod shell;
 mod spiral;
@@ -193,6 +195,33 @@ pub fn digraph_spring_layout(
         center,
         seed,
     )
+}
+
+/// Generate a planar layout
+///
+/// The algorithm first uses Ulrik Brandes: The Left-Right Planarity Test 2009,
+/// http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.217.9208
+/// to determine if the graph is planar. If so, then a planar embedding is created
+/// and the drawing is created using M. Chrobak and T.H. Payne: A Linear-time Algorithm
+/// for Drawing a Planar Graph on a Grid 1989,
+/// http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.51.6677.
+///
+/// :param PyGraph graph: The graph to be used
+/// :param float|None scale: Scale factor for positions. If scale is ``None``,
+///     no re-scaling is performed. (``default=1.0``)
+/// :param tuple|None center: An optional center position. This is a 2 tuple of two
+///     ``float`` values for the center position
+///
+/// :returns: A dictionary of positions keyed by node id.
+/// :rtype: Pos2DMapping
+#[pyfunction]
+#[pyo3(text_signature = "(graph, / scale=1.0, center=None)")]
+pub fn graph_planar_layout(
+    graph: &graph::PyGraph,
+    scale: Option<f64>,
+    center: Option<[f64; 2]>,
+) -> PyResult<Pos2DMapping> {
+    planar::planar_layout(&graph.graph, scale, center)
 }
 
 /// Generate a random layout

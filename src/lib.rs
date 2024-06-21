@@ -378,6 +378,8 @@ create_exception!(rustworkx, JSONSerializationError, PyException);
 create_exception!(rustworkx, NegativeCycle, PyException);
 // Failed to Converge on a solution
 create_exception!(rustworkx, FailedToConverge, PyException);
+// Graph is not planar
+create_exception!(rustworkx, GraphNotPlanar, PyException);
 // Graph is not bipartite
 create_exception!(rustworkx, GraphNotBipartite, PyException);
 
@@ -408,6 +410,8 @@ fn rustworkx(py: Python<'_>, m: &Bound<PyModule>) -> PyResult<()> {
         "GraphNotBipartite",
         py.get_type_bound::<GraphNotBipartite>(),
     )?;
+    m.add("GraphNotPlanar", py.get_type_bound::<GraphNotPlanar>())?;
+
     m.add_wrapped(wrap_pyfunction!(bfs_successors))?;
     m.add_wrapped(wrap_pyfunction!(bfs_predecessors))?;
     m.add_wrapped(wrap_pyfunction!(graph_bfs_search))?;
@@ -549,6 +553,7 @@ fn rustworkx(py: Python<'_>, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(digraph_core_number))?;
     m.add_wrapped(wrap_pyfunction!(graph_complement))?;
     m.add_wrapped(wrap_pyfunction!(digraph_complement))?;
+    m.add_wrapped(wrap_pyfunction!(graph_planar_layout))?;
     m.add_wrapped(wrap_pyfunction!(graph_random_layout))?;
     m.add_wrapped(wrap_pyfunction!(digraph_random_layout))?;
     m.add_wrapped(wrap_pyfunction!(graph_bipartite_layout))?;
