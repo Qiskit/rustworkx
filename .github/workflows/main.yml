@@ -127,7 +127,7 @@ jobs:
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
         with:
-          python-version: 3.8
+          python-version: "3.10"
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
         with:
@@ -135,7 +135,7 @@ jobs:
       - name: Download grcov
         run: curl -L https://github.com/mozilla/grcov/releases/download/v0.8.7/grcov-x86_64-unknown-linux-gnu.tar.bz2 | tar jxf -
       - name: Install deps
-        run: pip install -U setuptools-rust networkx scipy testtools fixtures stestr
+        run: pip install -U setuptools-rust networkx testtools fixtures stestr
       - name: Build retworkx
         run: python setup.py develop
         env:
