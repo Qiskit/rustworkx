@@ -143,7 +143,7 @@ use petgraph::visit::{
 ///     only a potential performance optimization if the complete size of the graph is known in
 ///     advance (default 0: no overallocation).
 /// :param int initial_edge_count: The graph will be allocated with enough capacity to store this
-///     many edges before needing to grow.  This does not prepopulate any nodes with data, it is
+///     many edges before needing to grow.  This does not prepopulate any edges with data, it is
 ///     only a potential performance optimization if the complete size of the graph is known in
 ///     advance (default 0: no overallocation).
 #[pyclass(mapping, module = "rustworkx", subclass)]
