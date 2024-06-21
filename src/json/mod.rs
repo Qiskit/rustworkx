@@ -43,7 +43,7 @@ use pyo3::Python;
 /// :returns: The graph represented by the node link JSON
 /// :rtype: PyGraph | PyDiGraph
 #[pyfunction]
-pub fn parse_node_link_json_file(
+pub fn from_node_link_json_file(
     py: Python,
     path: &str,
     graph_attrs: Option<PyObject>,
@@ -120,7 +120,7 @@ pub fn parse_node_link_json_file(
 /// :returns: The graph represented by the node link JSON
 /// :rtype: PyGraph | PyDiGraph
 #[pyfunction]
-pub fn parse_node_link_json_str(
+pub fn parse_node_link_json(
     py: Python,
     data: &str,
     graph_attrs: Option<PyObject>,

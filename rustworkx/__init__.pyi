@@ -135,8 +135,8 @@ from .rustworkx import directed_random_bipartite_graph as directed_random_bipart
 from .rustworkx import read_graphml as read_graphml
 from .rustworkx import digraph_node_link_json as digraph_node_link_json
 from .rustworkx import graph_node_link_json as graph_node_link_json
-from .rustworkx import parse_node_link_json_file as parse_node_link_json_file
-from .rustworkx import parse_node_link_json_str as parse_node_link_json_str
+from .rustworkx import from_node_link_json_file as from_node_link_json_file
+from .rustworkx import parse_node_link_json as parse_node_link_json
 from .rustworkx import digraph_bellman_ford_shortest_paths as digraph_bellman_ford_shortest_paths
 from .rustworkx import graph_bellman_ford_shortest_paths as graph_bellman_ford_shortest_paths
 from .rustworkx import (

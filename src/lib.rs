@@ -533,8 +533,8 @@ fn rustworkx(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(read_graphml))?;
     m.add_wrapped(wrap_pyfunction!(digraph_node_link_json))?;
     m.add_wrapped(wrap_pyfunction!(graph_node_link_json))?;
-    m.add_wrapped(wrap_pyfunction!(parse_node_link_json_file))?;
-    m.add_wrapped(wrap_pyfunction!(parse_node_link_json_str))?;
+    m.add_wrapped(wrap_pyfunction!(from_node_link_json_file))?;
+    m.add_wrapped(wrap_pyfunction!(parse_node_link_json))?;
     m.add_wrapped(wrap_pyfunction!(pagerank))?;
     m.add_wrapped(wrap_pyfunction!(hits))?;
     m.add_class::<digraph::PyDiGraph>()?;
