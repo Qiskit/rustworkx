@@ -210,7 +210,7 @@ impl PyGraph {
         (
             (self.multigraph, self.attrs.clone_ref(py)).into_py(py),
             [
-                ("initial_node_count", self.graph.node_count()),
+                ("initial_node_count", self.graph.node_bound()),
                 ("initial_edge_count", self.graph.edge_bound()),
             ]
             .into_py_dict_bound(py),
@@ -218,7 +218,7 @@ impl PyGraph {
     }
 
     fn __getstate__(&self, py: Python) -> PyResult<PyObject> {
-        let mut nodes: Vec<PyObject> = Vec::with_capacity(self.graph.node_count());
+        let mut nodes: Vec<PyObject> = Vec::with_capacity(self.graph.node_bound());
         let mut edges: Vec<PyObject> = Vec::with_capacity(self.graph.edge_bound());
 
         // save nodes to a list along with its index
