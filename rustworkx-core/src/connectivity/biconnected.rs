@@ -23,7 +23,7 @@ use petgraph::{
 
 use crate::traversal::{depth_first_search, DfsEvent};
 
-const NULL: usize = std::usize::MAX;
+const NULL: usize = usize::MAX;
 
 type Edge<G> = (<G as GraphBase>::NodeId, <G as GraphBase>::NodeId);
 

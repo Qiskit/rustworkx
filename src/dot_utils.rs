@@ -82,17 +82,18 @@ fn attr_map_to_string<'a>(
     if attrs.is_empty() {
         return Ok("".to_string());
     }
-
     let attr_string = attrs
         .iter()
         .map(|(key, value)| {
-            if key == "label" {
-                format!("{}=\"{}\"", key, value)
-            } else {
-                format!("{}={}", key, value)
-            }
+            let escaped_value = serde_json::to_string(value).map_err(|_err| {
+                pyo3::exceptions::PyValueError::new_err("could not escape character")
+            })?;
+            let escaped_value = &escaped_value.get(1..escaped_value.len() - 1).ok_or(
+                pyo3::exceptions::PyValueError::new_err("could not escape character"),
+            )?;
+            Ok(format!("{}=\"{}\"", key, escaped_value))
         })
-        .collect::<Vec<String>>()
+        .collect::<PyResult<Vec<String>>>()?
         .join(", ");
     Ok(format!("[{}]", attr_string))
 }

@@ -33,6 +33,7 @@ from .rustworkx import JSONSerializationError as JSONSerializationError
 from .rustworkx import FailedToConverge as FailedToConverge
 from .rustworkx import InvalidMapping as InvalidMapping
 from .rustworkx import GraphNotBipartite as GraphNotBipartite
+from .rustworkx import ColoringStrategy as ColoringStrategy
 
 from .rustworkx import digraph_maximum_bisimulation as digraph_maximum_bisimulation
 from .rustworkx import digraph_cartesian_product as digraph_cartesian_product
@@ -59,6 +60,7 @@ from .rustworkx import graph_bipartite_edge_color as graph_bipartite_edge_color
 from .rustworkx import connected_components as connected_components
 from .rustworkx import is_connected as is_connected
 from .rustworkx import is_weakly_connected as is_weakly_connected
+from .rustworkx import is_semi_connected as is_semi_connected
 from .rustworkx import number_connected_components as number_connected_components
 from .rustworkx import number_weakly_connected_components as number_weakly_connected_components
 from .rustworkx import node_connected_component as node_connected_component
@@ -128,7 +130,10 @@ from .rustworkx import directed_gnm_random_graph as directed_gnm_random_graph
 from .rustworkx import undirected_gnm_random_graph as undirected_gnm_random_graph
 from .rustworkx import directed_gnp_random_graph as directed_gnp_random_graph
 from .rustworkx import undirected_gnp_random_graph as undirected_gnp_random_graph
+from .rustworkx import directed_sbm_random_graph as directed_sbm_random_graph
+from .rustworkx import undirected_sbm_random_graph as undirected_sbm_random_graph
 from .rustworkx import random_geometric_graph as random_geometric_graph
+from .rustworkx import hyperbolic_random_graph as hyperbolic_random_graph
 from .rustworkx import barabasi_albert_graph as barabasi_albert_graph
 from .rustworkx import directed_barabasi_albert_graph as directed_barabasi_albert_graph
 from .rustworkx import undirected_random_bipartite_graph as undirected_random_bipartite_graph

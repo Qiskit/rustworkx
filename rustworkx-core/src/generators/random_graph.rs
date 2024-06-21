@@ -14,6 +14,7 @@
 
 use std::hash::Hash;
 
+use ndarray::ArrayView2;
 use petgraph::data::{Build, Create};
 use petgraph::visit::{
     Data, EdgeRef, GraphBase, GraphProp, IntoEdgeReferences, IntoEdgesDirected,
@@ -107,7 +108,7 @@ where
     }
 
     if probability > 0.0 {
-        if (probability - 1.0).abs() < std::f64::EPSILON {
+        if (probability - 1.0).abs() < f64::EPSILON {
             for u in 0..num_nodes {
                 let start_node = if directed { 0 } else { u + 1 };
                 for v in start_node..num_nodes {
@@ -305,9 +306,134 @@ where
     Ok(graph)
 }
 
+/// Generate a graph from the stochastic block model.
+///
+/// The stochastic block model is a generalization of the G<sub>np</sub> random graph
+/// (see [gnp_random_graph] ). The connection probability of
+/// nodes `u` and `v` depends on their block and is given by
+/// `probabilities[blocks[u]][blocks[v]]`, where `blocks[u]` is the block membership
+/// of vertex `u`. The number of nodes and the number of blocks are inferred from
+/// `sizes`.
+///
+/// Arguments:
+///
+/// * `sizes` - Number of nodes in each block.
+/// * `probabilities` - B x B array that contains the connection probability between
+///     nodes of different blocks. Must be symmetric for undirected graphs.
+/// * `loops` - Determines whether the graph can have loops or not.
+/// * `seed` - An optional seed to use for the random number generator.
+/// * `default_node_weight` - A callable that will return the weight to use
+///     for newly created nodes.
+/// * `default_edge_weight` - A callable that will return the weight object
+///     to use for newly created edges.
+///
+/// # Example
+/// ```rust
+/// use ndarray::arr2;
+/// use rustworkx_core::petgraph;
+/// use rustworkx_core::generators::sbm_random_graph;
+///
+/// let g = sbm_random_graph::<petgraph::graph::DiGraph<(), ()>, (), _, _, ()>(
+///     &vec![1, 2],
+///     &ndarray::arr2(&[[0., 1.], [0., 1.]]).view(),
+///     true,
+///     Some(10),
+///     || (),
+///     || (),
+/// )
+/// .unwrap();
+/// assert_eq!(g.node_count(), 3);
+/// assert_eq!(g.edge_count(), 6);
+/// ```
+pub fn sbm_random_graph<G, T, F, H, M>(
+    sizes: &[usize],
+    probabilities: &ndarray::ArrayView2<f64>,
+    loops: bool,
+    seed: Option<u64>,
+    mut default_node_weight: F,
+    mut default_edge_weight: H,
+) -> Result<G, InvalidInputError>
+where
+    G: Build + Create + Data<NodeWeight = T, EdgeWeight = M> + NodeIndexable + GraphProp,
+    F: FnMut() -> T,
+    H: FnMut() -> M,
+    G::NodeId: Eq + Hash,
+{
+    let num_nodes: usize = sizes.iter().sum();
+    if num_nodes == 0 {
+        return Err(InvalidInputError {});
+    }
+    let num_communities = sizes.len();
+    if probabilities.nrows() != num_communities
+        || probabilities.ncols() != num_communities
+        || probabilities.iter().any(|&x| !(0. ..=1.).contains(&x))
+    {
+        return Err(InvalidInputError {});
+    }
+
+    let mut graph = G::with_capacity(num_nodes, num_nodes);
+    let directed = graph.is_directed();
+    if !directed && !symmetric_array(probabilities) {
+        return Err(InvalidInputError {});
+    }
+
+    for _ in 0..num_nodes {
+        graph.add_node(default_node_weight());
+    }
+    let mut rng: Pcg64 = match seed {
+        Some(seed) => Pcg64::seed_from_u64(seed),
+        None => Pcg64::from_entropy(),
+    };
+    let mut blocks = Vec::new();
+    {
+        let mut block = 0;
+        let mut vertices_left = sizes[0];
+        for _ in 0..num_nodes {
+            while vertices_left == 0 {
+                block += 1;
+                vertices_left = sizes[block];
+            }
+            blocks.push(block);
+            vertices_left -= 1;
+        }
+    }
+
+    let between = Uniform::new(0.0, 1.0);
+    for v in 0..(if directed || loops {
+        num_nodes
+    } else {
+        num_nodes - 1
+    }) {
+        for w in ((if directed { 0 } else { v })..num_nodes).filter(|&w| w != v || loops) {
+            if &between.sample(&mut rng)
+                < probabilities.get((blocks[v], blocks[w])).unwrap_or(&0_f64)
+            {
+                graph.add_edge(
+                    graph.from_index(v),
+                    graph.from_index(w),
+                    default_edge_weight(),
+                );
+            }
+        }
+    }
+    Ok(graph)
+}
+
+fn symmetric_array<T: std::cmp::PartialEq>(mat: &ArrayView2<T>) -> bool {
+    let n = mat.nrows();
+    for (i, row) in mat.rows().into_iter().enumerate().take(n - 1) {
+        for (j, m_ij) in row.iter().enumerate().skip(i + 1) {
+            if m_ij != mat.get((j, i)).unwrap() {
+                return false;
+            }
+        }
+    }
+    true
+}
+
 #[inline]
 fn pnorm(x: f64, p: f64) -> f64 {
-    if p == 1.0 || p == std::f64::INFINITY {
+    if p == 1.0 || p == f64::INFINITY {
         x.abs()
     } else if p == 2.0 {
         x * x
@@ -319,7 +445,7 @@ fn pnorm(x: f64, p: f64) -> f64 {
 fn distance(x: &[f64], y: &[f64], p: f64) -> f64 {
     let it = x.iter().zip(y.iter()).map(|(xi, yi)| pnorm(xi - yi, p));
 
-    if p == std::f64::INFINITY {
+    if p == f64::INFINITY {
         it.fold(-1.0, |max, x| if x > max { x } else { max })
     } else {
         it.sum()
@@ -619,14 +745,150 @@ where
     Ok(graph)
 }
 
+/// Generate a hyperbolic random undirected graph (also called hyperbolic geometric graph).
+///
+/// The hyperbolic random graph model connects pairs of nodes with a probability
+/// that decreases as their hyperbolic distance increases.
+///
+/// The number of nodes and the dimension are inferred from the coordinates `pos` of the
+/// hyperboloid model. The "time" coordinates are inferred from the others, meaning that
+/// at least 2 coordinates must be provided per node. If `beta` is `None`, all pairs of
+/// nodes with a distance smaller than ``r`` are connected.
+///
+/// Arguments:
+///
+/// * `pos` - Hyperboloid model coordinates of the nodes `[p_1, p_2, ...]` where `p_i` is the
+///     position of node i. The "time" coordinates are inferred.
+/// * `beta` - Sigmoid sharpness (nonnegative) of the connection probability.
+/// * `r` - Distance at which the connection probability is 0.5 for the probabilistic model.
+///     Threshold when `beta` is `None`.
+/// * `seed` - An optional seed to use for the random number generator.
+/// * `default_node_weight` - A callable that will return the weight to use
+///     for newly created nodes.
+/// * `default_edge_weight` - A callable that will return the weight object
+///     to use for newly created edges.
+///
+/// # Example
+/// ```rust
+/// use rustworkx_core::petgraph;
+/// use rustworkx_core::generators::hyperbolic_random_graph;
+///
+/// let g: petgraph::graph::UnGraph<(), ()> = hyperbolic_random_graph(
+///     &[vec![3_f64.sinh(), 0.],
+///       vec![-0.5_f64.sinh(), 0.],
+///       vec![-1_f64.sinh(), 0.]],
+///     2.,
+///     None,
+///     None,
+///     || {()},
+///     || {()},
+/// ).unwrap();
+/// assert_eq!(g.node_count(), 3);
+/// assert_eq!(g.edge_count(), 1);
+/// ```
+pub fn hyperbolic_random_graph<G, T, F, H, M>(
+    pos: &[Vec<f64>],
+    r: f64,
+    beta: Option<f64>,
+    seed: Option<u64>,
+    mut default_node_weight: F,
+    mut default_edge_weight: H,
+) -> Result<G, InvalidInputError>
+where
+    G: Build + Create + Data<NodeWeight = T, EdgeWeight = M> + NodeIndexable + GraphProp,
+    F: FnMut() -> T,
+    H: FnMut() -> M,
+    G::NodeId: Eq + Hash,
+{
+    let num_nodes = pos.len();
+    if num_nodes == 0 {
+        return Err(InvalidInputError {});
+    }
+    if pos
+        .iter()
+        .any(|xs| xs.iter().any(|x| x.is_nan() || x.is_infinite()))
+    {
+        return Err(InvalidInputError {});
+    }
+    let dim = pos[0].len();
+    if dim < 2 || pos.iter().any(|x| x.len() != dim) {
+        return Err(InvalidInputError {});
+    }
+    if beta.is_some_and(|b| b < 0. || b.is_nan()) {
+        return Err(InvalidInputError {});
+    }
+    if r < 0. || r.is_nan() {
+        return Err(InvalidInputError {});
+    }
+
+    let mut rng: Pcg64 = match seed {
+        Some(seed) => Pcg64::seed_from_u64(seed),
+        None => Pcg64::from_entropy(),
+    };
+    let mut graph = G::with_capacity(num_nodes, num_nodes);
+    if graph.is_directed() {
+        return Err(InvalidInputError {});
+    }
+
+    for _ in 0..num_nodes {
+        graph.add_node(default_node_weight());
+    }
+
+    let between = Uniform::new(0.0, 1.0);
+    for (v, p1) in pos.iter().enumerate().take(num_nodes - 1) {
+        for (w, p2) in pos.iter().enumerate().skip(v + 1) {
+            let dist = hyperbolic_distance(p1, p2);
+            let is_edge = match beta {
+                Some(b) => {
+                    let prob_inverse = (b / 2. * (dist - r)).exp() + 1.;
+                    let u: f64 = between.sample(&mut rng);
+                    prob_inverse * u < 1.
+                }
+                None => dist < r,
+            };
+            if is_edge {
+                graph.add_edge(
+                    graph.from_index(v),
+                    graph.from_index(w),
+                    default_edge_weight(),
+                );
+            }
+        }
+    }
+    Ok(graph)
+}
+
+#[inline]
+fn hyperbolic_distance(x: &[f64], y: &[f64]) -> f64 {
+    let mut sum_squared_x = 0.;
+    let mut sum_squared_y = 0.;
+    let mut inner_product = 0.;
+    for (x_i, y_i) in x.iter().zip(y.iter()) {
+        if x_i.is_infinite() || y_i.is_infinite() || x_i.is_nan() || y_i.is_nan() {
+            return f64::NAN;
+        }
+        sum_squared_x = x_i.mul_add(*x_i, sum_squared_x);
+        sum_squared_y = y_i.mul_add(*y_i, sum_squared_y);
+        inner_product = x_i.mul_add(*y_i, inner_product);
+    }
+    let arg = (1. + sum_squared_x).sqrt() * (1. + sum_squared_y).sqrt() - inner_product;
+    if arg < 1. {
+        0.
+    } else {
+        arg.acosh()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use crate::generators::InvalidInputError;
     use crate::generators::{
-        barabasi_albert_graph, gnm_random_graph, gnp_random_graph, path_graph,
-        random_bipartite_graph, random_geometric_graph,
+        barabasi_albert_graph, gnm_random_graph, gnp_random_graph, hyperbolic_random_graph,
+        path_graph, random_bipartite_graph, random_geometric_graph, sbm_random_graph,
     };
     use crate::petgraph;
+
+    use super::hyperbolic_distance;
 
     // Test gnp_random_graph
 
@@ -744,6 +1006,165 @@ mod tests {
             0,
             0,
             None,
+            || (),
+            || (),
+        ) {
+            Ok(_) => panic!("Returned a non-error"),
+            Err(e) => assert_eq!(e, InvalidInputError),
+        };
+    }
+
+    // Test sbm_random_graph
+    #[test]
+    fn test_sbm_directed_complete_blocks_loops() {
+        let g = sbm_random_graph::<petgraph::graph::DiGraph<(), ()>, (), _, _, ()>(
+            &vec![1, 2],
+            &ndarray::arr2(&[[0., 1.], [0., 1.]]).view(),
+            true,
+            Some(10),
+            || (),
+            || (),
+        )
+        .unwrap();
+        assert_eq!(g.node_count(), 3);
+        assert_eq!(g.edge_count(), 6);
+        for (u, v) in [(1, 1), (1, 2), (2, 1), (2, 2), (0, 1), (0, 2)] {
+            assert_eq!(g.contains_edge(u.into(), v.into()), true);
+        }
+        assert_eq!(g.contains_edge(1.into(), 0.into()), false);
+        assert_eq!(g.contains_edge(2.into(), 0.into()), false);
+    }
+
+    #[test]
+    fn test_sbm_undirected_complete_blocks_loops() {
+        let g = sbm_random_graph::<petgraph::graph::UnGraph<(), ()>, (), _, _, ()>(
+            &vec![1, 2],
+            &ndarray::arr2(&[[0., 1.], [1., 1.]]).view(),
+            true,
+            Some(10),
+            || (),
+            || (),
+        )
+        .unwrap();
+        assert_eq!(g.node_count(), 3);
+        assert_eq!(g.edge_count(), 5);
+        for (u, v) in [(1, 1), (1, 2), (2, 2), (0, 1), (0, 2)] {
+            assert_eq!(g.contains_edge(u.into(), v.into()), true);
+        }
+        assert_eq!(g.contains_edge(0.into(), 0.into()), false);
+    }
+
+    #[test]
+    fn test_sbm_directed_complete_blocks_noloops() {
+        let g = sbm_random_graph::<petgraph::graph::DiGraph<(), ()>, (), _, _, ()>(
+            &vec![1, 2],
+            &ndarray::arr2(&[[0., 1.], [0., 1.]]).view(),
+            false,
+            Some(10),
+            || (),
+            || (),
+        )
+        .unwrap();
+        assert_eq!(g.node_count(), 3);
+        assert_eq!(g.edge_count(), 4);
+        for (u, v) in [(1, 2), (2, 1), (0, 1), (0, 2)] {
+            assert_eq!(g.contains_edge(u.into(), v.into()), true);
+        }
+        assert_eq!(g.contains_edge(1.into(), 0.into()), false);
+        assert_eq!(g.contains_edge(2.into(), 0.into()), false);
+        for u in 0..2 {
+            assert_eq!(g.contains_edge(u.into(), u.into()), false);
+        }
+    }
+
+    #[test]
+    fn test_sbm_undirected_complete_blocks_noloops() {
+        let g = sbm_random_graph::<petgraph::graph::UnGraph<(), ()>, (), _, _, ()>(
+            &vec![1, 2],
+            &ndarray::arr2(&[[0., 1.], [1., 1.]]).view(),
+            false,
+            Some(10),
+            || (),
+            || (),
+        )
+        .unwrap();
+        assert_eq!(g.node_count(), 3);
+        assert_eq!(g.edge_count(), 3);
+        for (u, v) in [(1, 2), (0, 1), (0, 2)] {
+            assert_eq!(g.contains_edge(u.into(), v.into()), true);
+        }
+        for u in 0..2 {
+            assert_eq!(g.contains_edge(u.into(), u.into()), false);
+        }
+    }
+
+    #[test]
+    fn test_sbm_bad_array_rows_error() {
+        match sbm_random_graph::<petgraph::graph::DiGraph<(), ()>, (), _, _, ()>(
+            &vec![1, 2],
+            &ndarray::arr2(&[[0., 1.], [1., 1.], [1., 1.]]).view(),
+            true,
+            Some(10),
+            || (),
+            || (),
+        ) {
+            Ok(_) => panic!("Returned a non-error"),
+            Err(e) => assert_eq!(e, InvalidInputError),
+        };
+    }
+    #[test]
+
+    fn test_sbm_bad_array_cols_error() {
+        match sbm_random_graph::<petgraph::graph::DiGraph<(), ()>, (), _, _, ()>(
+            &vec![1, 2],
+            &ndarray::arr2(&[[0., 1., 1.], [1., 1., 1.]]).view(),
+            true,
+            Some(10),
+            || (),
+            || (),
+        ) {
+            Ok(_) => panic!("Returned a non-error"),
+            Err(e) => assert_eq!(e, InvalidInputError),
+        };
+    }
+
+    #[test]
+    fn test_sbm_asymmetric_array_error() {
+        match sbm_random_graph::<petgraph::graph::UnGraph<(), ()>, (), _, _, ()>(
+            &vec![1, 2],
+            &ndarray::arr2(&[[0., 1.], [0., 1.]]).view(),
+            true,
+            Some(10),
+            || (),
+            || (),
+        ) {
+            Ok(_) => panic!("Returned a non-error"),
+            Err(e) => assert_eq!(e, InvalidInputError),
+        };
+    }
+
+    #[test]
+    fn test_sbm_invalid_probability_error() {
+        match sbm_random_graph::<petgraph::graph::UnGraph<(), ()>, (), _, _, ()>(
+            &vec![1, 2],
+            &ndarray::arr2(&[[0., 1.], [0., -1.]]).view(),
+            true,
+            Some(10),
+            || (),
+            || (),
+        ) {
+            Ok(_) => panic!("Returned a non-error"),
+            Err(e) => assert_eq!(e, InvalidInputError),
+        };
+    }
+
+    #[test]
+    fn test_sbm_empty_error() {
+        match sbm_random_graph::<petgraph::graph::DiGraph<(), ()>, (), _, _, ()>(
+            &vec![],
+            &ndarray::arr2(&[[]]).view(),
+            true,
+            Some(10),
             || (),
             || (),
         ) {
@@ -915,5 +1336,157 @@ mod tests {
             Ok(_) => panic!("Returned a non-error"),
             Err(e) => assert_eq!(e, InvalidInputError),
         };
+    }
+
+    // Test hyperbolic_random_graph
+    //
+    // Hyperboloid (H^2) "polar" coordinates (r, theta) are transformed to "cartesian"
+    // coordinates using
+    // z = cosh(r)
+    // x = sinh(r)cos(theta)
+    // y = sinh(r)sin(theta)
+
+    #[test]
+    fn test_hyperbolic_dist() {
+        assert_eq!(
+            hyperbolic_distance(&[3_f64.sinh(), 0.], &[-0.5_f64.sinh(), 0.]),
+            3.5
+        );
+    }
+    #[test]
+    fn test_hyperbolic_dist_inf() {
+        assert_eq!(
+            hyperbolic_distance(&[f64::INFINITY, 0.], &[0., 0.]).is_nan(),
+            true
+        );
+    }
+
+    #[test]
+    fn test_hyperbolic_random_graph_seeded() {
+        let g = hyperbolic_random_graph::<petgraph::graph::UnGraph<(), ()>, _, _, _, _>(
+            &[
+                vec![3_f64.sinh(), 0.],
+                vec![-0.5_f64.sinh(), 0.],
+                vec![0.5_f64.sinh(), 0.],
+                vec![0., 0.],
+            ],
+            0.75,
+            Some(10000.),
+            Some(10),
+            || (),
+            || (),
+        )
+        .unwrap();
+        assert_eq!(g.node_count(), 4);
+        assert_eq!(g.edge_count(), 2);
+    }
+
+    #[test]
+    fn test_hyperbolic_random_graph_threshold() {
+        let g = hyperbolic_random_graph::<petgraph::graph::UnGraph<(), ()>, _, _, _, _>(
+            &[
+                vec![3_f64.sinh(), 0.],
+                vec![-0.5_f64.sinh(), 0.],
+                vec![-1_f64.sinh(), 0.],
+            ],
+            1.,
+            None,
+            None,
+            || (),
+            || (),
+        )
+        .unwrap();
+        assert_eq!(g.node_count(), 3);
+        assert_eq!(g.edge_count(), 1);
+    }
+
+    #[test]
+    fn test_hyperbolic_random_graph_invalid_dim_error() {
+        match hyperbolic_random_graph::<petgraph::graph::UnGraph<(), ()>, _, _, _, _>(
+            &[vec![0.]],
+            1.,
+            None,
+            None,
+            || (),
+            || (),
+        ) {
+            Ok(_) => panic!("Returned a non-error"),
+            Err(e) => assert_eq!(e, InvalidInputError),
+        }
+    }
+
+    #[test]
+    fn test_hyperbolic_random_graph_neg_r_error() {
+        match hyperbolic_random_graph::<petgraph::graph::UnGraph<(), ()>, _, _, _, _>(
+            &[vec![0., 0.], vec![0., 0.]],
+            -1.,
+            None,
+            None,
+            || (),
+            || (),
+        ) {
+            Ok(_) => panic!("Returned a non-error"),
+            Err(e) => assert_eq!(e, InvalidInputError),
+        }
+    }
+
+    #[test]
+    fn test_hyperbolic_random_graph_neg_beta_error() {
+        match hyperbolic_random_graph::<petgraph::graph::UnGraph<(), ()>, _, _, _, _>(
+            &[vec![0., 0.], vec![0., 0.]],
+            1.,
+            Some(-1.),
+            None,
+            || (),
+            || (),
+        ) {
+            Ok(_) => panic!("Returned a non-error"),
+            Err(e) => assert_eq!(e, InvalidInputError),
+        }
+    }
+
+    #[test]
+    fn test_hyperbolic_random_graph_diff_dims_error() {
+        match hyperbolic_random_graph::<petgraph::graph::UnGraph<(), ()>, _, _, _, _>(
+            &[vec![0., 0.], vec![0., 0., 0.]],
+            1.,
+            None,
+            None,
+            || (),
+            || (),
+        ) {
+            Ok(_) => panic!("Returned a non-error"),
+            Err(e) => assert_eq!(e, InvalidInputError),
+        }
+    }
+
+    #[test]
+    fn test_hyperbolic_random_graph_empty_error() {
+        match hyperbolic_random_graph::<petgraph::graph::UnGraph<(), ()>, _, _, _, _>(
+            &[],
+            1.,
+            None,
+            None,
+            || (),
+            || (),
+        ) {
+            Ok(_) => panic!("Returned a non-error"),
+            Err(e) => assert_eq!(e, InvalidInputError),
+        }
+    }
+
+    #[test]
+    fn test_hyperbolic_random_graph_directed_error() {
+        match hyperbolic_random_graph::<petgraph::graph::DiGraph<(), ()>, _, _, _, _>(
+            &[vec![0., 0.], vec![0., 0.]],
+            1.,
+            None,
+            None,
+            || (),
+            || (),
+        ) {
+            Ok(_) => panic!("Returned a non-error"),
+            Err(e) => assert_eq!(e, InvalidInputError),
+        }
     }
 }

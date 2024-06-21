@@ -14,7 +14,6 @@ import os
 import subprocess
 import tempfile
 import unittest
-
 import rustworkx
 from rustworkx.visualization import graphviz_draw
 
@@ -150,3 +149,37 @@ class TestGraphvizDraw(unittest.TestCase):
         self.assertTrue(os.path.isfile("test_graphviz_filename.svg"))
         if not SAVE_IMAGES:
             self.addCleanup(os.remove, "test_graphviz_filename.svg")
+
+    def test_escape_sequences(self):
+        # Create a simple graph
+        graph = rustworkx.generators.path_graph(2)
+
+        escape_sequences = {
+            "\\n": "\n",  # Newline
+            "\\t": "\t",  # Horizontal tab
+            "\\'": "'",  # Single quote
+            '\\"': '"',  # Double quote
+            "\\\\": "\\",  # Backslash
+            "\\r": "\r",  # Carriage return
+            "\\b": "\b",  # Backspace
+            "\\f": "\f",  # Form feed
+        }
+
+        for escaped_seq, raw_seq in escape_sequences.items():
+            with self.subTest(chr=ord(raw_seq)):
+
+                def node_attr(node):
+                    """
+                    Define node attributes including escape sequences for labels and tooltips.
+                    """
+                    label = f"label{escaped_seq}"
+                    tooltip = f"tooltip{escaped_seq}"
+                    return {"label": label, "tooltip": tooltip}
+
+                # Draw the graph using graphviz_draw
+                dot_str = graph.to_dot(node_attr)
+
+                # Assert that the escape sequences are correctly placed and escaped in the dot string
+                self.assertIn(
+                    escaped_seq, dot_str, f"Escape sequence {escaped_seq} not found in dot output"
+                )
