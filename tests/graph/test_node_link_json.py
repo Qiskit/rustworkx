@@ -16,6 +16,7 @@ import uuid
 
 import unittest
 import rustworkx
+import networkx as nx
 
 
 class TestNodeLinkJSON(unittest.TestCase):
@@ -144,7 +145,7 @@ class TestNodeLinkJSON(unittest.TestCase):
     def test_round_trip(self):
         graph = rustworkx.generators.path_graph(3)
         res = rustworkx.node_link_json(graph)
-        new = rustworkx.parse_node_link_json_str(res)
+        new = rustworkx.parse_node_link_json(res)
         self.assertIsInstance(new, type(graph))
         self.assertEqual(new.nodes(), graph.nodes())
         self.assertEqual(new.weighted_edge_list(), graph.weighted_edge_list())
@@ -165,11 +166,19 @@ class TestNodeLinkJSON(unittest.TestCase):
                 node_attrs=dict,
                 edge_attrs=dict,
             )
-            new = rustworkx.parse_node_link_json_file(fd.name, graph_attrs=lambda x: x["label"])
+            new = rustworkx.from_node_link_json_file(fd.name, graph_attrs=lambda x: x["label"])
         self.assertIsInstance(new, type(graph))
         self.assertEqual(new.nodes(), graph.nodes())
         self.assertEqual(new.weighted_edge_list(), graph.weighted_edge_list())
         self.assertEqual(new.attrs, graph.attrs)
+
+    def test_round_trip_networkx(self):
+        graph = nx.generators.path_graph(5)
+        node_link_str = json.dumps(nx.node_link_data(graph))
+        new = rustworkx.parse_node_link_json(node_link_str)
+        self.assertIsInstance(new, rustworkx.PyGraph)
+        self.assertEqual(new.num_nodes(), graph.number_of_nodes())
+        self.assertEqual(new.edge_list(), list(graph.edges()))
 
     def test_round_trip_with_file_no_graph_attr(self):
         graph = rustworkx.generators.path_graph(3)
@@ -186,7 +195,7 @@ class TestNodeLinkJSON(unittest.TestCase):
                 node_attrs=dict,
                 edge_attrs=dict,
             )
-            new = rustworkx.parse_node_link_json_file(fd.name)
+            new = rustworkx.from_node_link_json_file(fd.name)
         self.assertIsInstance(new, type(graph))
         self.assertEqual(new.nodes(), graph.nodes())
         self.assertEqual(new.weighted_edge_list(), graph.weighted_edge_list())

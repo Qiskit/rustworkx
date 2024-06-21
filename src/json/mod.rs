@@ -52,7 +52,7 @@ pub fn from_node_link_json_file(
 ) -> PyResult<PyObject> {
     let file = File::open(path)?;
     let reader = BufReader::new(file);
-    let graph: node_link_data::Graph = match serde_json::from_reader(reader) {
+    let graph: node_link_data::GraphInput = match serde_json::from_reader(reader) {
         Ok(v) => v,
         Err(e) => {
             return Err(JSONDeserializationError::new_err(format!(
@@ -127,7 +127,7 @@ pub fn parse_node_link_json(
     node_attrs: Option<PyObject>,
     edge_attrs: Option<PyObject>,
 ) -> PyResult<PyObject> {
-    let graph: node_link_data::Graph = match serde_json::from_str(data) {
+    let graph: node_link_data::GraphInput = match serde_json::from_str(data) {
         Ok(v) => v,
         Err(e) => {
             return Err(JSONDeserializationError::new_err(format!(

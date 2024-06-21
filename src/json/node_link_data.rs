@@ -28,7 +28,7 @@ use crate::JSONSerializationError;
 use crate::NodeIndex;
 use crate::StablePyGraph;
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize)]
 pub struct Graph {
     pub directed: bool,
     pub multigraph: bool,
@@ -37,13 +37,37 @@ pub struct Graph {
     pub links: Vec<Link>,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Deserialize)]
+pub struct GraphInput {
+    pub directed: bool,
+    pub multigraph: bool,
+    pub attrs: Option<BTreeMap<String, String>>,
+    pub nodes: Vec<NodeInput>,
+    pub links: Vec<LinkInput>,
+}
+
+#[derive(Serialize)]
 pub struct Node {
     id: usize,
     data: Option<BTreeMap<String, String>>,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Deserialize)]
+pub struct NodeInput {
+    id: Option<usize>,
+    data: Option<BTreeMap<String, String>>,
+}
+
+#[derive(Deserialize)]
+pub struct LinkInput {
+    source: usize,
+    target: usize,
+    #[allow(dead_code)]
+    id: Option<usize>,
+    data: Option<BTreeMap<String, String>>,
+}
+
+#[derive(Serialize)]
 pub struct Link {
     source: usize,
     target: usize,
@@ -54,7 +78,7 @@ pub struct Link {
 #[allow(clippy::too_many_arguments)]
 pub fn parse_node_link_data<Ty: EdgeType>(
     py: &Python,
-    graph: Graph,
+    graph: GraphInput,
     out_graph: &mut StablePyGraph<Ty>,
     node_attrs: Option<PyObject>,
     edge_attrs: Option<PyObject>,
@@ -69,7 +93,10 @@ pub fn parse_node_link_data<Ty: EdgeType>(
             None => py.None(),
         };
         let id = out_graph.add_node(payload);
-        id_mapping.insert(node.id, id);
+        match node.id {
+            Some(input_id) => id_mapping.insert(input_id, id),
+            None => id_mapping.insert(id.index(), id),
+        };
     }
     for edge in graph.links {
         let data = match edge.data {
