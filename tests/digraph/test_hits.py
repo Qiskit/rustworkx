@@ -93,7 +93,7 @@ def hits_python(G, max_iter=100, tol=1.0e-8, nstart=None, normalized=True):
         if err < tol:
             break
     else:
-        raise nx.PowerIterationFailedConvergence(max_iter)
+        raise ValueError(max_iter)
     if normalized:
         s = 1.0 / sum(a.values())
         for n in a:
