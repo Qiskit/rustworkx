@@ -43,9 +43,9 @@ class TestDot(unittest.TestCase):
         )
         graph.add_edge(0, 1, dict(label="1", name="1"))
         expected = (
-            'digraph {\n0 [color=black, fillcolor=green, label="a", '
-            'style=filled];\n1 [color=black, fillcolor=red, label="a", '
-            'style=filled];\n0 -> 1 [label="1", name=1];\n}\n'
+            'digraph {\n0 [color="black", fillcolor="green", label="a", '
+            'style="filled"];\n1 [color="black", fillcolor="red", label="a", '
+            'style="filled"];\n0 -> 1 [label="1", name="1"];\n}\n'
         )
         res = graph.to_dot(lambda node: node, lambda edge: edge, filename=self.path)
         self.addCleanup(os.remove, self.path)

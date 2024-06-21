@@ -11,8 +11,9 @@
 // under the License.
 
 use hashbrown::{HashMap, HashSet};
+use petgraph::algo;
 use petgraph::visit::{
-    EdgeCount, GraphBase, IntoNeighborsDirected, IntoNodeIdentifiers, NodeCount,
+    EdgeCount, GraphBase, IntoNeighborsDirected, IntoNodeIdentifiers, NodeCount, Visitable,
 };
 use petgraph::Direction::Outgoing;
 use std::hash::Hash;
@@ -57,22 +58,22 @@ where
     G: GraphBase,
     G: NodeCount,
     G: EdgeCount,
-    for<'b> &'b G: GraphBase<NodeId = G::NodeId> + IntoNodeIdentifiers + IntoNeighborsDirected,
+    for<'b> &'b G:
+        GraphBase<NodeId = G::NodeId> + IntoNodeIdentifiers + IntoNeighborsDirected + Visitable,
     G::NodeId: Eq + Hash,
 {
     // Find a cycle in the given graph and return it as a list of edges
-    let mut graph_nodes: HashSet<G::NodeId> = graph.node_identifiers().collect();
     let mut cycle: Vec<(G::NodeId, G::NodeId)> = Vec::with_capacity(graph.edge_count());
-    let temp_value: G::NodeId;
-    // If source is not set get an arbitrary node from the set of graph
-    // nodes we've not "examined"
+    // If source is not set get a node in an arbitrary cycle if it exists,
+    // otherwise return that there is no cycle
     let source_index = match source {
         Some(source_value) => source_value,
-        None => {
-            temp_value = *graph_nodes.iter().next().unwrap();
-            graph_nodes.remove(&temp_value);
-            temp_value
-        }
+        None => match find_node_in_arbitrary_cycle(&graph) {
+            Some(node_in_cycle) => node_in_cycle,
+            None => {
+                return Vec::new();
+            }
+        },
     };
     // Stack (ie "pushdown list") of vertices already in the spanning tree
     let mut stack: Vec<G::NodeId> = vec![source_index];
@@ -119,10 +120,46 @@ where
     cycle
 }
 
+fn find_node_in_arbitrary_cycle<G>(graph: &G) -> Option<G::NodeId>
+where
+    G: GraphBase,
+    G: NodeCount,
+    G: EdgeCount,
+    for<'b> &'b G:
+        GraphBase<NodeId = G::NodeId> + IntoNodeIdentifiers + IntoNeighborsDirected + Visitable,
+    G::NodeId: Eq + Hash,
+{
+    for scc in algo::kosaraju_scc(&graph) {
+        if scc.len() > 1 {
+            return Some(scc[0]);
+        }
+    }
+    for node in graph.node_identifiers() {
+        for neighbor in graph.neighbors_directed(node, Outgoing) {
+            if neighbor == node {
+                return Some(node);
+            }
+        }
+    }
+    None
+}
+
 #[cfg(test)]
 mod tests {
     use crate::connectivity::find_cycle;
     use petgraph::prelude::*;
+
+    // Utility to assert cycles in the response
+    macro_rules! assert_cycle {
+        ($g: expr, $cycle: expr) => {{
+            for i in 0..$cycle.len() {
+                let (s, t) = $cycle[i];
+                assert!($g.contains_edge(s, t));
+                let (next_s, _) = $cycle[(i + 1) % $cycle.len()];
+                assert_eq!(t, next_s);
+            }
+        }};
+    }
 
     #[test]
     fn test_find_cycle_source() {
@@ -141,20 +178,13 @@ mod tests {
             (8, 9),
         ];
         let graph = DiGraph::<i32, i32>::from_edges(edge_list);
-        let mut res: Vec<(usize, usize)> = find_cycle(&graph, Some(NodeIndex::new(0)))
-            .iter()
-            .map(|(s, t)| (s.index(), t.index()))
-            .collect();
-        assert_eq!(res, [(0, 1), (1, 2), (2, 3), (3, 0)]);
-        res = find_cycle(&graph, Some(NodeIndex::new(1)))
-            .iter()
-            .map(|(s, t)| (s.index(), t.index()))
-            .collect();
-        assert_eq!(res, [(1, 2), (2, 3), (3, 0), (0, 1)]);
-        res = find_cycle(&graph, Some(NodeIndex::new(5)))
-            .iter()
-            .map(|(s, t)| (s.index(), t.index()))
-            .collect();
+        for i in [0, 1, 2, 3].iter() {
+            let idx = NodeIndex::new(*i);
+            let res = find_cycle(&graph, Some(idx));
+            assert_cycle!(graph, res);
+            assert_eq!(res[0].0, idx);
+        }
+        let res = find_cycle(&graph, Some(NodeIndex::new(5)));
         assert_eq!(res, []);
     }
 
@@ -176,10 +206,32 @@ mod tests {
         ];
         let mut graph = DiGraph::<i32, i32>::from_edges(edge_list);
         graph.add_edge(NodeIndex::new(1), NodeIndex::new(1), 0);
-        let res: Vec<(usize, usize)> = find_cycle(&graph, Some(NodeIndex::new(0)))
-            .iter()
-            .map(|(s, t)| (s.index(), t.index()))
-            .collect();
-        assert_eq!(res, [(1, 1)]);
+        let res = find_cycle(&graph, Some(NodeIndex::new(0)));
+        assert_eq!(res[0].0, NodeIndex::new(1));
+        assert_cycle!(graph, res);
+    }
+
+    #[test]
+    fn test_self_loop_no_source() {
+        let edge_list = vec![(0, 1), (1, 2), (2, 3), (2, 2)];
+        let graph = DiGraph::<i32, i32>::from_edges(edge_list);
+        let res = find_cycle(&graph, None);
+        assert_cycle!(graph, res);
+    }
+
+    #[test]
+    fn test_cycle_no_source() {
+        let edge_list = vec![(0, 1), (1, 2), (2, 3), (3, 4), (4, 2)];
+        let graph = DiGraph::<i32, i32>::from_edges(edge_list);
+        let res = find_cycle(&graph, None);
+        assert_cycle!(graph, res);
+    }
+
+    #[test]
+    fn test_no_cycle_no_source() {
+        let edge_list = vec![(0, 1), (1, 2), (2, 3)];
+        let graph = DiGraph::<i32, i32>::from_edges(edge_list);
+        let res = find_cycle(&graph, None);
+        assert_eq!(res, []);
     }
 }

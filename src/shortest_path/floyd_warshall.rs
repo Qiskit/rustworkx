@@ -153,7 +153,7 @@ pub fn floyd_warshall_numpy<Ty: EdgeType>(
 ) -> PyResult<(Array2<f64>, Option<Array2<usize>>)> {
     let n = graph.node_count();
     // Allocate empty matrix
-    let mut mat = Array2::<f64>::from_elem((n, n), std::f64::INFINITY);
+    let mut mat = Array2::<f64>::from_elem((n, n), f64::INFINITY);
     let mut next = if generate_successors {
         let mut next = Array2::<usize>::from_elem((n, n), 0);
 

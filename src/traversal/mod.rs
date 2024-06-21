@@ -19,7 +19,9 @@ use dfs_visit::{dfs_handler, PyDfsVisitor};
 use dijkstra_visit::{dijkstra_handler, PyDijkstraVisitor};
 
 use rustworkx_core::traversal::{
-    breadth_first_search, depth_first_search, dfs_edges, dijkstra_search,
+    ancestors as core_ancestors, bfs_predecessors as core_bfs_predecessors,
+    bfs_successors as core_bfs_successors, breadth_first_search, depth_first_search,
+    descendants as core_descendants, dfs_edges, dijkstra_search,
 };
 
 use super::{digraph, graph, iterators, CostFn};
@@ -32,9 +34,7 @@ use pyo3::exceptions::PyTypeError;
 use pyo3::prelude::*;
 use pyo3::Python;
 
-use petgraph::algo;
 use petgraph::graph::NodeIndex;
-use petgraph::visit::{Bfs, NodeCount, Reversed};
 
 use crate::iterators::EdgeList;
 
@@ -144,21 +144,21 @@ pub fn bfs_successors(
     node: usize,
 ) -> iterators::BFSSuccessors {
     let index = NodeIndex::new(node);
-    let mut bfs = Bfs::new(&graph.graph, index);
-    let mut out_list: Vec<(PyObject, Vec<PyObject>)> = Vec::with_capacity(graph.node_count());
-    while let Some(nx) = bfs.next(&graph.graph) {
-        let successors: Vec<PyObject> = graph
-            .graph
-            .neighbors_directed(nx, petgraph::Direction::Outgoing)
-            .map(|pred| graph.graph.node_weight(pred).unwrap().clone_ref(py))
-            .collect();
-        if !successors.is_empty() {
-            out_list.push((
-                graph.graph.node_weight(nx).unwrap().clone_ref(py),
-                successors,
-            ));
-        }
-    }
+    let out_list = core_bfs_successors(&graph.graph, index)
+        .filter_map(|(nx, succ_list)| {
+            if succ_list.is_empty() {
+                None
+            } else {
+                Some((
+                    graph.graph.node_weight(nx).unwrap().clone_ref(py),
+                    succ_list
+                        .into_iter()
+                        .map(|pred| graph.graph.node_weight(pred).unwrap().clone_ref(py))
+                        .collect(),
+                ))
+            }
+        })
+        .collect();
     iterators::BFSSuccessors {
         bfs_successors: out_list,
     }
@@ -185,22 +185,21 @@ pub fn bfs_predecessors(
     node: usize,
 ) -> iterators::BFSPredecessors {
     let index = NodeIndex::new(node);
-    let reverse_graph = Reversed(&graph.graph);
-    let mut bfs = Bfs::new(reverse_graph, index);
-    let mut out_list: Vec<(PyObject, Vec<PyObject>)> = Vec::with_capacity(graph.node_count());
-    while let Some(nx) = bfs.next(reverse_graph) {
-        let predecessors: Vec<PyObject> = graph
-            .graph
-            .neighbors_directed(nx, petgraph::Direction::Incoming)
-            .map(|pred| graph.graph.node_weight(pred).unwrap().clone_ref(py))
-            .collect();
-        if !predecessors.is_empty() {
-            out_list.push((
-                graph.graph.node_weight(nx).unwrap().clone_ref(py),
-                predecessors,
-            ));
-        }
-    }
+    let out_list = core_bfs_predecessors(&graph.graph, index)
+        .filter_map(|(nx, succ_list)| {
+            if succ_list.is_empty() {
+                None
+            } else {
+                Some((
+                    graph.graph.node_weight(nx).unwrap().clone_ref(py),
+                    succ_list
+                        .into_iter()
+                        .map(|pred| graph.graph.node_weight(pred).unwrap().clone_ref(py))
+                        .collect(),
+                ))
+            }
+        })
+        .collect();
     iterators::BFSPredecessors {
         bfs_predecessors: out_list,
     }
@@ -221,16 +220,10 @@ pub fn bfs_predecessors(
 #[pyfunction]
 #[pyo3(text_signature = "(graph, node, /)")]
 pub fn ancestors(graph: &digraph::PyDiGraph, node: usize) -> HashSet<usize> {
-    let index = NodeIndex::new(node);
-    let mut out_set: HashSet<usize> = HashSet::new();
-    let reverse_graph = Reversed(&graph.graph);
-    let res = algo::dijkstra(reverse_graph, index, None, |_| 1);
-    for n in res.keys() {
-        let n_int = n.index();
-        out_set.insert(n_int);
-    }
-    out_set.remove(&node);
-    out_set
+    core_ancestors(&graph.graph, NodeIndex::new(node))
+        .map(|x| x.index())
+        .filter(|x| *x != node)
+        .collect()
 }
 
 /// Return the descendants of a node in a graph.
@@ -249,14 +242,10 @@ pub fn ancestors(graph: &digraph::PyDiGraph, node: usize) -> HashSet<usize> {
 #[pyo3(text_signature = "(graph, node, /)")]
 pub fn descendants(graph: &digraph::PyDiGraph, node: usize) -> HashSet<usize> {
     let index = NodeIndex::new(node);
-    let mut out_set: HashSet<usize> = HashSet::new();
-    let res = algo::dijkstra(&graph.graph, index, None, |_| 1);
-    for n in res.keys() {
-        let n_int = n.index();
-        out_set.insert(n_int);
-    }
-    out_set.remove(&node);
-    out_set
+    core_descendants(&graph.graph, index)
+        .map(|x| x.index())
+        .filter(|x| *x != node)
+        .collect()
 }
 
 /// Breadth-first traversal of a directed graph.

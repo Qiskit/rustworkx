@@ -52,13 +52,6 @@ class TestMaxWeightMatching(unittest.TestCase):
         for (u, v) in rx_matches:
             if (u, v) not in nx_matches:
                 if (v, u) not in nx_matches:
-                    print(
-                        f"seed {seed} failed. Element {(u, v)} and it's "
-                        f"reverse {(v, u)} not found in networkx output.\nrustworkx"
-                        f" output: {rx_matches}\nnetworkx output: {nx_matches}"
-                        f"\nedge list: {list(rx_graph.weighted_edge_list())}\n"
-                        "falling back to checking for a valid solution"
-                    )
                     not_match = True
                     break
         if not_match:

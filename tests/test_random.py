@@ -12,7 +12,9 @@
 
 import unittest
 import random
+import math
 
+import numpy as np
 import rustworkx
 
 
@@ -176,6 +178,87 @@ class TestGNMRandomGraph(unittest.TestCase):
         self.assertEqual(graph.nodes(), [0, 1, 2])
 
 
+class TestRandomSBM(unittest.TestCase):
+    def test_undirected_sbm_complete_blocks_loops(self):
+        graph = rustworkx.undirected_sbm_random_graph(
+            [2, 1], np.array([[1, 1], [1, 0]], dtype=float), True
+        )
+        self.assertEqual(len(graph), 3)
+        self.assertEqual(len(graph.edges()), 5)
+        for i in range(2):
+            for j in range(i, 2):
+                if (i, j) != (2, 2):
+                    self.assertTrue(graph.has_edge(i, j))
+        self.assertFalse(graph.has_edge(2, 2))
+
+    def test_directed_sbm_complete_blocks_loops(self):
+        graph = rustworkx.directed_sbm_random_graph(
+            [2, 1], np.array([[0, 0], [1, 1]], dtype=float), True
+        )
+        self.assertEqual(len(graph), 3)
+        self.assertEqual(len(graph.edges()), 3)
+        self.assertEqual(set(graph.edge_list()), set([(2, 2), (2, 0), (2, 1)]))
+
+    def test_undirected_sbm_complete_blocks_noloops(self):
+        graph = rustworkx.undirected_sbm_random_graph(
+            [2, 1], np.array([[1, 1], [1, 0]], dtype=float), False
+        )
+        self.assertEqual(len(graph), 3)
+        self.assertEqual(len(graph.edges()), 3)
+        for i in range(2):
+            for j in range(i, 2):
+                if i != j:
+                    self.assertTrue(graph.has_edge(i, j))
+
+    def test_directed_sbm_complete_blocks_noloops(self):
+        graph = rustworkx.directed_sbm_random_graph(
+            [2, 1], np.array([[0, 0], [1, 1]], dtype=float), False
+        )
+        self.assertEqual(len(graph), 3)
+        self.assertEqual(len(graph.edges()), 2)
+        self.assertEqual(set(graph.edge_list()), set([(2, 0), (2, 1)]))
+
+    def test_undirected_sbm_asymmetric_probabilities_error(self):
+        with self.assertRaises(ValueError):
+            rustworkx.undirected_sbm_random_graph(
+                [2, 1], np.array([[0, 0], [1, 1]], dtype=float), True
+            )
+
+    def test_sbm_invalid_matrix_dim(self):
+        with self.assertRaises(ValueError):
+            rustworkx.undirected_sbm_random_graph(
+                [2, 1], np.array([[1, 0], [0, 1], [0, 1]], dtype=float), True
+            )
+        with self.assertRaises(ValueError):
+            rustworkx.directed_sbm_random_graph(
+                [2, 1], np.array([[1, 0, 1], [0, 1, 0]], dtype=float), True
+            )
+
+    def test_sbm_invalid_probabilities(self):
+        with self.assertRaises(ValueError):
+            rustworkx.undirected_sbm_random_graph(
+                [2, 1], np.array([[1, 0], [0, 1.5]], dtype=float), True
+            )
+        with self.assertRaises(ValueError):
+            rustworkx.undirected_sbm_random_graph(
+                [2, 1], np.array([[-1, 0], [0, 1]], dtype=float), True
+            )
+        with self.assertRaises(ValueError):
+            rustworkx.directed_sbm_random_graph(
+                [2, 1], np.array([[1, 0], [0, 1.5]], dtype=float), True
+            )
+        with self.assertRaises(ValueError):
+            rustworkx.directed_sbm_random_graph(
+                [2, 1], np.array([[-1, 0], [0, 1]], dtype=float), True
+            )
+
+    def test_sbm_empty(self):
+        with self.assertRaises(ValueError):
+            rustworkx.undirected_sbm_random_graph([], np.array([[]]), True)
+        with self.assertRaises(ValueError):
+            rustworkx.directed_sbm_random_graph([], np.array([[]]), True)
+
+
 class TestGeometricRandomGraph(unittest.TestCase):
     def test_random_geometric_empty(self):
         graph = rustworkx.random_geometric_graph(20, 0)
@@ -222,6 +305,56 @@ class TestGeometricRandomGraph(unittest.TestCase):
     def test_random_geometric_pos_num_nodes_incomp(self):
         with self.assertRaises(ValueError):
             rustworkx.random_geometric_graph(3, 0.15, pos=[[0.5, 0.5]])
+
+
+class TestHyperbolicRandomGraph(unittest.TestCase):
+    def test_hyperbolic_random_threshold_empty(self):
+        graph = rustworkx.hyperbolic_random_graph(
+            [[math.sinh(0.5), 0], [-math.sinh(1), 0]], 1.0, None
+        )
+        self.assertEqual(graph.num_edges(), 0)
+
+    def test_hyperbolic_random_prob_empty(self):
+        graph = rustworkx.hyperbolic_random_graph(
+            [[math.sinh(0.5), 0], [-math.sinh(1), 0]],
+            1.0,
+            500.0,
+            seed=10,
+        )
+        self.assertEqual(graph.num_edges(), 0)
+
+    def test_hyperbolic_random_threshold_complete(self):
+        graph = rustworkx.hyperbolic_random_graph(
+            [[math.sinh(0.5), 0], [-math.sinh(1), 0]],
+            1.55,
+            None,
+        )
+        self.assertEqual(graph.num_edges(), 1)
+
+    def test_hyperbolic_random_prob_complete(self):
+        graph = rustworkx.hyperbolic_random_graph(
+            [[math.sinh(0.5), 0], [-math.sinh(1), 0]],
+            1.55,
+            500.0,
+            seed=10,
+        )
+        self.assertEqual(graph.num_edges(), 1)
+
+    def test_hyperbolic_random_no_pos(self):
+        with self.assertRaises(ValueError):
+            rustworkx.hyperbolic_random_graph([], 1.0, None)
+
+    def test_hyperbolic_random_different_dim_pos(self):
+        with self.assertRaises(ValueError):
+            rustworkx.hyperbolic_random_graph([[0, 0], [0, 0, 0]], 1.0, None)
+
+    def test_hyperbolic_random_neg_r(self):
+        with self.assertRaises(ValueError):
+            rustworkx.hyperbolic_random_graph([[0, 0], [0, 0]], -1.0, None)
+
+    def test_hyperbolic_random_neg_beta(self):
+        with self.assertRaises(ValueError):
+            rustworkx.hyperbolic_random_graph([[0, 0], [0, 0]], 1.0, -1.0)
 
 
 class TestRandomSubGraphIsomorphism(unittest.TestCase):
