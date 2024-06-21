@@ -340,12 +340,12 @@ where
 /// ];
 ///
 /// let graph = DiGraph::<u32, u32>::from_edges(&edge_list);
-/// let layers: Vec<Vec<NodeIndex>> = layers(&graph, vec![0.into(),1.into()]).collect();
+/// let layers: Vec<Vec<NodeIndex>> = layers(&graph, vec![0.into(),]).collect();
 /// let expected_layers: Vec<Vec<NodeIndex>> = vec![
-///     vec![0.into(),1.into()],
-///     vec![1.into(),2.into()],
-///     vec![2.into(),3.into()],
-///     vec![3.into(),4.into()],
+///     vec![0.into(),],
+///     vec![1.into(),],
+///     vec![2.into(),],
+///     vec![3.into(),],
 ///     vec![4.into()]
 /// ];
 /// assert_eq!(layers, expected_layers)
@@ -459,7 +459,7 @@ where
 ///
 /// # Arguments:
 ///
-/// * `dag`: The DAG to find bicolor runs in
+/// * `graph`: The DAG to find bicolor runs in
 /// * `filter_fn`: The filter function to use for matching nodes. It takes
 ///     in one argument, the node data payload/weight object, and will return a
 ///     boolean whether the node matches the conditions or not.
@@ -609,6 +609,161 @@ where
     }
 
     Ok(Some(block_list))
+}
+
+/// Collect runs that match a filter function
+///
+/// A run is a path of nodes where there is only a single successor and all
+/// nodes in the path match the given condition. Each node in the graph can
+/// appear in only a single run.
+///
+/// # Arguments:
+///
+/// * `graph`: The DAG to collect runs from
+/// * `include_node_fn`: A filter function used for matching nodes. It takes
+///     in one argument, the node data payload/weight object, and returns a
+///     boolean whether the node matches the conditions or not.
+///     If it returns ``false``, the node will be skipped, cutting the run it's part of.
+///
+/// # Returns:
+///
+/// * An Iterator object for extracting the runs one by one. Each run is of type `Result<Vec<G::NodeId>>`.
+/// * `None` if a cycle is found in the graph.
+///
+/// # Example
+///
+/// ```rust
+/// use petgraph::graph::DiGraph;
+/// use rustworkx_core::dag_algo::collect_runs;
+///
+/// let mut graph: DiGraph<i32, ()> = DiGraph::new();
+/// let n1 = graph.add_node(-1);
+/// let n2 = graph.add_node(2);
+/// let n3 = graph.add_node(3);
+/// graph.add_edge(n1, n2, ());
+/// graph.add_edge(n1, n3, ());
+///
+/// let positive_payload = |n| -> Result<bool, ()> {Ok(*graph.node_weight(n).expect("i32") > 0)};
+/// let mut runs = collect_runs(&graph, positive_payload).expect("Some");
+///
+/// assert_eq!(runs.next(), Some(Ok(vec![n3])));
+/// assert_eq!(runs.next(), Some(Ok(vec![n2])));
+/// assert_eq!(runs.next(), None);
+/// ```
+///
+pub fn collect_runs<G, F, E>(
+    graph: G,
+    include_node_fn: F,
+) -> Option<impl Iterator<Item = Result<Vec<G::NodeId>, E>>>
+where
+    G: GraphProp<EdgeType = Directed>
+        + IntoNeighborsDirected
+        + IntoNodeIdentifiers
+        + Visitable
+        + NodeCount,
+    F: Fn(G::NodeId) -> Result<bool, E>,
+    <G as GraphBase>::NodeId: Hash + Eq,
+{
+    let mut nodes = match algo::toposort(graph, None) {
+        Ok(nodes) => nodes,
+        Err(_) => return None,
+    };
+
+    nodes.reverse(); // reversing so that pop() in Runs::next obeys the topological order
+
+    let runs = Runs {
+        graph,
+        seen: HashSet::with_capacity(nodes.len()),
+        sorted_nodes: nodes,
+        include_node_fn,
+    };
+
+    Some(runs)
+}
+
+/// Auxiliary struct to make the output of [`collect_runs`] iteratable
+///
+/// If the filtering function passed to [`collect_runs`] returns an error, it is propagated
+/// through `next` as `Err`. In this case the run in which the error occurred will be skipped
+/// but the iterator can be used further until consumed.
+///
+struct Runs<G, F, E>
+where
+    G: GraphProp<EdgeType = Directed>
+        + IntoNeighborsDirected
+        + IntoNodeIdentifiers
+        + Visitable
+        + NodeCount,
+    F: Fn(G::NodeId) -> Result<bool, E>,
+{
+    graph: G,
+    sorted_nodes: Vec<G::NodeId>, // topologically-sorted nodes
+    seen: HashSet<G::NodeId>,
+    include_node_fn: F, // filtering function of the nodes
+}
+
+impl<G, F, E> Iterator for Runs<G, F, E>
+where
+    G: GraphProp<EdgeType = Directed>
+        + IntoNeighborsDirected
+        + IntoNodeIdentifiers
+        + Visitable
+        + NodeCount,
+    F: Fn(G::NodeId) -> Result<bool, E>,
+    <G as GraphBase>::NodeId: Hash + Eq,
+{
+    // This is a run, wrapped in Result for catching filter function errors
+    type Item = Result<Vec<G::NodeId>, E>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        while let Some(node) = self.sorted_nodes.pop() {
+            if self.seen.contains(&node) {
+                continue;
+            }
+            self.seen.insert(node);
+
+            match (self.include_node_fn)(node) {
+                Ok(false) => continue,
+                Err(e) => return Some(Err(e)),
+                _ => (),
+            }
+
+            let mut run: Vec<G::NodeId> = vec![node];
+            loop {
+                let mut successors: Vec<G::NodeId> = self
+                    .graph
+                    .neighbors_directed(*run.last().unwrap(), petgraph::Direction::Outgoing)
+                    .collect();
+                successors.dedup();
+
+                if successors.len() != 1 || self.seen.contains(&successors[0]) {
+                    break;
+                }
+
+                self.seen.insert(successors[0]);
+
+                match (self.include_node_fn)(successors[0]) {
+                    Ok(false) => continue,
+                    Err(e) => return Some(Err(e)),
+                    _ => (),
+                }
+
+                run.push(successors[0]);
+            }
+
+            if !run.is_empty() {
+                return Some(Ok(run));
+            }
+        }
+
+        None
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        // Lower bound is 0 in case all remaining nodes are filtered out
+        // Upper bound is the remaining unprocessed nodes (some of which may be seen already), potentially all resulting with singleton runs
+        (0, Some(self.sorted_nodes.len()))
+    }
 }
 
 // Tests for longest_path
@@ -1192,5 +1347,127 @@ mod test_collect_bicolor_runs {
         let result = collect_bicolor_runs(&graph, test_filter_fn, test_color_fn).unwrap();
         let expected: Vec<Vec<NodeIndex>> = vec![vec![n2, n3, n4, n5]]; //[[h, cx, cz, y]]
         assert_eq!(result, Some(expected))
+    }
+}
+
+#[cfg(test)]
+mod test_collect_runs {
+    use super::collect_runs;
+    use petgraph::{graph::DiGraph, visit::GraphBase};
+
+    type BareDiGraph = DiGraph<(), ()>;
+    type RunResult = Result<Vec<<BareDiGraph as GraphBase>::NodeId>, ()>;
+
+    #[test]
+    fn test_empty_graph() {
+        let graph: BareDiGraph = DiGraph::new();
+
+        let mut runs = collect_runs(&graph, |_| -> Result<bool, ()> { Ok(true) }).expect("Some");
+
+        let run = runs.next();
+        assert!(run == None);
+
+        let runs = collect_runs(&graph, |_| -> Result<bool, ()> { Ok(true) }).expect("Some");
+
+        let runs: Vec<RunResult> = runs.collect();
+
+        assert_eq!(runs, Vec::<RunResult>::new());
+    }
+
+    #[test]
+    fn test_simple_run_w_filter() {
+        let mut graph: BareDiGraph = DiGraph::new();
+        let n1 = graph.add_node(());
+        let n2 = graph.add_node(());
+        let n3 = graph.add_node(());
+        graph.add_edge(n1, n2, ());
+        graph.add_edge(n2, n3, ());
+
+        let mut runs = collect_runs(&graph, |_| -> Result<bool, ()> { Ok(true) }).expect("Some");
+
+        let the_run = runs.next().expect("Some").expect("3 nodes");
+        assert_eq!(the_run.len(), 3);
+        assert_eq!(runs.next(), None);
+
+        assert_eq!(the_run, vec![n1, n2, n3]);
+
+        // Now with some filters
+        let mut runs = collect_runs(&graph, |_| -> Result<bool, ()> { Ok(false) }).expect("Some");
+
+        assert_eq!(runs.next(), None);
+
+        let mut runs = collect_runs(&graph, |n| -> Result<bool, ()> { Ok(n != n2) }).expect("Some");
+
+        assert_eq!(runs.next(), Some(Ok(vec![n1])));
+        assert_eq!(runs.next(), Some(Ok(vec![n3])));
+    }
+
+    #[test]
+    fn test_multiple_runs_w_filter() {
+        let mut graph: BareDiGraph = DiGraph::new();
+        let n1 = graph.add_node(());
+        let n2 = graph.add_node(());
+        let n3 = graph.add_node(());
+        let n4 = graph.add_node(());
+        let n5 = graph.add_node(());
+        let n6 = graph.add_node(());
+        let n7 = graph.add_node(());
+
+        graph.add_edge(n1, n2, ());
+        graph.add_edge(n2, n3, ());
+        graph.add_edge(n3, n7, ());
+        graph.add_edge(n4, n3, ());
+        graph.add_edge(n4, n7, ());
+        graph.add_edge(n5, n4, ());
+        graph.add_edge(n6, n5, ());
+
+        let runs: Vec<RunResult> = collect_runs(&graph, |_| -> Result<bool, ()> { Ok(true) })
+            .expect("Some")
+            .collect();
+
+        assert_eq!(runs, vec![Ok(vec![n6, n5, n4]), Ok(vec![n1, n2, n3, n7])]);
+
+        // And now with some filter
+        let runs: Vec<RunResult> =
+            collect_runs(&graph, |n| -> Result<bool, ()> { Ok(n != n4 && n != n2) })
+                .expect("Some")
+                .collect();
+
+        assert_eq!(runs, vec![Ok(vec![n6, n5]), Ok(vec![n1]), Ok(vec![n3, n7])]);
+    }
+
+    #[test]
+    fn test_singleton_runs_w_filter() {
+        let mut graph: BareDiGraph = DiGraph::new();
+        let n1 = graph.add_node(());
+        let n2 = graph.add_node(());
+        let n3 = graph.add_node(());
+
+        graph.add_edge(n1, n2, ());
+        graph.add_edge(n1, n3, ());
+
+        let mut runs = collect_runs(&graph, |_| -> Result<bool, ()> { Ok(true) }).expect("Some");
+
+        assert_eq!(runs.next().expect("n1"), Ok(vec![n1]));
+        assert_eq!(runs.next().expect("n3"), Ok(vec![n3]));
+        assert_eq!(runs.next().expect("n2"), Ok(vec![n2]));
+
+        // And now with some filter
+        let runs: Vec<RunResult> = collect_runs(&graph, |n| -> Result<bool, ()> { Ok(n != n1) })
+            .expect("Some")
+            .collect();
+
+        assert_eq!(runs, vec![Ok(vec![n3]), Ok(vec![n2])]);
+    }
+
+    #[test]
+    fn test_error_propagation() {
+        let mut graph: BareDiGraph = DiGraph::new();
+        graph.add_node(());
+
+        let mut runs = collect_runs(&graph, |_| -> Result<bool, ()> { Err(()) }).expect("Some");
+
+        assert!(runs.next().expect("Some").is_err());
+        assert_eq!(runs.next(), None);
     }
 }

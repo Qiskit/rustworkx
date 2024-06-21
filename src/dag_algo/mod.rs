@@ -20,6 +20,7 @@ use super::iterators::NodeIndices;
 use crate::{digraph, DAGHasCycle, InvalidNode, StablePyGraph};
 
 use rustworkx_core::dag_algo::collect_bicolor_runs as core_collect_bicolor_runs;
+use rustworkx_core::dag_algo::collect_runs as core_collect_runs;
 use rustworkx_core::dag_algo::lexicographical_topological_sort as core_lexico_topo_sort;
 use rustworkx_core::dag_algo::longest_path as core_longest_path;
 use rustworkx_core::traversal::dfs_edges;
@@ -30,10 +31,9 @@ use pyo3::types::PyList;
 use pyo3::Python;
 
 use petgraph::algo;
-use petgraph::graph::NodeIndex;
 use petgraph::prelude::*;
 use petgraph::stable_graph::EdgeReference;
-use petgraph::visit::{NodeCount, NodeIndexable};
+use petgraph::visit::NodeIndexable;
 
 use num_traits::{Num, Zero};
 
@@ -501,47 +501,28 @@ pub fn collect_runs(
     graph: &digraph::PyDiGraph,
     filter_fn: PyObject,
 ) -> PyResult<Vec<Vec<PyObject>>> {
-    let mut out_list: Vec<Vec<PyObject>> = Vec::new();
-    let mut seen: HashSet<NodeIndex> = HashSet::with_capacity(graph.node_count());
-
-    let filter_node = |node: &PyObject| -> PyResult<bool> {
-        let res = filter_fn.call1(py, (node,))?;
-        res.extract(py)
+    let filter_node = |node_id| -> Result<bool, PyErr> {
+        let py_node = graph.graph.node_weight(node_id);
+        filter_fn.call1(py, (py_node,))?.extract::<bool>(py)
     };
 
-    let nodes = match algo::toposort(&graph.graph, None) {
-        Ok(nodes) => nodes,
-        Err(_err) => return Err(DAGHasCycle::new_err("Sort encountered a cycle")),
+    let core_runs = match core_collect_runs(&graph.graph, filter_node) {
+        Some(runs) => runs,
+        None => return Err(DAGHasCycle::new_err("The DAG contains a cycle")),
     };
-    for node in nodes {
-        if !filter_node(&graph.graph[node])? || seen.contains(&node) {
-            continue;
-        }
-        seen.insert(node);
-        let mut group: Vec<PyObject> = vec![graph.graph[node].clone_ref(py)];
-        let mut successors: Vec<NodeIndex> = graph
-            .graph
-            .neighbors_directed(node, petgraph::Direction::Outgoing)
+
+    let mut result: Vec<Vec<PyObject>> = Vec::with_capacity(core_runs.size_hint().1.unwrap_or(0));
+    for run_result in core_runs {
+        // This is where a filter function error will be returned, otherwise Result is stripped away
+        let py_run: Vec<PyObject> = run_result?
+            .iter()
+            .map(|node| return graph.graph.node_weight(*node).into_py(py))
             .collect();
-        successors.dedup();
 
-        while successors.len() == 1
-            && filter_node(&graph.graph[successors[0]])?
-            && !seen.contains(&successors[0])
-        {
-            group.push(graph.graph[successors[0]].clone_ref(py));
-            seen.insert(successors[0]);
-            successors = graph
-                .graph
-                .neighbors_directed(successors[0], petgraph::Direction::Outgoing)
-                .collect();
-            successors.dedup();
-        }
-        if !group.is_empty() {
-            out_list.push(group);
-        }
+        result.push(py_run)
     }
-    Ok(out_list)
+
+    Ok(result)
 }
 
 /// Collect runs that match a filter function given edge colors.

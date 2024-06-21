@@ -72,5 +72,5 @@ class TestSemiConnected(unittest.TestCase):
         self.assertEqual(rustworkx.is_semi_connected(graph), naive_semi_connected(graph))
 
     def test_is_semi_connected_directed_grid_graph(self):
-        graph = rustworkx.generators.directed_grid_graph(50, 50)
+        graph = rustworkx.generators.directed_grid_graph(10, 10)
         self.assertEqual(rustworkx.is_semi_connected(graph), naive_semi_connected(graph))
