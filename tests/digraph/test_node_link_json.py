@@ -16,6 +16,7 @@ import uuid
 
 import unittest
 import rustworkx
+import networkx as nx
 
 
 class TestNodeLinkJSON(unittest.TestCase):
@@ -140,3 +141,81 @@ class TestNodeLinkJSON(unittest.TestCase):
         res = rustworkx.node_link_json(graph)
         expected = {"attrs": None, "directed": True, "links": [], "multigraph": False, "nodes": []}
         self.assertEqual(json.loads(res), expected)
+
+    def test_round_trip(self):
+        graph = rustworkx.generators.directed_path_graph(123)
+        res = rustworkx.node_link_json(graph)
+        new = rustworkx.parse_node_link_json(res)
+        self.assertIsInstance(new, type(graph))
+        self.assertEqual(new.nodes(), graph.nodes())
+        self.assertEqual(new.weighted_edge_list(), graph.weighted_edge_list())
+        self.assertEqual(new.attrs, graph.attrs)
+
+    def test_round_trip_file(self):
+        graph = rustworkx.generators.directed_heavy_hex_graph(19)
+        graph.attrs = "directed_heavy_hex_graph"
+        for node in graph.node_indices():
+            graph[node] = {"nodeLabel": f"node={node}"}
+        for edge, (source, target, _weight) in graph.edge_index_map().items():
+            graph.update_edge_by_index(edge, {"edgeLabel": f"{source}-          >{target}"})
+        with tempfile.NamedTemporaryFile() as fd:
+            rustworkx.node_link_json(
+                graph,
+                path=fd.name,
+                graph_attrs=lambda x: {"label": x},
+                node_attrs=dict,
+                edge_attrs=dict,
+            )
+            new = rustworkx.from_node_link_json_file(fd.name, graph_attrs=lambda x: x["label"])
+        self.assertIsInstance(new, type(graph))
+        self.assertEqual(new.nodes(), graph.nodes())
+        self.assertEqual(new.weighted_edge_list(), graph.weighted_edge_list())
+        self.assertEqual(new.attrs, graph.attrs)
+
+    def test_round_trip_networkx(self):
+        graph = nx.generators.path_graph(5, create_using=nx.DiGraph)
+        node_link_str = json.dumps(nx.node_link_data(graph))
+        new = rustworkx.parse_node_link_json(node_link_str)
+        self.assertIsInstance(new, rustworkx.PyDiGraph)
+        self.assertEqual(new.num_nodes(), graph.number_of_nodes())
+        self.assertEqual(new.edge_list(), list(graph.edges()))
+
+    def test_round_trip_file_no_callback(self):
+        graph = rustworkx.generators.directed_heavy_hex_graph(19)
+        graph.attrs = "directed_heavy_hex_graph"
+        for node in graph.node_indices():
+            graph[node] = {"nodeLabel": f"node={node}"}
+        for edge, (source, target, _weight) in graph.edge_index_map().items():
+            graph.update_edge_by_index(edge, {"edgeLabel": f"{source}-          >{target}"})
+        with tempfile.NamedTemporaryFile() as fd:
+            rustworkx.node_link_json(
+                graph,
+                path=fd.name,
+                graph_attrs=lambda x: {"label": x},
+                node_attrs=dict,
+                edge_attrs=dict,
+            )
+            new = rustworkx.from_node_link_json_file(fd.name)
+        self.assertIsInstance(new, type(graph))
+        self.assertEqual(new.nodes(), graph.nodes())
+        self.assertEqual(new.weighted_edge_list(), graph.weighted_edge_list())
+        self.assertEqual(new.attrs, {"label": graph.attrs})
+
+    def test_invalid_path(self):
+        with self.assertRaises(FileNotFoundError):
+            rustworkx.from_node_link_json_file("/invalid_path/I_AM_INVALID.json")
+
+    def test_not_JSON(self):
+        invalid_input = """<?xml version="1.0" encoding="UTF-8"?>
+<graphml xmlns="http://graphml.graphdrawing.org/xmlns"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://graphml.graphdrawing.org/xmlns/1.0/graphml.xsd">
+  <graph id="G" edgedefault="undirected">
+    <node id="n0"/>
+    <node id="n1"/>
+    <edge id="e1" source="n0" target="n1"/>
+  </graph>
+</graphml>
+"""
+        with self.assertRaises(rustworkx.JSONDeserializationError):
+            rustworkx.parse_node_link_json(invalid_input)
