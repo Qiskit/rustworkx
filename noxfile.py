@@ -8,7 +8,6 @@ deps = [
   "fixtures",
   "testtools>=2.5.0",
   "networkx>=2.5",
-  "scipy>=1.7",
   "stestr>=4.1",
 ]
 
