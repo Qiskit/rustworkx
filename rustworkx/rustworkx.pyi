@@ -1139,7 +1139,15 @@ class AllPairsMultiplePathMapping(_RustworkxCustomHashMapIter[int, MultiplePathM
 class PyGraph(Generic[_S, _T]):
     attrs: Any
     multigraph: bool = ...
-    def __init__(self, /, multigraph: bool = ...) -> None: ...
+    def __init__(
+        self,
+        /,
+        multigraph: bool = ...,
+        attrs: object = ...,
+        *,
+        node_count_hint: int | None = ...,
+        edge_count_hint: int | None = ...,
+    ) -> None: ...
     def add_edge(self, node_a: int, node_b: int, edge: _T, /) -> int: ...
     def add_edges_from(
         self,
@@ -1287,8 +1295,8 @@ class PyDiGraph(Generic[_S, _T]):
         multigraph: bool = ...,
         attrs: object = ...,
         *,
-        initial_node_count: int = ...,
-        initial_edge_count: int = ...,
+        node_count_hint: int | None = ...,
+        edge_count_hint: int | None = ...,
     ) -> None: ...
     def add_child(self, parent: int, obj: _S, edge: _T, /) -> int: ...
     def add_edge(self, parent: int, child: int, edge: _T, /) -> int: ...
