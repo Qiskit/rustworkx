@@ -12,10 +12,164 @@
 
 mod node_link_data;
 
-use crate::{digraph, graph};
+use std::fs::File;
+use std::io::BufReader;
+
+use crate::{digraph, graph, JSONDeserializationError, StablePyGraph};
+use petgraph::{algo, Directed, Undirected};
 
 use pyo3::prelude::*;
 use pyo3::Python;
+
+/// Parse a node-link format JSON file to generate a graph
+///
+/// :param path str: The path to the JSON file to load
+/// :param graph_attrs: An optional callable that will be passed a dictionary
+///     with string keys and string values and is expected to return a Python
+///     object to use for :attr:`~.PyGraph.attrs` attribute of the output graph.
+///     If not specified the dictionary with string keys and string values will
+///     be used as the value for ``attrs``.
+/// :param node_attrs: An optional callable that will be passed a dictionary with
+///     string keys and string values representing the data payload
+///     for each node in the graph and is expected to return a Python object to
+///     use for the data payload of the node. If not specified the dictionary with
+///     string keys and string values will be used for the nodes' data payload.
+/// :param edge_attrs:  An optional callable that will be passed a dictionary with
+///     string keys and string values representing the data payload
+///     for each edge in the graph and is expected to return a Python object to
+///     use for the data payload of the node. If not specified the dictionary with
+///     string keys and string values will be used for the edge' data payload.
+///
+/// :returns: The graph represented by the node link JSON
+/// :rtype: PyGraph | PyDiGraph
+#[pyfunction]
+pub fn from_node_link_json_file(
+    py: Python,
+    path: &str,
+    graph_attrs: Option<PyObject>,
+    node_attrs: Option<PyObject>,
+    edge_attrs: Option<PyObject>,
+) -> PyResult<PyObject> {
+    let file = File::open(path)?;
+    let reader = BufReader::new(file);
+    let graph: node_link_data::GraphInput = match serde_json::from_reader(reader) {
+        Ok(v) => v,
+        Err(e) => {
+            return Err(JSONDeserializationError::new_err(format!(
+                "JSON Deserialization Error {}",
+                e
+            )));
+        }
+    };
+    let attrs: PyObject = match graph.attrs {
+        Some(ref attrs) => match graph_attrs {
+            Some(ref callback) => callback.call1(py, (attrs.clone(),))?,
+            None => attrs.to_object(py),
+        },
+        None => py.None(),
+    };
+    let multigraph = graph.multigraph;
+
+    Ok(if graph.directed {
+        let mut inner_graph: StablePyGraph<Directed> =
+            StablePyGraph::with_capacity(graph.nodes.len(), graph.links.len());
+        node_link_data::parse_node_link_data(&py, graph, &mut inner_graph, node_attrs, edge_attrs)?;
+        digraph::PyDiGraph {
+            graph: inner_graph,
+            cycle_state: algo::DfsSpace::default(),
+            check_cycle: false,
+            node_removed: false,
+            multigraph,
+            attrs,
+        }
+        .into_py(py)
+    } else {
+        let mut inner_graph: StablePyGraph<Undirected> =
+            StablePyGraph::with_capacity(graph.nodes.len(), graph.links.len());
+        node_link_data::parse_node_link_data(&py, graph, &mut inner_graph, node_attrs, edge_attrs)?;
+
+        graph::PyGraph {
+            graph: inner_graph,
+            node_removed: false,
+            multigraph,
+            attrs,
+        }
+        .into_py(py)
+    })
+}
+
+/// Parse a node-link format JSON str to generate a graph
+///
+/// :param data str: The JSON str to parse
+/// :param graph_attrs: An optional callable that will be passed a dictionary
+///     with string keys and string values and is expected to return a Python
+///     object to use for :attr:`~.PyGraph.attrs` attribute of the output graph.
+///     If not specified the dictionary with string keys and string values will
+///     be used as the value for ``attrs``.
+/// :param node_attrs: An optional callable that will be passed a dictionary with
+///     string keys and string values representing the data payload
+///     for each node in the graph and is expected to return a Python object to
+///     use for the data payload of the node. If not specified the dictionary with
+///     string keys and string values will be used for the nodes' data payload.
+/// :param edge_attrs:  An optional callable that will be passed a dictionary with
+///     string keys and string values representing the data payload
+///     for each edge in the graph and is expected to return a Python object to
+///     use for the data payload of the node. If not specified the dictionary with
+///     string keys and string values will be used for the edge' data payload.
+///
+/// :returns: The graph represented by the node link JSON
+/// :rtype: PyGraph | PyDiGraph
+#[pyfunction]
+pub fn parse_node_link_json(
+    py: Python,
+    data: &str,
+    graph_attrs: Option<PyObject>,
+    node_attrs: Option<PyObject>,
+    edge_attrs: Option<PyObject>,
+) -> PyResult<PyObject> {
+    let graph: node_link_data::GraphInput = match serde_json::from_str(data) {
+        Ok(v) => v,
+        Err(e) => {
+            return Err(JSONDeserializationError::new_err(format!(
+                "JSON Deserialization Error {}",
+                e
+            )));
+        }
+    };
+    let attrs: PyObject = match graph.attrs {
+        Some(ref attrs) => match graph_attrs {
+            Some(ref callback) => callback.call1(py, (attrs.clone(),))?,
+            None => attrs.to_object(py),
+        },
+        None => py.None(),
+    };
+    let multigraph = graph.multigraph;
+    Ok(if graph.directed {
+        let mut inner_graph: StablePyGraph<Directed> =
+            StablePyGraph::with_capacity(graph.nodes.len(), graph.links.len());
+        node_link_data::parse_node_link_data(&py, graph, &mut inner_graph, node_attrs, edge_attrs)?;
+        digraph::PyDiGraph {
+            graph: inner_graph,
+            cycle_state: algo::DfsSpace::default(),
+            check_cycle: false,
+            node_removed: false,
+            multigraph,
+            attrs,
+        }
+        .into_py(py)
+    } else {
+        let mut inner_graph: StablePyGraph<Undirected> =
+            StablePyGraph::with_capacity(graph.nodes.len(), graph.links.len());
+        node_link_data::parse_node_link_data(&py, graph, &mut inner_graph, node_attrs, edge_attrs)?;
+        graph::PyGraph {
+            graph: inner_graph,
+            node_removed: false,
+            multigraph,
+            attrs,
+        }
+        .into_py(py)
+    })
+}
 
 /// Generate a JSON object representing a :class:`~.PyDiGraph` in a node-link format
 ///

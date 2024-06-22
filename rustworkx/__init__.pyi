@@ -30,6 +30,7 @@ from .rustworkx import NoSuitableNeighbors as NoSuitableNeighbors
 from .rustworkx import NullGraph as NullGraph
 from .rustworkx import NegativeCycle as NegativeCycle
 from .rustworkx import JSONSerializationError as JSONSerializationError
+from .rustworkx import JSONDeserializationError as JSONDeserializationError
 from .rustworkx import FailedToConverge as FailedToConverge
 from .rustworkx import InvalidMapping as InvalidMapping
 from .rustworkx import GraphNotBipartite as GraphNotBipartite
@@ -141,6 +142,8 @@ from .rustworkx import directed_random_bipartite_graph as directed_random_bipart
 from .rustworkx import read_graphml as read_graphml
 from .rustworkx import digraph_node_link_json as digraph_node_link_json
 from .rustworkx import graph_node_link_json as graph_node_link_json
+from .rustworkx import from_node_link_json_file as from_node_link_json_file
+from .rustworkx import parse_node_link_json as parse_node_link_json
 from .rustworkx import digraph_bellman_ford_shortest_paths as digraph_bellman_ford_shortest_paths
 from .rustworkx import graph_bellman_ford_shortest_paths as graph_bellman_ford_shortest_paths
 from .rustworkx import (

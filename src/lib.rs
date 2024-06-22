@@ -376,6 +376,8 @@ import_exception!(rustworkx.visit, PruneSearch);
 import_exception!(rustworkx.visit, StopSearch);
 // JSON Error
 create_exception!(rustworkx, JSONSerializationError, PyException);
+// JSON Error
+create_exception!(rustworkx, JSONDeserializationError, PyException);
 // Negative Cycle found on shortest-path algorithm
 create_exception!(rustworkx, NegativeCycle, PyException);
 // Failed to Converge on a solution
@@ -409,6 +411,10 @@ fn rustworkx(py: Python<'_>, m: &Bound<PyModule>) -> PyResult<()> {
     m.add(
         "GraphNotBipartite",
         py.get_type_bound::<GraphNotBipartite>(),
+    )?;
+    m.add(
+        "JSONDeserializationError",
+        py.get_type_bound::<JSONDeserializationError>(),
     )?;
     m.add_wrapped(wrap_pyfunction!(bfs_successors))?;
     m.add_wrapped(wrap_pyfunction!(bfs_predecessors))?;
@@ -588,6 +594,8 @@ fn rustworkx(py: Python<'_>, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(read_graphml))?;
     m.add_wrapped(wrap_pyfunction!(digraph_node_link_json))?;
     m.add_wrapped(wrap_pyfunction!(graph_node_link_json))?;
+    m.add_wrapped(wrap_pyfunction!(from_node_link_json_file))?;
+    m.add_wrapped(wrap_pyfunction!(parse_node_link_json))?;
     m.add_wrapped(wrap_pyfunction!(pagerank))?;
     m.add_wrapped(wrap_pyfunction!(hits))?;
     m.add_class::<digraph::PyDiGraph>()?;
