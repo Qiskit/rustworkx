@@ -13,6 +13,8 @@
 use std::collections::BTreeMap;
 use std::fs::File;
 
+use hashbrown::HashMap;
+
 use serde::{Deserialize, Serialize};
 
 use pyo3::prelude::*;
@@ -23,29 +25,90 @@ use petgraph::visit::IntoEdgeReferences;
 use petgraph::EdgeType;
 
 use crate::JSONSerializationError;
+use crate::NodeIndex;
 use crate::StablePyGraph;
 
-#[derive(Serialize, Deserialize)]
-struct Graph {
-    directed: bool,
-    multigraph: bool,
-    attrs: Option<BTreeMap<String, String>>,
-    nodes: Vec<Node>,
-    links: Vec<Link>,
+#[derive(Serialize)]
+pub struct Graph {
+    pub directed: bool,
+    pub multigraph: bool,
+    pub attrs: Option<BTreeMap<String, String>>,
+    pub nodes: Vec<Node>,
+    pub links: Vec<Link>,
 }
 
-#[derive(Serialize, Deserialize)]
-struct Node {
+#[derive(Deserialize)]
+pub struct GraphInput {
+    pub directed: bool,
+    pub multigraph: bool,
+    pub attrs: Option<BTreeMap<String, String>>,
+    pub nodes: Vec<NodeInput>,
+    pub links: Vec<LinkInput>,
+}
+
+#[derive(Serialize)]
+pub struct Node {
     id: usize,
     data: Option<BTreeMap<String, String>>,
 }
 
-#[derive(Serialize, Deserialize)]
-struct Link {
+#[derive(Deserialize)]
+pub struct NodeInput {
+    id: Option<usize>,
+    data: Option<BTreeMap<String, String>>,
+}
+
+#[derive(Deserialize)]
+pub struct LinkInput {
+    source: usize,
+    target: usize,
+    #[allow(dead_code)]
+    id: Option<usize>,
+    data: Option<BTreeMap<String, String>>,
+}
+
+#[derive(Serialize)]
+pub struct Link {
     source: usize,
     target: usize,
     id: usize,
     data: Option<BTreeMap<String, String>>,
+}
+
+#[allow(clippy::too_many_arguments)]
+pub fn parse_node_link_data<Ty: EdgeType>(
+    py: &Python,
+    graph: GraphInput,
+    out_graph: &mut StablePyGraph<Ty>,
+    node_attrs: Option<PyObject>,
+    edge_attrs: Option<PyObject>,
+) -> PyResult<()> {
+    let mut id_mapping: HashMap<usize, NodeIndex> = HashMap::with_capacity(graph.nodes.len());
+    for node in graph.nodes {
+        let payload = match node.data {
+            Some(data) => match node_attrs {
+                Some(ref callback) => callback.call1(*py, (data,))?,
+                None => data.to_object(*py),
+            },
+            None => py.None(),
+        };
+        let id = out_graph.add_node(payload);
+        match node.id {
+            Some(input_id) => id_mapping.insert(input_id, id),
+            None => id_mapping.insert(id.index(), id),
+        };
+    }
+    for edge in graph.links {
+        let data = match edge.data {
+            Some(data) => match edge_attrs {
+                Some(ref callback) => callback.call1(*py, (data,))?,
+                None => data.to_object(*py),
+            },
+            None => py.None(),
+        };
+        out_graph.add_edge(id_mapping[&edge.source], id_mapping[&edge.target], data);
+    }
+    Ok(())
 }
 
 #[allow(clippy::too_many_arguments)]

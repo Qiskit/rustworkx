@@ -8,7 +8,6 @@ deps = [
   "fixtures",
   "testtools>=2.5.0",
   "networkx>=2.5",
-  "scipy>=1.7",
   "stestr>=4.1",
 ]
 
@@ -33,7 +32,7 @@ def install_rustworkx(session):
 def base_test(session):
     install_rustworkx(session)
     session.chdir("tests")
-    session.run("python", "-m", "unittest", "discover", *session.posargs)
+    session.run("stestr", "run", *session.posargs)
 
 @nox.session(python=["3"])
 def test(session):

@@ -21,8 +21,9 @@ use super::{
 };
 
 use hashbrown::{HashMap, HashSet};
-
 use petgraph::algo;
+use petgraph::algo::condensation;
+use petgraph::graph::DiGraph;
 use petgraph::stable_graph::NodeIndex;
 use petgraph::unionfind::UnionFind;
 use petgraph::visit::{EdgeRef, IntoEdgeReferences, NodeCount, NodeIndexable, Visitable};
@@ -43,6 +44,7 @@ use crate::{EdgeType, StablePyGraph};
 use crate::graph::PyGraph;
 use rustworkx_core::coloring::two_color;
 use rustworkx_core::connectivity;
+use rustworkx_core::dag_algo::longest_path;
 
 /// Return a list of cycles which form a basis for cycles of a given PyGraph
 ///
@@ -264,6 +266,50 @@ pub fn is_weakly_connected(graph: &digraph::PyDiGraph) -> PyResult<bool> {
         return Err(NullGraph::new_err("Invalid operation on a NullGraph"));
     }
     Ok(weakly_connected_components(graph)[0].len() == graph.graph.node_count())
+}
+
+/// Check if the graph is semi connected
+///
+/// :param PyDiGraph graph: The graph to check if it is semi connected
+///
+/// :returns: Whether the graph is semi connected or not
+/// :rtype: bool
+///
+/// :raises NullGraph: If an empty graph is passed in
+#[pyfunction]
+#[pyo3(text_signature = "(graph, /)")]
+pub fn is_semi_connected(graph: &digraph::PyDiGraph) -> PyResult<bool> {
+    if graph.graph.node_count() == 0 {
+        return Err(NullGraph::new_err("Invalid operation on a NullGraph"));
+    }
+
+    let mut temp_graph = DiGraph::new();
+    let mut node_map = Vec::new();
+
+    for _node in graph.graph.node_indices() {
+        node_map.push(temp_graph.add_node(()));
+    }
+
+    for edge in graph.graph.edge_indices() {
+        let (source, target) = graph.graph.edge_endpoints(edge).unwrap();
+        temp_graph.add_edge(node_map[source.index()], node_map[target.index()], ());
+    }
+
+    let condensed = condensation(temp_graph, true);
+    let n = condensed.node_count();
+    let weight_fn =
+        |_: petgraph::graph::EdgeReference<()>| Ok::<usize, std::convert::Infallible>(1usize);
+
+    match longest_path(&condensed, weight_fn) {
+        Ok(path_len) => {
+            if let Some(path_len) = path_len {
+                Ok(path_len.1 == n - 1)
+            } else {
+                Ok(false)
+            }
+        }
+        Err(_) => Err(PyValueError::new_err("Graph could not be condensed")),
+    }
 }
 
 /// Return the adjacency matrix for a PyDiGraph object

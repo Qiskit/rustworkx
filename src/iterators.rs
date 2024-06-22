@@ -1058,6 +1058,95 @@ custom_vec_iter_impl!(
 );
 impl PyGCProtocol for Chains {}
 
+custom_vec_iter_impl!(
+    IndexPartitionBlock,
+    IndexPartitionBlockIter,
+    IndexPartitionBlockRev,
+    block,
+    usize,
+    "A custom class for the return of a block of node indices.
+
+    The class is a read-only sequence of integers instances.
+
+    This class is a container class for the results of the digraph_maximum_bisimulation funtion.
+    It implements the Python sequence
+    protocol. So you can treat the return as a read-only sequence/list
+    that is integer indexed. If you want to use it as an iterator you
+    can by wrapping it in an ``iter()`` that will yield the results in
+    order.
+
+    For example::
+
+        import rustworkx as rx
+
+        graph = rx.generators.directed_path_graph(2)
+        partition = rx.digraph_maximum_bisimulation(graph)
+        a_partition_block = partition[0]
+        # Index based access
+        first_element = a_partition_block[0]
+        # Use as iterator
+        block_iter = iter(a_partition_block)
+        another_element = next(block_iter)
+        the_second_element = next(block_iter)
+    "
+);
+impl PyGCProtocol for IndexPartitionBlock {}
+
+impl PyHash for IndexPartitionBlock {
+    fn hash<H: Hasher>(&self, py: Python, state: &mut H) -> PyResult<()> {
+        PyHash::hash(&self.block, py, state)?;
+        Ok(())
+    }
+}
+
+impl<'py> PyEq<Bound<'py, PyAny>> for IndexPartitionBlock {
+    #[inline]
+    fn eq(&self, other: &Bound<PyAny>, py: Python) -> PyResult<bool> {
+        PyEq::eq(&self.block, other, py)
+    }
+}
+
+impl PyDisplay for IndexPartitionBlock {
+    fn str(&self, py: Python) -> PyResult<String> {
+        Ok(format!("NodeList{}", self.block.str(py)?))
+    }
+}
+
+py_convert_to_py_array_obj_impl! {IndexPartitionBlock}
+
+custom_vec_iter_impl!(
+    RelationalCoarsestPartition,
+    RelationalCoarsestPartitionIter,
+    RelationalCoarsestPartitionRev,
+    partition,
+    IndexPartitionBlock,
+    "A custom class for the return of a partition of node indices.
+
+    The class is a read-only sequence of :class:`.NodeIndices` instances.
+
+    This class is a container class for the results of the digraph_maximum_bisimulation funtion.
+    It implements the Python sequence
+    protocol. So you can treat the return as a read-only sequence/list
+    that is integer indexed. If you want to use it as an iterator you
+    can by wrapping it in an ``iter()`` that will yield the results in
+    order.
+
+    For example::
+
+        import rustworkx as rx
+
+        graph = rx.generators.directed_path_graph(2)
+        partition = rx.digraph_maximum_bisimulation(graph)
+        # Index based access
+        a_partition_block = partition[0]
+        # Use as iterator
+        partition_iter = iter(partition)
+        another_block = next(parititon_iter)
+        the_second_block = next(parititon_iter)
+    "
+);
+impl PyGCProtocol for RelationalCoarsestPartition {}
+
 macro_rules! py_iter_protocol_impl {
     ($name:ident, $data:ident, $T:ty) => {
         #[pyclass(module = "rustworkx")]

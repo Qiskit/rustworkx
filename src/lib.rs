@@ -10,6 +10,7 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
+mod bisimulation;
 mod cartesian_product;
 mod centrality;
 mod coloring;
@@ -40,6 +41,7 @@ mod traversal;
 mod tree;
 mod union;
 
+use bisimulation::*;
 use cartesian_product::*;
 use centrality::*;
 use coloring::*;
@@ -394,6 +396,8 @@ import_exception!(rustworkx.visit, PruneSearch);
 import_exception!(rustworkx.visit, StopSearch);
 // JSON Error
 create_exception!(rustworkx, JSONSerializationError, PyException);
+// JSON Error
+create_exception!(rustworkx, JSONDeserializationError, PyException);
 // Negative Cycle found on shortest-path algorithm
 create_exception!(rustworkx, NegativeCycle, PyException);
 // Failed to Converge on a solution
@@ -428,6 +432,10 @@ fn rustworkx(py: Python<'_>, m: &Bound<PyModule>) -> PyResult<()> {
         "GraphNotBipartite",
         py.get_type_bound::<GraphNotBipartite>(),
     )?;
+    m.add(
+        "JSONDeserializationError",
+        py.get_type_bound::<JSONDeserializationError>(),
+    )?;
     m.add_wrapped(wrap_pyfunction!(bfs_successors))?;
     m.add_wrapped(wrap_pyfunction!(bfs_predecessors))?;
     m.add_wrapped(wrap_pyfunction!(graph_bfs_search))?;
@@ -446,6 +454,7 @@ fn rustworkx(py: Python<'_>, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(number_weakly_connected_components))?;
     m.add_wrapped(wrap_pyfunction!(weakly_connected_components))?;
     m.add_wrapped(wrap_pyfunction!(is_weakly_connected))?;
+    m.add_wrapped(wrap_pyfunction!(is_semi_connected))?;
     m.add_wrapped(wrap_pyfunction!(is_directed_acyclic_graph))?;
     m.add_wrapped(wrap_pyfunction!(digraph_is_isomorphic))?;
     m.add_wrapped(wrap_pyfunction!(graph_is_isomorphic))?;
@@ -455,6 +464,7 @@ fn rustworkx(py: Python<'_>, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(graph_vf2_mapping))?;
     m.add_wrapped(wrap_pyfunction!(digraph_union))?;
     m.add_wrapped(wrap_pyfunction!(graph_union))?;
+    m.add_wrapped(wrap_pyfunction!(digraph_maximum_bisimulation))?;
     m.add_wrapped(wrap_pyfunction!(digraph_cartesian_product))?;
     m.add_wrapped(wrap_pyfunction!(graph_cartesian_product))?;
     m.add_wrapped(wrap_pyfunction!(topological_sort))?;
@@ -604,11 +614,15 @@ fn rustworkx(py: Python<'_>, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(read_graphml))?;
     m.add_wrapped(wrap_pyfunction!(digraph_node_link_json))?;
     m.add_wrapped(wrap_pyfunction!(graph_node_link_json))?;
+    m.add_wrapped(wrap_pyfunction!(from_node_link_json_file))?;
+    m.add_wrapped(wrap_pyfunction!(parse_node_link_json))?;
     m.add_wrapped(wrap_pyfunction!(pagerank))?;
     m.add_wrapped(wrap_pyfunction!(hits))?;
     m.add_class::<digraph::PyDiGraph>()?;
     m.add_class::<graph::PyGraph>()?;
     m.add_class::<toposort::TopologicalSorter>()?;
+    m.add_class::<iterators::RelationalCoarsestPartition>()?;
+    m.add_class::<iterators::IndexPartitionBlock>()?;
     m.add_class::<iterators::BFSSuccessors>()?;
     m.add_class::<iterators::BFSPredecessors>()?;
     m.add_class::<iterators::Chains>()?;
