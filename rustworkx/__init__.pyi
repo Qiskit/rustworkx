@@ -36,6 +36,7 @@ from .rustworkx import InvalidMapping as InvalidMapping
 from .rustworkx import GraphNotBipartite as GraphNotBipartite
 from .rustworkx import ColoringStrategy as ColoringStrategy
 
+from .rustworkx import digraph_maximum_bisimulation as digraph_maximum_bisimulation
 from .rustworkx import digraph_cartesian_product as digraph_cartesian_product
 from .rustworkx import graph_cartesian_product as graph_cartesian_product
 from .rustworkx import digraph_eigenvector_centrality as digraph_eigenvector_centrality
@@ -246,6 +247,8 @@ from .rustworkx import BFSPredecessors as BFSPredecessors
 from .rustworkx import EdgeIndexMap as EdgeIndexMap
 from .rustworkx import EdgeIndices as EdgeIndices
 from .rustworkx import Chains as Chains
+from .rustworkx import IndexPartitionBlock as IndexPartitionBlock
+from .rustworkx import RelationalCoarsestPartition as RelationalCoarsestPartition
 from .rustworkx import EdgeList as EdgeList
 from .rustworkx import NodeMap as NodeMap
 from .rustworkx import NodesCountMapping as NodesCountMapping
