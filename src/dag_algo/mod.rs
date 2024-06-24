@@ -11,7 +11,7 @@
 // under the License.
 
 use super::DictMap;
-use hashbrown::{HashMap, HashSet};
+use hashbrown::HashMap;
 use indexmap::IndexSet;
 use rustworkx_core::dag_algo::layers as core_layers;
 use rustworkx_core::dictmap::InitWithHasher;
@@ -297,9 +297,8 @@ pub fn layers(
     first_layer: Vec<usize>,
     index_output: bool,
 ) -> PyResult<PyObject> {
-    let node_set = dag.graph.node_indices().collect::<HashSet<NodeIndex>>();
     for layer_node in &first_layer {
-        if !node_set.contains(&NodeIndex::new(*layer_node)) {
+        if !dag.graph.contains_node(NodeIndex::new(*layer_node)) {
             return Err(InvalidNode::new_err(format!(
                 "An index input in 'first_layer' {} is not a valid node index in the graph",
                 layer_node
@@ -314,19 +313,33 @@ pub fn layers(
             .collect(),
     );
     if index_output {
-        let res: Vec<Vec<usize>> = result
-            .map(|x| x.iter().map(|nodeid| dag.graph.to_index(*nodeid)).collect())
-            .collect();
-        Ok(PyList::new_bound(py, res).into())
+        let pylist = PyList::empty_bound(py);
+        for layer in result {
+            match layer {
+                Ok(layer) => pylist.append(
+                    layer
+                        .iter()
+                        .map(|x| dag.graph.to_index(*x))
+                        .collect::<Vec<usize>>(),
+                )?,
+                Err(e) => return Err(DAGHasCycle::new_err(e.0)),
+            }
+        }
+        Ok(pylist.into())
     } else {
-        let res: Vec<Vec<Option<&PyObject>>> = result
-            .map(|x| {
-                x.iter()
-                    .map(|index| dag.graph.node_weight(*index))
-                    .collect::<Vec<Option<&PyObject>>>()
-            })
-            .collect();
-        Ok(PyList::new_bound(py, res).into())
+        let pylist = PyList::empty_bound(py);
+        for layer in result {
+            match layer {
+                Ok(layer) => pylist.append(
+                    layer
+                        .iter()
+                        .map(|x| dag.graph.node_weight(*x))
+                        .collect::<Vec<Option<&PyObject>>>(),
+                )?,
+                Err(e) => return Err(DAGHasCycle::new_err(e.0)),
+            }
+        }
+        Ok(pylist.into())
     }
 }
 /// Get the lexicographical topological sorted nodes from the provided DAG

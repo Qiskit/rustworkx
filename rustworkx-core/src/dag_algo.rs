@@ -28,6 +28,8 @@ use petgraph::Directed;
 
 use num_traits::{Num, Zero};
 
+use crate::err::LayersError;
+
 /// Return a pair of [`petgraph::Direction`] values corresponding to the "forwards" and "backwards"
 /// direction of graph traversal, based on whether the graph is being traved forwards (following
 /// the edges) or backward (reversing along edges).  The order of returns is (forwards, backwards).
@@ -340,7 +342,7 @@ where
 /// ];
 ///
 /// let graph = DiGraph::<u32, u32>::from_edges(&edge_list);
-/// let layers: Vec<Vec<NodeIndex>> = layers(&graph, vec![0.into(),]).collect();
+/// let layers: Vec<Vec<NodeIndex>> = layers(&graph, vec![0.into(),]).map(|layer| layer.unwrap()).collect();
 /// let expected_layers: Vec<Vec<NodeIndex>> = vec![
 ///     vec![0.into(),],
 ///     vec![1.into(),],
@@ -350,7 +352,10 @@ where
 /// ];
 /// assert_eq!(layers, expected_layers)
 /// ```
-pub fn layers<G>(graph: G, first_layer: Vec<G::NodeId>) -> impl Iterator<Item = Vec<G::NodeId>>
+pub fn layers<G>(
+    graph: G,
+    first_layer: Vec<G::NodeId>,
+) -> impl Iterator<Item = Result<Vec<G::NodeId>, LayersError>>
 where
     G: NodeIndexable // Used in from_index and to_index.
         + IntoNodeIdentifiers // Used for .node_identifiers
@@ -375,7 +380,7 @@ struct LayersIter<G, N> {
     next_layer: Vec<N>,
     predecessor_count: HashMap<N, usize>,
     first_iter: bool,
-    cycle_check: HashSet<Vec<N>>,
+    cycle_check: HashSet<N>, // TODO: Figure out why some cycles cannot be detected
 }
 
 impl<G, N> Iterator for LayersIter<G, N>
@@ -387,12 +392,12 @@ where
         + GraphBase<NodeId = N>,
     N: Debug + Copy + Eq + Hash,
 {
-    type Item = Vec<N>;
+    type Item = Result<Vec<N>, LayersError>;
     fn next(&mut self) -> Option<Self::Item> {
         if self.first_iter {
             self.first_iter = false;
-            self.cycle_check.insert(self.cur_layer.clone());
-            Some(self.cur_layer.to_owned())
+            self.cycle_check.extend(self.cur_layer.iter());
+            Some(Ok(self.cur_layer.to_owned()))
         } else if self.cur_layer.is_empty() {
             None
         } else {
@@ -430,21 +435,21 @@ where
                                 - multiplicity,
                         );
                     if *self.predecessor_count.get(&succ).unwrap() == 0 {
+                        if self.cycle_check.contains(&succ) {
+                            return Some(Err(LayersError("The provided graph contains a cycle or an invalid first layer was provided.".to_string())));
+                        }
                         self.next_layer.push(succ);
+                        self.cycle_check.insert(succ);
                         self.predecessor_count.remove(&succ);
                     }
                 }
             }
             swap(&mut self.cur_layer, &mut self.next_layer);
-            if self.cycle_check.contains(&self.cur_layer) {
-                panic!("The layers algorithm doesn't support graphs with cycles.")
-            }
-            self.cycle_check.insert(self.cur_layer.to_owned());
             self.next_layer.clear();
             if self.cur_layer.is_empty() {
                 None
             } else {
-                Some(self.cur_layer.to_owned())
+                Some(Ok(self.cur_layer.to_owned()))
             }
         }
     }
@@ -1059,14 +1064,14 @@ mod test_layers {
     #[test]
     fn test_empty_graph() {
         let graph: DiGraph<(), ()> = DiGraph::new();
-        let result: Vec<Vec<NodeIndex>> = layers(&graph, vec![]).collect();
+        let result: Vec<Vec<NodeIndex>> = layers(&graph, vec![]).flatten().collect();
         assert_eq!(result, vec![vec![]]);
     }
 
     #[test]
     fn test_empty_stable_graph() {
         let graph: StableDiGraph<(), ()> = StableDiGraph::new();
-        let result: Vec<Vec<NodeIndex>> = layers(&graph, vec![]).collect();
+        let result: Vec<Vec<NodeIndex>> = layers(&graph, vec![]).flatten().collect();
         assert_eq!(result, vec![vec![]]);
     }
 
@@ -1084,7 +1089,7 @@ mod test_layers {
         }
         let expected: Vec<Vec<NodeIndex>> =
             vec![vec![0.into()], vec![5.into(), 4.into(), 2.into(), 1.into()]];
-        let result: Vec<Vec<NodeIndex>> = layers(&graph, vec![0.into()]).collect();
+        let result: Vec<Vec<NodeIndex>> = layers(&graph, vec![0.into()]).flatten().collect();
         assert_eq!(result, expected);
     }
 
@@ -1093,7 +1098,10 @@ mod test_layers {
     fn test_missing_node() {
         let edge_list = vec![(0, 1), (1, 2), (2, 3), (3, 4)];
         let graph = DiGraph::<u32, u32>::from_edges(&edge_list);
-        layers(&graph, vec![4.into(), 5.into()]).for_each(drop);
+        layers(&graph, vec![4.into(), 5.into()]).for_each(|layer| match layer {
+            Err(e) => panic!("{}", e.0),
+            Ok(layer) => drop(layer),
+        });
     }
 
     #[test]
@@ -1114,7 +1122,7 @@ mod test_layers {
         graph.add_edge(n2, n5, ());
         graph.add_edge(n4, n5, ());
 
-        let result: Vec<Vec<NodeIndex>> = layers(&graph, vec![0.into()]).collect();
+        let result: Vec<Vec<NodeIndex>> = layers(&graph, vec![0.into()]).flatten().collect();
         assert_eq!(
             result,
             vec![vec![n0], vec![n1], vec![n2], vec![n3], vec![n4], vec![n5]]
@@ -1130,7 +1138,10 @@ mod test_layers {
         graph.add_edge(n0, n1, 1);
         graph.add_edge(n1, n0, 1);
 
-        layers(&graph, vec![0.into()]).for_each(drop);
+        layers(&graph, vec![0.into()]).for_each(|layer| match layer {
+            Err(e) => panic!("{}", e.0),
+            Ok(layer) => drop(layer),
+        });
     }
 }
 
