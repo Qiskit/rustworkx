@@ -52,5 +52,5 @@ fn fmt_dag_would_cycle(f: &mut Formatter<'_>) -> std::fmt::Result {
 }
 
 fn fmt_merge_error<E: Error>(f: &mut Formatter<'_>, inner: &E) -> std::fmt::Result {
-    write!(f, "The prov failed with: {:?}", inner)
+    write!(f, "The merge callback failed with: {:?}", inner)
 }
