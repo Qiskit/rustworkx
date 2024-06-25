@@ -175,14 +175,14 @@ use super::dag_algo::is_directed_acyclic_graph;
 /// :param attrs: An optional attributes payload to assign to the
 ///     :attr:`~.PyDiGraph.attrs` attribute. This can be any Python object. If
 ///     it is not specified :attr:`~.PyDiGraph.attrs` will be set to ``None``.
-/// :param int initial_node_count: The graph will be allocated with enough capacity to store this
+/// :param int node_count_hint: An optional hint that will allocate with enough capacity to store this
 ///     many nodes before needing to grow.  This does not prepopulate any nodes with data, it is
 ///     only a potential performance optimization if the complete size of the graph is known in
-///     advance (default 0: no overallocation).
-/// :param int initial_edge_count: The graph will be allocated with enough capacity to store this
+///     advance.
+/// :param int edge_count_hint: An optional hint that will allocate enough capacity to store this
 ///     many edges before needing to grow.  This does not prepopulate any edges with data, it is
 ///     only a potential performance optimization if the complete size of the graph is known in
-///     advance (default 0: no overallocation).
+///     advance.
 #[pyclass(mapping, module = "rustworkx", subclass)]
 #[derive(Clone)]
 pub struct PyDiGraph {
@@ -295,17 +295,20 @@ impl PyDiGraph {
 #[pymethods]
 impl PyDiGraph {
     #[new]
-    #[pyo3(signature=(/, check_cycle=false, multigraph=true, attrs=None, *, initial_node_count=0, initial_edge_count=0))]
+    #[pyo3(signature=(/, check_cycle=false, multigraph=true, attrs=None, *, node_count_hint=None, edge_count_hint=None))]
     fn new(
         py: Python,
         check_cycle: bool,
         multigraph: bool,
         attrs: Option<PyObject>,
-        initial_node_count: usize,
-        initial_edge_count: usize,
+        node_count_hint: Option<usize>,
+        edge_count_hint: Option<usize>,
     ) -> Self {
         PyDiGraph {
-            graph: StablePyGraph::<Directed>::with_capacity(initial_node_count, initial_edge_count),
+            graph: StablePyGraph::<Directed>::with_capacity(
+                node_count_hint.unwrap_or_default(),
+                edge_count_hint.unwrap_or_default(),
+            ),
             cycle_state: algo::DfsSpace::default(),
             check_cycle,
             node_removed: false,
@@ -318,8 +321,8 @@ impl PyDiGraph {
         (
             (self.check_cycle, self.multigraph, self.attrs.clone_ref(py)).into_py(py),
             [
-                ("initial_node_count", self.graph.node_bound()),
-                ("initial_edge_count", self.graph.edge_bound()),
+                ("node_count_hint", self.graph.node_bound()),
+                ("edge_count_hint", self.graph.edge_bound()),
             ]
             .into_py_dict_bound(py),
         )

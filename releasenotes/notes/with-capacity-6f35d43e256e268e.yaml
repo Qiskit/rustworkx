@@ -1,6 +1,6 @@
 ---
 features:
   - |
-    :class:`.PyGraph` and :class:`.PyDiGraph` now each take keyword arguments ``initial_node_count``
-    and ``initial_edge_count`` in their constructors, which can be used to pre-allocate space for
+    :class:`.PyGraph` and :class:`.PyDiGraph` now each take keyword arguments ``node_count_hint``
+    and ``edge_count_hint`` in their constructors, which can be used to pre-allocate space for
     the given number of nodes and edges.
