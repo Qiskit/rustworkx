@@ -320,10 +320,10 @@ impl PyDiGraph {
     fn __getnewargs_ex__<'py>(&self, py: Python<'py>) -> (Py<PyTuple>, Bound<'py, PyDict>) {
         (
             (self.check_cycle, self.multigraph, self.attrs.clone_ref(py)).into_py(py),
-            indexmap::indexmap! {
-                "node_count_hint" => self.graph.node_bound(),
-                "edge_count_hint" => self.graph.edge_bound(),
-            }
+            [
+                ("node_count_hint", self.graph.node_bound()),
+                ("edge_count_hint", self.graph.edge_bound()),
+            ]
             .into_py_dict_bound(py),
         )
     }
