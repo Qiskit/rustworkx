@@ -329,6 +329,7 @@ where
 /// * `first_layer` - A list of node ids for the first layer. This
 ///     will be the first layer in the output
 ///
+/// Will `panic!` if a provided node is not in the graph.
 /// ```
 /// use rustworkx_core::petgraph::prelude::*;
 /// use rustworkx_core::dag_algo::layers;
@@ -396,7 +397,17 @@ where
     fn next(&mut self) -> Option<Self::Item> {
         if self.first_iter {
             self.first_iter = false;
-            self.cycle_check.extend(self.cur_layer.iter());
+            for node in &self.cur_layer {
+                if self.graph.to_index(*node) >= self.graph.node_bound() {
+                    panic!("Node {:#?} is not present in the graph.", node);
+                }
+                if self.cycle_check.contains(node) {
+                    return Some(Err(LayersError(
+                        "An invalid first layer was provided.".to_owned(),
+                    )));
+                }
+                self.cycle_check.insert(*node);
+            }
             Some(Ok(self.cur_layer.to_owned()))
         } else if self.cur_layer.is_empty() {
             None
@@ -1087,9 +1098,12 @@ mod test_layers {
         for (source, target) in [(0, 1), (0, 2), (0, 3), (0, 4), (0, 5), (6, 3)] {
             graph.add_edge(nodes[source], nodes[target], ());
         }
-        let expected: Vec<Vec<NodeIndex>> =
-            vec![vec![0.into()], vec![5.into(), 4.into(), 2.into(), 1.into()]];
-        let result: Vec<Vec<NodeIndex>> = layers(&graph, vec![0.into()]).flatten().collect();
+        let expected: Vec<Vec<NodeIndex>> = vec![
+            vec![0.into(), 6.into()],
+            vec![5.into(), 4.into(), 2.into(), 1.into(), 3.into()],
+        ];
+        let result: Vec<Vec<NodeIndex>> =
+            layers(&graph, vec![0.into(), 6.into()]).flatten().collect();
         assert_eq!(result, expected);
     }
 
