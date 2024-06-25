@@ -1,0 +1,6 @@
+---
+features:
+  - |
+    Added two new functions, :func:`.parse_node_link_json_file` and
+    :func:`.parse_node_link_json_str`, which are used to parse a node link json
+    and generate a graph object from it.

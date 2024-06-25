@@ -31,7 +31,7 @@ use smallvec::SmallVec;
 use pyo3::exceptions::PyIndexError;
 use pyo3::gc::PyVisit;
 use pyo3::prelude::*;
-use pyo3::types::{PyBool, PyDict, PyList, PyString, PyTuple};
+use pyo3::types::{IntoPyDict, PyBool, PyDict, PyList, PyString, PyTuple};
 use pyo3::PyTraverseError;
 use pyo3::Python;
 
@@ -175,6 +175,14 @@ use super::dag_algo::is_directed_acyclic_graph;
 /// :param attrs: An optional attributes payload to assign to the
 ///     :attr:`~.PyDiGraph.attrs` attribute. This can be any Python object. If
 ///     it is not specified :attr:`~.PyDiGraph.attrs` will be set to ``None``.
+/// :param int node_count_hint: An optional hint that will allocate with enough capacity to store this
+///     many nodes before needing to grow.  This does not prepopulate any nodes with data, it is
+///     only a potential performance optimization if the complete size of the graph is known in
+///     advance.
+/// :param int edge_count_hint: An optional hint that will allocate enough capacity to store this
+///     many edges before needing to grow.  This does not prepopulate any edges with data, it is
+///     only a potential performance optimization if the complete size of the graph is known in
+///     advance.
 #[pyclass(mapping, module = "rustworkx", subclass)]
 #[derive(Clone)]
 pub struct PyDiGraph {
@@ -287,10 +295,20 @@ impl PyDiGraph {
 #[pymethods]
 impl PyDiGraph {
     #[new]
-    #[pyo3(signature=(check_cycle=false, multigraph=true, attrs=None), text_signature="(/, check_cycle=False, multigraph=True, attrs=None)")]
-    fn new(py: Python, check_cycle: bool, multigraph: bool, attrs: Option<PyObject>) -> Self {
+    #[pyo3(signature=(/, check_cycle=false, multigraph=true, attrs=None, *, node_count_hint=None, edge_count_hint=None))]
+    fn new(
+        py: Python,
+        check_cycle: bool,
+        multigraph: bool,
+        attrs: Option<PyObject>,
+        node_count_hint: Option<usize>,
+        edge_count_hint: Option<usize>,
+    ) -> Self {
         PyDiGraph {
-            graph: StablePyGraph::<Directed>::new(),
+            graph: StablePyGraph::<Directed>::with_capacity(
+                node_count_hint.unwrap_or_default(),
+                edge_count_hint.unwrap_or_default(),
+            ),
             cycle_state: algo::DfsSpace::default(),
             check_cycle,
             node_removed: false,
@@ -299,8 +317,19 @@ impl PyDiGraph {
         }
     }
 
+    fn __getnewargs_ex__<'py>(&self, py: Python<'py>) -> (Py<PyTuple>, Bound<'py, PyDict>) {
+        (
+            (self.check_cycle, self.multigraph, self.attrs.clone_ref(py)).into_py(py),
+            [
+                ("node_count_hint", self.graph.node_bound()),
+                ("edge_count_hint", self.graph.edge_bound()),
+            ]
+            .into_py_dict_bound(py),
+        )
+    }
+
     fn __getstate__(&self, py: Python) -> PyResult<PyObject> {
-        let mut nodes: Vec<PyObject> = Vec::with_capacity(self.graph.node_count());
+        let mut nodes: Vec<PyObject> = Vec::with_capacity(self.graph.node_bound());
         let mut edges: Vec<PyObject> = Vec::with_capacity(self.graph.edge_bound());
 
         // save nodes to a list along with its index
@@ -327,9 +356,6 @@ impl PyDiGraph {
         out_dict.set_item("nodes", nodes_lst)?;
         out_dict.set_item("edges", edges_lst)?;
         out_dict.set_item("nodes_removed", self.node_removed)?;
-        out_dict.set_item("multigraph", self.multigraph)?;
-        out_dict.set_item("attrs", self.attrs.clone_ref(py))?;
-        out_dict.set_item("check_cycle", self.check_cycle)?;
         Ok(out_dict.into())
     }
 
@@ -341,23 +367,8 @@ impl PyDiGraph {
         let edges_lst = binding.downcast::<PyList>()?;
         self.graph = StablePyGraph::<Directed>::new();
         let dict_state = state.downcast_bound::<PyDict>(py)?;
-        self.multigraph = dict_state
-            .get_item("multigraph")?
-            .unwrap()
-            .downcast::<PyBool>()?
-            .extract()?;
         self.node_removed = dict_state
             .get_item("nodes_removed")?
-            .unwrap()
-            .downcast::<PyBool>()?
-            .extract()?;
-        let attrs = match dict_state.get_item("attrs")? {
-            Some(attr) => attr.into(),
-            None => py.None(),
-        };
-        self.attrs = attrs;
-        self.check_cycle = dict_state
-            .get_item("check_cycle")?
             .unwrap()
             .downcast::<PyBool>()?
             .extract()?;

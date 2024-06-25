@@ -30,7 +30,7 @@ class TestPickleDiGraph(unittest.TestCase):
         self.assertEqual({1: (1, 2, None), 3: (3, 1, None)}, dict(gprime.edge_index_map()))
 
     def test_weight_graph(self):
-        g = rx.PyDAG()
+        g = rx.PyDAG(node_count_hint=4, edge_count_hint=4)
         g.add_nodes_from(["A", "B", "C", "D"])
         g.add_edges_from([(0, 1, "A -> B"), (1, 2, "B -> C"), (3, 0, "D -> A"), (3, 1, "D -> B")])
         g.remove_node(0)

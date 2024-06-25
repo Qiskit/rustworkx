@@ -12,6 +12,8 @@
 
 use std::cmp::{Eq, Ordering};
 use std::collections::BinaryHeap;
+use std::error::Error;
+use std::fmt::{Display, Formatter};
 use std::hash::Hash;
 
 use hashbrown::{HashMap, HashSet};
@@ -42,26 +44,42 @@ pub fn traversal_directions(reverse: bool) -> (petgraph::Direction, petgraph::Di
     }
 }
 
-/// Get the lexicographical topological sorted nodes from the provided DAG
+/// An error enumeration returned by topological sort functions.
+#[derive(Debug, PartialEq, Eq)]
+pub enum TopologicalSortError<E: Error> {
+    CycleOrBadInitialState,
+    KeyError(E),
+}
+
+impl<E: Error> Display for TopologicalSortError<E> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            TopologicalSortError::CycleOrBadInitialState => {
+                write!(f, "At least one initial node is reachable from another")
+            }
+            TopologicalSortError::KeyError(ref e) => {
+                write!(f, "The key callback failed with: {:?}", e)
+            }
+        }
+    }
+}
+
+impl<E: Error> Error for TopologicalSortError<E> {}
+
+/// Get the lexicographical topological sorted nodes from the provided DAG.
 ///
-/// This function returns a list of nodes data in a graph lexicographically
-/// topologically sorted using the provided key function. A topological sort
-/// is a linear ordering of vertices such that for every directed edge from
-/// node :math:`u` to node :math:`v`, :math:`u` comes before :math:`v`
-/// in the ordering.  If ``reverse`` is set to ``False``, the edges are treated
-/// as if they pointed in the opposite direction.
-///
-/// This function differs from :func:`~rustworkx.topological_sort` because
-/// when there are ties between nodes in the sort order this function will
-/// use the string returned by the ``key`` argument to determine the output
-/// order used.  The ``reverse`` argument does not affect the ordering of keys
-/// from this function, only the edges of the graph.
+/// This function returns a list of nodes in a graph lexicographically
+/// topologically sorted, using the provided key function as a tie-breaker.
+/// A topological sort is a linear ordering of vertices such that for every
+/// directed edge from node :math:`u` to node :math:`v`, :math:`u` comes before
+/// :math:`v` in the ordering.  If ``reverse`` is set to ``true``, the edges
+/// are treated as if they pointed in the opposite direction.
 ///
 /// # Arguments:
 ///
 /// * `dag`: The DAG to get the topological sorted nodes from
 /// * `key`: A function that gets passed a single argument, the node id from
-///     `dag` and is expected to return a `String` which will be used for
+///     `dag` and is expected to return a key which will be used for
 ///     resolving ties in the sorting order.
 /// * `reverse`: If `false`, perform a regular topological ordering.  If `true`,
 ///     return the lexicographical topological order that would have been found
@@ -77,9 +95,8 @@ pub fn traversal_directions(reverse: bool) -> (petgraph::Direction, petgraph::Di
 ///
 /// # Returns
 ///
-/// * `None` if the graph contains a cycle or `initial` is invalid
-/// * `Some(Vec<G::NodeId>)` representing the topological ordering of nodes.
-/// * `Err(E)` if there is an error computing the key for any node
+/// `Vec<G::NodeId>` representing the topological ordering of nodes or a
+/// `TopologicalSortError` if there is an error.
 ///
 /// # Example
 ///
@@ -122,15 +139,15 @@ pub fn traversal_directions(reverse: bool) -> (petgraph::Direction, petgraph::Di
 ///     nodes[1],
 ///     nodes[0]
 /// ];
-/// assert_eq!(result, Ok(Some(expected)));
+/// assert_eq!(result, Ok(expected));
 ///
 /// ```
-pub fn lexicographical_topological_sort<G, F, E>(
+pub fn lexicographical_topological_sort<G, F, K, E>(
     dag: G,
     mut key: F,
     reverse: bool,
     initial: Option<&[G::NodeId]>,
-) -> Result<Option<Vec<G::NodeId>>, E>
+) -> Result<Vec<G::NodeId>, TopologicalSortError<E>>
 where
     G: GraphProp<EdgeType = Directed>
         + IntoNodeIdentifiers
@@ -138,22 +155,24 @@ where
         + IntoEdgesDirected
         + NodeCount,
     <G as GraphBase>::NodeId: Hash + Eq + Ord,
-    F: FnMut(G::NodeId) -> Result<String, E>,
+    F: FnMut(G::NodeId) -> Result<K, E>,
+    K: Ord,
+    E: Error,
 {
     // HashMap of node_index indegree
     let node_count = dag.node_count();
     let (in_dir, out_dir) = traversal_directions(reverse);
 
     #[derive(Clone, Eq, PartialEq)]
-    struct State<N: Eq + PartialOrd> {
-        key: String,
+    struct State<K: Ord, N: Eq + PartialOrd> {
+        key: K,
         node: N,
     }
 
-    impl<N: Eq + Ord> Ord for State<N> {
-        fn cmp(&self, other: &State<N>) -> Ordering {
-            // Notice that the we flip the ordering on costs.
-            // In case of a tie we compare positions - this step is necessary
+    impl<K: Ord, N: Eq + Ord> Ord for State<K, N> {
+        fn cmp(&self, other: &State<K, N>) -> Ordering {
+            // Notice that we flip the ordering on costs.
+            // In case of a tie, we compare positions - this step is necessary
             // to make implementations of `PartialEq` and `Ord` consistent.
             other
                 .key
@@ -163,8 +182,8 @@ where
     }
 
     // `PartialOrd` needs to be implemented as well.
-    impl<N: Eq + Ord> PartialOrd for State<N> {
-        fn partial_cmp(&self, other: &State<N>) -> Option<Ordering> {
+    impl<K: Ord, N: Eq + Ord> PartialOrd for State<K, N> {
+        fn partial_cmp(&self, other: &State<K, N>) -> Option<Ordering> {
             Some(self.cmp(other))
         }
     }
@@ -185,7 +204,7 @@ where
     let mut zero_indegree = BinaryHeap::with_capacity(node_count);
     for (node, degree) in in_degree_map.iter() {
         if *degree == 0 {
-            let map_key: String = key(*node)?;
+            let map_key = key(*node).map_err(|e| TopologicalSortError::KeyError(e))?;
             zero_indegree.push(State {
                 key: map_key,
                 node: *node,
@@ -200,9 +219,9 @@ where
                 .entry(child)
                 .or_insert_with(|| dag.edges_directed(child, in_dir).count());
             if *child_degree == 0 {
-                return Ok(None);
+                return Err(TopologicalSortError::CycleOrBadInitialState);
             } else if *child_degree == 1 {
-                let map_key: String = key(child)?;
+                let map_key = key(child).map_err(|e| TopologicalSortError::KeyError(e))?;
                 zero_indegree.push(State {
                     key: map_key,
                     node: child,
@@ -214,7 +233,7 @@ where
         }
         out_list.push(node)
     }
-    Ok(Some(out_list))
+    Ok(out_list)
 }
 
 // Type aliases for readability
@@ -904,7 +923,7 @@ mod test_lexicographical_topological_sort {
         let graph: DiGraph<(), ()> = DiGraph::new();
         let sort_fn = |_: NodeIndex| -> Result<String, Infallible> { Ok("a".to_string()) };
         let result = lexicographical_topological_sort(&graph, sort_fn, false, None);
-        assert_eq!(result, Ok(Some(vec![])));
+        assert_eq!(result, Ok(vec![]));
     }
 
     #[test]
@@ -912,7 +931,7 @@ mod test_lexicographical_topological_sort {
         let graph: StableDiGraph<(), ()> = StableDiGraph::new();
         let sort_fn = |_: NodeIndex| -> Result<String, Infallible> { Ok("a".to_string()) };
         let result = lexicographical_topological_sort(&graph, sort_fn, false, None);
-        assert_eq!(result, Ok(Some(vec![])));
+        assert_eq!(result, Ok(vec![]));
     }
 
     #[test]
@@ -931,7 +950,7 @@ mod test_lexicographical_topological_sort {
         let result = lexicographical_topological_sort(&graph, sort_fn, false, None);
         assert_eq!(
             result,
-            Ok(Some(vec![
+            Ok(vec![
                 NodeIndex::new(6),
                 NodeIndex::new(0),
                 NodeIndex::new(1),
@@ -939,7 +958,7 @@ mod test_lexicographical_topological_sort {
                 NodeIndex::new(3),
                 NodeIndex::new(4),
                 NodeIndex::new(5)
-            ]))
+            ])
         )
     }
 
@@ -959,7 +978,7 @@ mod test_lexicographical_topological_sort {
         let result = lexicographical_topological_sort(&graph, sort_fn, false, None);
         assert_eq!(
             result,
-            Ok(Some(vec![
+            Ok(vec![
                 NodeIndex::new(6),
                 NodeIndex::new(0),
                 NodeIndex::new(1),
@@ -967,7 +986,7 @@ mod test_lexicographical_topological_sort {
                 NodeIndex::new(3),
                 NodeIndex::new(4),
                 NodeIndex::new(5)
-            ]))
+            ])
         )
     }
 
@@ -1051,7 +1070,7 @@ mod test_lexicographical_topological_sort {
             |index: NodeIndex| -> Result<String, Infallible> { Ok(graph[index].to_string()) };
         let initial = [nodes[6], nodes[7]];
         let result = lexicographical_topological_sort(&graph, sort_fn, false, Some(&initial));
-        assert_eq!(result, Ok(Some(vec![nodes[6], nodes[7], nodes[8]])));
+        assert_eq!(result, Ok(vec![nodes[6], nodes[7], nodes[8]]));
         let initial = [nodes[0]];
         let result = lexicographical_topological_sort(&graph, sort_fn, false, Some(&initial));
         assert_eq!(
@@ -1060,7 +1079,7 @@ mod test_lexicographical_topological_sort {
         );
         let initial = [nodes[7]];
         let result = lexicographical_topological_sort(&graph, sort_fn, false, Some(&initial));
-        assert_eq!(result, Ok(Some(vec![nodes[7]])));
+        assert_eq!(result, Ok(vec![nodes[7]]));
     }
 }
 

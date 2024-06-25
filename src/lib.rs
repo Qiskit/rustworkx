@@ -10,6 +10,7 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
+mod bisimulation;
 mod cartesian_product;
 mod centrality;
 mod coloring;
@@ -40,6 +41,7 @@ mod traversal;
 mod tree;
 mod union;
 
+use bisimulation::*;
 use cartesian_product::*;
 use centrality::*;
 use coloring::*;
@@ -84,6 +86,7 @@ use petgraph::visit::{
 };
 use petgraph::EdgeType;
 
+use rustworkx_core::dag_algo::TopologicalSortError;
 use std::convert::TryFrom;
 
 use rustworkx_core::dictmap::*;
@@ -117,7 +120,7 @@ pub struct RxPyErr {
 pub type RxPyResult<T> = Result<T, RxPyErr>;
 
 fn map_dag_would_cycle<E: std::error::Error>(value: E) -> PyErr {
-    DAGWouldCycle::new_err(format!("{:?}", value))
+    DAGWouldCycle::new_err(format!("{}", value))
 }
 
 impl From<ContractError> for RxPyErr {
@@ -141,6 +144,19 @@ impl From<ContractSimpleError<PyErr>> for RxPyErr {
     }
 }
 
+impl From<TopologicalSortError<PyErr>> for RxPyErr {
+    fn from(value: TopologicalSortError<PyErr>) -> Self {
+        RxPyErr {
+            pyerr: match value {
+                TopologicalSortError::CycleOrBadInitialState => {
+                    PyValueError::new_err(format!("{}", value))
+                }
+                TopologicalSortError::KeyError(e) => e,
+            },
+        }
+    }
+}
+
 impl IntoPy<PyObject> for RxPyErr {
     fn into_py(self, py: Python<'_>) -> PyObject {
         self.pyerr.into_value(py).into()
@@ -150,6 +166,12 @@ impl IntoPy<PyObject> for RxPyErr {
 impl From<RxPyErr> for PyErr {
     fn from(value: RxPyErr) -> Self {
         value.pyerr
+    }
+}
+
+impl From<PyErr> for RxPyErr {
+    fn from(value: PyErr) -> Self {
+        RxPyErr { pyerr: value }
     }
 }
 
@@ -374,6 +396,8 @@ import_exception!(rustworkx.visit, PruneSearch);
 import_exception!(rustworkx.visit, StopSearch);
 // JSON Error
 create_exception!(rustworkx, JSONSerializationError, PyException);
+// JSON Error
+create_exception!(rustworkx, JSONDeserializationError, PyException);
 // Negative Cycle found on shortest-path algorithm
 create_exception!(rustworkx, NegativeCycle, PyException);
 // Failed to Converge on a solution
@@ -408,6 +432,10 @@ fn rustworkx(py: Python<'_>, m: &Bound<PyModule>) -> PyResult<()> {
         "GraphNotBipartite",
         py.get_type_bound::<GraphNotBipartite>(),
     )?;
+    m.add(
+        "JSONDeserializationError",
+        py.get_type_bound::<JSONDeserializationError>(),
+    )?;
     m.add_wrapped(wrap_pyfunction!(bfs_successors))?;
     m.add_wrapped(wrap_pyfunction!(bfs_predecessors))?;
     m.add_wrapped(wrap_pyfunction!(graph_bfs_search))?;
@@ -436,6 +464,7 @@ fn rustworkx(py: Python<'_>, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(graph_vf2_mapping))?;
     m.add_wrapped(wrap_pyfunction!(digraph_union))?;
     m.add_wrapped(wrap_pyfunction!(graph_union))?;
+    m.add_wrapped(wrap_pyfunction!(digraph_maximum_bisimulation))?;
     m.add_wrapped(wrap_pyfunction!(digraph_cartesian_product))?;
     m.add_wrapped(wrap_pyfunction!(graph_cartesian_product))?;
     m.add_wrapped(wrap_pyfunction!(topological_sort))?;
@@ -585,11 +614,15 @@ fn rustworkx(py: Python<'_>, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(read_graphml))?;
     m.add_wrapped(wrap_pyfunction!(digraph_node_link_json))?;
     m.add_wrapped(wrap_pyfunction!(graph_node_link_json))?;
+    m.add_wrapped(wrap_pyfunction!(from_node_link_json_file))?;
+    m.add_wrapped(wrap_pyfunction!(parse_node_link_json))?;
     m.add_wrapped(wrap_pyfunction!(pagerank))?;
     m.add_wrapped(wrap_pyfunction!(hits))?;
     m.add_class::<digraph::PyDiGraph>()?;
     m.add_class::<graph::PyGraph>()?;
     m.add_class::<toposort::TopologicalSorter>()?;
+    m.add_class::<iterators::RelationalCoarsestPartition>()?;
+    m.add_class::<iterators::IndexPartitionBlock>()?;
     m.add_class::<iterators::BFSSuccessors>()?;
     m.add_class::<iterators::BFSPredecessors>()?;
     m.add_class::<iterators::Chains>()?;
