@@ -1012,6 +1012,23 @@ def graph_union(
     merge_edges: bool = ...,
 ) -> PyGraph[_S, _T]: ...
 
+# Densest Subgraph
+
+def graph_densest_subgraph_of_size(
+    graph: PyGraph[_S, _T],
+    num_nodes: int,
+    /,
+    edge_weight_callback: Callable[[_T], float] | None = ...,
+    node_weight_callback: Callable[[_T], float] | None = ...,
+) -> tuple[PyGraph[_S, _T], NodeMap]: ...
+def digraph_densest_subgraph_of_size(
+    graph: PyDiGraph[_S, _T],
+    num_nodes: int,
+    /,
+    edge_weight_callback: Callable[[_T], float] | None = ...,
+    node_weight_callback: Callable[[_T], float] | None = ...,
+) -> tuple[PyGraph[_S, _T], NodeMap]: ...
+
 # Iterators
 
 _T_co = TypeVar("_T_co", covariant=True)

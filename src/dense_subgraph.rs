@@ -51,7 +51,7 @@ use crate::StablePyGraph;
 /// :rtype: (PyGraph, NodeMap)
 #[pyfunction]
 #[pyo3(
-    text_signature = "(graph, num_nodes, /, edge_weight_callback=None, node_weight_callback=None)"
+    signature=(graph, num_nodes, /, edge_weight_callback=None, node_weight_callback=None)
 )]
 pub fn graph_densest_subgraph_of_size(
     py: Python,
@@ -129,7 +129,7 @@ pub fn graph_densest_subgraph_of_size(
 /// :rtype: (PyDiGraph, NodeMap)
 #[pyfunction]
 #[pyo3(
-    text_signature = "(graph, num_nodes, /, edge_weight_callback=None, node_weight_callback=None)"
+    signature = (graph, num_nodes, /, edge_weight_callback=None, node_weight_callback=None)
 )]
 pub fn digraph_densest_subgraph_of_size(
     py: Python,

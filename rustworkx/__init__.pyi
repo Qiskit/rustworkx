@@ -232,6 +232,8 @@ from .rustworkx import steiner_tree as steiner_tree
 from .rustworkx import metric_closure as metric_closure
 from .rustworkx import digraph_union as digraph_union
 from .rustworkx import graph_union as graph_union
+from .rustworkx import digraph_densest_subgraph_of_size as digraph_densest_subgraph_of_size
+from .rustworkx import graph_densest_subgraph_of_size as graph_densest_subgraph_of_size
 from .rustworkx import NodeIndices as NodeIndices
 from .rustworkx import PathLengthMapping as PathLengthMapping
 from .rustworkx import PathMapping as PathMapping
@@ -602,3 +604,10 @@ def longest_simple_path(graph: PyGraph[_S, _T] | PyDiGraph[_S, _T]) -> NodeIndic
 def isolates(graph: PyGraph[_S, _T] | PyDiGraph[_S, _T]) -> NodeIndices: ...
 def two_color(graph: PyGraph[_S, _T] | PyDiGraph[_S, _T]) -> dict[int, int]: ...
 def is_bipartite(graph: PyGraph[_S, _T] | PyDiGraph[_S, _T]) -> bool: ...
+def densest_subgraph_of_size(
+    graph: PyGraph[_S, _T] | PyDiGraph[_S, _T],
+    num_nodes: int,
+    /,
+    edge_weight_callback: Callable[[_T], float] | None = ...,
+    node_weight_callback: Callable[[_S], float] | None = ...,
+) -> tuple[PyGraph[_S, _T], NodeMap]: ...
