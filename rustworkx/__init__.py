@@ -1877,7 +1877,9 @@ def longest_simple_path(graph):
 
 
 @_rustworkx_dispatch
-def densest_subgraph_of_size(graph, num_nodes, /, edge_weight_callback=None, node_weight_callback=None):
+def densest_subgraph_of_size(
+    graph, num_nodes, /, edge_weight_callback=None, node_weight_callback=None
+):
     """Find a connected and dense subgraph of a given size in a graph.
 
     This method does not provide any guarantees on the approximation of the optimal solution as it
