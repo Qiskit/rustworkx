@@ -26,7 +26,7 @@ use rustworkx_core::graph_ext::*;
 use pyo3::exceptions::PyIndexError;
 use pyo3::gc::PyVisit;
 use pyo3::prelude::*;
-use pyo3::types::{PyBool, PyDict, PyList, PyString, PyTuple};
+use pyo3::types::{IntoPyDict, PyBool, PyDict, PyList, PyString, PyTuple};
 use pyo3::PyTraverseError;
 use pyo3::Python;
 
@@ -138,6 +138,14 @@ use petgraph::visit::{
 /// :param attrs: An optional attributes payload to assign to the
 ///     :attr:`~.PyGraph.attrs` attribute. This can be any Python object. If
 ///     it is not specified :attr:`~.PyGraph.attrs` will be set to ``None``.
+/// :param int node_count_hint: An optional hint that will allocate enough capacity to store this
+///     many nodes before needing to grow. This does not prepopulate any nodes with data, it is
+///     only a potential performance optimization if the complete size of the graph is known in
+///     advance.
+/// :param int edge_count_hint: An optional hint that will allocate enough capacity to store this
+///     many edges before needing to grow.  This does not prepopulate any edges with data, it is
+///     only a potential performance optimization if the complete size of the graph is known in
+///     advance.
 #[pyclass(mapping, module = "rustworkx", subclass)]
 #[derive(Clone)]
 pub struct PyGraph {
@@ -183,18 +191,38 @@ impl PyGraph {
 #[pymethods]
 impl PyGraph {
     #[new]
-    #[pyo3(signature=(multigraph=true, attrs=None), text_signature = "(/, multigraph=True, attrs=None)")]
-    fn new(py: Python, multigraph: bool, attrs: Option<PyObject>) -> Self {
+    #[pyo3(signature=(multigraph=true, attrs=None, *, node_count_hint=None, edge_count_hint=None))]
+    fn new(
+        py: Python,
+        multigraph: bool,
+        attrs: Option<PyObject>,
+        node_count_hint: Option<usize>,
+        edge_count_hint: Option<usize>,
+    ) -> Self {
         PyGraph {
-            graph: StablePyGraph::<Undirected>::default(),
+            graph: StablePyGraph::<Undirected>::with_capacity(
+                node_count_hint.unwrap_or_default(),
+                edge_count_hint.unwrap_or_default(),
+            ),
             node_removed: false,
             multigraph,
             attrs: attrs.unwrap_or_else(|| py.None()),
         }
     }
 
+    fn __getnewargs_ex__<'py>(&self, py: Python<'py>) -> (Py<PyTuple>, Bound<'py, PyDict>) {
+        (
+            (self.multigraph, self.attrs.clone_ref(py)).into_py(py),
+            [
+                ("node_count_hint", self.graph.node_bound()),
+                ("edge_count_hint", self.graph.edge_bound()),
+            ]
+            .into_py_dict_bound(py),
+        )
+    }
+
     fn __getstate__(&self, py: Python) -> PyResult<PyObject> {
-        let mut nodes: Vec<PyObject> = Vec::with_capacity(self.graph.node_count());
+        let mut nodes: Vec<PyObject> = Vec::with_capacity(self.graph.node_bound());
         let mut edges: Vec<PyObject> = Vec::with_capacity(self.graph.edge_bound());
 
         // save nodes to a list along with its index
@@ -222,8 +250,6 @@ impl PyGraph {
         out_dict.set_item("nodes", nodes_lst)?;
         out_dict.set_item("edges", edges_lst)?;
         out_dict.set_item("nodes_removed", self.node_removed)?;
-        out_dict.set_item("multigraph", self.multigraph)?;
-        out_dict.set_item("attrs", self.attrs.clone_ref(py))?;
         Ok(out_dict.into())
     }
 
@@ -234,21 +260,11 @@ impl PyGraph {
         let binding = dict_state.get_item("edges")?.unwrap();
         let edges_lst = binding.downcast::<PyList>()?;
 
-        self.graph = StablePyGraph::<Undirected>::default();
-        self.multigraph = dict_state
-            .get_item("multigraph")?
-            .unwrap()
-            .downcast::<PyBool>()?
-            .extract()?;
         self.node_removed = dict_state
             .get_item("nodes_removed")?
             .unwrap()
             .downcast::<PyBool>()?
             .extract()?;
-        self.attrs = match dict_state.get_item("attrs")? {
-            Some(attr) => attr.into(),
-            None => py.None(),
-        };
         // graph is empty, stop early
         if nodes_lst.is_empty() {
             return Ok(());

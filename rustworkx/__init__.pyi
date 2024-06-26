@@ -30,11 +30,13 @@ from .rustworkx import NoSuitableNeighbors as NoSuitableNeighbors
 from .rustworkx import NullGraph as NullGraph
 from .rustworkx import NegativeCycle as NegativeCycle
 from .rustworkx import JSONSerializationError as JSONSerializationError
+from .rustworkx import JSONDeserializationError as JSONDeserializationError
 from .rustworkx import FailedToConverge as FailedToConverge
 from .rustworkx import InvalidMapping as InvalidMapping
 from .rustworkx import GraphNotBipartite as GraphNotBipartite
 from .rustworkx import ColoringStrategy as ColoringStrategy
 
+from .rustworkx import digraph_maximum_bisimulation as digraph_maximum_bisimulation
 from .rustworkx import digraph_cartesian_product as digraph_cartesian_product
 from .rustworkx import graph_cartesian_product as graph_cartesian_product
 from .rustworkx import digraph_eigenvector_centrality as digraph_eigenvector_centrality
@@ -59,6 +61,7 @@ from .rustworkx import graph_bipartite_edge_color as graph_bipartite_edge_color
 from .rustworkx import connected_components as connected_components
 from .rustworkx import is_connected as is_connected
 from .rustworkx import is_weakly_connected as is_weakly_connected
+from .rustworkx import is_semi_connected as is_semi_connected
 from .rustworkx import number_connected_components as number_connected_components
 from .rustworkx import number_weakly_connected_components as number_weakly_connected_components
 from .rustworkx import node_connected_component as node_connected_component
@@ -139,6 +142,8 @@ from .rustworkx import directed_random_bipartite_graph as directed_random_bipart
 from .rustworkx import read_graphml as read_graphml
 from .rustworkx import digraph_node_link_json as digraph_node_link_json
 from .rustworkx import graph_node_link_json as graph_node_link_json
+from .rustworkx import from_node_link_json_file as from_node_link_json_file
+from .rustworkx import parse_node_link_json as parse_node_link_json
 from .rustworkx import digraph_bellman_ford_shortest_paths as digraph_bellman_ford_shortest_paths
 from .rustworkx import graph_bellman_ford_shortest_paths as graph_bellman_ford_shortest_paths
 from .rustworkx import (
@@ -242,6 +247,8 @@ from .rustworkx import BFSPredecessors as BFSPredecessors
 from .rustworkx import EdgeIndexMap as EdgeIndexMap
 from .rustworkx import EdgeIndices as EdgeIndices
 from .rustworkx import Chains as Chains
+from .rustworkx import IndexPartitionBlock as IndexPartitionBlock
+from .rustworkx import RelationalCoarsestPartition as RelationalCoarsestPartition
 from .rustworkx import EdgeList as EdgeList
 from .rustworkx import NodeMap as NodeMap
 from .rustworkx import NodesCountMapping as NodesCountMapping
