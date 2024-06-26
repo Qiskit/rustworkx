@@ -11,8 +11,9 @@
 // under the License.
 
 use super::DictMap;
-use hashbrown::{HashMap, HashSet};
+use hashbrown::HashMap;
 use indexmap::IndexSet;
+use rustworkx_core::dag_algo::layers as core_layers;
 use rustworkx_core::dictmap::InitWithHasher;
 
 use super::iterators::NodeIndices;
@@ -32,6 +33,7 @@ use pyo3::Python;
 use petgraph::algo;
 use petgraph::prelude::*;
 use petgraph::stable_graph::EdgeReference;
+use petgraph::visit::NodeIndexable;
 
 use num_traits::{Num, Zero};
 
@@ -295,99 +297,51 @@ pub fn layers(
     first_layer: Vec<usize>,
     index_output: bool,
 ) -> PyResult<PyObject> {
-    let mut output_indices: Vec<Vec<usize>> = Vec::new();
-    let mut output: Vec<Vec<&PyObject>> = Vec::new();
-    // Convert usize to NodeIndex
-    let mut first_layer_index: Vec<NodeIndex> = Vec::new();
-    for index in first_layer {
-        first_layer_index.push(NodeIndex::new(index));
-    }
-
-    let mut cur_layer = first_layer_index;
-    let mut next_layer: Vec<NodeIndex> = Vec::new();
-    let mut predecessor_count: HashMap<NodeIndex, usize> = HashMap::new();
-
-    let mut layer_node_data: Vec<&PyObject> = Vec::new();
-    if !index_output {
-        for layer_node in &cur_layer {
-            let node_data = match dag.graph.node_weight(*layer_node) {
-                Some(data) => data,
-                None => {
-                    return Err(InvalidNode::new_err(format!(
-                        "An index input in 'first_layer' {} is not a valid node index in the graph",
-                        layer_node.index()
-                    )))
-                }
-            };
-            layer_node_data.push(node_data);
+    for layer_node in &first_layer {
+        if !dag.graph.contains_node(NodeIndex::new(*layer_node)) {
+            return Err(InvalidNode::new_err(format!(
+                "An index input in 'first_layer' {} is not a valid node index in the graph",
+                layer_node
+            )));
         }
-        output.push(layer_node_data);
+    }
+    let result = core_layers(
+        &dag.graph,
+        first_layer
+            .iter()
+            .map(|x| dag.graph.from_index(*x))
+            .collect(),
+    );
+    if index_output {
+        let pylist = PyList::empty_bound(py);
+        for layer in result {
+            match layer {
+                Ok(layer) => pylist.append(
+                    layer
+                        .iter()
+                        .map(|x| dag.graph.to_index(*x))
+                        .collect::<Vec<usize>>(),
+                )?,
+                Err(e) => return Err(DAGHasCycle::new_err(e.0)),
+            }
+        }
+        Ok(pylist.into())
     } else {
-        for layer_node in &cur_layer {
-            if !dag.graph.contains_node(*layer_node) {
-                return Err(InvalidNode::new_err(format!(
-                    "An index input in 'first_layer' {} is not a valid node index in the graph",
-                    layer_node.index()
-                )));
+        let pylist = PyList::empty_bound(py);
+        for layer in result {
+            match layer {
+                Ok(layer) => pylist.append(
+                    layer
+                        .iter()
+                        .map(|x| dag.graph.node_weight(*x))
+                        .collect::<Vec<Option<&PyObject>>>(),
+                )?,
+                Err(e) => return Err(DAGHasCycle::new_err(e.0)),
             }
         }
-        output_indices.push(cur_layer.iter().map(|x| x.index()).collect());
-    }
-
-    // Iterate until there are no more
-    while !cur_layer.is_empty() {
-        for node in &cur_layer {
-            let children = dag
-                .graph
-                .neighbors_directed(*node, petgraph::Direction::Outgoing);
-            let mut used_indices: HashSet<NodeIndex> = HashSet::new();
-            for succ in children {
-                // Skip duplicate successors
-                if used_indices.contains(&succ) {
-                    continue;
-                }
-                used_indices.insert(succ);
-                let mut multiplicity: usize = 0;
-                let raw_edges = dag
-                    .graph
-                    .edges_directed(*node, petgraph::Direction::Outgoing);
-                for edge in raw_edges {
-                    if edge.target() == succ {
-                        multiplicity += 1;
-                    }
-                }
-                predecessor_count
-                    .entry(succ)
-                    .and_modify(|e| *e -= multiplicity)
-                    .or_insert(dag.in_degree(succ.index()) - multiplicity);
-                if *predecessor_count.get(&succ).unwrap() == 0 {
-                    next_layer.push(succ);
-                    predecessor_count.remove(&succ);
-                }
-            }
-        }
-        if !index_output {
-            let mut layer_node_data: Vec<&PyObject> = Vec::new();
-
-            for layer_node in &next_layer {
-                layer_node_data.push(&dag.graph[*layer_node]);
-            }
-            if !layer_node_data.is_empty() {
-                output.push(layer_node_data);
-            }
-        } else if !next_layer.is_empty() {
-            output_indices.push(next_layer.iter().map(|x| x.index()).collect());
-        }
-        cur_layer = next_layer;
-        next_layer = Vec::new();
-    }
-    if !index_output {
-        Ok(PyList::new_bound(py, output).into())
-    } else {
-        Ok(PyList::new_bound(py, output_indices).into())
+        Ok(pylist.into())
     }
 }
-
 /// Get the lexicographical topological sorted nodes from the provided DAG
 ///
 /// This function returns a list of nodes data in a graph lexicographically

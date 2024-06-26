@@ -17,16 +17,20 @@ use std::fmt::{Display, Formatter};
 use std::hash::Hash;
 
 use hashbrown::{HashMap, HashSet};
+use std::fmt::Debug;
+use std::mem::swap;
 
 use petgraph::algo;
 use petgraph::data::DataMap;
 use petgraph::visit::{
     EdgeRef, GraphBase, GraphProp, IntoEdgesDirected, IntoNeighborsDirected, IntoNodeIdentifiers,
-    NodeCount, Visitable,
+    NodeCount, NodeIndexable, Visitable,
 };
 use petgraph::Directed;
 
 use num_traits::{Num, Zero};
+
+use crate::err::LayersError;
 
 /// Return a pair of [`petgraph::Direction`] values corresponding to the "forwards" and "backwards"
 /// direction of graph traversal, based on whether the graph is being traved forwards (following
@@ -331,6 +335,155 @@ where
     let path_weight = dist[first].0; // The total weight of the longest path
 
     Ok(Some((path, path_weight)))
+}
+
+/// Return an iterator of graph layers
+///
+/// A layer is a subgraph whose nodes are disjoint, i.e.,
+/// a layer has depth 1. The layers are constructed using a greedy algorithm.
+///
+/// Arguments:
+///
+/// * `graph` - The graph to get the layers from
+/// * `first_layer` - A list of node ids for the first layer. This
+///     will be the first layer in the output
+///
+/// Will `panic!` if a provided node is not in the graph.
+/// ```
+/// use rustworkx_core::petgraph::prelude::*;
+/// use rustworkx_core::dag_algo::layers;
+/// use rustworkx_core::dictmap::*;
+///
+/// let edge_list = vec![
+///  (0, 1),
+///  (1, 2),
+///  (2, 3),
+///  (3, 4),
+/// ];
+///
+/// let graph = DiGraph::<u32, u32>::from_edges(&edge_list);
+/// let layers: Vec<Vec<NodeIndex>> = layers(&graph, vec![0.into(),]).map(|layer| layer.unwrap()).collect();
+/// let expected_layers: Vec<Vec<NodeIndex>> = vec![
+///     vec![0.into(),],
+///     vec![1.into(),],
+///     vec![2.into(),],
+///     vec![3.into(),],
+///     vec![4.into()]
+/// ];
+/// assert_eq!(layers, expected_layers)
+/// ```
+pub fn layers<G>(
+    graph: G,
+    first_layer: Vec<G::NodeId>,
+) -> impl Iterator<Item = Result<Vec<G::NodeId>, LayersError>>
+where
+    G: NodeIndexable // Used in from_index and to_index.
+        + IntoNodeIdentifiers // Used for .node_identifiers
+        + IntoNeighborsDirected // Used for .neighbors_directed
+        + IntoEdgesDirected, // Used for .edged_directed
+    <G as GraphBase>::NodeId: Debug + Copy + Eq + Hash,
+{
+    LayersIter {
+        graph,
+        cur_layer: first_layer,
+        next_layer: vec![],
+        predecessor_count: HashMap::new(),
+        first_iter: true,
+        cycle_check: HashSet::default(),
+    }
+}
+
+#[derive(Debug, Clone)]
+struct LayersIter<G, N> {
+    graph: G,
+    cur_layer: Vec<N>,
+    next_layer: Vec<N>,
+    predecessor_count: HashMap<N, usize>,
+    first_iter: bool,
+    cycle_check: HashSet<N>, // TODO: Figure out why some cycles cannot be detected
+}
+
+impl<G, N> Iterator for LayersIter<G, N>
+where
+    G: NodeIndexable // Used in from_index and to_index.
+        + IntoNodeIdentifiers // Used for .node_identifiers
+        + IntoNeighborsDirected // Used for .neighbors_directed
+        + IntoEdgesDirected // Used for .edged_directed
+        + GraphBase<NodeId = N>,
+    N: Debug + Copy + Eq + Hash,
+{
+    type Item = Result<Vec<N>, LayersError>;
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.first_iter {
+            self.first_iter = false;
+            for node in &self.cur_layer {
+                if self.graph.to_index(*node) >= self.graph.node_bound() {
+                    panic!("Node {:#?} is not present in the graph.", node);
+                }
+                if self.cycle_check.contains(node) {
+                    return Some(Err(LayersError(format!(
+                        "An invalid first layer was provided: {:#?} appears more than once.",
+                        node
+                    ))));
+                }
+                self.cycle_check.insert(*node);
+            }
+            Some(Ok(self.cur_layer.clone()))
+        } else if self.cur_layer.is_empty() {
+            None
+        } else {
+            for node in &self.cur_layer {
+                if self.graph.to_index(*node) >= self.graph.node_bound() {
+                    panic!("Node {:#?} is not present in the graph.", node);
+                }
+                let children = self
+                    .graph
+                    .neighbors_directed(*node, petgraph::Direction::Outgoing);
+                let mut used_indices: HashSet<G::NodeId> = HashSet::new();
+                for succ in children {
+                    // Skip duplicate successors
+                    if used_indices.contains(&succ) {
+                        continue;
+                    }
+                    used_indices.insert(succ);
+                    let mut multiplicity: usize = 0;
+                    let raw_edges: G::EdgesDirected = self
+                        .graph
+                        .edges_directed(*node, petgraph::Direction::Outgoing);
+                    for edge in raw_edges {
+                        if edge.target() == succ {
+                            multiplicity += 1;
+                        }
+                    }
+                    self.predecessor_count
+                        .entry(succ)
+                        .and_modify(|e| *e -= multiplicity)
+                        .or_insert(
+                            // Get the number of incoming edges to the successor
+                            self.graph
+                                .edges_directed(succ, petgraph::Direction::Incoming)
+                                .count()
+                                - multiplicity,
+                        );
+                    if *self.predecessor_count.get(&succ).unwrap() == 0 {
+                        if self.cycle_check.contains(&succ) {
+                            return Some(Err(LayersError("The provided graph contains a cycle or an invalid first layer was provided.".to_string())));
+                        }
+                        self.next_layer.push(succ);
+                        self.cycle_check.insert(succ);
+                        self.predecessor_count.remove(&succ);
+                    }
+                }
+            }
+            swap(&mut self.cur_layer, &mut self.next_layer);
+            self.next_layer.clear();
+            if self.cur_layer.is_empty() {
+                None
+            } else {
+                Some(Ok(self.cur_layer.clone()))
+            }
+        }
+    }
 }
 
 /// Collect runs that match a filter function given edge colors.
@@ -928,6 +1081,101 @@ mod test_lexicographical_topological_sort {
         let initial = [nodes[7]];
         let result = lexicographical_topological_sort(&graph, sort_fn, false, Some(&initial));
         assert_eq!(result, Ok(vec![nodes[7]]));
+    }
+}
+
+#[cfg(test)]
+mod test_layers {
+    use super::*;
+    use petgraph::{
+        graph::{DiGraph, NodeIndex},
+        stable_graph::StableDiGraph,
+    };
+
+    #[test]
+    fn test_empty_graph() {
+        let graph: DiGraph<(), ()> = DiGraph::new();
+        let result: Vec<Vec<NodeIndex>> = layers(&graph, vec![]).flatten().collect();
+        assert_eq!(result, vec![vec![]]);
+    }
+
+    #[test]
+    fn test_empty_stable_graph() {
+        let graph: StableDiGraph<(), ()> = StableDiGraph::new();
+        let result: Vec<Vec<NodeIndex>> = layers(&graph, vec![]).flatten().collect();
+        assert_eq!(result, vec![vec![]]);
+    }
+
+    #[test]
+    fn test_simple_layer() {
+        let mut graph: DiGraph<String, ()> = DiGraph::new();
+        let mut nodes: Vec<NodeIndex> = Vec::new();
+        nodes.push(graph.add_node("a".to_string()));
+        for i in 0..5 {
+            nodes.push(graph.add_node(i.to_string()));
+        }
+        nodes.push(graph.add_node("A parent".to_string()));
+        for (source, target) in [(0, 1), (0, 2), (0, 3), (0, 4), (0, 5), (6, 3)] {
+            graph.add_edge(nodes[source], nodes[target], ());
+        }
+        let expected: Vec<Vec<NodeIndex>> = vec![
+            vec![0.into(), 6.into()],
+            vec![5.into(), 4.into(), 2.into(), 1.into(), 3.into()],
+        ];
+        let result: Vec<Vec<NodeIndex>> =
+            layers(&graph, vec![0.into(), 6.into()]).flatten().collect();
+        assert_eq!(result, expected);
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_missing_node() {
+        let edge_list = vec![(0, 1), (1, 2), (2, 3), (3, 4)];
+        let graph = DiGraph::<u32, u32>::from_edges(&edge_list);
+        layers(&graph, vec![4.into(), 5.into()]).for_each(|layer| match layer {
+            Err(e) => panic!("{}", e.0),
+            Ok(layer) => drop(layer),
+        });
+    }
+
+    #[test]
+    fn test_dag_with_multiple_paths() {
+        let mut graph: DiGraph<(), ()> = DiGraph::new();
+        let n0 = graph.add_node(());
+        let n1 = graph.add_node(());
+        let n2 = graph.add_node(());
+        let n3 = graph.add_node(());
+        let n4 = graph.add_node(());
+        let n5 = graph.add_node(());
+        graph.add_edge(n0, n1, ());
+        graph.add_edge(n0, n2, ());
+        graph.add_edge(n1, n2, ());
+        graph.add_edge(n1, n3, ());
+        graph.add_edge(n2, n3, ());
+        graph.add_edge(n3, n4, ());
+        graph.add_edge(n2, n5, ());
+        graph.add_edge(n4, n5, ());
+
+        let result: Vec<Vec<NodeIndex>> = layers(&graph, vec![0.into()]).flatten().collect();
+        assert_eq!(
+            result,
+            vec![vec![n0], vec![n1], vec![n2], vec![n3], vec![n4], vec![n5]]
+        );
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_graph_with_cycle() {
+        let mut graph: DiGraph<(), i32> = DiGraph::new();
+        let n0 = graph.add_node(());
+        let n1 = graph.add_node(());
+        graph.add_edge(n0, n1, 1);
+        graph.add_edge(n1, n0, 1);
+
+        layers(&graph, vec![0.into()]).for_each(|layer| match layer {
+            Err(e) => panic!("{}", e.0),
+            Ok(layer) => drop(layer),
+        });
     }
 }
 
