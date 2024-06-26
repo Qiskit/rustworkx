@@ -90,12 +90,16 @@ def full_rary_tree(
     weights: Sequence[Any] | None = ...,
     multigraph: bool = ...,
 ) -> PyGraph: ...
-def hexagonal_lattice_graph(rows: int, cols: int, multigraph: bool = ...) -> PyGraph: ...
+def hexagonal_lattice_graph(
+    rows: int, cols: int, multigraph: bool = ..., periodic: bool = ..., with_positions: bool = ...
+) -> PyGraph: ...
 def directed_hexagonal_lattice_graph(
     rows: int,
     cols: int,
     bidirectional: bool = ...,
     multigraph: bool = ...,
+    periodic: bool = ...,
+    with_positions: bool = ...,
 ) -> PyDiGraph: ...
 def lollipop_graph(
     num_mesh_nodes: int | None = ...,

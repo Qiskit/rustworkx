@@ -14,7 +14,7 @@ use petgraph::algo;
 use petgraph::prelude::*;
 use petgraph::Undirected;
 
-use pyo3::exceptions::{PyIndexError, PyOverflowError};
+use pyo3::exceptions::{PyIndexError, PyOverflowError, PyValueError};
 use pyo3::prelude::*;
 use pyo3::wrap_pyfunction;
 use pyo3::Python;
@@ -1103,6 +1103,12 @@ pub fn full_rary_tree(
     })
 }
 
+fn _hexagonal_lattice_node_position(u: usize, v: usize) -> (f64, f64) {
+    let [i, j, a, b, c] = [u, v, u / 2, v % 2, u % 2].map(|val| val as f64);
+    const SQRT3: f64 = 1.732_050_807_568_877_2_f64;
+    (0.5 + i + a + b * (c - 0.5), SQRT3 * j)
+}
+
 /// Generate an undirected hexagonal lattice graph.
 ///
 /// :param int rows: The number of rows to generate the graph with.
@@ -1111,6 +1117,12 @@ pub fn full_rary_tree(
 ///     :class:`~rustworkx.PyGraph` object will not be not be a multigraph and
 ///     won't allow parallel edges to be added. Instead
 ///     calls which would create a parallel edge will update the existing edge.
+/// :param bool periodic: When set to ``True`` the boundaries of the lattice
+///     will be joined to form a periodic grid. Requires ``cols`` to be even,
+///     ``rows > 1``, and ``cols > 1``.
+/// :param bool with_positions: When set to ``True`` each node will be assigned
+///     a pair of coordinates ``(x, y)`` as a weight. This embeds the nodes in
+///     the plane so that each hexagon is regular (with side length 2).
 ///
 /// :returns: The generated hexagonal lattice graph.
 ///
@@ -1128,20 +1140,39 @@ pub fn full_rary_tree(
 ///
 #[pyfunction]
 #[pyo3(
-    signature=(rows, cols, multigraph=true),
+    signature=(rows, cols, multigraph=true, periodic=false, with_positions=false),
 )]
 pub fn hexagonal_lattice_graph(
     py: Python,
     rows: usize,
     cols: usize,
     multigraph: bool,
+    periodic: bool,
+    with_positions: bool,
 ) -> PyResult<graph::PyGraph> {
     let default_fn = || py.None();
-    let graph: StablePyGraph<Undirected> =
-        match core_generators::hexagonal_lattice_graph(rows, cols, default_fn, default_fn, false) {
+    let graph: StablePyGraph<Undirected> = if with_positions {
+        let node_position_fn =
+            |u: usize, v: usize| _hexagonal_lattice_node_position(u, v).to_object(py);
+        match core_generators::hexagonal_lattice_graph_weighted(
+            rows,
+            cols,
+            node_position_fn,
+            default_fn,
+            false,
+            periodic,
+        ) {
             Ok(graph) => graph,
-            Err(_) => return Err(PyIndexError::new_err("rows and cols not specified")),
-        };
+            Err(_) => return Err(PyValueError::new_err("Invalid arguments")),
+        }
+    } else {
+        match core_generators::hexagonal_lattice_graph(
+            rows, cols, default_fn, default_fn, false, periodic,
+        ) {
+            Ok(graph) => graph,
+            Err(_) => return Err(PyValueError::new_err("Invalid arguments")),
+        }
+    };
     Ok(graph::PyGraph {
         graph,
         node_removed: false,
@@ -1162,6 +1193,12 @@ pub fn hexagonal_lattice_graph(
 ///     :class:`~rustworkx.PyDiGraph` object will not be not be a multigraph and
 ///     won't allow parallel edges to be added. Instead
 ///     calls which would create a parallel edge will update the existing edge.
+/// :param bool periodic: When set to ``True`` the boundaries of the lattice
+///     will be joined to form a periodic grid. Requires ``cols`` to be even,
+///     ``rows > 1``, and ``cols > 1``.
+/// :param bool with_positions: When set to ``True`` each node will be assigned
+///     a pair of coordinates ``(x, y)`` as a payload. This embeds the nodes in
+///     the plane so that each hexagon is regular (with side length 2).
 ///
 /// :returns: The generated directed hexagonal lattice graph.
 ///
@@ -1179,7 +1216,7 @@ pub fn hexagonal_lattice_graph(
 ///
 #[pyfunction]
 #[pyo3(
-    signature=(rows, cols, bidirectional=false, multigraph=true),
+    signature=(rows, cols, bidirectional=false, multigraph=true, periodic=false, with_positions=false),
 )]
 pub fn directed_hexagonal_lattice_graph(
     py: Python,
@@ -1187,17 +1224,36 @@ pub fn directed_hexagonal_lattice_graph(
     cols: usize,
     bidirectional: bool,
     multigraph: bool,
+    periodic: bool,
+    with_positions: bool,
 ) -> PyResult<digraph::PyDiGraph> {
     let default_fn = || py.None();
-    let graph: StablePyGraph<Directed> = match core_generators::hexagonal_lattice_graph(
-        rows,
-        cols,
-        default_fn,
-        default_fn,
-        bidirectional,
-    ) {
-        Ok(graph) => graph,
-        Err(_) => return Err(PyIndexError::new_err("rows and cols not specified")),
+    let graph: StablePyGraph<Directed> = if with_positions {
+        let node_position_fn =
+            |u: usize, v: usize| _hexagonal_lattice_node_position(u, v).to_object(py);
+        match core_generators::hexagonal_lattice_graph_weighted(
+            rows,
+            cols,
+            node_position_fn,
+            default_fn,
+            bidirectional,
+            periodic,
+        ) {
+            Ok(graph) => graph,
+            Err(_) => return Err(PyValueError::new_err("Invalid arguments")),
+        }
+    } else {
+        match core_generators::hexagonal_lattice_graph(
+            rows,
+            cols,
+            default_fn,
+            default_fn,
+            bidirectional,
+            periodic,
+        ) {
+            Ok(graph) => graph,
+            Err(_) => return Err(PyValueError::new_err("Invalid arguments")),
+        }
     };
     Ok(digraph::PyDiGraph {
         graph,
