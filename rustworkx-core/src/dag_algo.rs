@@ -421,13 +421,14 @@ where
                     panic!("Node {:#?} is not present in the graph.", node);
                 }
                 if self.cycle_check.contains(node) {
-                    return Some(Err(LayersError(
-                        "An invalid first layer was provided.".to_owned(),
-                    )));
+                    return Some(Err(LayersError(format!(
+                        "An invalid first layer was provided: {:#?} appears more than once.",
+                        node
+                    ))));
                 }
                 self.cycle_check.insert(*node);
             }
-            Some(Ok(self.cur_layer.to_owned()))
+            Some(Ok(self.cur_layer.clone()))
         } else if self.cur_layer.is_empty() {
             None
         } else {
@@ -479,7 +480,7 @@ where
             if self.cur_layer.is_empty() {
                 None
             } else {
-                Some(Ok(self.cur_layer.to_owned()))
+                Some(Ok(self.cur_layer.clone()))
             }
         }
     }
