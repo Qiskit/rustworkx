@@ -1,0 +1,16 @@
+---
+prelude: >
+  This is a new feature release of Rustworkx that adds a many new features to
+  the library. The highlights of this release are:
+
+    * An expansion of functions in rustworkx-core that previously only existed
+      in the Python API.
+    * Expanded graph coloring algorithms
+
+  This release moves to using the `Python Stable ABI <https://docs.python.org/3.9/c-api/stable.html>`__,
+  while this release officially supports Python 3.8 through 3.12, the published
+  binaries should be compatible with future Python versions too. Although there
+  is no guarantee provided about future versions. Additionally, the minimum
+  supported Rust version for building rustworkx and more importantly
+  rustworkx-core is now 1.70.0. Additionally, in this release the macOS arm64
+  platform has been promoted from :ref:`tier-4` to :ref:`tier-1`.

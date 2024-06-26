@@ -12,3 +12,4 @@ Other Algorithm Functions
    rustworkx.graph_line_graph
    rustworkx.metric_closure
    rustworkx.is_planar
+   rustworkx.digraph_maximum_bisimulation

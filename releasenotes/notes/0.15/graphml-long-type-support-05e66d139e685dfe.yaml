@@ -1,0 +1,6 @@
+---
+fixes:
+  - |
+    Fixed support for handling ``Long`` type attributes from input GraphML
+    in the :func:`~rustworkx.read_graphml` function.
+    Fixed `#1140 <https://github.com/Qiskit/rustworkx/issues/1140>`__.
