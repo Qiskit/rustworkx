@@ -14,3 +14,30 @@ prelude: >
   supported Rust version for building rustworkx and more importantly
   rustworkx-core is now 1.70.0. Additionally, in this release the macOS arm64
   platform has been promoted from :ref:`tier-4` to :ref:`tier-1`.
+features:
+  - |
+    Added two new keyword arguments, ``periodic`` an ``with_positions``, to the generator functions
+    :func:`.hexagonal_lattice_graph` and :func:`.directed_hexagonal_lattice_graph`. If periodic is
+    set to ``True`` the boundaries of the lattice will be joined to form a periodic grid. If the
+    ``with_positions`` argument is set to ``True`` than the data payload of all the nodes will
+    be set to a tuple of the form ``(x, y)`` where x and y represent the node's position in the
+    lattice. For example:
+
+    .. jupyter-execute::
+
+        import rustworkx as rx
+        from rustworkx.visualization import mpl_draw
+
+        graph = rx.generators.hexagonal_lattice_graph(4, 4, periodic=True, with_positions=True)
+        mpl_draw(graph, with_labels=True, labels=str)
+  - |
+    Added a new rustworkx-core function ``rustworkx_core::generators::hexagonal_lattice_graph_weighted()``
+    which is used to generate a hexagonal lattice graph where a callback is used to generate the node
+    weights for each node from a tuple of the form ``(usize, usize)``.
+upgrade:
+  - |
+    The interface of the ``rustworkx_core::generators::hexagonal_lattice_graph()`` function has been
+    changed, there is a new required boolean argument ``periodic`` which is used to indicate whether
+    the output graph should join the bondaries of the lattice to form a periodic grid or not. This
+    argument didn't exist in prior releases of rustworkx-core and it will need to be added when
+    upgrading to this new release.
