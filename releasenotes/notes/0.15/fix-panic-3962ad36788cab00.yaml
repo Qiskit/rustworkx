@@ -11,5 +11,5 @@ fixes:
 
     where a ``PanicException`` was raised without much detail when an
     invalid node index was passed in to the ``source`` argument. This has been
-    corrected so a ``IndexError`` is raised instead.
+    corrected so an ``IndexError`` is raised instead.
     Fixed `#1117 <https://github.com/Qiskit/rustworkx/issues/1117>`__
