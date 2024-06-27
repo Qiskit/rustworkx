@@ -13,5 +13,6 @@ features:
       mpl_draw(graph)
 
   - |
-    Added to rustworkx-core ``generators::dorogovtsev_goltsev_mendes_graph`` function that generates,
-    deterministic scale-free graphs using the Dorogovtsev-Goltsev-Mendes iterative procedure.
+    Added a new function, ``rustworkx_core::generators::dorogovtsev_goltsev_mendes_graph``, to
+    rustworkx-core that is used to generate deterministic scale-free graphs using the
+    Dorogovtsev-Goltsev-Mendes iterative procedure.
