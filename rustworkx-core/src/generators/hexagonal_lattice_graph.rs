@@ -21,6 +21,7 @@ pub struct HexagonalLatticeBuilder {
     rowlen: usize,    // Number of nodes in each vertical chain
     collen: usize,    // Number of vertical chains
     num_nodes: usize, // Total number of nodes
+    num_edges: usize, // Total number of edges
     bidirectional: bool,
     periodic: bool,
 }
@@ -36,18 +37,31 @@ impl HexagonalLatticeBuilder {
             return Err(InvalidInputError {});
         }
 
-        let (rowlen, collen, num_nodes) = if periodic {
+        let num_edges_factor = if bidirectional { 2 } else { 1 };
+
+        let (rowlen, collen, num_nodes, num_edges) = if periodic {
             let r_len = 2 * rows;
-            (r_len, cols, r_len * cols)
+            (
+                r_len,
+                cols,
+                r_len * cols,
+                num_edges_factor * 3 * rows * cols,
+            )
         } else {
             let r_len = 2 * rows + 2;
-            (r_len, cols + 1, r_len * (cols + 1) - 2)
+            (
+                r_len,
+                cols + 1,
+                r_len * (cols + 1) - 2,
+                num_edges_factor * (3 * rows * cols + 2 * (rows + cols) - 1),
+            )
         };
 
         Ok(HexagonalLatticeBuilder {
             rowlen,
             collen,
             num_nodes,
+            num_edges,
             bidirectional,
             periodic,
         })
@@ -64,8 +78,7 @@ impl HexagonalLatticeBuilder {
         H: FnMut() -> M,
         G::NodeId: Eq + Hash,
     {
-        // ToDo: be more precise about the number of edges
-        let mut graph = G::with_capacity(self.num_nodes, self.num_nodes);
+        let mut graph = G::with_capacity(self.num_nodes, self.num_edges);
         let nodes: Vec<G::NodeId> = (0..self.num_nodes)
             .map(|_| graph.add_node(default_node_weight()))
             .collect();
@@ -85,8 +98,7 @@ impl HexagonalLatticeBuilder {
         H: FnMut() -> M,
         G::NodeId: Eq + Hash,
     {
-        // ToDo: be more precise about the number of edges
-        let mut graph = G::with_capacity(self.num_nodes, self.num_nodes);
+        let mut graph = G::with_capacity(self.num_nodes, self.num_edges);
 
         let lattice_position = |n| -> (usize, usize) {
             if self.periodic {
