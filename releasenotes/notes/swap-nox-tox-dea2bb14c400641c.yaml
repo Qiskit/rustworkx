@@ -1,6 +1,0 @@
----
-other:
-  - |
-    Switched automated testing environment from
-    Tox to `Nox <https://nox.thea.codes/en/stable/>`__. This
-    change should not impact the end-user

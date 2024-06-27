@@ -24,6 +24,4 @@ fixes:
 
             mpl_draw(graph, with_labels=True, labels=str, edge_labels=str, alpha=0.5)
 
-  - |
-    Refer to `#774 <https://github.com/Qiskit/rustworkx/issues/774>` for more
-    details.
+    Fixed `#774 <https://github.com/Qiskit/rustworkx/issues/774>`__

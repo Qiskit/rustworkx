@@ -1,7 +1,0 @@
-features:
-  - |
-    Adds new random graph generator function, :func:`.hyperbolic_random_graph`
-    to sample the hyperbolic random graph model.
-  - |
-    Adds new function to the rustworkx-core module ``rustworkx_core::generators``
-    ``hyperbolic_random_graph()`` that samples the hyperbolic random graph model.
