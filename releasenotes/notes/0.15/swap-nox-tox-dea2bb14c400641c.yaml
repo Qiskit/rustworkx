@@ -1,7 +1,7 @@
 ---
 other:
   - |
-    For developement of rustworkx the automated automated testing environment
+    For developement of rustworkx the automated testing environment
     tooling used has switched from Tox to instead
     `Nox <https://nox.thea.codes/en/stable/>`__. This is has no impact for
     end users and is only relevant if you contribute code to rustworkx.
