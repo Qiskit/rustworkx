@@ -17,178 +17,170 @@ use petgraph::visit::{Data, NodeIndexable};
 
 use super::InvalidInputError;
 
-mod utils {
-    use super::*;
+pub struct HexagonalLatticeBuilder {
+    rowlen: usize,    // Number of nodes in each vertical chain
+    collen: usize,    // Number of vertical chains
+    num_nodes: usize, // Total number of nodes
+    bidirectional: bool,
+    periodic: bool,
+}
 
-    pub struct HexagonalLatticeBuilder {
-        rowlen: usize,    // Number of nodes in each vertical chain
-        collen: usize,    // Number of vertical chains
-        num_nodes: usize, // Total number of nodes
+impl HexagonalLatticeBuilder {
+    pub fn new(
+        rows: usize,
+        cols: usize,
         bidirectional: bool,
         periodic: bool,
+    ) -> Result<HexagonalLatticeBuilder, InvalidInputError> {
+        if periodic && (cols % 2 == 1 || rows < 2 || cols < 2) {
+            return Err(InvalidInputError {});
+        }
+
+        let (rowlen, collen, num_nodes) = if periodic {
+            let r_len = 2 * rows;
+            (r_len, cols, r_len * cols)
+        } else {
+            let r_len = 2 * rows + 2;
+            (r_len, cols + 1, r_len * (cols + 1) - 2)
+        };
+
+        Ok(HexagonalLatticeBuilder {
+            rowlen,
+            collen,
+            num_nodes,
+            bidirectional,
+            periodic,
+        })
     }
 
-    impl HexagonalLatticeBuilder {
-        pub fn new(
-            rows: usize,
-            cols: usize,
-            bidirectional: bool,
-            periodic: bool,
-        ) -> Result<HexagonalLatticeBuilder, InvalidInputError> {
-            if periodic && (cols % 2 == 1 || rows < 2 || cols < 2) {
-                return Err(InvalidInputError {});
-            }
+    pub fn build_with_default_node_weight<G, T, F, H, M>(
+        self,
+        mut default_node_weight: F,
+        default_edge_weight: H,
+    ) -> G
+    where
+        G: Build + Create + Data<NodeWeight = T, EdgeWeight = M> + NodeIndexable,
+        F: FnMut() -> T,
+        H: FnMut() -> M,
+        G::NodeId: Eq + Hash,
+    {
+        // ToDo: be more precise about the number of edges
+        let mut graph = G::with_capacity(self.num_nodes, self.num_nodes);
+        let nodes: Vec<G::NodeId> = (0..self.num_nodes)
+            .map(|_| graph.add_node(default_node_weight()))
+            .collect();
+        self.add_edges(&mut graph, nodes, default_edge_weight);
 
-            let (rowlen, collen, num_nodes) = if periodic {
-                let r_len = 2 * rows;
-                (r_len, cols, r_len * cols)
-            } else {
-                let r_len = 2 * rows + 2;
-                (r_len, cols + 1, r_len * (cols + 1) - 2)
-            };
+        graph
+    }
 
-            Ok(HexagonalLatticeBuilder {
-                rowlen,
-                collen,
-                num_nodes,
-                bidirectional,
-                periodic,
-            })
-        }
+    pub fn build_with_position_dependent_node_weight<G, T, F, H, M>(
+        self,
+        mut node_weight: F,
+        default_edge_weight: H,
+    ) -> G
+    where
+        G: Build + Create + Data<NodeWeight = T, EdgeWeight = M> + NodeIndexable,
+        F: FnMut(usize, usize) -> T,
+        H: FnMut() -> M,
+        G::NodeId: Eq + Hash,
+    {
+        // ToDo: be more precise about the number of edges
+        let mut graph = G::with_capacity(self.num_nodes, self.num_nodes);
 
-        pub fn build_with_default_node_weight<G, T, F, H, M>(
-            self,
-            mut default_node_weight: F,
-            default_edge_weight: H,
-        ) -> G
-        where
-            G: Build + Create + Data<NodeWeight = T, EdgeWeight = M> + NodeIndexable,
-            F: FnMut() -> T,
-            H: FnMut() -> M,
-            G::NodeId: Eq + Hash,
-        {
-            // ToDo: be more precise about the number of edges
-            let mut graph = G::with_capacity(self.num_nodes, self.num_nodes);
-            let nodes: Vec<G::NodeId> = (0..self.num_nodes)
-                .map(|_| graph.add_node(default_node_weight()))
-                .collect();
-            self.add_edges(&mut graph, nodes, default_edge_weight);
-
-            graph
-        }
-
-        pub fn build_with_position_dependent_node_weight<G, T, F, H, M>(
-            self,
-            mut node_weight: F,
-            default_edge_weight: H,
-        ) -> G
-        where
-            G: Build + Create + Data<NodeWeight = T, EdgeWeight = M> + NodeIndexable,
-            F: FnMut(usize, usize) -> T,
-            H: FnMut() -> M,
-            G::NodeId: Eq + Hash,
-        {
-            // ToDo: be more precise about the number of edges
-            let mut graph = G::with_capacity(self.num_nodes, self.num_nodes);
-
-            let lattice_position = |n| -> (usize, usize) {
-                if self.periodic {
-                    (n / self.rowlen, n % self.rowlen)
-                } else {
-                    // In the non-periodic case the first and last vertical
-                    // chains have rowlen - 1 = 2 * rows + 1 nodes. All others
-                    // have rowlen = 2 * rows + 2 nodes.
-                    if n < self.rowlen - 1 {
-                        (0, n)
-                    } else {
-                        let k = n - (self.rowlen - 1);
-                        let u = k / self.rowlen + 1;
-                        let v = k % self.rowlen;
-                        if u == self.collen - 1 {
-                            (u, v + 1)
-                        } else {
-                            (u, v)
-                        }
-                    }
-                }
-            };
-
-            let nodes: Vec<G::NodeId> = (0..self.num_nodes)
-                .map(lattice_position)
-                .map(|(u, v)| graph.add_node(node_weight(u, v)))
-                .collect();
-            self.add_edges(&mut graph, nodes, default_edge_weight);
-
-            graph
-        }
-
-        fn add_edges<G, H, M>(
-            &self,
-            graph: &mut G,
-            nodes: Vec<G::NodeId>,
-            mut default_edge_weight: H,
-        ) where
-            G: Build + NodeIndexable + Data<EdgeWeight = M>,
-            H: FnMut() -> M,
-        {
-            let mut add_edge = |u, v| {
-                graph.add_edge(nodes[u], nodes[v], default_edge_weight());
-                if self.bidirectional {
-                    graph.add_edge(nodes[v], nodes[u], default_edge_weight());
-                }
-            };
-
+        let lattice_position = |n| -> (usize, usize) {
             if self.periodic {
-                // Add column edges
-                for i in 0..self.collen {
-                    let col_start = i * self.rowlen;
-                    for j in col_start..(col_start + self.rowlen - 1) {
-                        add_edge(j, j + 1);
-                    }
-                    add_edge(col_start + self.rowlen - 1, col_start);
-                }
-                // Add row edges
-                for i in 0..self.collen {
-                    let col_start = i * self.rowlen + i % 2;
-                    for j in (col_start..(col_start + self.rowlen)).step_by(2) {
-                        add_edge(j, (j + self.rowlen) % self.num_nodes);
-                    }
-                }
+                (n / self.rowlen, n % self.rowlen)
             } else {
-                // Add column edges
-                for j in 0..(self.rowlen - 2) {
+                // In the non-periodic case the first and last vertical
+                // chains have rowlen - 1 = 2 * rows + 1 nodes. All others
+                // have rowlen = 2 * rows + 2 nodes.
+                if n < self.rowlen - 1 {
+                    (0, n)
+                } else {
+                    let k = n - (self.rowlen - 1);
+                    let u = k / self.rowlen + 1;
+                    let v = k % self.rowlen;
+                    if u == self.collen - 1 {
+                        (u, v + 1)
+                    } else {
+                        (u, v)
+                    }
+                }
+            }
+        };
+
+        let nodes: Vec<G::NodeId> = (0..self.num_nodes)
+            .map(lattice_position)
+            .map(|(u, v)| graph.add_node(node_weight(u, v)))
+            .collect();
+        self.add_edges(&mut graph, nodes, default_edge_weight);
+
+        graph
+    }
+
+    fn add_edges<G, H, M>(&self, graph: &mut G, nodes: Vec<G::NodeId>, mut default_edge_weight: H)
+    where
+        G: Build + NodeIndexable + Data<EdgeWeight = M>,
+        H: FnMut() -> M,
+    {
+        let mut add_edge = |u, v| {
+            graph.add_edge(nodes[u], nodes[v], default_edge_weight());
+            if self.bidirectional {
+                graph.add_edge(nodes[v], nodes[u], default_edge_weight());
+            }
+        };
+
+        if self.periodic {
+            // Add column edges
+            for i in 0..self.collen {
+                let col_start = i * self.rowlen;
+                for j in col_start..(col_start + self.rowlen - 1) {
                     add_edge(j, j + 1);
                 }
-                for i in 1..(self.collen - 1) {
-                    for j in 0..(self.rowlen - 1) {
-                        add_edge(i * self.rowlen + j - 1, i * self.rowlen + j);
-                    }
+                add_edge(col_start + self.rowlen - 1, col_start);
+            }
+            // Add row edges
+            for i in 0..self.collen {
+                let col_start = i * self.rowlen + i % 2;
+                for j in (col_start..(col_start + self.rowlen)).step_by(2) {
+                    add_edge(j, (j + self.rowlen) % self.num_nodes);
                 }
-                for j in 0..(self.rowlen - 2) {
-                    add_edge(
-                        (self.collen - 1) * self.rowlen + j - 1,
-                        (self.collen - 1) * self.rowlen + j,
-                    );
+            }
+        } else {
+            // Add column edges
+            for j in 0..(self.rowlen - 2) {
+                add_edge(j, j + 1);
+            }
+            for i in 1..(self.collen - 1) {
+                for j in 0..(self.rowlen - 1) {
+                    add_edge(i * self.rowlen + j - 1, i * self.rowlen + j);
                 }
+            }
+            for j in 0..(self.rowlen - 2) {
+                add_edge(
+                    (self.collen - 1) * self.rowlen + j - 1,
+                    (self.collen - 1) * self.rowlen + j,
+                );
+            }
 
-                // Add row edges
-                for j in (0..(self.rowlen - 1)).step_by(2) {
-                    add_edge(j, j + self.rowlen - 1);
-                }
-                for i in 1..(self.collen - 2) {
-                    for j in 0..self.rowlen {
-                        if i % 2 == j % 2 {
-                            add_edge(i * self.rowlen + j - 1, (i + 1) * self.rowlen + j - 1);
-                        }
+            // Add row edges
+            for j in (0..(self.rowlen - 1)).step_by(2) {
+                add_edge(j, j + self.rowlen - 1);
+            }
+            for i in 1..(self.collen - 2) {
+                for j in 0..self.rowlen {
+                    if i % 2 == j % 2 {
+                        add_edge(i * self.rowlen + j - 1, (i + 1) * self.rowlen + j - 1);
                     }
                 }
-                if self.collen > 2 {
-                    for j in ((self.collen % 2)..self.rowlen).step_by(2) {
-                        add_edge(
-                            (self.collen - 2) * self.rowlen + j - 1,
-                            (self.collen - 1) * self.rowlen + j - 1 - (self.collen % 2),
-                        );
-                    }
+            }
+            if self.collen > 2 {
+                for j in ((self.collen % 2)..self.rowlen).step_by(2) {
+                    add_edge(
+                        (self.collen - 2) * self.rowlen + j - 1,
+                        (self.collen - 1) * self.rowlen + j - 1 - (self.collen % 2),
+                    );
                 }
             }
         }
@@ -272,7 +264,7 @@ where
         return Ok(G::with_capacity(0, 0));
     }
 
-    let builder = utils::HexagonalLatticeBuilder::new(rows, cols, bidirectional, periodic)?;
+    let builder = HexagonalLatticeBuilder::new(rows, cols, bidirectional, periodic)?;
 
     let graph = builder
         .build_with_default_node_weight::<G, T, F, H, M>(default_node_weight, default_edge_weight);
@@ -357,7 +349,7 @@ where
         return Ok(G::with_capacity(0, 0));
     }
 
-    let builder = utils::HexagonalLatticeBuilder::new(rows, cols, bidirectional, periodic)?;
+    let builder = HexagonalLatticeBuilder::new(rows, cols, bidirectional, periodic)?;
 
     let graph = builder.build_with_position_dependent_node_weight::<G, T, F, H, M>(
         node_weight,
