@@ -1,6 +1,6 @@
 ---
 prelude: >
-  This is a new feature release of Rustworkx that adds a many new features to
+  This is a new feature release of Rustworkx that adds many new features to
   the library. The highlights of this release are:
 
     * An expansion of functions in rustworkx-core that previously only existed
