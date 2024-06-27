@@ -438,9 +438,12 @@ class TestHexagonalLatticeGraph(unittest.TestCase):
         degree 3 (idea copied from the networkx test suite)."""
         for nRows in range(2, 8):
             for nCols in range(2, 8, 2):
-                graph = rustworkx.generators.hexagonal_lattice_graph(nRows, nCols, periodic=True)
-                for n in range(graph.num_nodes()):
-                    self.assertEqual(graph.degree(n), 3)
+                with self.subTest(nRows=nRows, nCols=nCols):
+                    graph = rustworkx.generators.hexagonal_lattice_graph(
+                        nRows, nCols, periodic=True
+                    )
+                    for n in range(graph.num_nodes()):
+                        self.assertEqual(graph.degree(n), 3)
 
     def test_hexagonal_graph_periodic_3_4(self):
         graph = rustworkx.generators.hexagonal_lattice_graph(3, 4, periodic=True)
@@ -564,13 +567,16 @@ class TestHexagonalLatticeGraph(unittest.TestCase):
         networkx are isomorphic for a few cases."""
         for nRows in range(2, 8):
             for nCols in range(2, 8, 2):
-                graph = rustworkx.generators.hexagonal_lattice_graph(nRows, nCols, periodic=True)
+                with self.subTest(nRows=nRows, nCols=nCols):
+                    graph = rustworkx.generators.hexagonal_lattice_graph(
+                        nRows, nCols, periodic=True
+                    )
 
-                nx_graph = rustworkx.networkx_converter(
-                    networkx.hexagonal_lattice_graph(nRows, nCols, periodic=True)
-                )
+                    nx_graph = rustworkx.networkx_converter(
+                        networkx.hexagonal_lattice_graph(nRows, nCols, periodic=True)
+                    )
 
-                self.assertTrue(rustworkx.is_isomorphic(graph, nx_graph))
+                    self.assertTrue(rustworkx.is_isomorphic(graph, nx_graph))
 
     def test_hexagonal_graph_periodic_odd_columns(self):
         with self.assertRaises(ValueError):
