@@ -1,0 +1,22 @@
+---
+fixes:
+  - |
+    Fixed an issue in the :func:`~.graphviz_draw`, :meth:`.PyGraph.to_dot`, and
+    :meth:`.PyDiGraph.to_dot` which was incorrectly escaping strings when
+    upgrading to 0.15.0. In earlier versions of rustworkx if you manually
+    placed quotes in a string for an attr callback get that to pass through to 
+    the output dot file this was incorrectly being converted in rustworkx 0.15.0
+    to duplicate the quotes and escape them. For example, if you defined a
+    callback like::
+
+        def color_node(_node):
+            return {
+                "color": '"#422952"'
+            }
+
+    to set the color attribute in the output dot file with the string
+    `"#422952"` (with the quotes) this was incorrectly being converted to
+    `\"#422952\"`. This no longer occurs, in rustworkx 0.16.0 there will likely
+    be additional options exposed in :func:`~.graphviz_draw`,
+    :meth:`.PyGraph.to_dot`, and :meth:`.PyDiGraph.to_dot` to expose further
+    options around this.
