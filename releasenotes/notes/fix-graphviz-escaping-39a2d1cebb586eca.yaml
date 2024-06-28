@@ -13,6 +13,7 @@ fixes:
             return {
                 "color": '"#422952"'
             }
+
     to set the color attribute in the output dot file with the string
     `"#422952"` (with the quotes) this was incorrectly being converted to
     `\"#422952\"`. This no longer occurs, in rustworkx 0.16.0 there will likely
