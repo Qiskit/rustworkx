@@ -17,8 +17,11 @@
 
 use std::cmp::{Ordering, Reverse};
 use std::convert::Infallible;
+use std::error::Error;
+use std::fmt::{Debug, Display, Formatter};
 use std::iter::Iterator;
 use std::marker;
+use std::ops::Deref;
 
 use crate::dictmap::*;
 use hashbrown::HashMap;
@@ -27,7 +30,8 @@ use petgraph::data::{Build, Create, DataMap};
 use petgraph::stable_graph::NodeIndex;
 use petgraph::visit::{
     Data, EdgeCount, EdgeRef, GraphBase, GraphProp, IntoEdgeReferences, IntoEdges,
-    IntoEdgesDirected, IntoNeighbors, IntoNodeIdentifiers, NodeCount, NodeIndexable,
+    IntoEdgesDirected, IntoNeighbors, IntoNeighborsDirected, IntoNodeIdentifiers, NodeCount,
+    NodeIndexable,
 };
 use petgraph::{Directed, Incoming, Outgoing};
 
@@ -68,7 +72,7 @@ fn sorted<N: std::cmp::PartialOrd>(x: &mut (N, N)) {
 
 /// Returns the adjacency matrix of a graph as a dictionary
 /// with `(i, j)` entry equal to number of edges from node `i` to node `j`.
-fn adjacency_matrix<G>(graph: &G) -> HashMap<(NodeIndex, NodeIndex), usize>
+fn adjacency_matrix<G>(graph: G) -> HashMap<(NodeIndex, NodeIndex), usize>
 where
     G: GraphProp + GraphBase<NodeId = NodeIndex> + EdgeCount + IntoEdgeReferences,
 {
@@ -116,7 +120,7 @@ where
     edge_multiplicity(graph, matrix, a, b) >= val
 }
 
-trait NodeSorter<'a, G>
+trait NodeSorter<G>
 where
     G: GraphBase<NodeId = NodeIndex> + DataMap + NodeCount + EdgeCount + IntoEdgeReferences,
     G::NodeWeight: Clone,
@@ -126,9 +130,9 @@ where
         + Create
         + Data<NodeWeight = G::NodeWeight, EdgeWeight = G::EdgeWeight>;
 
-    fn sort(&self, _: &'a G) -> Vec<NodeIndex>;
+    fn sort(&self, _: G) -> Vec<NodeIndex>;
 
-    fn reorder(&self, graph: &'a G) -> (Self::OutputGraph, HashMap<usize, usize>) {
+    fn reorder(&self, graph: G) -> (Self::OutputGraph, HashMap<usize, usize>) {
         let order = self.sort(graph);
 
         let mut new_graph =
@@ -161,20 +165,23 @@ impl DefaultIdSorter {
     }
 }
 
-impl<'a, G> NodeSorter<'a, G> for DefaultIdSorter
+impl<G> NodeSorter<G> for DefaultIdSorter
 where
-    G: GraphBase<NodeId = NodeIndex>
-        + Create
+    G: Deref
+        + GraphBase<NodeId = NodeIndex>
         + DataMap
         + NodeCount
         + EdgeCount
         + IntoEdgeReferences
         + IntoNodeIdentifiers,
+    G::Target: GraphBase<NodeId = NodeIndex>
+        + Data<NodeWeight = G::NodeWeight, EdgeWeight = G::EdgeWeight>
+        + Create,
     G::NodeWeight: Clone,
     G::EdgeWeight: Clone,
 {
-    type OutputGraph = G;
-    fn sort(&self, graph: &'a G) -> Vec<NodeIndex> {
+    type OutputGraph = G::Target;
+    fn sort(&self, graph: G) -> Vec<NodeIndex> {
         graph.node_identifiers().collect()
     }
 }
@@ -188,22 +195,25 @@ impl Vf2ppSorter {
     }
 }
 
-impl<'a, G> NodeSorter<'a, G> for Vf2ppSorter
+impl<G> NodeSorter<G> for Vf2ppSorter
 where
-    G: GraphProp
+    G: Deref
+        + GraphProp
         + GraphBase<NodeId = NodeIndex>
-        + Create
         + DataMap
         + NodeCount
         + NodeIndexable
         + EdgeCount
         + IntoNodeIdentifiers
         + IntoEdgesDirected,
+    G::Target: GraphBase<NodeId = NodeIndex>
+        + Data<NodeWeight = G::NodeWeight, EdgeWeight = G::EdgeWeight>
+        + Create,
     G::NodeWeight: Clone,
     G::EdgeWeight: Clone,
 {
-    type OutputGraph = G;
-    fn sort(&self, graph: &'a G) -> Vec<NodeIndex> {
+    type OutputGraph = G::Target;
+    fn sort(&self, graph: G) -> Vec<NodeIndex> {
         let n = graph.node_bound();
 
         let dout: Vec<usize> = (0..n)
@@ -330,7 +340,9 @@ struct Vf2State<G> {
 
 impl<G> Vf2State<G>
 where
-    G: GraphProp + GraphBase<NodeId = NodeIndex> + NodeCount + EdgeCount + IntoEdgesDirected,
+    G: GraphBase<NodeId = NodeIndex> + GraphProp + NodeCount + EdgeCount,
+    for<'a> &'a G:
+        GraphBase<NodeId = NodeIndex> + GraphProp + NodeCount + EdgeCount + IntoEdgesDirected,
 {
     pub fn new(graph: G) -> Self {
         let c0 = graph.node_count();
@@ -435,10 +447,26 @@ where
     }
 }
 
+#[derive(Debug)]
 pub enum IsIsomorphicError<NME, EME> {
     NodeMatcherErr(NME),
     EdgeMatcherErr(EME),
 }
+
+impl<NME: Error, EME: Error> Display for IsIsomorphicError<NME, EME> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            IsIsomorphicError::NodeMatcherErr(e) => {
+                write!(f, "Node match callback failed with: {}", e)
+            }
+            IsIsomorphicError::EdgeMatcherErr(e) => {
+                write!(f, "Edge match callback failed with: {}", e)
+            }
+        }
+    }
+}
+
+impl<NME: Error, EME: Error> Error for IsIsomorphicError<NME, EME> {}
 
 pub struct NoSemanticMatch;
 
@@ -531,8 +559,10 @@ impl<G0: GraphBase, G1: GraphBase> EdgeMatcher<G0, G1> for NoSemanticMatch {
 
 impl<G0, G1, F, E> EdgeMatcher<G0, G1> for F
 where
-    G0: GraphBase + DataMap + IntoEdgesDirected,
-    G1: GraphBase + DataMap + IntoEdgesDirected,
+    G0: GraphBase + DataMap,
+    for<'a> &'a G0: GraphBase<NodeId = G0::NodeId, EdgeId = G0::EdgeId> + IntoEdgesDirected,
+    G1: GraphBase + DataMap,
+    for<'a> &'a G1: GraphBase<NodeId = G1::NodeId, EdgeId = G1::EdgeId> + IntoEdgesDirected,
     F: FnMut(&G0::EdgeWeight, &G1::EdgeWeight) -> Result<bool, E>,
 {
     type Error = E;
@@ -570,9 +600,9 @@ where
 /// graph isomorphism (graph structure and matching node and edge weights).
 ///
 /// The graphs should not be multigraphs.
-pub fn is_isomorphic<'a, G0, G1, NM, EM>(
-    g0: &'a G0,
-    g1: &'a G1,
+pub fn is_isomorphic<G0, G1, NM, EM>(
+    g0: &G0,
+    g1: &G1,
     node_match: NM,
     edge_match: EM,
     id_order: bool,
@@ -581,23 +611,17 @@ pub fn is_isomorphic<'a, G0, G1, NM, EM>(
     call_limit: Option<usize>,
 ) -> Result<bool, IsIsomorphicError<NM::Error, EM::Error>>
 where
-    G0: GraphProp
-        + GraphBase<NodeId = NodeIndex>
-        + Create
-        + DataMap
-        + NodeCount
-        + EdgeCount
+    G0: GraphProp + GraphBase<NodeId = NodeIndex> + DataMap + Create + NodeCount + EdgeCount,
+    for<'a> &'a G0: GraphBase<NodeId = NodeIndex>
+        + Data<NodeWeight = G0::NodeWeight, EdgeWeight = G0::EdgeWeight>
         + NodeIndexable
         + IntoEdgesDirected
         + IntoNodeIdentifiers,
     G0::NodeWeight: Clone,
     G0::EdgeWeight: Clone,
-    G1: GraphProp
-        + GraphBase<NodeId = NodeIndex>
-        + Create
-        + DataMap
-        + NodeCount
-        + EdgeCount
+    G1: GraphProp + GraphBase<NodeId = NodeIndex> + DataMap + Create + NodeCount + EdgeCount,
+    for<'a> &'a G1: GraphBase<NodeId = NodeIndex>
+        + Data<NodeWeight = G1::NodeWeight, EdgeWeight = G1::EdgeWeight>
         + NodeIndexable
         + IntoEdgesDirected
         + IntoNodeIdentifiers,
@@ -656,23 +680,17 @@ where
 
 impl<G0, G1, NM, EM> Vf2Algorithm<G0, G1, NM, EM>
 where
-    G0: GraphProp
-        + GraphBase<NodeId = NodeIndex>
-        + Create
-        + DataMap
-        + NodeCount
-        + EdgeCount
+    G0: GraphProp + GraphBase<NodeId = NodeIndex> + DataMap + Create + NodeCount + EdgeCount,
+    for<'a> &'a G0: GraphBase<NodeId = NodeIndex>
+        + Data<NodeWeight = G0::NodeWeight, EdgeWeight = G0::EdgeWeight>
         + NodeIndexable
         + IntoEdgesDirected
         + IntoNodeIdentifiers,
     G0::NodeWeight: Clone,
     G0::EdgeWeight: Clone,
-    G1: GraphProp
-        + GraphBase<NodeId = NodeIndex>
-        + Create
-        + DataMap
-        + NodeCount
-        + EdgeCount
+    G1: GraphProp + GraphBase<NodeId = NodeIndex> + DataMap + Create + NodeCount + EdgeCount,
+    for<'a> &'a G1: GraphBase<NodeId = NodeIndex>
+        + Data<NodeWeight = G1::NodeWeight, EdgeWeight = G1::EdgeWeight>
         + NodeIndexable
         + IntoEdgesDirected
         + IntoNodeIdentifiers,

@@ -12,14 +12,16 @@
 
 #![allow(clippy::too_many_arguments)]
 
-mod vf2;
+mod vf2_mapping;
 
 use crate::{digraph, graph};
+use rustworkx_core::isomorphism::vf2;
 
 use std::cmp::Ordering;
 
 use pyo3::prelude::*;
 use pyo3::Python;
+use rustworkx_core::isomorphism::vf2::{IsIsomorphicError, NoSemanticMatch};
 
 /// Determine if 2 directed graphs are isomorphic
 ///
@@ -72,17 +74,73 @@ pub fn digraph_is_isomorphic(
     id_order: bool,
     call_limit: Option<usize>,
 ) -> PyResult<bool> {
-    vf2::is_isomorphic(
-        py,
-        &first.graph,
-        &second.graph,
-        node_matcher,
-        edge_matcher,
-        id_order,
-        Ordering::Equal,
-        true,
-        call_limit,
-    )
+    fn semantic_matcher(
+        py: Python,
+        matcher: PyObject,
+    ) -> impl FnMut(&PyObject, &PyObject) -> PyResult<bool> + '_ {
+        move |w1: &PyObject, w2: &PyObject| -> PyResult<bool> {
+            let res = matcher.call1(py, (w1, w2))?;
+            res.is_truthy(py)
+        }
+    }
+    let node_matcher = node_matcher.map(|nm| semantic_matcher(py, nm));
+    let edge_matcher = edge_matcher.map(|em| semantic_matcher(py, em));
+    let result = match (node_matcher, edge_matcher) {
+        (Some(node_matcher), Some(edge_matcher)) => vf2::is_isomorphic(
+            &first.graph,
+            &second.graph,
+            node_matcher,
+            edge_matcher,
+            id_order,
+            Ordering::Equal,
+            true,
+            call_limit,
+        )
+        .map_err(|e| match e {
+            IsIsomorphicError::NodeMatcherErr(e) => e,
+            IsIsomorphicError::EdgeMatcherErr(e) => e,
+        })?,
+        (Some(node_matcher), None) => vf2::is_isomorphic(
+            &first.graph,
+            &second.graph,
+            node_matcher,
+            NoSemanticMatch,
+            id_order,
+            Ordering::Equal,
+            true,
+            call_limit,
+        )
+        .map_err(|e| match e {
+            IsIsomorphicError::NodeMatcherErr(e) => e,
+            _ => unreachable!(),
+        })?,
+        (None, Some(edge_matcher)) => vf2::is_isomorphic(
+            &first.graph,
+            &second.graph,
+            NoSemanticMatch,
+            edge_matcher,
+            id_order,
+            Ordering::Equal,
+            true,
+            call_limit,
+        )
+        .map_err(|e| match e {
+            IsIsomorphicError::EdgeMatcherErr(e) => e,
+            _ => unreachable!(),
+        })?,
+        (None, None) => vf2::is_isomorphic(
+            &first.graph,
+            &second.graph,
+            NoSemanticMatch,
+            NoSemanticMatch,
+            id_order,
+            Ordering::Equal,
+            true,
+            call_limit,
+        )
+        .unwrap(),
+    };
+    Ok(result)
 }
 
 /// Determine if 2 undirected graphs are isomorphic
@@ -136,17 +194,18 @@ pub fn graph_is_isomorphic(
     id_order: bool,
     call_limit: Option<usize>,
 ) -> PyResult<bool> {
-    vf2::is_isomorphic(
-        py,
-        &first.graph,
-        &second.graph,
-        node_matcher,
-        edge_matcher,
-        id_order,
-        Ordering::Equal,
-        true,
-        call_limit,
-    )
+    // vf2::is_isomorphic(
+    //     py,
+    //     &first.graph,
+    //     &second.graph,
+    //     node_matcher,
+    //     edge_matcher,
+    //     id_order,
+    //     Ordering::Equal,
+    //     true,
+    //     call_limit,
+    // )
+    todo!()
 }
 
 /// Determine if 2 directed graphs are subgraph - isomorphic
@@ -208,17 +267,18 @@ pub fn digraph_is_subgraph_isomorphic(
     induced: bool,
     call_limit: Option<usize>,
 ) -> PyResult<bool> {
-    vf2::is_isomorphic(
-        py,
-        &first.graph,
-        &second.graph,
-        node_matcher,
-        edge_matcher,
-        id_order,
-        Ordering::Greater,
-        induced,
-        call_limit,
-    )
+    // vf2::is_isomorphic(
+    //     py,
+    //     &first.graph,
+    //     &second.graph,
+    //     node_matcher,
+    //     edge_matcher,
+    //     id_order,
+    //     Ordering::Greater,
+    //     induced,
+    //     call_limit,
+    // )
+    todo!()
 }
 
 /// Determine if 2 undirected graphs are subgraph - isomorphic
@@ -280,17 +340,18 @@ pub fn graph_is_subgraph_isomorphic(
     induced: bool,
     call_limit: Option<usize>,
 ) -> PyResult<bool> {
-    vf2::is_isomorphic(
-        py,
-        &first.graph,
-        &second.graph,
-        node_matcher,
-        edge_matcher,
-        id_order,
-        Ordering::Greater,
-        induced,
-        call_limit,
-    )
+    // vf2::is_isomorphic(
+    //     py,
+    //     &first.graph,
+    //     &second.graph,
+    //     node_matcher,
+    //     edge_matcher,
+    //     id_order,
+    //     Ordering::Greater,
+    //     induced,
+    //     call_limit,
+    // )
+    todo!()
 }
 
 /// Return an iterator over all vf2 mappings between two :class:`~rustworkx.PyDiGraph` objects
@@ -352,14 +413,14 @@ pub fn digraph_vf2_mapping(
     subgraph: bool,
     induced: bool,
     call_limit: Option<usize>,
-) -> vf2::DiGraphVf2Mapping {
+) -> vf2_mapping::DiGraphVf2Mapping {
     let ordering = if subgraph {
         Ordering::Greater
     } else {
         Ordering::Equal
     };
 
-    vf2::DiGraphVf2Mapping::new(
+    vf2_mapping::DiGraphVf2Mapping::new(
         py,
         &first.graph,
         &second.graph,
@@ -430,14 +491,14 @@ pub fn graph_vf2_mapping(
     subgraph: bool,
     induced: bool,
     call_limit: Option<usize>,
-) -> vf2::GraphVf2Mapping {
+) -> vf2_mapping::GraphVf2Mapping {
     let ordering = if subgraph {
         Ordering::Greater
     } else {
         Ordering::Equal
     };
 
-    vf2::GraphVf2Mapping::new(
+    vf2_mapping::GraphVf2Mapping::new(
         py,
         &first.graph,
         &second.graph,
