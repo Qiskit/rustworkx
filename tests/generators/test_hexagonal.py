@@ -13,6 +13,9 @@
 import unittest
 import rustworkx
 import networkx
+import numpy as np
+
+import rustworkx.generators
 
 
 class TestHexagonalLatticeGraph(unittest.TestCase):
@@ -581,3 +584,20 @@ class TestHexagonalLatticeGraph(unittest.TestCase):
     def test_hexagonal_graph_periodic_odd_columns(self):
         with self.assertRaises(ValueError):
             rustworkx.generators.hexagonal_lattice_graph(4, 5, periodic=True)
+    
+    def test_hexagonal_graph_with_positions(self):
+        graph = rustworkx.generators.hexagonal_lattice_graph(2, 2, with_positions=True)
+        positions = graph.nodes()
+        hexagons = [[0, 1, 2, 7, 6, 5], [2, 3, 4, 7, 8, 9]]
+        C6 = rustworkx.generators.cycle_graph(6)
+        for h in hexagons:
+            self.assertTrue(rustworkx.is_isomorphic(graph.subgraph(h), C6))
+            coordinates = np.array([positions[node] for node in h])
+            vectors = [ coordinates[(ii+1)%6] - coordinates[ii] for ii in range(6) ]
+
+            for v in vectors:
+                # Check that each side of the hexagon has length 2
+                self.assertAlmostEqual(np.linalg.norm(v), 2.0, 12)
+            for ii in range(6):
+                # Check that the angle between each consecutive pair of sides is pi/3
+                self.assertAlmostEqual(np.dot(vectors[ii], vectors[(ii+1)%6]), 2 * 2 * np.cos(np.pi/3), 12)

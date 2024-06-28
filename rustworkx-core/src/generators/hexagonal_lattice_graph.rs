@@ -600,7 +600,10 @@ mod tests {
             hexagonal_lattice_graph_weighted(2, 2, |u, v| (u, v), || (), false, true).unwrap();
         assert_eq!(g_weighted.node_count(), 8);
         check_expected_edges_directed(&g_weighted, &expected_edges);
+    }
 
+    #[test]
+    fn test_hexagonal_lattice_graph_node_weights() {
         let g: petgraph::graph::UnGraph<(usize, usize), ()> =
             hexagonal_lattice_graph_weighted(2, 2, |u, v| (u, v), || (), false, false).unwrap();
         let expected_node_weights = vec![
