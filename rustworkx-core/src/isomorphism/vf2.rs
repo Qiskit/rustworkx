@@ -16,6 +16,7 @@
 // since diverged significantly from the original petgraph implementation.
 
 use std::cmp::{Ordering, Reverse};
+use std::convert::Infallible;
 use std::iter::Iterator;
 use std::marker;
 
@@ -34,15 +35,15 @@ use rayon::slice::ParallelSliceMut;
 
 /// Returns `true` if we can map every element of `xs` to a unique
 /// element of `ys` while using `matcher` func to compare two elements.
-fn is_subset<T: Copy, F>(xs: &[T], ys: &[T], matcher: &mut F) -> bool
+fn is_subset<T: Copy, F, E>(xs: &[T], ys: &[T], matcher: &mut F) -> Result<bool, E>
 where
-    F: FnMut(T, T) -> bool,
+    F: FnMut(T, T) -> Result<bool, E>,
 {
     let mut valid = vec![true; ys.len()];
     for &a in xs {
         let mut found = false;
         for (&b, free) in ys.iter().zip(valid.iter_mut()) {
-            if *free && matcher(a, b) {
+            if *free && matcher(a, b)? {
                 found = true;
                 *free = false;
                 break;
@@ -50,11 +51,11 @@ where
         }
 
         if !found {
-            return false;
+            return Ok(false);
         }
     }
 
-    true
+    Ok(true)
 }
 
 #[inline]
@@ -434,45 +435,72 @@ where
     }
 }
 
+pub enum IsIsomorphicError<NME, EME> {
+    NodeMatcherErr(NME),
+    EdgeMatcherErr(EME),
+}
+
 pub struct NoSemanticMatch;
 
 pub trait NodeMatcher<G0: GraphBase, G1: GraphBase> {
+    type Error;
     fn enabled() -> bool;
-    fn eq(&mut self, _g0: &G0, _g1: &G1, _n0: G0::NodeId, _n1: G1::NodeId) -> bool;
+    fn eq(
+        &mut self,
+        _g0: &G0,
+        _g1: &G1,
+        _n0: G0::NodeId,
+        _n1: G1::NodeId,
+    ) -> Result<bool, Self::Error>;
 }
 
 impl<G0: GraphBase, G1: GraphBase> NodeMatcher<G0, G1> for NoSemanticMatch {
+    type Error = Infallible;
     #[inline]
     fn enabled() -> bool {
         false
     }
     #[inline]
-    fn eq(&mut self, _g0: &G0, _g1: &G1, _n0: G0::NodeId, _n1: G1::NodeId) -> bool {
-        true
+    fn eq(
+        &mut self,
+        _g0: &G0,
+        _g1: &G1,
+        _n0: G0::NodeId,
+        _n1: G1::NodeId,
+    ) -> Result<bool, Self::Error> {
+        Ok(true)
     }
 }
 
-impl<G0, G1, F> NodeMatcher<G0, G1> for F
+impl<G0, G1, F, E> NodeMatcher<G0, G1> for F
 where
     G0: GraphBase + DataMap,
     G1: GraphBase + DataMap,
-    F: FnMut(&G0::NodeWeight, &G1::NodeWeight) -> bool,
+    F: FnMut(&G0::NodeWeight, &G1::NodeWeight) -> Result<bool, E>,
 {
+    type Error = E;
     #[inline]
     fn enabled() -> bool {
         true
     }
     #[inline]
-    fn eq(&mut self, g0: &G0, g1: &G1, n0: G0::NodeId, n1: G1::NodeId) -> bool {
+    fn eq(
+        &mut self,
+        g0: &G0,
+        g1: &G1,
+        n0: G0::NodeId,
+        n1: G1::NodeId,
+    ) -> Result<bool, Self::Error> {
         if let (Some(x), Some(y)) = (g0.node_weight(n0), g1.node_weight(n1)) {
             self(x, y)
         } else {
-            false
+            Ok(false)
         }
     }
 }
 
 pub trait EdgeMatcher<G0: GraphBase, G1: GraphBase> {
+    type Error;
     fn enabled() -> bool;
     fn eq(
         &mut self,
@@ -480,10 +508,11 @@ pub trait EdgeMatcher<G0: GraphBase, G1: GraphBase> {
         _g1: &G1,
         e0: (G0::NodeId, G0::NodeId),
         e1: (G1::NodeId, G1::NodeId),
-    ) -> bool;
+    ) -> Result<bool, Self::Error>;
 }
 
 impl<G0: GraphBase, G1: GraphBase> EdgeMatcher<G0, G1> for NoSemanticMatch {
+    type Error = Infallible;
     #[inline]
     fn enabled() -> bool {
         false
@@ -495,17 +524,18 @@ impl<G0: GraphBase, G1: GraphBase> EdgeMatcher<G0, G1> for NoSemanticMatch {
         _g1: &G1,
         _e0: (G0::NodeId, G0::NodeId),
         _e1: (G1::NodeId, G1::NodeId),
-    ) -> bool {
-        true
+    ) -> Result<bool, Self::Error> {
+        Ok(true)
     }
 }
 
-impl<G0, G1, F> EdgeMatcher<G0, G1> for F
+impl<G0, G1, F, E> EdgeMatcher<G0, G1> for F
 where
     G0: GraphBase + DataMap + IntoEdgesDirected,
     G1: GraphBase + DataMap + IntoEdgesDirected,
-    F: FnMut(&G0::EdgeWeight, &G1::EdgeWeight) -> bool,
+    F: FnMut(&G0::EdgeWeight, &G1::EdgeWeight) -> Result<bool, E>,
 {
+    type Error = E;
     #[inline]
     fn enabled() -> bool {
         true
@@ -517,7 +547,7 @@ where
         g1: &G1,
         e0: (G0::NodeId, G0::NodeId),
         e1: (G1::NodeId, G1::NodeId),
-    ) -> bool {
+    ) -> Result<bool, Self::Error> {
         let w0 = g0
             .edges_directed(e0.0, Outgoing)
             .find(|edge| edge.target() == e0.1)
@@ -529,7 +559,7 @@ where
         if let (Some(x), Some(y)) = (w0, w1) {
             self(x, y)
         } else {
-            false
+            Ok(false)
         }
     }
 }
@@ -549,7 +579,7 @@ pub fn is_isomorphic<'a, G0, G1, NM, EM>(
     ordering: Ordering,
     induced: bool,
     call_limit: Option<usize>,
-) -> bool
+) -> Result<bool, IsIsomorphicError<NM::Error, EM::Error>>
 where
     G0: GraphProp
         + GraphBase<NodeId = NodeIndex>
@@ -579,16 +609,16 @@ where
     if (g0.node_count().cmp(&g1.node_count()).then(ordering) != ordering)
         || (g0.edge_count().cmp(&g1.edge_count()).then(ordering) != ordering)
     {
-        return false;
+        return Ok(false);
     }
 
     let mut vf2 = Vf2Algorithm::new(
         g0, g1, node_match, edge_match, id_order, ordering, induced, call_limit,
     );
-    if vf2.next().is_some() {
-        return true;
+    if vf2.next()?.is_some() {
+        return Ok(true);
     }
-    false
+    Ok(false)
 }
 
 #[derive(Copy, Clone, PartialEq, Debug)]
@@ -779,7 +809,7 @@ where
         edge_match: &mut EM,
         ordering: Ordering,
         induced: bool,
-    ) -> bool {
+    ) -> Result<bool, IsIsomorphicError<NM::Error, EM::Error>> {
         // Check syntactic feasibility of mapping by ensuring adjacencies
         // of nx map to adjacencies of mx.
         //
@@ -816,7 +846,7 @@ where
 
             let has_edge = is_adjacent(&st.1.graph, &st.1.adjacency_matrix, nodes[1], m_neigh, val);
             if !has_edge {
-                return false;
+                return Ok(false);
             }
         }
 
@@ -838,11 +868,11 @@ where
 
             let has_edge = is_adjacent(&st.0.graph, &st.0.adjacency_matrix, nodes[0], m_neigh, val);
             if !has_edge {
-                return false;
+                return Ok(false);
             }
         }
         if succ_count[0].cmp(&succ_count[1]).then(ordering) != ordering {
-            return false;
+            return Ok(false);
         }
         // R_pred
         if st.0.graph.is_directed() {
@@ -862,7 +892,7 @@ where
                 let has_edge =
                     is_adjacent(&st.1.graph, &st.1.adjacency_matrix, m_neigh, nodes[1], val);
                 if !has_edge {
-                    return false;
+                    return Ok(false);
                 }
             }
 
@@ -878,11 +908,11 @@ where
                 let has_edge =
                     is_adjacent(&st.0.graph, &st.0.adjacency_matrix, m_neigh, nodes[0], val);
                 if !has_edge {
-                    return false;
+                    return Ok(false);
                 }
             }
             if pred_count[0].cmp(&pred_count[1]).then(ordering) != ordering {
-                return false;
+                return Ok(false);
             }
         }
         macro_rules! field {
@@ -917,7 +947,7 @@ where
             .then(ordering)
             != ordering
         {
-            return false;
+            return Ok(false);
         }
         if st.0.graph.is_directed()
             && rule!(out, 0, Incoming)
@@ -925,7 +955,7 @@ where
                 .then(ordering)
                 != ordering
         {
-            return false;
+            return Ok(false);
         }
         // R_in
         if st.0.graph.is_directed() {
@@ -934,7 +964,7 @@ where
                 .then(ordering)
                 != ordering
             {
-                return false;
+                return Ok(false);
             }
 
             if rule!(ins, 0, Incoming)
@@ -942,7 +972,7 @@ where
                 .then(ordering)
                 != ordering
             {
-                return false;
+                return Ok(false);
             }
         }
         // R_new
@@ -961,7 +991,7 @@ where
                 }
             }
             if new_count[0].cmp(&new_count[1]).then(ordering) != ordering {
-                return false;
+                return Ok(false);
             }
             if st.0.graph.is_directed() {
                 let mut new_count = [0, 0];
@@ -978,26 +1008,35 @@ where
                     }
                 }
                 if new_count[0].cmp(&new_count[1]).then(ordering) != ordering {
-                    return false;
+                    return Ok(false);
                 }
             }
         }
         // semantic feasibility: compare associated data for nodes
-        if NM::enabled() && !node_match.eq(&st.0.graph, &st.1.graph, nodes[0], nodes[1]) {
-            return false;
+        if NM::enabled()
+            && !node_match
+                .eq(&st.0.graph, &st.1.graph, nodes[0], nodes[1])
+                .map_err(|e| IsIsomorphicError::NodeMatcherErr(e))?
+        {
+            return Ok(false);
         }
         // semantic feasibility: compare associated data for edges
         if EM::enabled() {
-            let mut matcher = |a: (NodeIndex, (NodeIndex, NodeIndex)),
-                               b: (NodeIndex, (NodeIndex, NodeIndex))|
-             -> bool {
-                let (nx, n_edge) = a;
-                let (mx, m_edge) = b;
-                if nx == mx && edge_match.eq(&st.0.graph, &st.1.graph, n_edge, m_edge) {
-                    return true;
-                }
-                false
-            };
+            let mut matcher =
+                |a: (NodeIndex, (NodeIndex, NodeIndex)),
+                 b: (NodeIndex, (NodeIndex, NodeIndex))|
+                 -> Result<bool, IsIsomorphicError<NM::Error, EM::Error>> {
+                    let (nx, n_edge) = a;
+                    let (mx, m_edge) = b;
+                    if nx == mx
+                        && edge_match
+                            .eq(&st.0.graph, &st.1.graph, n_edge, m_edge)
+                            .map_err(|e| IsIsomorphicError::EdgeMatcherErr(e))?
+                    {
+                        return Ok(true);
+                    }
+                    Ok(false)
+                };
 
             // outgoing edges
             if induced {
@@ -1024,8 +1063,8 @@ where
                         .map(|edge| (edge.target(), (edge.source(), edge.target())))
                         .collect();
 
-                if !is_subset(&e_first, &e_second, &mut matcher) {
-                    return false;
+                if !is_subset(&e_first, &e_second, &mut matcher)? {
+                    return Ok(false);
                 };
 
                 let e_first: Vec<(NodeIndex, (NodeIndex, NodeIndex))> =
@@ -1051,8 +1090,8 @@ where
                         .map(|edge| (edge.target(), (edge.source(), edge.target())))
                         .collect();
 
-                if !is_subset(&e_first, &e_second, &mut matcher) {
-                    return false;
+                if !is_subset(&e_first, &e_second, &mut matcher)? {
+                    return Ok(false);
                 };
             } else {
                 let e_first: Vec<(NodeIndex, (NodeIndex, NodeIndex))> =
@@ -1078,8 +1117,8 @@ where
                         .map(|edge| (edge.target(), (edge.source(), edge.target())))
                         .collect();
 
-                if !is_subset(&e_first, &e_second, &mut matcher) {
-                    return false;
+                if !is_subset(&e_first, &e_second, &mut matcher)? {
+                    return Ok(false);
                 };
             }
 
@@ -1109,8 +1148,8 @@ where
                             .map(|edge| (edge.source(), (edge.source(), edge.target())))
                             .collect();
 
-                    if !is_subset(&e_first, &e_second, &mut matcher) {
-                        return false;
+                    if !is_subset(&e_first, &e_second, &mut matcher)? {
+                        return Ok(false);
                     };
 
                     let e_first: Vec<(NodeIndex, (NodeIndex, NodeIndex))> =
@@ -1136,8 +1175,8 @@ where
                             .map(|edge| (edge.source(), (edge.source(), edge.target())))
                             .collect();
 
-                    if !is_subset(&e_first, &e_second, &mut matcher) {
-                        return false;
+                    if !is_subset(&e_first, &e_second, &mut matcher)? {
+                        return Ok(false);
                     };
                 } else {
                     let e_first: Vec<(NodeIndex, (NodeIndex, NodeIndex))> =
@@ -1163,17 +1202,19 @@ where
                             .map(|edge| (edge.source(), (edge.source(), edge.target())))
                             .collect();
 
-                    if !is_subset(&e_first, &e_second, &mut matcher) {
-                        return false;
+                    if !is_subset(&e_first, &e_second, &mut matcher)? {
+                        return Ok(false);
                     };
                 }
             }
         }
-        true
+        Ok(true)
     }
 
     /// Return Some(mapping) if isomorphism is decided, else None.
-    fn next(&mut self) -> Option<DictMap<usize, usize>> {
+    fn next(
+        &mut self,
+    ) -> Result<Option<DictMap<usize, usize>>, IsIsomorphicError<NM::Error, EM::Error>> {
         if (self
             .st
             .0
@@ -1191,7 +1232,7 @@ where
                 .then(self.ordering)
                 != self.ordering)
         {
-            return None;
+            return Ok(None);
         }
 
         // A "depth first" search of a valid mapping from graph 1 to graph 2
@@ -1222,7 +1263,7 @@ where
                     match Vf2Algorithm::<G0, G1, NM, EM>::next_candidate(&mut self.st) {
                         None => {
                             if self.st.1.is_complete() {
-                                return Some(self.mapping());
+                                return Ok(Some(self.mapping()));
                             }
                             continue;
                         }
@@ -1246,7 +1287,7 @@ where
                         &mut self.edge_match,
                         self.ordering,
                         self.induced,
-                    ) {
+                    )? {
                         Vf2Algorithm::<G0, G1, NM, EM>::push_state(&mut self.st, nodes);
                         // Check cardinalities of Tin, Tout sets
                         if self
@@ -1267,7 +1308,7 @@ where
                             self._counter += 1;
                             if let Some(limit) = self.call_limit {
                                 if self._counter > limit {
-                                    return None;
+                                    return Ok(None);
                                 }
                             }
                             let f0 = Frame::Unwind {
@@ -1294,6 +1335,6 @@ where
                 }
             }
         }
-        None
+        Ok(None)
     }
 }
