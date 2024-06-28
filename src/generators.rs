@@ -1105,8 +1105,8 @@ pub fn full_rary_tree(
 
 fn _hexagonal_lattice_node_position(u: usize, v: usize) -> (f64, f64) {
     let [i, j, a, b, c] = [u, v, u / 2, v % 2, u % 2].map(|val| val as f64);
-    const SQRT3: f64 = 1.732_050_807_568_877_2_f64;
-    (0.5 + i + a + b * (c - 0.5), SQRT3 * j)
+    const HALFSQRT3: f64 = 0.866_025_403_784_438_6_f64;
+    (0.5 + i + a + b * (c - 0.5), HALFSQRT3 * j)
 }
 
 /// Generate an undirected hexagonal lattice graph.
@@ -1122,7 +1122,7 @@ fn _hexagonal_lattice_node_position(u: usize, v: usize) -> (f64, f64) {
 ///     ``rows > 1``, and ``cols > 1``.
 /// :param bool with_positions: When set to ``True`` each node will be assigned
 ///     a pair of coordinates ``(x, y)`` as a weight. This embeds the nodes in
-///     the plane so that each hexagon is regular (with side length 2).
+///     the plane so that each hexagon is regular (with side length 1).
 ///
 /// :returns: The generated hexagonal lattice graph.
 ///
@@ -1198,7 +1198,7 @@ pub fn hexagonal_lattice_graph(
 ///     ``rows > 1``, and ``cols > 1``.
 /// :param bool with_positions: When set to ``True`` each node will be assigned
 ///     a pair of coordinates ``(x, y)`` as a payload. This embeds the nodes in
-///     the plane so that each hexagon is regular (with side length 2).
+///     the plane so that each hexagon is regular (with side length 1).
 ///
 /// :returns: The generated directed hexagonal lattice graph.
 ///
