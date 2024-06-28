@@ -608,3 +608,29 @@ class TestHexagonalLatticeGraph(unittest.TestCase):
                 self.assertAlmostEqual(
                     np.dot(vectors[ii], vectors[(ii + 1) % 6]), np.cos(np.pi / 3), 12
                 )
+
+    def test_hexagonal_graph_with_positions_odd_number_of_columns(self):
+        graph = rustworkx.generators.hexagonal_lattice_graph(2, 3, with_positions=True)
+        positions = graph.nodes()
+        hexagons = [
+            [0, 1, 2, 7, 6, 5],
+            [2, 3, 4, 9, 8, 7],
+            [6, 7, 8, 14, 13, 12],
+            [8, 9, 10, 16, 15, 14],
+            [11, 12, 13, 19, 18, 17],
+            [13, 14, 15, 21, 20, 19],
+        ]
+        C6 = rustworkx.generators.cycle_graph(6)
+        for h in hexagons:
+            self.assertTrue(rustworkx.is_isomorphic(graph.subgraph(h), C6))
+            coordinates = np.array([positions[node] for node in h])
+            vectors = [coordinates[(ii + 1) % 6] - coordinates[ii] for ii in range(6)]
+
+            for v in vectors:
+                # Check that each side of the hexagon has length 1
+                self.assertAlmostEqual(np.linalg.norm(v), 1.0, 12)
+            for ii in range(6):
+                # Check that the angle between each consecutive pair of sides is pi/3
+                self.assertAlmostEqual(
+                    np.dot(vectors[ii], vectors[(ii + 1) % 6]), np.cos(np.pi / 3), 12
+                )

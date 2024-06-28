@@ -113,7 +113,7 @@ impl HexagonalLatticeBuilder {
                     let k = n - (self.rowlen - 1);
                     let u = k / self.rowlen + 1;
                     let v = k % self.rowlen;
-                    if u == self.collen - 1 {
+                    if u == self.collen - 1 && u % 2 == 0 {
                         (u, v + 1)
                     } else {
                         (u, v)
