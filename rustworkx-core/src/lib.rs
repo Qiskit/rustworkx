@@ -102,6 +102,7 @@ pub mod connectivity;
 pub mod dag_algo;
 pub mod generators;
 pub mod graph_ext;
+pub mod isomorphism;
 pub mod line_graph;
 /// Module for maximum weight matching algorithms.
 pub mod max_weight_matching;
