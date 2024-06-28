@@ -18,19 +18,19 @@
 use std::cmp::{Ordering, Reverse};
 use std::iter::Iterator;
 use std::marker;
-use std::marker::PhantomData;
 
-use hashbrown::HashMap;
 use crate::dictmap::*;
+use hashbrown::HashMap;
 
-use petgraph::stable_graph::NodeIndex;
-use petgraph::visit::{Data, EdgeCount, EdgeRef, GraphBase, GraphProp, IntoEdgeReferences, IntoEdges, IntoEdgesDirected, IntoNeighbors, IntoNodeIdentifiers, NodeCount, NodeIndexable};
-use petgraph::EdgeType;
-use petgraph::{Directed, Incoming, Outgoing, Undirected};
 use petgraph::data::{Build, Create, DataMap};
+use petgraph::stable_graph::NodeIndex;
+use petgraph::visit::{
+    Data, EdgeCount, EdgeRef, GraphBase, GraphProp, IntoEdgeReferences, IntoEdges,
+    IntoEdgesDirected, IntoNeighbors, IntoNodeIdentifiers, NodeCount, NodeIndexable,
+};
+use petgraph::{Directed, Incoming, Outgoing};
 
 use rayon::slice::ParallelSliceMut;
-
 
 /// Returns `true` if we can map every element of `xs` to a unique
 /// element of `ys` while using `matcher` func to compare two elements.
@@ -67,10 +67,9 @@ fn sorted<N: std::cmp::PartialOrd>(x: &mut (N, N)) {
 
 /// Returns the adjacency matrix of a graph as a dictionary
 /// with `(i, j)` entry equal to number of edges from node `i` to node `j`.
-fn adjacency_matrix<G>(
-    graph: &G,
-) -> HashMap<(NodeIndex, NodeIndex), usize> where
-    G: GraphProp + GraphBase<NodeId = NodeIndex> + EdgeCount + IntoEdgeReferences
+fn adjacency_matrix<G>(graph: &G) -> HashMap<(NodeIndex, NodeIndex), usize>
+where
+    G: GraphProp + GraphBase<NodeId = NodeIndex> + EdgeCount + IntoEdgeReferences,
 {
     let mut matrix = HashMap::with_capacity(graph.edge_count());
     for edge in graph.edge_references() {
@@ -90,8 +89,9 @@ fn edge_multiplicity<G>(
     matrix: &HashMap<(NodeIndex, NodeIndex), usize>,
     a: NodeIndex,
     b: NodeIndex,
-) -> usize where
-    G: GraphProp + GraphBase<NodeId = NodeIndex>
+) -> usize
+where
+    G: GraphProp + GraphBase<NodeId = NodeIndex>,
 {
     let mut item = (a, b);
     if !graph.is_directed() {
@@ -108,7 +108,10 @@ fn is_adjacent<G>(
     a: NodeIndex,
     b: NodeIndex,
     val: usize,
-) -> bool where G: GraphProp + GraphBase<NodeId = NodeIndex> {
+) -> bool
+where
+    G: GraphProp + GraphBase<NodeId = NodeIndex>,
+{
     edge_multiplicity(graph, matrix, a, b) >= val
 }
 
@@ -118,17 +121,17 @@ where
     G::NodeWeight: Clone,
     G::EdgeWeight: Clone,
 {
-    type OutputGraph: GraphBase<NodeId = NodeIndex> + Create + Data<NodeWeight = G::NodeWeight, EdgeWeight = G::EdgeWeight>;
+    type OutputGraph: GraphBase<NodeId = NodeIndex>
+        + Create
+        + Data<NodeWeight = G::NodeWeight, EdgeWeight = G::EdgeWeight>;
 
     fn sort(&self, _: &'a G) -> Vec<NodeIndex>;
 
-    fn reorder(
-        &self,
-        graph: &'a G,
-    ) -> (Self::OutputGraph, HashMap<usize, usize>) {
+    fn reorder(&self, graph: &'a G) -> (Self::OutputGraph, HashMap<usize, usize>) {
         let order = self.sort(graph);
 
-        let mut new_graph = Self::OutputGraph::with_capacity(graph.node_count(), graph.edge_count());
+        let mut new_graph =
+            Self::OutputGraph::with_capacity(graph.node_count(), graph.edge_count());
         let mut id_map: HashMap<NodeIndex, NodeIndex> = HashMap::with_capacity(graph.node_count());
         for node_index in order {
             let node_data = graph.node_weight(node_index).unwrap();
@@ -153,14 +156,19 @@ struct DefaultIdSorter {}
 
 impl DefaultIdSorter {
     pub fn new() -> Self {
-        Self {
-        }
+        Self {}
     }
 }
 
 impl<'a, G> NodeSorter<'a, G> for DefaultIdSorter
 where
-    G: GraphBase<NodeId = NodeIndex> + Create + DataMap + NodeCount + EdgeCount + IntoEdgeReferences + IntoNodeIdentifiers,
+    G: GraphBase<NodeId = NodeIndex>
+        + Create
+        + DataMap
+        + NodeCount
+        + EdgeCount
+        + IntoEdgeReferences
+        + IntoNodeIdentifiers,
     G::NodeWeight: Clone,
     G::EdgeWeight: Clone,
 {
@@ -171,19 +179,25 @@ where
 }
 
 /// Sort nodes based on VF2++ heuristic.
-struct Vf2ppSorter {
-}
+struct Vf2ppSorter {}
 
 impl Vf2ppSorter {
     pub fn new() -> Self {
-        Self {
-        }
+        Self {}
     }
 }
 
 impl<'a, G> NodeSorter<'a, G> for Vf2ppSorter
 where
-    G: GraphProp + GraphBase<NodeId = NodeIndex> + Create + DataMap + NodeCount + NodeIndexable + EdgeCount  + IntoNodeIdentifiers + IntoEdgesDirected,
+    G: GraphProp
+        + GraphBase<NodeId = NodeIndex>
+        + Create
+        + DataMap
+        + NodeCount
+        + NodeIndexable
+        + EdgeCount
+        + IntoNodeIdentifiers
+        + IntoEdgesDirected,
     G::NodeWeight: Clone,
     G::EdgeWeight: Clone,
 {
@@ -278,7 +292,8 @@ where
             }
         };
 
-        let mut sorted_nodes: Vec<usize> = graph.node_identifiers().map(|node| node.index()).collect();
+        let mut sorted_nodes: Vec<usize> =
+            graph.node_identifiers().map(|node| node.index()).collect();
         sorted_nodes.par_sort_by_key(|&node| (dout[node], din[node], Reverse(node)));
         sorted_nodes.reverse();
 
@@ -291,8 +306,7 @@ where
 }
 
 #[derive(Debug)]
-struct Vf2State<G>
-{
+struct Vf2State<G> {
     graph: G,
     /// The current mapping M(s) of nodes from G0 → G1 and G1 → G0,
     /// NodeIndex::end() for no mapping.
@@ -315,7 +329,7 @@ struct Vf2State<G>
 
 impl<G> Vf2State<G>
 where
-    G: GraphProp + GraphBase<NodeId = NodeIndex> + NodeCount + EdgeCount + IntoEdgesDirected ,
+    G: GraphProp + GraphBase<NodeId = NodeIndex> + NodeCount + EdgeCount + IntoEdgesDirected,
 {
     pub fn new(graph: G) -> Self {
         let c0 = graph.node_count();
@@ -439,10 +453,10 @@ impl<G0: GraphBase, G1: GraphBase> NodeMatcher<G0, G1> for NoSemanticMatch {
 }
 
 impl<G0, G1, F> NodeMatcher<G0, G1> for F
-    where
-        G0: GraphBase + DataMap,
-        G1: GraphBase + DataMap,
-        F: FnMut(&G0::NodeWeight, &G1::NodeWeight) -> bool,
+where
+    G0: GraphBase + DataMap,
+    G1: GraphBase + DataMap,
+    F: FnMut(&G0::NodeWeight, &G1::NodeWeight) -> bool,
 {
     #[inline]
     fn enabled() -> bool {
@@ -487,10 +501,10 @@ impl<G0: GraphBase, G1: GraphBase> EdgeMatcher<G0, G1> for NoSemanticMatch {
 }
 
 impl<G0, G1, F> EdgeMatcher<G0, G1> for F
-    where
-        G0: GraphBase + DataMap + IntoEdgesDirected,
-        G1: GraphBase + DataMap + IntoEdgesDirected,
-        F: FnMut(&G0::EdgeWeight, &G1::EdgeWeight) -> bool,
+where
+    G0: GraphBase + DataMap + IntoEdgesDirected,
+    G1: GraphBase + DataMap + IntoEdgesDirected,
+    F: FnMut(&G0::EdgeWeight, &G1::EdgeWeight) -> bool,
 {
     #[inline]
     fn enabled() -> bool {
@@ -536,15 +550,31 @@ pub fn is_isomorphic<'a, G0, G1, NM, EM>(
     induced: bool,
     call_limit: Option<usize>,
 ) -> bool
-    where
-        G0: GraphProp + GraphBase<NodeId = NodeIndex> + Create + DataMap + NodeCount + EdgeCount + NodeIndexable + IntoEdgesDirected  + IntoNodeIdentifiers,
-        G0::NodeWeight: Clone,
-        G0::EdgeWeight: Clone,
-        G1: GraphProp + GraphBase<NodeId = NodeIndex> + Create + DataMap + NodeCount + EdgeCount + NodeIndexable + IntoEdgesDirected  + IntoNodeIdentifiers,
-        G1::NodeWeight: Clone,
-        G1::EdgeWeight: Clone,
-        NM: NodeMatcher<G0, G1>,
-        EM: EdgeMatcher<G0, G1>,
+where
+    G0: GraphProp
+        + GraphBase<NodeId = NodeIndex>
+        + Create
+        + DataMap
+        + NodeCount
+        + EdgeCount
+        + NodeIndexable
+        + IntoEdgesDirected
+        + IntoNodeIdentifiers,
+    G0::NodeWeight: Clone,
+    G0::EdgeWeight: Clone,
+    G1: GraphProp
+        + GraphBase<NodeId = NodeIndex>
+        + Create
+        + DataMap
+        + NodeCount
+        + EdgeCount
+        + NodeIndexable
+        + IntoEdgesDirected
+        + IntoNodeIdentifiers,
+    G1::NodeWeight: Clone,
+    G1::EdgeWeight: Clone,
+    NM: NodeMatcher<G0, G1>,
+    EM: EdgeMatcher<G0, G1>,
 {
     if (g0.node_count().cmp(&g1.node_count()).then(ordering) != ordering)
         || (g0.edge_count().cmp(&g1.edge_count()).then(ordering) != ordering)
@@ -596,10 +626,26 @@ where
 
 impl<G0, G1, NM, EM> Vf2Algorithm<G0, G1, NM, EM>
 where
-    G0: GraphProp + GraphBase<NodeId = NodeIndex> + Create + DataMap + NodeCount + EdgeCount + NodeIndexable + IntoEdgesDirected + IntoNodeIdentifiers,
+    G0: GraphProp
+        + GraphBase<NodeId = NodeIndex>
+        + Create
+        + DataMap
+        + NodeCount
+        + EdgeCount
+        + NodeIndexable
+        + IntoEdgesDirected
+        + IntoNodeIdentifiers,
     G0::NodeWeight: Clone,
     G0::EdgeWeight: Clone,
-    G1: GraphProp + GraphBase<NodeId = NodeIndex> + Create + DataMap + NodeCount + EdgeCount + NodeIndexable + IntoEdgesDirected  + IntoNodeIdentifiers,
+    G1: GraphProp
+        + GraphBase<NodeId = NodeIndex>
+        + Create
+        + DataMap
+        + NodeCount
+        + EdgeCount
+        + NodeIndexable
+        + IntoEdgesDirected
+        + IntoNodeIdentifiers,
     G1::NodeWeight: Clone,
     G1::EdgeWeight: Clone,
     NM: NodeMatcher<G0, G1>,
@@ -644,7 +690,8 @@ where
 
     fn mapping(&self) -> DictMap<usize, usize> {
         let mut mapping: DictMap<usize, usize> = DictMap::new();
-        self.st.1
+        self.st
+            .1
             .mapping
             .iter()
             .enumerate()
@@ -655,7 +702,9 @@ where
         mapping
     }
 
-    fn next_candidate(st: &mut (Vf2State<G0>, Vf2State<G1>)) -> Option<(NodeIndex, NodeIndex, OpenList)> {
+    fn next_candidate(
+        st: &mut (Vf2State<G0>, Vf2State<G1>),
+    ) -> Option<(NodeIndex, NodeIndex, OpenList)> {
         // Try the out list
         let mut to_index = st.1.next_out_index(0);
         let mut from_index = None;
@@ -763,16 +812,9 @@ where
             if m_neigh == end {
                 continue;
             }
-            let val =
-                edge_multiplicity(&st.0.graph, &st.0.adjacency_matrix, nodes[0], n_neigh);
+            let val = edge_multiplicity(&st.0.graph, &st.0.adjacency_matrix, nodes[0], n_neigh);
 
-            let has_edge = is_adjacent(
-                &st.1.graph,
-                &st.1.adjacency_matrix,
-                nodes[1],
-                m_neigh,
-                val,
-            );
+            let has_edge = is_adjacent(&st.1.graph, &st.1.adjacency_matrix, nodes[1], m_neigh, val);
             if !has_edge {
                 return false;
             }
@@ -792,16 +834,9 @@ where
             if m_neigh == end {
                 continue;
             }
-            let val =
-                edge_multiplicity(&st.1.graph, &st.1.adjacency_matrix, nodes[1], n_neigh);
+            let val = edge_multiplicity(&st.1.graph, &st.1.adjacency_matrix, nodes[1], n_neigh);
 
-            let has_edge = is_adjacent(
-                &st.0.graph,
-                &st.0.adjacency_matrix,
-                nodes[0],
-                m_neigh,
-                val,
-            );
+            let has_edge = is_adjacent(&st.0.graph, &st.0.adjacency_matrix, nodes[0], m_neigh, val);
             if !has_edge {
                 return false;
             }
@@ -822,16 +857,10 @@ where
                 if m_neigh == end {
                     continue;
                 }
-                let val =
-                    edge_multiplicity(&st.0.graph, &st.0.adjacency_matrix, n_neigh, nodes[0]);
+                let val = edge_multiplicity(&st.0.graph, &st.0.adjacency_matrix, n_neigh, nodes[0]);
 
-                let has_edge = is_adjacent(
-                    &st.1.graph,
-                    &st.1.adjacency_matrix,
-                    m_neigh,
-                    nodes[1],
-                    val,
-                );
+                let has_edge =
+                    is_adjacent(&st.1.graph, &st.1.adjacency_matrix, m_neigh, nodes[1], val);
                 if !has_edge {
                     return false;
                 }
@@ -844,16 +873,10 @@ where
                 if m_neigh == end {
                     continue;
                 }
-                let val =
-                    edge_multiplicity(&st.1.graph, &st.1.adjacency_matrix, n_neigh, nodes[1]);
+                let val = edge_multiplicity(&st.1.graph, &st.1.adjacency_matrix, n_neigh, nodes[1]);
 
-                let has_edge = is_adjacent(
-                    &st.0.graph,
-                    &st.0.adjacency_matrix,
-                    m_neigh,
-                    nodes[0],
-                    val,
-                );
+                let has_edge =
+                    is_adjacent(&st.0.graph, &st.0.adjacency_matrix, m_neigh, nodes[0], val);
                 if !has_edge {
                     return false;
                 }
@@ -960,115 +983,29 @@ where
             }
         }
         // semantic feasibility: compare associated data for nodes
-        if NM::enabled()
-            && !node_match.eq(&st.0.graph, &st.1.graph, nodes[0], nodes[1])
-        {
+        if NM::enabled() && !node_match.eq(&st.0.graph, &st.1.graph, nodes[0], nodes[1]) {
             return false;
         }
         // semantic feasibility: compare associated data for edges
         if EM::enabled() {
-            let mut matcher =
-                |a: (NodeIndex, (NodeIndex, NodeIndex)), b: (NodeIndex, (NodeIndex, NodeIndex))| -> bool {
-                    let (nx, n_edge) = a;
-                    let (mx, m_edge) = b;
-                    if nx == mx && edge_match.eq(&st.0.graph, &st.1.graph, n_edge, m_edge) {
-                        return true;
-                    }
-                    false
-                };
+            let mut matcher = |a: (NodeIndex, (NodeIndex, NodeIndex)),
+                               b: (NodeIndex, (NodeIndex, NodeIndex))|
+             -> bool {
+                let (nx, n_edge) = a;
+                let (mx, m_edge) = b;
+                if nx == mx && edge_match.eq(&st.0.graph, &st.1.graph, n_edge, m_edge) {
+                    return true;
+                }
+                false
+            };
 
             // outgoing edges
             if induced {
-                let e_first: Vec<(NodeIndex, (NodeIndex, NodeIndex))> = st.0
-                    .graph
-                    .edges(nodes[0])
-                    .filter_map(|edge| {
-                        let n_neigh = edge.target();
-                        let m_neigh = if nodes[0] != n_neigh {
-                            st.0.mapping[n_neigh.index()]
-                        } else {
-                            nodes[1]
-                        };
-                        if m_neigh == end {
-                            return None;
-                        }
-                        Some((m_neigh, (edge.source(), edge.target())))
-                    })
-                    .collect();
-
-                let e_second: Vec<(NodeIndex, (NodeIndex, NodeIndex))> = st.1
-                    .graph
-                    .edges(nodes[1])
-                    .map(|edge| (edge.target(), (edge.source(), edge.target())))
-                    .collect();
-
-                if !is_subset(&e_first, &e_second, &mut matcher) {
-                    return false;
-                };
-
-                let e_first: Vec<(NodeIndex, (NodeIndex, NodeIndex))> = st.1
-                    .graph
-                    .edges(nodes[1])
-                    .filter_map(|edge| {
-                        let n_neigh = edge.target();
-                        let m_neigh = if nodes[1] != n_neigh {
-                            st.1.mapping[n_neigh.index()]
-                        } else {
-                            nodes[0]
-                        };
-                        if m_neigh == end {
-                            return None;
-                        }
-                        Some((m_neigh, (edge.source(), edge.target())))
-                    })
-                    .collect();
-
-                let e_second: Vec<(NodeIndex, (NodeIndex, NodeIndex))> = st.0
-                    .graph
-                    .edges(nodes[0])
-                    .map(|edge| (edge.target(), (edge.source(), edge.target())))
-                    .collect();
-
-                if !is_subset(&e_first, &e_second, &mut matcher) {
-                    return false;
-                };
-            } else {
-                let e_first: Vec<(NodeIndex, (NodeIndex, NodeIndex))> = st.1
-                    .graph
-                    .edges(nodes[1])
-                    .filter_map(|edge| {
-                        let n_neigh = edge.target();
-                        let m_neigh = if nodes[1] != n_neigh {
-                            st.1.mapping[n_neigh.index()]
-                        } else {
-                            nodes[0]
-                        };
-                        if m_neigh == end {
-                            return None;
-                        }
-                        Some((m_neigh, (edge.source(), edge.target())))
-                    })
-                    .collect();
-
-                let e_second: Vec<(NodeIndex, (NodeIndex, NodeIndex))> = st.0
-                    .graph
-                    .edges(nodes[0])
-                    .map(|edge| (edge.target(), (edge.source(), edge.target())))
-                    .collect();
-
-                if !is_subset(&e_first, &e_second, &mut matcher) {
-                    return false;
-                };
-            }
-
-            // incoming edges
-            if st.0.graph.is_directed() {
-                if induced {
-                    let e_first: Vec<(NodeIndex, (NodeIndex, NodeIndex))> = st.0
-                        .graph
-                        .edges_directed(nodes[0], Incoming)
+                let e_first: Vec<(NodeIndex, (NodeIndex, NodeIndex))> =
+                    st.0.graph
+                        .edges(nodes[0])
                         .filter_map(|edge| {
-                            let n_neigh = edge.source();
+                            let n_neigh = edge.target();
                             let m_neigh = if nodes[0] != n_neigh {
                                 st.0.mapping[n_neigh.index()]
                             } else {
@@ -1081,21 +1018,21 @@ where
                         })
                         .collect();
 
-                    let e_second: Vec<(NodeIndex, (NodeIndex, NodeIndex))> = st.1
-                        .graph
-                        .edges_directed(nodes[1], Incoming)
-                        .map(|edge| (edge.source(), (edge.source(), edge.target())))
+                let e_second: Vec<(NodeIndex, (NodeIndex, NodeIndex))> =
+                    st.1.graph
+                        .edges(nodes[1])
+                        .map(|edge| (edge.target(), (edge.source(), edge.target())))
                         .collect();
 
-                    if !is_subset(&e_first, &e_second, &mut matcher) {
-                        return false;
-                    };
+                if !is_subset(&e_first, &e_second, &mut matcher) {
+                    return false;
+                };
 
-                    let e_first: Vec<(NodeIndex, (NodeIndex, NodeIndex))> = st.1
-                        .graph
-                        .edges_directed(nodes[1], Incoming)
+                let e_first: Vec<(NodeIndex, (NodeIndex, NodeIndex))> =
+                    st.1.graph
+                        .edges(nodes[1])
                         .filter_map(|edge| {
-                            let n_neigh = edge.source();
+                            let n_neigh = edge.target();
                             let m_neigh = if nodes[1] != n_neigh {
                                 st.1.mapping[n_neigh.index()]
                             } else {
@@ -1108,38 +1045,123 @@ where
                         })
                         .collect();
 
-                    let e_second: Vec<(NodeIndex, (NodeIndex, NodeIndex))> = st.1
-                        .graph
-                        .edges_directed(nodes[0], Incoming)
-                        .map(|edge| (edge.source(), (edge.source(), edge.target())))
+                let e_second: Vec<(NodeIndex, (NodeIndex, NodeIndex))> =
+                    st.0.graph
+                        .edges(nodes[0])
+                        .map(|edge| (edge.target(), (edge.source(), edge.target())))
                         .collect();
+
+                if !is_subset(&e_first, &e_second, &mut matcher) {
+                    return false;
+                };
+            } else {
+                let e_first: Vec<(NodeIndex, (NodeIndex, NodeIndex))> =
+                    st.1.graph
+                        .edges(nodes[1])
+                        .filter_map(|edge| {
+                            let n_neigh = edge.target();
+                            let m_neigh = if nodes[1] != n_neigh {
+                                st.1.mapping[n_neigh.index()]
+                            } else {
+                                nodes[0]
+                            };
+                            if m_neigh == end {
+                                return None;
+                            }
+                            Some((m_neigh, (edge.source(), edge.target())))
+                        })
+                        .collect();
+
+                let e_second: Vec<(NodeIndex, (NodeIndex, NodeIndex))> =
+                    st.0.graph
+                        .edges(nodes[0])
+                        .map(|edge| (edge.target(), (edge.source(), edge.target())))
+                        .collect();
+
+                if !is_subset(&e_first, &e_second, &mut matcher) {
+                    return false;
+                };
+            }
+
+            // incoming edges
+            if st.0.graph.is_directed() {
+                if induced {
+                    let e_first: Vec<(NodeIndex, (NodeIndex, NodeIndex))> =
+                        st.0.graph
+                            .edges_directed(nodes[0], Incoming)
+                            .filter_map(|edge| {
+                                let n_neigh = edge.source();
+                                let m_neigh = if nodes[0] != n_neigh {
+                                    st.0.mapping[n_neigh.index()]
+                                } else {
+                                    nodes[1]
+                                };
+                                if m_neigh == end {
+                                    return None;
+                                }
+                                Some((m_neigh, (edge.source(), edge.target())))
+                            })
+                            .collect();
+
+                    let e_second: Vec<(NodeIndex, (NodeIndex, NodeIndex))> =
+                        st.1.graph
+                            .edges_directed(nodes[1], Incoming)
+                            .map(|edge| (edge.source(), (edge.source(), edge.target())))
+                            .collect();
+
+                    if !is_subset(&e_first, &e_second, &mut matcher) {
+                        return false;
+                    };
+
+                    let e_first: Vec<(NodeIndex, (NodeIndex, NodeIndex))> =
+                        st.1.graph
+                            .edges_directed(nodes[1], Incoming)
+                            .filter_map(|edge| {
+                                let n_neigh = edge.source();
+                                let m_neigh = if nodes[1] != n_neigh {
+                                    st.1.mapping[n_neigh.index()]
+                                } else {
+                                    nodes[0]
+                                };
+                                if m_neigh == end {
+                                    return None;
+                                }
+                                Some((m_neigh, (edge.source(), edge.target())))
+                            })
+                            .collect();
+
+                    let e_second: Vec<(NodeIndex, (NodeIndex, NodeIndex))> =
+                        st.1.graph
+                            .edges_directed(nodes[0], Incoming)
+                            .map(|edge| (edge.source(), (edge.source(), edge.target())))
+                            .collect();
 
                     if !is_subset(&e_first, &e_second, &mut matcher) {
                         return false;
                     };
                 } else {
-                    let e_first: Vec<(NodeIndex, (NodeIndex, NodeIndex))> = st.1
-                        .graph
-                        .edges_directed(nodes[1], Incoming)
-                        .filter_map(|edge| {
-                            let n_neigh = edge.source();
-                            let m_neigh = if nodes[1] != n_neigh {
-                                st.1.mapping[n_neigh.index()]
-                            } else {
-                                nodes[0]
-                            };
-                            if m_neigh == end {
-                                return None;
-                            }
-                            Some((m_neigh, (edge.source(), edge.target())))
-                        })
-                        .collect();
+                    let e_first: Vec<(NodeIndex, (NodeIndex, NodeIndex))> =
+                        st.1.graph
+                            .edges_directed(nodes[1], Incoming)
+                            .filter_map(|edge| {
+                                let n_neigh = edge.source();
+                                let m_neigh = if nodes[1] != n_neigh {
+                                    st.1.mapping[n_neigh.index()]
+                                } else {
+                                    nodes[0]
+                                };
+                                if m_neigh == end {
+                                    return None;
+                                }
+                                Some((m_neigh, (edge.source(), edge.target())))
+                            })
+                            .collect();
 
-                    let e_second: Vec<(NodeIndex, (NodeIndex, NodeIndex))> = st.0
-                        .graph
-                        .edges_directed(nodes[0], Incoming)
-                        .map(|edge| (edge.source(), (edge.source(), edge.target())))
-                        .collect();
+                    let e_second: Vec<(NodeIndex, (NodeIndex, NodeIndex))> =
+                        st.0.graph
+                            .edges_directed(nodes[0], Incoming)
+                            .map(|edge| (edge.source(), (edge.source(), edge.target())))
+                            .collect();
 
                     if !is_subset(&e_first, &e_second, &mut matcher) {
                         return false;
@@ -1152,13 +1174,17 @@ where
 
     /// Return Some(mapping) if isomorphism is decided, else None.
     fn next(&mut self) -> Option<DictMap<usize, usize>> {
-        if (self.st.0
+        if (self
+            .st
+            .0
             .graph
             .node_count()
             .cmp(&self.st.1.graph.node_count())
             .then(self.ordering)
             != self.ordering)
-            || (self.st.0
+            || (self
+                .st
+                .0
                 .graph
                 .edge_count()
                 .cmp(&self.st.1.graph.edge_count())
@@ -1192,21 +1218,23 @@ where
                         }
                     }
                 }
-                Frame::Outer => match Vf2Algorithm::<G0, G1, NM, EM>::next_candidate(&mut self.st) {
-                    None => {
-                        if self.st.1.is_complete() {
-                            return Some(self.mapping());
+                Frame::Outer => {
+                    match Vf2Algorithm::<G0, G1, NM, EM>::next_candidate(&mut self.st) {
+                        None => {
+                            if self.st.1.is_complete() {
+                                return Some(self.mapping());
+                            }
+                            continue;
                         }
-                        continue;
+                        Some((nx, mx, ol)) => {
+                            let f = Frame::Inner {
+                                nodes: [nx, mx],
+                                open_list: ol,
+                            };
+                            self.stack.push(f);
+                        }
                     }
-                    Some((nx, mx, ol)) => {
-                        let f = Frame::Inner {
-                            nodes: [nx, mx],
-                            open_list: ol,
-                        };
-                        self.stack.push(f);
-                    }
-                },
+                }
                 Frame::Inner {
                     nodes,
                     open_list: ol,
@@ -1221,12 +1249,16 @@ where
                     ) {
                         Vf2Algorithm::<G0, G1, NM, EM>::push_state(&mut self.st, nodes);
                         // Check cardinalities of Tin, Tout sets
-                        if self.st.0
+                        if self
+                            .st
+                            .0
                             .out_size
                             .cmp(&self.st.1.out_size)
                             .then(self.ordering)
                             == self.ordering
-                            && self.st.0
+                            && self
+                                .st
+                                .0
                                 .ins_size
                                 .cmp(&self.st.1.ins_size)
                                 .then(self.ordering)
