@@ -7,7 +7,7 @@ features:
     for Rust users too.
 fix:
   - |
-    When calling :func:`~.layers` if the provided graph has a cycle, the
+    When calling :func:`~.layers` with a graph containing a cycle, the
     function will throw a ``DAGHasCycle`` error instance now. Previously, the
     function would get stuck in an infinite loop if a graph with a cycle was
     passed to the function.
