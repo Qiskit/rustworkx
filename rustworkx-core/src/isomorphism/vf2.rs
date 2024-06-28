@@ -24,7 +24,7 @@ use hashbrown::HashMap;
 use crate::dictmap::*;
 
 use petgraph::stable_graph::NodeIndex;
-use petgraph::visit::{Data, EdgeCount, EdgeRef, GraphBase, GraphProp, IntoEdgeReferences, IntoEdges, IntoEdgesDirected, IntoNeighbors, IntoNeighborsDirected, IntoNodeIdentifiers, NodeCount, NodeIndexable};
+use petgraph::visit::{Data, EdgeCount, EdgeRef, GraphBase, GraphProp, IntoEdgeReferences, IntoEdges, IntoEdgesDirected, IntoNeighbors, IntoNodeIdentifiers, NodeCount, NodeIndexable};
 use petgraph::EdgeType;
 use petgraph::{Directed, Incoming, Outgoing, Undirected};
 use petgraph::data::{Build, Create, DataMap};
@@ -34,9 +34,9 @@ use rayon::slice::ParallelSliceMut;
 
 /// Returns `true` if we can map every element of `xs` to a unique
 /// element of `ys` while using `matcher` func to compare two elements.
-fn is_subset<T: Copy, F>(xs: &[T], ys: &[T], matcher: F) -> bool
+fn is_subset<T: Copy, F>(xs: &[T], ys: &[T], matcher: &mut F) -> bool
 where
-    F: Fn(T, T) -> bool,
+    F: FnMut(T, T) -> bool,
 {
     let mut valid = vec![true; ys.len()];
     for &a in xs {
@@ -149,52 +149,45 @@ where
 }
 
 /// Sort nodes based on node ids.
-struct DefaultIdSorter<G> {
-    _phantom: PhantomData<G>,
-}
+struct DefaultIdSorter {}
 
-impl<G> DefaultIdSorter<G> {
+impl DefaultIdSorter {
     pub fn new() -> Self {
         Self {
-            _phantom: PhantomData::default(),
         }
     }
 }
 
-impl<'a, G, GS> NodeSorter<'a, G> for DefaultIdSorter<GS>
+impl<'a, G> NodeSorter<'a, G> for DefaultIdSorter
 where
-    G: GraphBase<NodeId = NodeIndex> + DataMap + NodeCount + EdgeCount + IntoEdgeReferences + IntoNodeIdentifiers,
+    G: GraphBase<NodeId = NodeIndex> + Create + DataMap + NodeCount + EdgeCount + IntoEdgeReferences + IntoNodeIdentifiers,
     G::NodeWeight: Clone,
     G::EdgeWeight: Clone,
-    GS: GraphBase<NodeId = NodeIndex> + Create + Data<NodeWeight = G::NodeWeight, EdgeWeight = G::EdgeWeight>,
 {
-    type OutputGraph = GS;
+    type OutputGraph = G;
     fn sort(&self, graph: &'a G) -> Vec<NodeIndex> {
         graph.node_identifiers().collect()
     }
 }
 
 /// Sort nodes based on VF2++ heuristic.
-struct Vf2ppSorter<G> {
-    _phantom: PhantomData<G>,
+struct Vf2ppSorter {
 }
 
-impl<G> Vf2ppSorter<G> {
+impl Vf2ppSorter {
     pub fn new() -> Self {
         Self {
-            _phantom: PhantomData::default(),
         }
     }
 }
 
-impl<'a, G, GS> NodeSorter<'a, G> for Vf2ppSorter<GS>
+impl<'a, G> NodeSorter<'a, G> for Vf2ppSorter
 where
-    G: GraphProp + GraphBase<NodeId = NodeIndex> + DataMap + NodeCount + NodeIndexable + EdgeCount + IntoEdgeReferences + IntoNodeIdentifiers + IntoNeighborsDirected,
+    G: GraphProp + GraphBase<NodeId = NodeIndex> + Create + DataMap + NodeCount + NodeIndexable + EdgeCount  + IntoNodeIdentifiers + IntoEdgesDirected,
     G::NodeWeight: Clone,
     G::EdgeWeight: Clone,
-    GS: GraphBase<NodeId = NodeIndex> + Create + Data<NodeWeight = G::NodeWeight, EdgeWeight = G::EdgeWeight>,
 {
-    type OutputGraph = GS;
+    type OutputGraph = G;
     fn sort(&self, graph: &'a G) -> Vec<NodeIndex> {
         let n = graph.node_bound();
 
@@ -298,9 +291,9 @@ where
 }
 
 #[derive(Debug)]
-struct Vf2State<'a, G>
+struct Vf2State<G>
 {
-    graph: &'a G,
+    graph: G,
     /// The current mapping M(s) of nodes from G0 → G1 and G1 → G0,
     /// NodeIndex::end() for no mapping.
     mapping: Vec<NodeIndex>,
@@ -320,11 +313,11 @@ struct Vf2State<'a, G>
     _etype: marker::PhantomData<Directed>,
 }
 
-impl<'a, G> Vf2State<'a, G>
+impl<G> Vf2State<G>
 where
-    G: GraphProp + GraphBase<NodeId = NodeIndex> + NodeCount + EdgeCount + IntoNeighborsDirected + IntoEdgeReferences,
+    G: GraphProp + GraphBase<NodeId = NodeIndex> + NodeCount + EdgeCount + IntoEdgesDirected ,
 {
-    pub fn new(graph: &'a G) -> Self {
+    pub fn new(graph: G) -> Self {
         let c0 = graph.node_count();
         let is_directed = graph.is_directed();
         let adjacency_matrix = adjacency_matrix(&graph);
@@ -544,8 +537,12 @@ pub fn is_isomorphic<'a, G0, G1, NM, EM>(
     call_limit: Option<usize>,
 ) -> bool
     where
-        G0: GraphProp + GraphBase<NodeId = NodeIndex> + Data + NodeCount + EdgeCount + IntoNeighborsDirected + IntoEdgeReferences,
-        G1: GraphProp + GraphBase<NodeId = NodeIndex> + Data + NodeCount + EdgeCount + IntoNeighborsDirected + IntoEdgeReferences,
+        G0: GraphProp + GraphBase<NodeId = NodeIndex> + Create + DataMap + NodeCount + EdgeCount + NodeIndexable + IntoEdgesDirected  + IntoNodeIdentifiers,
+        G0::NodeWeight: Clone,
+        G0::EdgeWeight: Clone,
+        G1: GraphProp + GraphBase<NodeId = NodeIndex> + Create + DataMap + NodeCount + EdgeCount + NodeIndexable + IntoEdgesDirected  + IntoNodeIdentifiers,
+        G1::NodeWeight: Clone,
+        G1::EdgeWeight: Clone,
         NM: NodeMatcher<G0, G1>,
         EM: EdgeMatcher<G0, G1>,
 {
@@ -578,14 +575,14 @@ enum Frame<N: marker::Copy> {
     Unwind { nodes: [N; 2], open_list: OpenList },
 }
 
-struct Vf2Algorithm<'a, G0, G1, NM, EM>
+struct Vf2Algorithm<G0, G1, NM, EM>
 where
     G0: GraphBase,
     G1: GraphBase,
     NM: NodeMatcher<G0, G1>,
     EM: EdgeMatcher<G0, G1>,
 {
-    st: (Vf2State<'a, G0>, Vf2State<'a, G1>),
+    st: (Vf2State<G0>, Vf2State<G1>),
     node_match: NM,
     edge_match: EM,
     ordering: Ordering,
@@ -597,16 +594,20 @@ where
     _counter: usize,
 }
 
-impl<'a, G0, G1, NM, EM> Vf2Algorithm<'a, G0, G1, NM, EM>
+impl<G0, G1, NM, EM> Vf2Algorithm<G0, G1, NM, EM>
 where
-    G0: GraphProp + GraphBase<NodeId = NodeIndex> + Data + NodeCount + EdgeCount + IntoNeighborsDirected + IntoEdgeReferences,
-    G1: GraphProp + GraphBase<NodeId = NodeIndex> + Data + NodeCount + EdgeCount + IntoNeighborsDirected + IntoEdgeReferences,
+    G0: GraphProp + GraphBase<NodeId = NodeIndex> + Create + DataMap + NodeCount + EdgeCount + NodeIndexable + IntoEdgesDirected + IntoNodeIdentifiers,
+    G0::NodeWeight: Clone,
+    G0::EdgeWeight: Clone,
+    G1: GraphProp + GraphBase<NodeId = NodeIndex> + Create + DataMap + NodeCount + EdgeCount + NodeIndexable + IntoEdgesDirected  + IntoNodeIdentifiers,
+    G1::NodeWeight: Clone,
+    G1::EdgeWeight: Clone,
     NM: NodeMatcher<G0, G1>,
     EM: EdgeMatcher<G0, G1>,
 {
     pub fn new(
-        g0: &'a G0,
-        g1: &'a G1,
+        g0: &G0,
+        g1: &G1,
         node_match: NM,
         edge_match: EM,
         id_order: bool,
@@ -615,15 +616,15 @@ where
         call_limit: Option<usize>,
     ) -> Self {
         let (g0, node_map_g0) = if id_order {
-            DefaultIdSorter::<G0>::new().reorder(g0)
+            DefaultIdSorter::new().reorder(g0)
         } else {
-            Vf2ppSorter::<G0>::new().reorder(g0)
+            Vf2ppSorter::new().reorder(g0)
         };
 
         let (g1, node_map_g1) = if id_order {
-            DefaultIdSorter::<G1>::new().reorder(g1)
+            DefaultIdSorter::new().reorder(g1)
         } else {
-            Vf2ppSorter::<G1>::new().reorder(g1)
+            Vf2ppSorter::new().reorder(g1)
         };
 
         let st = (Vf2State::new(g0), Vf2State::new(g1));
@@ -654,7 +655,7 @@ where
         mapping
     }
 
-    fn next_candidate(st: &mut (Vf2State<'a, G0>, Vf2State<'a, G1>)) -> Option<(NodeIndex, NodeIndex, OpenList)> {
+    fn next_candidate(st: &mut (Vf2State<G0>, Vf2State<G1>)) -> Option<(NodeIndex, NodeIndex, OpenList)> {
         // Try the out list
         let mut to_index = st.1.next_out_index(0);
         let mut from_index = None;
@@ -689,7 +690,7 @@ where
     }
 
     fn next_from_ix(
-        st: &mut (Vf2State<'a, G0>, Vf2State<'a, G1>),
+        st: &mut (Vf2State<G0>, Vf2State<G1>),
         nx: NodeIndex,
         open_list: OpenList,
     ) -> Option<NodeIndex> {
@@ -710,20 +711,20 @@ where
         }
     }
 
-    fn pop_state(st: &mut (Vf2State<'a, G0>, Vf2State<'a, G1>), nodes: [NodeIndex; 2]) {
+    fn pop_state(st: &mut (Vf2State<G0>, Vf2State<G1>), nodes: [NodeIndex; 2]) {
         // Restore state.
         st.0.pop_mapping(nodes[0]);
         st.1.pop_mapping(nodes[1]);
     }
 
-    fn push_state(st: &mut (Vf2State<'a, G0>, Vf2State<'a, G1>), nodes: [NodeIndex; 2]) {
+    fn push_state(st: &mut (Vf2State<G0>, Vf2State<G1>), nodes: [NodeIndex; 2]) {
         // Add mapping nx <-> mx to the state
         st.0.push_mapping(nodes[0], nodes[1]);
         st.1.push_mapping(nodes[1], nodes[0]);
     }
 
     fn is_feasible(
-        st: &mut (Vf2State<'a, G0>, Vf2State<'a, G1>),
+        st: &mut (Vf2State<G0>, Vf2State<G1>),
         nodes: [NodeIndex; 2],
         node_match: &mut NM,
         edge_match: &mut EM,
@@ -750,7 +751,7 @@ where
         let mut succ_count = [0, 0];
         for n_neigh in st.0.graph.neighbors(nodes[0]) {
             succ_count[0] += 1;
-            if !induced && 0 == 0 {
+            if !induced {
                 continue;
             }
             // handle the self loop case; it's not in the mapping (yet)
@@ -813,7 +814,7 @@ where
             let mut pred_count = [0, 0];
             for n_neigh in st.0.graph.neighbors_directed(nodes[0], Incoming) {
                 pred_count[0] += 1;
-                if !induced && 0 == 0 {
+                if !induced {
                     continue;
                 }
                 // the self loop case is handled in outgoing
@@ -838,9 +839,6 @@ where
 
             for n_neigh in st.1.graph.neighbors_directed(nodes[1], Incoming) {
                 pred_count[1] += 1;
-                if !induced && 1 == 0 {
-                    continue;
-                }
                 // the self loop case is handled in outgoing
                 let m_neigh = st.1.mapping[n_neigh.index()];
                 if m_neigh == end {
@@ -962,18 +960,18 @@ where
             }
         }
         // semantic feasibility: compare associated data for nodes
-        if node_match.enabled()
-            && !node_match.eq(st.0.graph, st.1.graph, nodes[0], nodes[1])
+        if NM::enabled()
+            && !node_match.eq(&st.0.graph, &st.1.graph, nodes[0], nodes[1])
         {
             return false;
         }
         // semantic feasibility: compare associated data for edges
-        if edge_match.enabled() {
-            let matcher =
+        if EM::enabled() {
+            let mut matcher =
                 |a: (NodeIndex, (NodeIndex, NodeIndex)), b: (NodeIndex, (NodeIndex, NodeIndex))| -> bool {
                     let (nx, n_edge) = a;
                     let (mx, m_edge) = b;
-                    if nx == mx && edge_match.eq(st.0.graph, st.1.graph, n_edge, m_edge)? {
+                    if nx == mx && edge_match.eq(&st.0.graph, &st.1.graph, n_edge, m_edge) {
                         return true;
                     }
                     false
@@ -1004,7 +1002,7 @@ where
                     .map(|edge| (edge.target(), (edge.source(), edge.target())))
                     .collect();
 
-                if !is_subset(&e_first, &e_second, matcher)? {
+                if !is_subset(&e_first, &e_second, &mut matcher) {
                     return false;
                 };
 
@@ -1031,7 +1029,7 @@ where
                     .map(|edge| (edge.target(), (edge.source(), edge.target())))
                     .collect();
 
-                if !is_subset(&e_first, &e_second, matcher)? {
+                if !is_subset(&e_first, &e_second, &mut matcher) {
                     return false;
                 };
             } else {
@@ -1058,7 +1056,7 @@ where
                     .map(|edge| (edge.target(), (edge.source(), edge.target())))
                     .collect();
 
-                if !is_subset(&e_first, &e_second, matcher)? {
+                if !is_subset(&e_first, &e_second, &mut matcher) {
                     return false;
                 };
             }
@@ -1089,7 +1087,7 @@ where
                         .map(|edge| (edge.source(), (edge.source(), edge.target())))
                         .collect();
 
-                    if !is_subset(&e_first, &e_second, matcher)? {
+                    if !is_subset(&e_first, &e_second, &mut matcher) {
                         return false;
                     };
 
@@ -1116,7 +1114,7 @@ where
                         .map(|edge| (edge.source(), (edge.source(), edge.target())))
                         .collect();
 
-                    if !is_subset(&e_first, &e_second, matcher)? {
+                    if !is_subset(&e_first, &e_second, &mut matcher) {
                         return false;
                     };
                 } else {
@@ -1143,7 +1141,7 @@ where
                         .map(|edge| (edge.source(), (edge.source(), edge.target())))
                         .collect();
 
-                    if !is_subset(&e_first, &e_second, matcher)? {
+                    if !is_subset(&e_first, &e_second, &mut matcher) {
                         return false;
                     };
                 }
@@ -1181,9 +1179,9 @@ where
                     nodes,
                     open_list: ol,
                 } => {
-                    Vf2Algorithm::<'a, G0, G1, NM, EM>::pop_state(&mut self.st, nodes);
+                    Vf2Algorithm::<G0, G1, NM, EM>::pop_state(&mut self.st, nodes);
 
-                    match Vf2Algorithm::<'a, G0, G1, NM, EM>::next_from_ix(&mut self.st, nodes[0], ol) {
+                    match Vf2Algorithm::<G0, G1, NM, EM>::next_from_ix(&mut self.st, nodes[0], ol) {
                         None => continue,
                         Some(nx) => {
                             let f = Frame::Inner {
@@ -1194,7 +1192,7 @@ where
                         }
                     }
                 }
-                Frame::Outer => match Vf2Algorithm::<'a, G0, G1, NM, EM>::next_candidate(&mut self.st) {
+                Frame::Outer => match Vf2Algorithm::<G0, G1, NM, EM>::next_candidate(&mut self.st) {
                     None => {
                         if self.st.1.is_complete() {
                             return Some(self.mapping());
@@ -1213,7 +1211,7 @@ where
                     nodes,
                     open_list: ol,
                 } => {
-                    if Vf2Algorithm::<'a, G0, G1, NM, EM>::is_feasible(
+                    if Vf2Algorithm::<G0, G1, NM, EM>::is_feasible(
                         &mut self.st,
                         nodes,
                         &mut self.node_match,
@@ -1221,7 +1219,7 @@ where
                         self.ordering,
                         self.induced,
                     ) {
-                        Vf2Algorithm::<'a, G0, G1, NM, EM>::push_state(&mut self.st, nodes);
+                        Vf2Algorithm::<G0, G1, NM, EM>::push_state(&mut self.st, nodes);
                         // Check cardinalities of Tin, Tout sets
                         if self.st.0
                             .out_size
@@ -1249,9 +1247,9 @@ where
                             self.stack.push(Frame::Outer);
                             continue;
                         }
-                        Vf2Algorithm::<'a, G0, G1, NM, EM>::pop_state(&mut self.st, nodes);
+                        Vf2Algorithm::<G0, G1, NM, EM>::pop_state(&mut self.st, nodes);
                     }
-                    match Vf2Algorithm::<'a, G0, G1, NM, EM>::next_from_ix(&mut self.st, nodes[0], ol) {
+                    match Vf2Algorithm::<G0, G1, NM, EM>::next_from_ix(&mut self.st, nodes[0], ol) {
                         None => continue,
                         Some(nx) => {
                             let f = Frame::Inner {
