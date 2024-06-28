@@ -1,11 +1,13 @@
 ---
 features:
   - |
-    Added a function ``~rustworkx_core.dag_algo::layers`` in rustworkx-core to 
-    get the layers of a directed acyclic graph.  This is equivalent to the
+    Added a new function ``rustworkx_core::dag_algo::layers`` to rustworkx-core
+    to get the layers of a directed acyclic graph.  This is equivalent to the
     :func:`.layers` function that existed in the Python API but now exposes it
     for Rust users too.
 fix:
   - |
-    When calling ``~rustworkx_core.dag_algo::layers``if the provided graph has
-    a cycle, the function will throw a ``DAGHasCycle`` error instance.
+    When calling :func:`~.layers` if the provided graph has a cycle, the
+    function will throw a ``DAGHasCycle`` error instance now. Previously, the
+    function would get stuck in an infinite loop if a graph with a cycle was
+    passed to the function.
