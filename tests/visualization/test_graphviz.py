@@ -150,6 +150,55 @@ class TestGraphvizDraw(unittest.TestCase):
         if not SAVE_IMAGES:
             self.addCleanup(os.remove, "test_graphviz_filename.svg")
 
+    def test_qiskit_style_visualization(self):
+        """This test is to test visualizations like qiskit performs which regressed in 0.15.0."""
+        graph = rustworkx.generators.cycle_graph(4)
+        colors = ["#422952", "#492d58", "#4f305c", "#5e3767"]
+        edge_colors = ["#4d2f5b", "#693d6f", "#995a88", "#382449"]
+        pos = [(0, 0), (0, 1), (1, 0), (1, 1)]
+        for node in graph.node_indices():
+            graph[node] = node
+
+        for edge in graph.edge_indices():
+            graph.update_edge_by_index(edge, edge)
+
+        def color_node(node):
+            out_dict = {
+                "label": str(node),
+                "color": f'"{colors[node]}"',
+                "pos": f'"{pos[node][0]}, {pos[node][1]}"',
+                "fontname": '"DejaVu Sans"',
+                "pin": "True",
+                "shape": "circle",
+                "style": "filled",
+                "fillcolor": f'"{colors[node]}"',
+                "fontcolor": "white",
+                "fontsize": "10",
+                "height": "0.322",
+                "fixedsize": "True",
+            }
+            return out_dict
+
+        def color_edge(edge):
+            out_dict = {
+                "color": f'"{edge_colors[edge]}"',
+                "fillcolor": f'"{edge_colors[edge]}"',
+                "penwidth": str(5),
+            }
+            return out_dict
+
+        graphviz_draw(
+            graph,
+            node_attr_fn=color_node,
+            edge_attr_fn=color_edge,
+            filename="test_qiskit_style_visualization.png",
+            image_type="png",
+            method="neato",
+        )
+        self.assertTrue(os.path.isfile("test_qiskit_style_visualization.png"))
+        if not SAVE_IMAGES:
+            self.addCleanup(os.remove, "test_qiskit_style_visualization.png")
+
     def test_escape_sequences(self):
         # Create a simple graph
         graph = rustworkx.generators.path_graph(2)
