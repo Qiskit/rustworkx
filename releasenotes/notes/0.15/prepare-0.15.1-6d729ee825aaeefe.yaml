@@ -1,0 +1,4 @@
+---
+prelude: >
+  This release is a bugfix patch release that fixes an inadvertant breaking
+  API change for the :func:`.graphviz_draw` function in the 0.15.0 release.
