@@ -10,8 +10,6 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-#![allow(clippy::too_many_arguments)]
+//! Module for graph isomorphism.
 
 pub mod vf2;
-
-use std::cmp::Ordering;

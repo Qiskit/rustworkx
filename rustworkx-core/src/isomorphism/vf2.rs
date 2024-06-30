@@ -317,8 +317,8 @@ where
 }
 
 #[derive(Debug)]
-struct Vf2State<G> {
-    graph: G,
+pub struct Vf2State<G> {
+    pub graph: G,
     /// The current mapping M(s) of nodes from G0 → G1 and G1 → G0,
     /// NodeIndex::end() for no mapping.
     mapping: Vec<NodeIndex>,
@@ -472,7 +472,7 @@ pub struct NoSemanticMatch;
 
 pub trait NodeMatcher<G0: GraphBase, G1: GraphBase> {
     type Error;
-    fn enabled() -> bool;
+    fn enabled(&self) -> bool;
     fn eq(
         &mut self,
         _g0: &G0,
@@ -485,7 +485,7 @@ pub trait NodeMatcher<G0: GraphBase, G1: GraphBase> {
 impl<G0: GraphBase, G1: GraphBase> NodeMatcher<G0, G1> for NoSemanticMatch {
     type Error = Infallible;
     #[inline]
-    fn enabled() -> bool {
+    fn enabled(&self) -> bool {
         false
     }
     #[inline]
@@ -508,7 +508,7 @@ where
 {
     type Error = E;
     #[inline]
-    fn enabled() -> bool {
+    fn enabled(&self) -> bool {
         true
     }
     #[inline]
@@ -529,7 +529,7 @@ where
 
 pub trait EdgeMatcher<G0: GraphBase, G1: GraphBase> {
     type Error;
-    fn enabled() -> bool;
+    fn enabled(&self) -> bool;
     fn eq(
         &mut self,
         _g0: &G0,
@@ -542,7 +542,7 @@ pub trait EdgeMatcher<G0: GraphBase, G1: GraphBase> {
 impl<G0: GraphBase, G1: GraphBase> EdgeMatcher<G0, G1> for NoSemanticMatch {
     type Error = Infallible;
     #[inline]
-    fn enabled() -> bool {
+    fn enabled(&self) -> bool {
         false
     }
     #[inline]
@@ -567,7 +567,7 @@ where
 {
     type Error = E;
     #[inline]
-    fn enabled() -> bool {
+    fn enabled(&self) -> bool {
         true
     }
     #[inline]
@@ -639,10 +639,12 @@ where
     let mut vf2 = Vf2Algorithm::new(
         g0, g1, node_match, edge_match, id_order, ordering, induced, call_limit,
     );
-    if vf2.next()?.is_some() {
-        return Ok(true);
+
+    match vf2.next() {
+        Some(Ok(_)) => Ok(true),
+        Some(Err(e)) => Err(e),
+        None => Ok(false),
     }
-    Ok(false)
 }
 
 #[derive(Copy, Clone, PartialEq, Debug)]
@@ -659,16 +661,16 @@ enum Frame<N: marker::Copy> {
     Unwind { nodes: [N; 2], open_list: OpenList },
 }
 
-struct Vf2Algorithm<G0, G1, NM, EM>
+pub struct Vf2Algorithm<G0, G1, NM, EM>
 where
     G0: GraphBase,
     G1: GraphBase,
     NM: NodeMatcher<G0, G1>,
     EM: EdgeMatcher<G0, G1>,
 {
-    st: (Vf2State<G0>, Vf2State<G1>),
-    node_match: NM,
-    edge_match: EM,
+    pub st: (Vf2State<G0>, Vf2State<G1>),
+    pub node_match: NM,
+    pub edge_match: EM,
     ordering: Ordering,
     induced: bool,
     node_map_g0: HashMap<usize, usize>,
@@ -1031,15 +1033,15 @@ where
             }
         }
         // semantic feasibility: compare associated data for nodes
-        if NM::enabled()
+        if node_match.enabled()
             && !node_match
                 .eq(&st.0.graph, &st.1.graph, nodes[0], nodes[1])
-                .map_err(|e| IsIsomorphicError::NodeMatcherErr(e))?
+                .map_err(IsIsomorphicError::NodeMatcherErr)?
         {
             return Ok(false);
         }
         // semantic feasibility: compare associated data for edges
-        if EM::enabled() {
+        if edge_match.enabled() {
             let mut matcher =
                 |a: (NodeIndex, (NodeIndex, NodeIndex)),
                  b: (NodeIndex, (NodeIndex, NodeIndex))|
@@ -1049,7 +1051,7 @@ where
                     if nx == mx
                         && edge_match
                             .eq(&st.0.graph, &st.1.graph, n_edge, m_edge)
-                            .map_err(|e| IsIsomorphicError::EdgeMatcherErr(e))?
+                            .map_err(IsIsomorphicError::EdgeMatcherErr)?
                     {
                         return Ok(true);
                     }
@@ -1228,11 +1230,33 @@ where
         }
         Ok(true)
     }
+}
+
+impl<G0, G1, NM, EM> Iterator for Vf2Algorithm<G0, G1, NM, EM>
+where
+    G0: GraphProp + GraphBase<NodeId = NodeIndex> + DataMap + Create + NodeCount + EdgeCount,
+    for<'a> &'a G0: GraphBase<NodeId = NodeIndex>
+        + Data<NodeWeight = G0::NodeWeight, EdgeWeight = G0::EdgeWeight>
+        + NodeIndexable
+        + IntoEdgesDirected
+        + IntoNodeIdentifiers,
+    G0::NodeWeight: Clone,
+    G0::EdgeWeight: Clone,
+    G1: GraphProp + GraphBase<NodeId = NodeIndex> + DataMap + Create + NodeCount + EdgeCount,
+    for<'a> &'a G1: GraphBase<NodeId = NodeIndex>
+        + Data<NodeWeight = G1::NodeWeight, EdgeWeight = G1::EdgeWeight>
+        + NodeIndexable
+        + IntoEdgesDirected
+        + IntoNodeIdentifiers,
+    G1::NodeWeight: Clone,
+    G1::EdgeWeight: Clone,
+    NM: NodeMatcher<G0, G1>,
+    EM: EdgeMatcher<G0, G1>,
+{
+    type Item = Result<DictMap<usize, usize>, IsIsomorphicError<NM::Error, EM::Error>>;
 
     /// Return Some(mapping) if isomorphism is decided, else None.
-    fn next(
-        &mut self,
-    ) -> Result<Option<DictMap<usize, usize>>, IsIsomorphicError<NM::Error, EM::Error>> {
+    fn next(&mut self) -> Option<Self::Item> {
         if (self
             .st
             .0
@@ -1250,7 +1274,7 @@ where
                 .then(self.ordering)
                 != self.ordering)
         {
-            return Ok(None);
+            return None;
         }
 
         // A "depth first" search of a valid mapping from graph 1 to graph 2
@@ -1281,7 +1305,7 @@ where
                     match Vf2Algorithm::<G0, G1, NM, EM>::next_candidate(&mut self.st) {
                         None => {
                             if self.st.1.is_complete() {
-                                return Ok(Some(self.mapping()));
+                                return Some(Ok(self.mapping()));
                             }
                             continue;
                         }
@@ -1298,14 +1322,21 @@ where
                     nodes,
                     open_list: ol,
                 } => {
-                    if Vf2Algorithm::<G0, G1, NM, EM>::is_feasible(
+                    let feasible = match Vf2Algorithm::<G0, G1, NM, EM>::is_feasible(
                         &mut self.st,
                         nodes,
                         &mut self.node_match,
                         &mut self.edge_match,
                         self.ordering,
                         self.induced,
-                    )? {
+                    ) {
+                        Ok(f) => f,
+                        Err(e) => {
+                            return Some(Err(e));
+                        }
+                    };
+
+                    if feasible {
                         Vf2Algorithm::<G0, G1, NM, EM>::push_state(&mut self.st, nodes);
                         // Check cardinalities of Tin, Tout sets
                         if self
@@ -1326,7 +1357,7 @@ where
                             self._counter += 1;
                             if let Some(limit) = self.call_limit {
                                 if self._counter > limit {
-                                    return Ok(None);
+                                    return None;
                                 }
                             }
                             let f0 = Frame::Unwind {
@@ -1353,6 +1384,6 @@ where
                 }
             }
         }
-        Ok(None)
+        None
     }
 }

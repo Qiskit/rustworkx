@@ -15,7 +15,6 @@
 mod vf2_mapping;
 
 use crate::{digraph, graph};
-use rustworkx_core::isomorphism::vf2;
 
 use petgraph::data::{Create, DataMap};
 use petgraph::prelude::*;
@@ -23,11 +22,12 @@ use petgraph::visit::{
     Data, EdgeCount, GraphBase, GraphProp, IntoEdgesDirected, IntoNodeIdentifiers, NodeCount,
     NodeIndexable,
 };
+use rustworkx_core::isomorphism::vf2;
+
 use std::cmp::Ordering;
 
 use pyo3::prelude::*;
 use pyo3::Python;
-use rustworkx_core::isomorphism::vf2::{IsIsomorphicError, NoSemanticMatch};
 
 fn is_isomorphic<G>(
     py: Python,
@@ -77,27 +77,27 @@ where
             call_limit,
         )
         .map_err(|e| match e {
-            IsIsomorphicError::NodeMatcherErr(e) => e,
-            IsIsomorphicError::EdgeMatcherErr(e) => e,
+            vf2::IsIsomorphicError::NodeMatcherErr(e) => e,
+            vf2::IsIsomorphicError::EdgeMatcherErr(e) => e,
         })?,
         (Some(node_matcher), None) => vf2::is_isomorphic(
             first,
             second,
             node_matcher,
-            NoSemanticMatch,
+            vf2::NoSemanticMatch,
             id_order,
             ordering,
             induced,
             call_limit,
         )
         .map_err(|e| match e {
-            IsIsomorphicError::NodeMatcherErr(e) => e,
+            vf2::IsIsomorphicError::NodeMatcherErr(e) => e,
             _ => unreachable!(),
         })?,
         (None, Some(edge_matcher)) => vf2::is_isomorphic(
             first,
             second,
-            NoSemanticMatch,
+            vf2::NoSemanticMatch,
             edge_matcher,
             id_order,
             ordering,
@@ -105,14 +105,14 @@ where
             call_limit,
         )
         .map_err(|e| match e {
-            IsIsomorphicError::EdgeMatcherErr(e) => e,
+            vf2::IsIsomorphicError::EdgeMatcherErr(e) => e,
             _ => unreachable!(),
         })?,
         (None, None) => vf2::is_isomorphic(
             first,
             second,
-            NoSemanticMatch,
-            NoSemanticMatch,
+            vf2::NoSemanticMatch,
+            vf2::NoSemanticMatch,
             id_order,
             ordering,
             induced,
