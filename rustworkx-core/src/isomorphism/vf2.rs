@@ -1083,61 +1083,34 @@ where
                 if !is_subset(&e_first, &e_second, &mut matcher)? {
                     return Ok(false);
                 };
-
-                let e_first: Vec<(NodeIndex, G1::EdgeId)> =
-                    st.1.graph
-                        .edges(nodes[1])
-                        .filter_map(|edge| {
-                            let n_neigh = edge.target();
-                            let m_neigh = if nodes[1] != n_neigh {
-                                st.1.mapping[n_neigh.index()]
-                            } else {
-                                nodes[0]
-                            };
-                            if m_neigh == end {
-                                return None;
-                            }
-                            Some((m_neigh, edge.id()))
-                        })
-                        .collect();
-
-                let e_second: Vec<(NodeIndex, G0::EdgeId)> =
-                    st.0.graph
-                        .edges(nodes[0])
-                        .map(|edge| (edge.target(), edge.id()))
-                        .collect();
-
-                if !is_subset(&e_first, &e_second, &mut reverse_args(&mut matcher))? {
-                    return Ok(false);
-                };
-            } else {
-                let e_first: Vec<(NodeIndex, G1::EdgeId)> =
-                    st.1.graph
-                        .edges(nodes[1])
-                        .filter_map(|edge| {
-                            let n_neigh = edge.target();
-                            let m_neigh = if nodes[1] != n_neigh {
-                                st.1.mapping[n_neigh.index()]
-                            } else {
-                                nodes[0]
-                            };
-                            if m_neigh == end {
-                                return None;
-                            }
-                            Some((m_neigh, edge.id()))
-                        })
-                        .collect();
-
-                let e_second: Vec<(NodeIndex, G0::EdgeId)> =
-                    st.0.graph
-                        .edges(nodes[0])
-                        .map(|edge| (edge.target(), edge.id()))
-                        .collect();
-
-                if !is_subset(&e_first, &e_second, &mut reverse_args(&mut matcher))? {
-                    return Ok(false);
-                };
             }
+
+            let e_first: Vec<(NodeIndex, G1::EdgeId)> =
+                st.1.graph
+                    .edges(nodes[1])
+                    .filter_map(|edge| {
+                        let n_neigh = edge.target();
+                        let m_neigh = if nodes[1] != n_neigh {
+                            st.1.mapping[n_neigh.index()]
+                        } else {
+                            nodes[0]
+                        };
+                        if m_neigh == end {
+                            return None;
+                        }
+                        Some((m_neigh, edge.id()))
+                    })
+                    .collect();
+
+            let e_second: Vec<(NodeIndex, G0::EdgeId)> =
+                st.0.graph
+                    .edges(nodes[0])
+                    .map(|edge| (edge.target(), edge.id()))
+                    .collect();
+
+            if !is_subset(&e_first, &e_second, &mut reverse_args(&mut matcher))? {
+                return Ok(false);
+            };
 
             // incoming edges
             if st.0.graph.is_directed() {
@@ -1168,61 +1141,34 @@ where
                     if !is_subset(&e_first, &e_second, &mut matcher)? {
                         return Ok(false);
                     };
-
-                    let e_first: Vec<(NodeIndex, G1::EdgeId)> =
-                        st.1.graph
-                            .edges_directed(nodes[1], Incoming)
-                            .filter_map(|edge| {
-                                let n_neigh = edge.source();
-                                let m_neigh = if nodes[1] != n_neigh {
-                                    st.1.mapping[n_neigh.index()]
-                                } else {
-                                    nodes[0]
-                                };
-                                if m_neigh == end {
-                                    return None;
-                                }
-                                Some((m_neigh, edge.id()))
-                            })
-                            .collect();
-
-                    let e_second: Vec<(NodeIndex, G0::EdgeId)> =
-                        st.0.graph
-                            .edges_directed(nodes[0], Incoming)
-                            .map(|edge| (edge.source(), edge.id()))
-                            .collect();
-
-                    if !is_subset(&e_first, &e_second, &mut reverse_args(&mut matcher))? {
-                        return Ok(false);
-                    };
-                } else {
-                    let e_first: Vec<(NodeIndex, G1::EdgeId)> =
-                        st.1.graph
-                            .edges_directed(nodes[1], Incoming)
-                            .filter_map(|edge| {
-                                let n_neigh = edge.source();
-                                let m_neigh = if nodes[1] != n_neigh {
-                                    st.1.mapping[n_neigh.index()]
-                                } else {
-                                    nodes[0]
-                                };
-                                if m_neigh == end {
-                                    return None;
-                                }
-                                Some((m_neigh, edge.id()))
-                            })
-                            .collect();
-
-                    let e_second: Vec<(NodeIndex, G0::EdgeId)> =
-                        st.0.graph
-                            .edges_directed(nodes[0], Incoming)
-                            .map(|edge| (edge.source(), edge.id()))
-                            .collect();
-
-                    if !is_subset(&e_first, &e_second, &mut reverse_args(&mut matcher))? {
-                        return Ok(false);
-                    };
                 }
+
+                let e_first: Vec<(NodeIndex, G1::EdgeId)> =
+                    st.1.graph
+                        .edges_directed(nodes[1], Incoming)
+                        .filter_map(|edge| {
+                            let n_neigh = edge.source();
+                            let m_neigh = if nodes[1] != n_neigh {
+                                st.1.mapping[n_neigh.index()]
+                            } else {
+                                nodes[0]
+                            };
+                            if m_neigh == end {
+                                return None;
+                            }
+                            Some((m_neigh, edge.id()))
+                        })
+                        .collect();
+
+                let e_second: Vec<(NodeIndex, G0::EdgeId)> =
+                    st.0.graph
+                        .edges_directed(nodes[0], Incoming)
+                        .map(|edge| (edge.source(), edge.id()))
+                        .collect();
+
+                if !is_subset(&e_first, &e_second, &mut reverse_args(&mut matcher))? {
+                    return Ok(false);
+                };
             }
         }
         Ok(true)
