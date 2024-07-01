@@ -12,7 +12,7 @@
 
 #![allow(clippy::too_many_arguments)]
 // This module was originally forked from petgraph's isomorphism module @ v0.5.0
-// to handle PyDiGraph inputs instead of petgraph's generic Graph. However it has
+// to support StableGraph inputs instead of petgraph's generic Graph. However it has
 // since diverged significantly from the original petgraph implementation.
 
 use std::cmp::Ordering;
@@ -22,10 +22,9 @@ use pyo3::gc::PyVisit;
 use pyo3::prelude::*;
 use pyo3::PyTraverseError;
 
-use petgraph::stable_graph::NodeIndex;
-use petgraph::visit::EdgeRef;
+use petgraph::stable_graph::{EdgeIndex, NodeIndex};
 use petgraph::EdgeType;
-use petgraph::{Directed, Outgoing, Undirected};
+use petgraph::{Directed, Undirected};
 
 use crate::iterators::NodeMap;
 use crate::StablePyGraph;
@@ -73,17 +72,11 @@ impl<Ty: EdgeType> vf2::EdgeMatcher<StablePyGraph<Ty>, StablePyGraph<Ty>> for Py
         &mut self,
         g0: &StablePyGraph<Ty>,
         g1: &StablePyGraph<Ty>,
-        e0: (NodeIndex, NodeIndex),
-        e1: (NodeIndex, NodeIndex),
+        e0: EdgeIndex,
+        e1: EdgeIndex,
     ) -> Result<bool, Self::Error> {
-        let w0 = g0
-            .edges_directed(e0.0, Outgoing)
-            .find(|edge| edge.target() == e0.1)
-            .and_then(|edge| g0.edge_weight(edge.id()));
-        let w1 = g1
-            .edges_directed(e1.0, Outgoing)
-            .find(|edge| edge.target() == e1.1)
-            .and_then(|edge| g1.edge_weight(edge.id()));
+        let w0 = g0.edge_weight(e0);
+        let w1 = g1.edge_weight(e1);
         if let (Some(a), Some(b)) = (w0, w1) {
             unsafe {
                 // Note: we can assume this since we'll have the GIL whenever we're

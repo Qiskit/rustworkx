@@ -39,9 +39,9 @@ use rayon::slice::ParallelSliceMut;
 
 /// Returns `true` if we can map every element of `xs` to a unique
 /// element of `ys` while using `matcher` func to compare two elements.
-fn is_subset<T: Copy, F, E>(xs: &[T], ys: &[T], matcher: &mut F) -> Result<bool, E>
+fn is_subset<T1: Copy, T2: Copy, F, E>(xs: &[T1], ys: &[T2], matcher: &mut F) -> Result<bool, E>
 where
-    F: FnMut(T, T) -> Result<bool, E>,
+    F: FnMut(T1, T2) -> Result<bool, E>,
 {
     let mut valid = vec![true; ys.len()];
     for &a in xs {
@@ -124,7 +124,7 @@ trait NodeSorter<G>
 where
     G: GraphBase<NodeId = NodeIndex> + DataMap + NodeCount + EdgeCount + IntoEdgeReferences,
     G::NodeWeight: Clone,
-    G::EdgeWeight: Clone,
+    G::EdgeWeight: Clone + Debug,
 {
     type OutputGraph: GraphBase<NodeId = NodeIndex>
         + Create
@@ -178,7 +178,7 @@ where
         + Data<NodeWeight = G::NodeWeight, EdgeWeight = G::EdgeWeight>
         + Create,
     G::NodeWeight: Clone,
-    G::EdgeWeight: Clone,
+    G::EdgeWeight: Clone + Debug,
 {
     type OutputGraph = G::Target;
     fn sort(&self, graph: G) -> Vec<NodeIndex> {
@@ -210,7 +210,7 @@ where
         + Data<NodeWeight = G::NodeWeight, EdgeWeight = G::EdgeWeight>
         + Create,
     G::NodeWeight: Clone,
-    G::EdgeWeight: Clone,
+    G::EdgeWeight: Clone + Debug,
 {
     type OutputGraph = G::Target;
     fn sort(&self, graph: G) -> Vec<NodeIndex> {
@@ -534,8 +534,8 @@ pub trait EdgeMatcher<G0: GraphBase, G1: GraphBase> {
         &mut self,
         _g0: &G0,
         _g1: &G1,
-        e0: (G0::NodeId, G0::NodeId),
-        e1: (G1::NodeId, G1::NodeId),
+        e0: G0::EdgeId,
+        e1: G1::EdgeId,
     ) -> Result<bool, Self::Error>;
 }
 
@@ -550,8 +550,8 @@ impl<G0: GraphBase, G1: GraphBase> EdgeMatcher<G0, G1> for NoSemanticMatch {
         &mut self,
         _g0: &G0,
         _g1: &G1,
-        _e0: (G0::NodeId, G0::NodeId),
-        _e1: (G1::NodeId, G1::NodeId),
+        _e0: G0::EdgeId,
+        _e1: G1::EdgeId,
     ) -> Result<bool, Self::Error> {
         Ok(true)
     }
@@ -560,9 +560,7 @@ impl<G0: GraphBase, G1: GraphBase> EdgeMatcher<G0, G1> for NoSemanticMatch {
 impl<G0, G1, F, E> EdgeMatcher<G0, G1> for F
 where
     G0: GraphBase + DataMap,
-    for<'a> &'a G0: GraphBase<NodeId = G0::NodeId, EdgeId = G0::EdgeId> + IntoEdgesDirected,
     G1: GraphBase + DataMap,
-    for<'a> &'a G1: GraphBase<NodeId = G1::NodeId, EdgeId = G1::EdgeId> + IntoEdgesDirected,
     F: FnMut(&G0::EdgeWeight, &G1::EdgeWeight) -> Result<bool, E>,
 {
     type Error = E;
@@ -575,18 +573,10 @@ where
         &mut self,
         g0: &G0,
         g1: &G1,
-        e0: (G0::NodeId, G0::NodeId),
-        e1: (G1::NodeId, G1::NodeId),
+        e0: G0::EdgeId,
+        e1: G1::EdgeId,
     ) -> Result<bool, Self::Error> {
-        let w0 = g0
-            .edges_directed(e0.0, Outgoing)
-            .find(|edge| edge.target() == e0.1)
-            .and_then(|edge| g0.edge_weight(edge.id()));
-        let w1 = g1
-            .edges_directed(e1.0, Outgoing)
-            .find(|edge| edge.target() == e1.1)
-            .and_then(|edge| g1.edge_weight(edge.id()));
-        if let (Some(x), Some(y)) = (w0, w1) {
+        if let (Some(x), Some(y)) = (g0.edge_weight(e0), g1.edge_weight(e1)) {
             self(x, y)
         } else {
             Ok(false)
@@ -612,21 +602,21 @@ pub fn is_isomorphic<G0, G1, NM, EM>(
 ) -> Result<bool, IsIsomorphicError<NM::Error, EM::Error>>
 where
     G0: GraphProp + GraphBase<NodeId = NodeIndex> + DataMap + Create + NodeCount + EdgeCount,
-    for<'a> &'a G0: GraphBase<NodeId = NodeIndex>
+    for<'a> &'a G0: GraphBase<NodeId = G0::NodeId, EdgeId = G0::EdgeId>
         + Data<NodeWeight = G0::NodeWeight, EdgeWeight = G0::EdgeWeight>
         + NodeIndexable
         + IntoEdgesDirected
         + IntoNodeIdentifiers,
     G0::NodeWeight: Clone,
-    G0::EdgeWeight: Clone,
+    G0::EdgeWeight: Clone + Debug,
     G1: GraphProp + GraphBase<NodeId = NodeIndex> + DataMap + Create + NodeCount + EdgeCount,
-    for<'a> &'a G1: GraphBase<NodeId = NodeIndex>
+    for<'a> &'a G1: GraphBase<NodeId = G1::NodeId, EdgeId = G1::EdgeId>
         + Data<NodeWeight = G1::NodeWeight, EdgeWeight = G1::EdgeWeight>
         + NodeIndexable
         + IntoEdgesDirected
         + IntoNodeIdentifiers,
     G1::NodeWeight: Clone,
-    G1::EdgeWeight: Clone,
+    G1::EdgeWeight: Clone + Debug,
     NM: NodeMatcher<G0, G1>,
     EM: EdgeMatcher<G0, G1>,
 {
@@ -663,8 +653,10 @@ enum Frame<N: marker::Copy> {
 
 pub struct Vf2Algorithm<G0, G1, NM, EM>
 where
-    G0: GraphBase,
-    G1: GraphBase,
+    G0: GraphBase + Data,
+    G1: GraphBase + Data,
+    G0::EdgeWeight: Debug,
+    G1::EdgeWeight: Debug,
     NM: NodeMatcher<G0, G1>,
     EM: EdgeMatcher<G0, G1>,
 {
@@ -683,21 +675,21 @@ where
 impl<G0, G1, NM, EM> Vf2Algorithm<G0, G1, NM, EM>
 where
     G0: GraphProp + GraphBase<NodeId = NodeIndex> + DataMap + Create + NodeCount + EdgeCount,
-    for<'a> &'a G0: GraphBase<NodeId = NodeIndex>
+    for<'a> &'a G0: GraphBase<NodeId = G0::NodeId, EdgeId = G0::EdgeId>
         + Data<NodeWeight = G0::NodeWeight, EdgeWeight = G0::EdgeWeight>
         + NodeIndexable
         + IntoEdgesDirected
         + IntoNodeIdentifiers,
     G0::NodeWeight: Clone,
-    G0::EdgeWeight: Clone,
+    G0::EdgeWeight: Clone + Debug,
     G1: GraphProp + GraphBase<NodeId = NodeIndex> + DataMap + Create + NodeCount + EdgeCount,
-    for<'a> &'a G1: GraphBase<NodeId = NodeIndex>
+    for<'a> &'a G1: GraphBase<NodeId = G1::NodeId, EdgeId = G1::EdgeId>
         + Data<NodeWeight = G1::NodeWeight, EdgeWeight = G1::EdgeWeight>
         + NodeIndexable
         + IntoEdgesDirected
         + IntoNodeIdentifiers,
     G1::NodeWeight: Clone,
-    G1::EdgeWeight: Clone,
+    G1::EdgeWeight: Clone + Debug,
     NM: NodeMatcher<G0, G1>,
     EM: EdgeMatcher<G0, G1>,
 {
@@ -1043,14 +1035,14 @@ where
         // semantic feasibility: compare associated data for edges
         if edge_match.enabled() {
             let mut matcher =
-                |a: (NodeIndex, (NodeIndex, NodeIndex)),
-                 b: (NodeIndex, (NodeIndex, NodeIndex))|
+                |g0_edge: (NodeIndex, G0::EdgeId),
+                 g1_edge: (NodeIndex, G1::EdgeId)|
                  -> Result<bool, IsIsomorphicError<NM::Error, EM::Error>> {
-                    let (nx, n_edge) = a;
-                    let (mx, m_edge) = b;
+                    let (nx, e0) = g0_edge;
+                    let (mx, e1) = g1_edge;
                     if nx == mx
                         && edge_match
-                            .eq(&st.0.graph, &st.1.graph, n_edge, m_edge)
+                            .eq(&st.0.graph, &st.1.graph, e0, e1)
                             .map_err(IsIsomorphicError::EdgeMatcherErr)?
                     {
                         return Ok(true);
@@ -1058,9 +1050,19 @@ where
                     Ok(false)
                 };
 
+            // Used to reverse the order of edge args to the matcher
+            // when checking G1 subset of G0.
+            #[inline]
+            fn reverse_args<T1, T2, R, F>(mut f: F) -> impl FnMut(T2, T1) -> R
+                where
+                    F: FnMut(T1, T2) -> R,
+            {
+                move |y, x| f(x, y)
+            }
+
             // outgoing edges
             if induced {
-                let e_first: Vec<(NodeIndex, (NodeIndex, NodeIndex))> =
+                let e_first: Vec<(NodeIndex, G0::EdgeId)> =
                     st.0.graph
                         .edges(nodes[0])
                         .filter_map(|edge| {
@@ -1073,21 +1075,21 @@ where
                             if m_neigh == end {
                                 return None;
                             }
-                            Some((m_neigh, (edge.source(), edge.target())))
+                            Some((m_neigh, edge.id()))
                         })
                         .collect();
 
-                let e_second: Vec<(NodeIndex, (NodeIndex, NodeIndex))> =
+                let e_second: Vec<(NodeIndex, G1::EdgeId)> =
                     st.1.graph
                         .edges(nodes[1])
-                        .map(|edge| (edge.target(), (edge.source(), edge.target())))
+                        .map(|edge| (edge.target(), edge.id()))
                         .collect();
 
                 if !is_subset(&e_first, &e_second, &mut matcher)? {
                     return Ok(false);
                 };
 
-                let e_first: Vec<(NodeIndex, (NodeIndex, NodeIndex))> =
+                let e_first: Vec<(NodeIndex, G1::EdgeId)> =
                     st.1.graph
                         .edges(nodes[1])
                         .filter_map(|edge| {
@@ -1100,21 +1102,22 @@ where
                             if m_neigh == end {
                                 return None;
                             }
-                            Some((m_neigh, (edge.source(), edge.target())))
+                            Some((m_neigh, edge.id()))
                         })
                         .collect();
 
-                let e_second: Vec<(NodeIndex, (NodeIndex, NodeIndex))> =
+                let e_second: Vec<(NodeIndex, G0::EdgeId)> =
                     st.0.graph
                         .edges(nodes[0])
-                        .map(|edge| (edge.target(), (edge.source(), edge.target())))
+                        .map(|edge| (edge.target(), edge.id()))
                         .collect();
 
-                if !is_subset(&e_first, &e_second, &mut matcher)? {
+                if !is_subset(&e_first, &e_second, &mut reverse_args(&mut matcher))? {
                     return Ok(false);
                 };
             } else {
-                let e_first: Vec<(NodeIndex, (NodeIndex, NodeIndex))> =
+                println!("[1117]");
+                let e_first: Vec<(NodeIndex, G1::EdgeId)> =
                     st.1.graph
                         .edges(nodes[1])
                         .filter_map(|edge| {
@@ -1127,17 +1130,22 @@ where
                             if m_neigh == end {
                                 return None;
                             }
-                            Some((m_neigh, (edge.source(), edge.target())))
+                            println!("[1131] First edge: {:?}", (edge.source(), edge.target(), edge.weight()));
+                            Some((m_neigh, edge.id()))
                         })
                         .collect();
 
-                let e_second: Vec<(NodeIndex, (NodeIndex, NodeIndex))> =
+                let e_second: Vec<(NodeIndex, G0::EdgeId)> =
                     st.0.graph
                         .edges(nodes[0])
-                        .map(|edge| (edge.target(), (edge.source(), edge.target())))
+                        .map(|edge| {
+                            println!("[1140] Second edge: {:?}", (edge.source(), edge.target(), edge.weight()));
+                            (edge.target(), edge.id())
+                        })
                         .collect();
 
-                if !is_subset(&e_first, &e_second, &mut matcher)? {
+                if !is_subset(&e_first, &e_second, &mut reverse_args(&mut matcher))? {
+                    println!("[1146] NOT SUBSET!");
                     return Ok(false);
                 };
             }
@@ -1145,7 +1153,7 @@ where
             // incoming edges
             if st.0.graph.is_directed() {
                 if induced {
-                    let e_first: Vec<(NodeIndex, (NodeIndex, NodeIndex))> =
+                    let e_first: Vec<(NodeIndex, G0::EdgeId)> =
                         st.0.graph
                             .edges_directed(nodes[0], Incoming)
                             .filter_map(|edge| {
@@ -1158,21 +1166,21 @@ where
                                 if m_neigh == end {
                                     return None;
                                 }
-                                Some((m_neigh, (edge.source(), edge.target())))
+                                Some((m_neigh, edge.id()))
                             })
                             .collect();
 
-                    let e_second: Vec<(NodeIndex, (NodeIndex, NodeIndex))> =
+                    let e_second: Vec<(NodeIndex, G1::EdgeId)> =
                         st.1.graph
                             .edges_directed(nodes[1], Incoming)
-                            .map(|edge| (edge.source(), (edge.source(), edge.target())))
+                            .map(|edge| (edge.source(), edge.id()))
                             .collect();
 
                     if !is_subset(&e_first, &e_second, &mut matcher)? {
                         return Ok(false);
                     };
 
-                    let e_first: Vec<(NodeIndex, (NodeIndex, NodeIndex))> =
+                    let e_first: Vec<(NodeIndex, G1::EdgeId)> =
                         st.1.graph
                             .edges_directed(nodes[1], Incoming)
                             .filter_map(|edge| {
@@ -1185,21 +1193,22 @@ where
                                 if m_neigh == end {
                                     return None;
                                 }
-                                Some((m_neigh, (edge.source(), edge.target())))
+                                Some((m_neigh, edge.id()))
                             })
                             .collect();
 
-                    let e_second: Vec<(NodeIndex, (NodeIndex, NodeIndex))> =
-                        st.1.graph
+                    let e_second: Vec<(NodeIndex, G0::EdgeId)> =
+                        st.0.graph
                             .edges_directed(nodes[0], Incoming)
-                            .map(|edge| (edge.source(), (edge.source(), edge.target())))
+                            .map(|edge| (edge.source(), edge.id()))
                             .collect();
 
-                    if !is_subset(&e_first, &e_second, &mut matcher)? {
+                    if !is_subset(&e_first, &e_second, &mut reverse_args(&mut matcher))? {
                         return Ok(false);
                     };
                 } else {
-                    let e_first: Vec<(NodeIndex, (NodeIndex, NodeIndex))> =
+                    println!("[1208]");
+                    let e_first: Vec<(NodeIndex, G1::EdgeId)> =
                         st.1.graph
                             .edges_directed(nodes[1], Incoming)
                             .filter_map(|edge| {
@@ -1212,17 +1221,22 @@ where
                                 if m_neigh == end {
                                     return None;
                                 }
-                                Some((m_neigh, (edge.source(), edge.target())))
+                                println!("[1222] First edge: {:?}", (edge.source(), edge.target(), edge.weight()));
+                                Some((m_neigh, edge.id()))
                             })
                             .collect();
 
-                    let e_second: Vec<(NodeIndex, (NodeIndex, NodeIndex))> =
+                    let e_second: Vec<(NodeIndex, G0::EdgeId)> =
                         st.0.graph
                             .edges_directed(nodes[0], Incoming)
-                            .map(|edge| (edge.source(), (edge.source(), edge.target())))
+                            .map(|edge| {
+                                println!("[1231] Second edge: {:?}", (edge.source(), edge.target(), edge.weight()));
+                                (edge.source(), edge.id())
+                            })
                             .collect();
 
-                    if !is_subset(&e_first, &e_second, &mut matcher)? {
+                    if !is_subset(&e_first, &e_second, &mut reverse_args(&mut matcher))? {
+                        println!("[1237] NOT SUBSET!");
                         return Ok(false);
                     };
                 }
@@ -1235,21 +1249,21 @@ where
 impl<G0, G1, NM, EM> Iterator for Vf2Algorithm<G0, G1, NM, EM>
 where
     G0: GraphProp + GraphBase<NodeId = NodeIndex> + DataMap + Create + NodeCount + EdgeCount,
-    for<'a> &'a G0: GraphBase<NodeId = NodeIndex>
+    for<'a> &'a G0: GraphBase<NodeId = G0::NodeId, EdgeId = G0::EdgeId>
         + Data<NodeWeight = G0::NodeWeight, EdgeWeight = G0::EdgeWeight>
         + NodeIndexable
         + IntoEdgesDirected
         + IntoNodeIdentifiers,
     G0::NodeWeight: Clone,
-    G0::EdgeWeight: Clone,
+    G0::EdgeWeight: Clone + Debug,
     G1: GraphProp + GraphBase<NodeId = NodeIndex> + DataMap + Create + NodeCount + EdgeCount,
-    for<'a> &'a G1: GraphBase<NodeId = NodeIndex>
+    for<'a> &'a G1: GraphBase<NodeId = G1::NodeId, EdgeId = G1::EdgeId>
         + Data<NodeWeight = G1::NodeWeight, EdgeWeight = G1::EdgeWeight>
         + NodeIndexable
         + IntoEdgesDirected
         + IntoNodeIdentifiers,
     G1::NodeWeight: Clone,
-    G1::EdgeWeight: Clone,
+    G1::EdgeWeight: Clone + Debug,
     NM: NodeMatcher<G0, G1>,
     EM: EdgeMatcher<G0, G1>,
 {
@@ -1385,5 +1399,50 @@ where
             }
         }
         None
+    }
+}
+
+#[cfg(test)]
+mod vf2_test {
+    use petgraph::prelude::StableGraph;
+    use super::*;
+    use petgraph::stable_graph::StableDiGraph;
+
+    #[test]
+    fn it_works() {
+        // first = rustworkx.PyGraph()
+        // first.extend_from_weighted_edge_list([(0, 1, "a"), (1, 2, "b"), (2, 0, "c")])
+        // second = rustworkx.PyGraph()
+        // second.extend_from_weighted_edge_list([(0, 1, "a"), (1, 2, "b")])
+        //
+        // self.assertTrue(
+        //     rustworkx.is_subgraph_isomorphic(
+        //         first, second, induced=False, edge_matcher=lambda x, y: x == y
+        //     )
+        // )
+        let mut first: StableDiGraph<usize, char> = StableDiGraph::new();
+        let mut second: StableDiGraph<usize, char> = StableDiGraph::new();
+        first.extend_with_edges([(0, 1, 'a'), (1, 2, 'b'), (2, 0, 'c')]);
+        second.extend_with_edges([(0, 1, 'a'), (1, 2, 'b')]);
+
+        let node_match = |n1: &usize, n2: &usize| -> Result<bool, Infallible> {
+            Ok(n1 == n2)
+        };
+        let edge_match = |e1: &char, e2: &char| -> Result<bool, Infallible> {
+            Ok(e1 == e2)
+        };
+
+        let result = is_isomorphic(
+            &first,
+            &second,
+            node_match,
+            edge_match,
+            false,
+            Ordering::Greater,
+            false,
+            None,
+        )
+        .expect("Should work.");
+        assert!(result)
     }
 }
