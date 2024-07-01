@@ -61,6 +61,7 @@ where
             })
             .collect());
     }
+
     let mut edge_weights: Vec<Option<f64>> = vec![None; graph.edge_bound()];
     for edge in graph.edge_references() {
         let index = EdgeIndexable::to_index(&graph, edge.id());
