@@ -124,7 +124,7 @@ trait NodeSorter<G>
 where
     G: GraphBase<NodeId = NodeIndex> + DataMap + NodeCount + EdgeCount + IntoEdgeReferences,
     G::NodeWeight: Clone,
-    G::EdgeWeight: Clone + Debug,
+    G::EdgeWeight: Clone,
 {
     type OutputGraph: GraphBase<NodeId = NodeIndex>
         + Create
@@ -178,7 +178,7 @@ where
         + Data<NodeWeight = G::NodeWeight, EdgeWeight = G::EdgeWeight>
         + Create,
     G::NodeWeight: Clone,
-    G::EdgeWeight: Clone + Debug,
+    G::EdgeWeight: Clone,
 {
     type OutputGraph = G::Target;
     fn sort(&self, graph: G) -> Vec<NodeIndex> {
@@ -210,7 +210,7 @@ where
         + Data<NodeWeight = G::NodeWeight, EdgeWeight = G::EdgeWeight>
         + Create,
     G::NodeWeight: Clone,
-    G::EdgeWeight: Clone + Debug,
+    G::EdgeWeight: Clone,
 {
     type OutputGraph = G::Target;
     fn sort(&self, graph: G) -> Vec<NodeIndex> {
@@ -608,7 +608,7 @@ where
         + IntoEdgesDirected
         + IntoNodeIdentifiers,
     G0::NodeWeight: Clone,
-    G0::EdgeWeight: Clone + Debug,
+    G0::EdgeWeight: Clone,
     G1: GraphProp + GraphBase<NodeId = NodeIndex> + DataMap + Create + NodeCount + EdgeCount,
     for<'a> &'a G1: GraphBase<NodeId = G1::NodeId, EdgeId = G1::EdgeId>
         + Data<NodeWeight = G1::NodeWeight, EdgeWeight = G1::EdgeWeight>
@@ -616,7 +616,7 @@ where
         + IntoEdgesDirected
         + IntoNodeIdentifiers,
     G1::NodeWeight: Clone,
-    G1::EdgeWeight: Clone + Debug,
+    G1::EdgeWeight: Clone,
     NM: NodeMatcher<G0, G1>,
     EM: EdgeMatcher<G0, G1>,
 {
@@ -655,8 +655,6 @@ pub struct Vf2Algorithm<G0, G1, NM, EM>
 where
     G0: GraphBase + Data,
     G1: GraphBase + Data,
-    G0::EdgeWeight: Debug,
-    G1::EdgeWeight: Debug,
     NM: NodeMatcher<G0, G1>,
     EM: EdgeMatcher<G0, G1>,
 {
@@ -681,7 +679,7 @@ where
         + IntoEdgesDirected
         + IntoNodeIdentifiers,
     G0::NodeWeight: Clone,
-    G0::EdgeWeight: Clone + Debug,
+    G0::EdgeWeight: Clone,
     G1: GraphProp + GraphBase<NodeId = NodeIndex> + DataMap + Create + NodeCount + EdgeCount,
     for<'a> &'a G1: GraphBase<NodeId = G1::NodeId, EdgeId = G1::EdgeId>
         + Data<NodeWeight = G1::NodeWeight, EdgeWeight = G1::EdgeWeight>
@@ -689,7 +687,7 @@ where
         + IntoEdgesDirected
         + IntoNodeIdentifiers,
     G1::NodeWeight: Clone,
-    G1::EdgeWeight: Clone + Debug,
+    G1::EdgeWeight: Clone,
     NM: NodeMatcher<G0, G1>,
     EM: EdgeMatcher<G0, G1>,
 {
@@ -864,9 +862,6 @@ where
 
         for n_neigh in st.1.graph.neighbors(nodes[1]) {
             succ_count[1] += 1;
-            if !induced && 1 == 0 {
-                continue;
-            }
             // handle the self loop case; it's not in the mapping (yet)
             let m_neigh = if nodes[1] != n_neigh {
                 st.1.mapping[n_neigh.index()]
@@ -1054,8 +1049,8 @@ where
             // when checking G1 subset of G0.
             #[inline]
             fn reverse_args<T1, T2, R, F>(mut f: F) -> impl FnMut(T2, T1) -> R
-                where
-                    F: FnMut(T1, T2) -> R,
+            where
+                F: FnMut(T1, T2) -> R,
             {
                 move |y, x| f(x, y)
             }
@@ -1116,7 +1111,6 @@ where
                     return Ok(false);
                 };
             } else {
-                println!("[1117]");
                 let e_first: Vec<(NodeIndex, G1::EdgeId)> =
                     st.1.graph
                         .edges(nodes[1])
@@ -1130,7 +1124,6 @@ where
                             if m_neigh == end {
                                 return None;
                             }
-                            println!("[1131] First edge: {:?}", (edge.source(), edge.target(), edge.weight()));
                             Some((m_neigh, edge.id()))
                         })
                         .collect();
@@ -1138,14 +1131,10 @@ where
                 let e_second: Vec<(NodeIndex, G0::EdgeId)> =
                     st.0.graph
                         .edges(nodes[0])
-                        .map(|edge| {
-                            println!("[1140] Second edge: {:?}", (edge.source(), edge.target(), edge.weight()));
-                            (edge.target(), edge.id())
-                        })
+                        .map(|edge| (edge.target(), edge.id()))
                         .collect();
 
                 if !is_subset(&e_first, &e_second, &mut reverse_args(&mut matcher))? {
-                    println!("[1146] NOT SUBSET!");
                     return Ok(false);
                 };
             }
@@ -1207,7 +1196,6 @@ where
                         return Ok(false);
                     };
                 } else {
-                    println!("[1208]");
                     let e_first: Vec<(NodeIndex, G1::EdgeId)> =
                         st.1.graph
                             .edges_directed(nodes[1], Incoming)
@@ -1221,7 +1209,6 @@ where
                                 if m_neigh == end {
                                     return None;
                                 }
-                                println!("[1222] First edge: {:?}", (edge.source(), edge.target(), edge.weight()));
                                 Some((m_neigh, edge.id()))
                             })
                             .collect();
@@ -1229,14 +1216,10 @@ where
                     let e_second: Vec<(NodeIndex, G0::EdgeId)> =
                         st.0.graph
                             .edges_directed(nodes[0], Incoming)
-                            .map(|edge| {
-                                println!("[1231] Second edge: {:?}", (edge.source(), edge.target(), edge.weight()));
-                                (edge.source(), edge.id())
-                            })
+                            .map(|edge| (edge.source(), edge.id()))
                             .collect();
 
                     if !is_subset(&e_first, &e_second, &mut reverse_args(&mut matcher))? {
-                        println!("[1237] NOT SUBSET!");
                         return Ok(false);
                     };
                 }
@@ -1255,7 +1238,7 @@ where
         + IntoEdgesDirected
         + IntoNodeIdentifiers,
     G0::NodeWeight: Clone,
-    G0::EdgeWeight: Clone + Debug,
+    G0::EdgeWeight: Clone,
     G1: GraphProp + GraphBase<NodeId = NodeIndex> + DataMap + Create + NodeCount + EdgeCount,
     for<'a> &'a G1: GraphBase<NodeId = G1::NodeId, EdgeId = G1::EdgeId>
         + Data<NodeWeight = G1::NodeWeight, EdgeWeight = G1::EdgeWeight>
@@ -1263,7 +1246,7 @@ where
         + IntoEdgesDirected
         + IntoNodeIdentifiers,
     G1::NodeWeight: Clone,
-    G1::EdgeWeight: Clone + Debug,
+    G1::EdgeWeight: Clone,
     NM: NodeMatcher<G0, G1>,
     EM: EdgeMatcher<G0, G1>,
 {
@@ -1404,8 +1387,8 @@ where
 
 #[cfg(test)]
 mod vf2_test {
-    use petgraph::prelude::StableGraph;
     use super::*;
+    use petgraph::prelude::StableGraph;
     use petgraph::stable_graph::StableDiGraph;
 
     #[test]
@@ -1425,12 +1408,8 @@ mod vf2_test {
         first.extend_with_edges([(0, 1, 'a'), (1, 2, 'b'), (2, 0, 'c')]);
         second.extend_with_edges([(0, 1, 'a'), (1, 2, 'b')]);
 
-        let node_match = |n1: &usize, n2: &usize| -> Result<bool, Infallible> {
-            Ok(n1 == n2)
-        };
-        let edge_match = |e1: &char, e2: &char| -> Result<bool, Infallible> {
-            Ok(e1 == e2)
-        };
+        let node_match = |n1: &usize, n2: &usize| -> Result<bool, Infallible> { Ok(n1 == n2) };
+        let edge_match = |e1: &char, e2: &char| -> Result<bool, Infallible> { Ok(e1 == e2) };
 
         let result = is_isomorphic(
             &first,
