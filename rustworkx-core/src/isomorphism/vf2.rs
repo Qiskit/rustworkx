@@ -651,6 +651,11 @@ enum Frame<N: marker::Copy> {
     Unwind { nodes: [N; 2], open_list: OpenList },
 }
 
+/// An iterator which uses the VF2(++) algorithm to produce isomorphic matches
+/// between two graphs, examining both syntactic and semantic graph isomorphism
+/// (graph structure and matching node and edge weights).
+///
+/// The graphs should not be multigraphs.
 pub struct Vf2Algorithm<G0, G1, NM, EM>
 where
     G0: GraphBase + Data,
