@@ -140,7 +140,7 @@ where
                 }
             }
         }
-        _ => {}
+        _ => ()
     });
 
     if let Some(x) = components {

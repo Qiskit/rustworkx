@@ -556,11 +556,7 @@ where
             .flat_map(|i| graph.edges_directed(*i, Direction::Incoming))
             .filter_map(|edge| {
                 let pred = edge.source();
-                if !nodes.contains(&pred) {
-                    Some((pred, edge.weight().clone()))
-                } else {
-                    None
-                }
+                (!nodes.contains(&pred)).then_some((pred, edge.weight().clone()))
             })
             .collect();
 
@@ -579,11 +575,7 @@ where
             .flat_map(|&i| graph.edges_directed(i, Direction::Outgoing))
             .filter_map(|edge| {
                 let succ = edge.target();
-                if !nodes.contains(&succ) {
-                    Some((succ, edge.weight().clone()))
-                } else {
-                    None
-                }
+                (!nodes.contains(&succ)).then_some((succ, edge.weight().clone()))
             })
             .collect();
 

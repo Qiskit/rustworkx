@@ -340,18 +340,18 @@ fn rbmg_edge_color(g0: &RegularBipartiteMultiGraph) -> Vec<Matching> {
     let mut g: RegularBipartiteMultiGraph = RegularBipartiteMultiGraph::clone(g0);
     let mut coloring: Vec<Matching> = Vec::with_capacity(g.degree);
 
-    if g.degree == 0 {
-        return coloring;
-    }
-
-    if g.degree == 1 {
-        let mut matching: Matching = Vec::with_capacity(g.l_nodes.len());
-        for edge in g.graph.edge_references() {
-            matching.push((edge.source(), edge.target()));
+    match g.degree {
+        0 => return coloring,
+        1 => {
+            let mut matching: Matching = Vec::with_capacity(g.l_nodes.len());
+            for edge in g.graph.edge_references() {
+                matching.push((edge.source(), edge.target()));
+            }
+            coloring.push(matching);
+            return coloring;
         }
-        coloring.push(matching);
-        return coloring;
-    }
+        _ => (),
+    };
 
     let mut odd_degree_matching: Option<Matching> = None;
 
