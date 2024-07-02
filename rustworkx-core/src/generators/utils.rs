@@ -12,5 +12,9 @@
 
 #[inline]
 pub fn get_num_nodes<T>(num_nodes: &Option<usize>, weights: &Option<Vec<T>>) -> usize {
-    if let Some(v) = weights {v.len()} else {num_nodes.unwrap()}
+    if let Some(v) = weights {
+        v.len()
+    } else {
+        num_nodes.unwrap()
+    }
 }

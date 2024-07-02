@@ -604,7 +604,7 @@ where
                     } else {
                         pending_list[c0].push(node);
                     }
-                },
+                }
                 (2, true) => {
                     let c0 = colors[0];
                     let c1 = colors[1];
@@ -631,7 +631,7 @@ where
                         block_id[c1] = Some(block_list.len());
                         block_list.push(new_block);
                     }
-                },
+                }
                 _ => {
                     for color in colors {
                         ensure_vector_has_index!(pending_list, block_id, color);
@@ -643,7 +643,6 @@ where
                     }
                 }
             }
-           
         }
     }
 

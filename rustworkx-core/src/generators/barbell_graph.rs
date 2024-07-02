@@ -151,7 +151,7 @@ where
             default_edge_weight(),
         );
         for (node_a, node_b) in pairwise(path_nodes) {
-            if let Some(node_a) = node_a{
+            if let Some(node_a) = node_a {
                 graph.add_edge(node_a, node_b, default_edge_weight());
             }
         }
