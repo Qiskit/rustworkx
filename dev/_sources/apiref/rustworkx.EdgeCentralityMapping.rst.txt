@@ -1,0 +1,20 @@
+﻿EdgeCentralityMapping
+=====================
+
+.. currentmodule:: rustworkx
+
+.. autoclass:: EdgeCentralityMapping
+   :no-members:
+   :show-inheritance:
+
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+      :toctree: ../apiref/
+
+      ~EdgeCentralityMapping.items
+      ~EdgeCentralityMapping.keys
+      ~EdgeCentralityMapping.values
+
+

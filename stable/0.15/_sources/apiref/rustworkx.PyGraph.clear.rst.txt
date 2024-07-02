@@ -1,0 +1,6 @@
+rustworkx.PyGraph.clear
+=======================
+
+.. currentmodule:: rustworkx
+
+.. automethod:: PyGraph.clear
