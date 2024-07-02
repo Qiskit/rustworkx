@@ -2,11 +2,11 @@
 features:
   - |
     Graph isomorphism using VF2(++) is now supported in ``rustworkx-core``
-    for `petgraph` graph types ``StableGraph`` and ``Graph`` (it may also
+    for ``petgraph`` graph types ``StableGraph`` and ``Graph`` (it may also
     work for ``GraphMap``, but this is not verified).
     To use it, import ``rustworkx_core::isomorphism::vf2`` which provides
-    func:`.is_isomorphic` for isomorphism testing in addition to the
-    ``Vf2Algorithm` struct, which can be used to iterate over valid
-    isomorphisms of two graphs. It also provides traits `EdgeMatcher`
-    and `NodeMatcher`, which allow a user-provided implementation of
+    function :func:`.is_isomorphic` for isomorphism testing in addition to the
+    ``Vf2Algorithm`` struct, which can be used to iterate over valid
+    isomorphic matches of two graphs. It also provides traits ``EdgeMatcher``
+    and ``NodeMatcher``, which allow a user-provided implementation of
     node and edge equality.
