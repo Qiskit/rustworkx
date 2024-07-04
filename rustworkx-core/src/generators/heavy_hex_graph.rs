@@ -170,7 +170,7 @@ where
                     default_edge_weight(),
                 );
             }
-        } else if i % 2 == 1 {
+        } else {
             graph.add_edge(
                 nodes_data[i * d + (d - 1)],
                 syndrome_chunk[syndrome_chunk.len() - 1],
@@ -225,7 +225,7 @@ where
                     }
                 }
             }
-        } else if i % 2 == 1 {
+        } else {
             for (j, syndrome) in syndrome_chunk.iter().enumerate() {
                 if j != syndrome_chunk.len() - 1 {
                     graph.add_edge(

@@ -196,7 +196,7 @@ where
         // Adds an edge to digraph if distance from the token to a neighbor is
         // less than distance from token to node. sub_digraph is same except
         // for self-edges.
-        if !(tokens.contains_key(&node)) {
+        if !tokens.contains_key(&node) {
             return Ok(());
         }
         if tokens[&node] == node {

@@ -55,11 +55,7 @@ where
         .edges(a)
         .filter_map(|edge| {
             let e = (edge.source(), edge.target());
-            if filter(&e) {
-                Some(e)
-            } else {
-                None
-            }
+            filter(&e).then_some(e)
         })
         .collect::<Vec<_>>();
     edges.sort_by_key(compare);
@@ -335,7 +331,7 @@ where
                     }
                 }
             }
-            _ => {}
+            _ => (),
         }
     }
 
