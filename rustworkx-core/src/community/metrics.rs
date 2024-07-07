@@ -32,7 +32,7 @@ where
 }
 
 pub fn modularity<G, W>(
-    graph: &G,
+    graph: G,
     communities: &Vec<Vec<G::NodeId>>,
     resolution: f64,
 ) -> Result<f64, NotAPartitionError>
@@ -54,7 +54,7 @@ where
 
     let mut internal_edge_weights = vec![W::zero(); communities.len()];
     let mut outgoing_edge_weights = vec![W::zero(); communities.len()];
-    let mut incoming_edge_weights = if graph.is_directed() {
+    let mut incoming_edge_weights_opt = if graph.is_directed() {
         Some(vec![W::zero(); communities.len()])
     } else {
         None
@@ -68,8 +68,10 @@ where
                 internal_edge_weights[c_a] += w;
             }
             outgoing_edge_weights[c_a] += w;
-            if let Some(ref mut incoming) = incoming_edge_weights {
-                incoming[c_b] += w;
+            if let Some(ref mut incoming_edge_weights) = incoming_edge_weights_opt {
+                incoming_edge_weights[c_b] += w;
+            } else {
+                outgoing_edge_weights[c_b] += w;
             }
         } else {
             // At least one node was not included in `communities`
@@ -77,17 +79,49 @@ where
         }
     }
 
-    let two_m: f64 = 2.0 * _total_edge_weight(graph).into();
-    let weight_sum = |v: Vec<W>| -> f64 { v.iter().fold(W::zero(), |s, &w| s + w).into() };
+    let m: f64 = _total_edge_weight(&graph).into();
 
-    let sigma_internal = weight_sum(internal_edge_weights);
-    let sigma_outgoing = weight_sum(outgoing_edge_weights);
+    let sigma_internal: f64 = internal_edge_weights
+        .iter()
+        .fold(W::zero(), |s, &w| s + w)
+        .into();
 
-    let sigma_incoming = if let Some(incoming) = incoming_edge_weights {
-        weight_sum(incoming)
+    let sigma_total_squared: W = if let Some(incoming_edge_weights) = incoming_edge_weights_opt {
+        incoming_edge_weights
+            .iter()
+            .zip(outgoing_edge_weights.iter())
+            .fold(W::zero(), |s, (&x, &y)| s + x * y)
     } else {
-        sigma_outgoing
+        outgoing_edge_weights
+            .iter()
+            .fold(W::zero(), |s, &x| s + x * x)
     };
 
-    Ok(sigma_internal / two_m - resolution * sigma_incoming * sigma_outgoing / (two_m * two_m))
+    Ok(sigma_internal / m - resolution * sigma_total_squared.into() / (4.0 * m * m))
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::generators::barbell_graph;
+    use petgraph::graph::UnGraph;
+    use petgraph::visit::{GraphBase, IntoNodeIdentifiers};
+    use std::vec::Vec;
+
+    use super::modularity;
+
+    #[test]
+    fn test_modularity_barbell_graph() {
+        type G = UnGraph<(), f64>;
+        type N = <G as GraphBase>::NodeId;
+
+        let g: G = barbell_graph(Some(3), Some(0), None, None, || (), || 1.0f64).unwrap();
+        let nodes: Vec<N> = g.node_identifiers().collect();
+        let communities: Vec<Vec<N>> = vec![
+            vec![nodes[0], nodes[1], nodes[2]],
+            vec![nodes[3], nodes[4], nodes[5]],
+        ];
+        let resolution = 1.0;
+        let m = modularity(&g, &communities, resolution).unwrap();
+        assert!((m - 0.35714285714285715).abs() < 1.0e-9);
+    }
 }
