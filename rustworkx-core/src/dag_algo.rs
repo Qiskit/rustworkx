@@ -595,8 +595,8 @@ where
             // Remove null edges from color_fn
             let colors = colors.into_iter().flatten().collect::<Vec<usize>>();
 
-            if colors.len() <= 2 && is_match {
-                if colors.len() == 1 {
+            match (colors.len(), is_match) {
+                (1, true) => {
                     let c0 = colors[0];
                     ensure_vector_has_index!(pending_list, block_id, c0);
                     if let Some(c0_block_id) = block_id[c0] {
@@ -604,7 +604,8 @@ where
                     } else {
                         pending_list[c0].push(node);
                     }
-                } else if colors.len() == 2 {
+                }
+                (2, true) => {
                     let c0 = colors[0];
                     let c1 = colors[1];
                     ensure_vector_has_index!(pending_list, block_id, c0);
@@ -619,7 +620,7 @@ where
                         let mut new_block: Vec<G::NodeId> =
                             Vec::with_capacity(pending_list[c0].len() + pending_list[c1].len() + 1);
 
-                        // Clears pending lits and add to new block
+                        // Clears pending list and add to new block
                         new_block.append(&mut pending_list[c0]);
                         new_block.append(&mut pending_list[c1]);
 
@@ -631,14 +632,15 @@ where
                         block_list.push(new_block);
                     }
                 }
-            } else {
-                for color in colors {
-                    ensure_vector_has_index!(pending_list, block_id, color);
-                    if let Some(color_block_id) = block_id[color] {
-                        block_list[color_block_id].append(&mut pending_list[color]);
+                _ => {
+                    for color in colors {
+                        ensure_vector_has_index!(pending_list, block_id, color);
+                        if let Some(color_block_id) = block_id[color] {
+                            block_list[color_block_id].append(&mut pending_list[color]);
+                        }
+                        block_id[color] = None;
+                        pending_list[color].clear();
                     }
-                    block_id[color] = None;
-                    pending_list[color].clear();
                 }
             }
         }
