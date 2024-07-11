@@ -1,0 +1,18 @@
+---
+features:
+  - |
+    Added :func:`rustworkx.generators.dorogovtsev_goltsev_mendes_graph` that generates
+    deterministic scale-free graphs using the Dorogovtsev-Goltsev-Mendes iterative procedure.
+
+    .. jupyter-execute::
+
+      import rustworkx as rx
+      from rustworkx.visualization import mpl_draw
+
+      graph = rx.generators.dorogovtsev_goltsev_mendes_graph(2)
+      mpl_draw(graph)
+
+  - |
+    Added a new function, ``rustworkx_core::generators::dorogovtsev_goltsev_mendes_graph``, to
+    rustworkx-core that is used to generate deterministic scale-free graphs using the
+    Dorogovtsev-Goltsev-Mendes iterative procedure.

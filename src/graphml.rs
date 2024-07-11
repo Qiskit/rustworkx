@@ -13,7 +13,6 @@
 #![allow(clippy::borrow_as_ptr)]
 
 use std::convert::From;
-use std::io::BufRead;
 use std::iter::FromIterator;
 use std::num::{ParseFloatError, ParseIntError};
 use std::path::Path;
@@ -23,6 +22,7 @@ use hashbrown::HashMap;
 use indexmap::IndexMap;
 
 use quick_xml::events::{BytesStart, Event};
+use quick_xml::name::QName;
 use quick_xml::Error as XmlError;
 use quick_xml::Reader;
 
@@ -60,7 +60,7 @@ impl From<ParseBoolError> for Error {
 impl From<ParseIntError> for Error {
     #[inline]
     fn from(e: ParseIntError) -> Error {
-        Error::ParseValue(format!("Failed conversion to 'int': {}", e))
+        Error::ParseValue(format!("Failed conversion to 'int' or 'long': {}", e))
     }
 }
 
@@ -84,17 +84,16 @@ impl From<Error> for PyErr {
     }
 }
 
-fn xml_attribute<'a, B: BufRead>(
-    reader: &Reader<B>,
-    element: &'a BytesStart<'a>,
-    key: &[u8],
-) -> Result<String, Error> {
+fn xml_attribute<'a>(element: &'a BytesStart<'a>, key: &[u8]) -> Result<String, Error> {
     element
         .attributes()
         .find_map(|a| {
             if let Ok(a) = a {
-                if a.key == key {
-                    let decoded = a.unescape_and_decode_value(reader).map_err(Error::from);
+                if a.key == QName(key) {
+                    let decoded = a
+                        .unescape_value()
+                        .map_err(Error::from)
+                        .map(|cow_str| cow_str.into_owned());
                     return Some(decoded);
                 }
             }
@@ -122,6 +121,7 @@ enum Type {
     Float,
     Double,
     String,
+    Long,
 }
 
 #[derive(Clone)]
@@ -131,6 +131,7 @@ enum Value {
     Float(f32),
     Double(f64),
     String(String),
+    Long(isize),
     UnDefined,
 }
 
@@ -142,6 +143,7 @@ impl IntoPy<PyObject> for Value {
             Value::Float(val) => val.into_py(py),
             Value::Double(val) => val.into_py(py),
             Value::String(val) => val.into_py(py),
+            Value::Long(val) => val.into_py(py),
             Value::UnDefined => py.None(),
         }
     }
@@ -161,6 +163,7 @@ impl Key {
             Type::Float => Value::Float(val.parse()?),
             Type::Double => Value::Double(val.parse()?),
             Type::String => Value::String(val),
+            Type::Long => Value::Long(val.parse()?),
         })
     }
 
@@ -209,17 +212,12 @@ impl Graph {
         }
     }
 
-    fn add_node<'a, B: BufRead, I>(
-        &mut self,
-        reader: &Reader<B>,
-        element: &'a BytesStart<'a>,
-        default_data: I,
-    ) -> Result<(), Error>
+    fn add_node<'a, I>(&mut self, element: &'a BytesStart<'a>, default_data: I) -> Result<(), Error>
     where
         I: Iterator<Item = &'a Key>,
     {
         self.nodes.push(Node {
-            id: xml_attribute(reader, element, b"id")?,
+            id: xml_attribute(element, b"id")?,
             data: HashMap::from_iter(
                 default_data.map(|key| (key.name.clone(), key.default.clone())),
             ),
@@ -228,19 +226,14 @@ impl Graph {
         Ok(())
     }
 
-    fn add_edge<'a, B: BufRead, I>(
-        &mut self,
-        reader: &Reader<B>,
-        element: &'a BytesStart<'a>,
-        default_data: I,
-    ) -> Result<(), Error>
+    fn add_edge<'a, I>(&mut self, element: &'a BytesStart<'a>, default_data: I) -> Result<(), Error>
     where
         I: Iterator<Item = &'a Key>,
     {
         self.edges.push(Edge {
-            id: xml_attribute(reader, element, b"id").ok(),
-            source: xml_attribute(reader, element, b"source")?,
-            target: xml_attribute(reader, element, b"target")?,
+            id: xml_attribute(element, b"id").ok(),
+            source: xml_attribute(element, b"source")?,
+            target: xml_attribute(element, b"target")?,
             data: HashMap::from_iter(
                 default_data.map(|key| (key.name.clone(), key.default.clone())),
             ),
@@ -381,12 +374,8 @@ impl Default for GraphML {
 }
 
 impl GraphML {
-    fn create_graph<'a, B: BufRead>(
-        &mut self,
-        reader: &Reader<B>,
-        element: &'a BytesStart<'a>,
-    ) -> Result<(), Error> {
-        let dir = match xml_attribute(reader, element, b"edgedefault")?.as_bytes() {
+    fn create_graph<'a>(&mut self, element: &'a BytesStart<'a>) -> Result<(), Error> {
+        let dir = match xml_attribute(element, b"edgedefault")?.as_bytes() {
             b"directed" => Direction::Directed,
             b"undirected" => Direction::UnDirected,
             _ => {
@@ -404,14 +393,9 @@ impl GraphML {
         Ok(())
     }
 
-    fn add_node<'a, B: BufRead>(
-        &mut self,
-        reader: &Reader<B>,
-        element: &'a BytesStart<'a>,
-    ) -> Result<(), Error> {
+    fn add_node<'a>(&mut self, element: &'a BytesStart<'a>) -> Result<(), Error> {
         if let Some(graph) = self.graphs.last_mut() {
             graph.add_node(
-                reader,
                 element,
                 self.key_for_nodes.values().chain(self.key_for_all.values()),
             )?;
@@ -420,14 +404,9 @@ impl GraphML {
         Ok(())
     }
 
-    fn add_edge<'a, B: BufRead>(
-        &mut self,
-        reader: &Reader<B>,
-        element: &'a BytesStart<'a>,
-    ) -> Result<(), Error> {
+    fn add_edge<'a>(&mut self, element: &'a BytesStart<'a>) -> Result<(), Error> {
         if let Some(graph) = self.graphs.last_mut() {
             graph.add_edge(
-                reader,
                 element,
                 self.key_for_edges.values().chain(self.key_for_all.values()),
             )?;
@@ -436,18 +415,15 @@ impl GraphML {
         Ok(())
     }
 
-    fn add_graphml_key<'a, B: BufRead>(
-        &mut self,
-        reader: &Reader<B>,
-        element: &'a BytesStart<'a>,
-    ) -> Result<Domain, Error> {
-        let id = xml_attribute(reader, element, b"id")?;
-        let ty = match xml_attribute(reader, element, b"attr.type")?.as_bytes() {
+    fn add_graphml_key<'a>(&mut self, element: &'a BytesStart<'a>) -> Result<Domain, Error> {
+        let id = xml_attribute(element, b"id")?;
+        let ty = match xml_attribute(element, b"attr.type")?.as_bytes() {
             b"boolean" => Type::Boolean,
             b"int" => Type::Int,
             b"float" => Type::Float,
             b"double" => Type::Double,
             b"string" => Type::String,
+            b"long" => Type::Long,
             _ => {
                 return Err(Error::InvalidDoc(format!(
                     "Invalid 'attr.type' attribute in key with id={}.",
@@ -457,12 +433,12 @@ impl GraphML {
         };
 
         let key = Key {
-            name: xml_attribute(reader, element, b"attr.name")?,
+            name: xml_attribute(element, b"attr.name")?,
             ty,
             default: Value::UnDefined,
         };
 
-        match xml_attribute(reader, element, b"for")?.as_bytes() {
+        match xml_attribute(element, b"for")?.as_bytes() {
             b"node" => {
                 self.key_for_nodes.insert(id, key);
                 Ok(Domain::Node)
@@ -566,35 +542,35 @@ impl GraphML {
         let mut last_data_key = String::new();
 
         loop {
-            match reader.read_event(&mut buf)? {
+            match reader.read_event_into(&mut buf)? {
                 Event::Start(ref e) => match e.name() {
-                    b"key" => {
+                    QName(b"key") => {
                         matches!(state, State::Start);
-                        domain_of_last_key = graphml.add_graphml_key(&reader, e)?;
+                        domain_of_last_key = graphml.add_graphml_key(e)?;
                         state = State::Key;
                     }
-                    b"default" => {
+                    QName(b"default") => {
                         matches!(state, State::Key);
                         state = State::DefaultForKey;
                     }
-                    b"graph" => {
+                    QName(b"graph") => {
                         matches!(state, State::Start);
-                        graphml.create_graph(&reader, e)?;
+                        graphml.create_graph(e)?;
                         state = State::Graph;
                     }
-                    b"node" => {
+                    QName(b"node") => {
                         matches!(state, State::Graph);
-                        graphml.add_node(&reader, e)?;
+                        graphml.add_node(e)?;
                         state = State::Node;
                     }
-                    b"edge" => {
+                    QName(b"edge") => {
                         matches!(state, State::Graph);
-                        graphml.add_edge(&reader, e)?;
+                        graphml.add_edge(e)?;
                         state = State::Edge;
                     }
-                    b"data" => {
+                    QName(b"data") => {
                         matches!(state, State::Node | State::Edge | State::Graph);
-                        last_data_key = xml_attribute(&reader, e, b"key")?;
+                        last_data_key = xml_attribute(e, b"key")?;
                         match state {
                             State::Node => state = State::DataForNode,
                             State::Edge => state = State::DataForEdge,
@@ -605,56 +581,56 @@ impl GraphML {
                             }
                         }
                     }
-                    b"hyperedge" => {
+                    QName(b"hyperedge") => {
                         return Err(Error::UnSupported(String::from(
                             "Hyperedges are not supported.",
                         )));
                     }
-                    b"port" => {
+                    QName(b"port") => {
                         return Err(Error::UnSupported(String::from("Ports are not supported.")));
                     }
                     _ => {}
                 },
                 Event::Empty(ref e) => match e.name() {
-                    b"key" => {
+                    QName(b"key") => {
                         matches!(state, State::Start);
-                        graphml.add_graphml_key(&reader, e)?;
+                        graphml.add_graphml_key(e)?;
                     }
-                    b"node" => {
+                    QName(b"node") => {
                         matches!(state, State::Graph);
-                        graphml.add_node(&reader, e)?;
+                        graphml.add_node(e)?;
                     }
-                    b"edge" => {
+                    QName(b"edge") => {
                         matches!(state, State::Graph);
-                        graphml.add_edge(&reader, e)?;
+                        graphml.add_edge(e)?;
                     }
-                    b"port" => {
+                    QName(b"port") => {
                         return Err(Error::UnSupported(String::from("Ports are not supported.")));
                     }
                     _ => {}
                 },
                 Event::End(ref e) => match e.name() {
-                    b"key" => {
+                    QName(b"key") => {
                         matches!(state, State::Key);
                         state = State::Start;
                     }
-                    b"default" => {
+                    QName(b"default") => {
                         matches!(state, State::DefaultForKey);
                         state = State::Key;
                     }
-                    b"graph" => {
+                    QName(b"graph") => {
                         matches!(state, State::Graph);
                         state = State::Start;
                     }
-                    b"node" => {
+                    QName(b"node") => {
                         matches!(state, State::Node);
                         state = State::Graph;
                     }
-                    b"edge" => {
+                    QName(b"edge") => {
                         matches!(state, State::Edge);
                         state = State::Graph;
                     }
-                    b"data" => {
+                    QName(b"data") => {
                         matches!(
                             state,
                             State::DataForNode | State::DataForEdge | State::DataForGraph
@@ -673,23 +649,19 @@ impl GraphML {
                 },
                 Event::Text(ref e) => match state {
                     State::DefaultForKey => {
-                        graphml.last_key_set_value(
-                            e.unescape_and_decode(&reader)?,
-                            domain_of_last_key,
-                        )?;
+                        graphml
+                            .last_key_set_value((e.unescape()?).to_string(), domain_of_last_key)?;
                     }
                     State::DataForNode => {
-                        graphml
-                            .last_node_set_data(&last_data_key, e.unescape_and_decode(&reader)?)?;
+                        graphml.last_node_set_data(&last_data_key, (e.unescape()?).to_string())?;
                     }
                     State::DataForEdge => {
-                        graphml
-                            .last_edge_set_data(&last_data_key, e.unescape_and_decode(&reader)?)?;
+                        graphml.last_edge_set_data(&last_data_key, (e.unescape()?).to_string())?;
                     }
                     State::DataForGraph => {
                         graphml.last_graph_set_attribute(
                             &last_data_key,
-                            e.unescape_and_decode(&reader)?,
+                            (e.unescape()?).to_string(),
                         )?;
                     }
                     _ => {}

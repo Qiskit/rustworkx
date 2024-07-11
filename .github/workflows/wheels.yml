@@ -9,11 +9,8 @@ jobs:
     name: Publish rustworkx-core
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          override: true
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
       - name: Run cargo publish
         run: |
           cd rustworkx-core
@@ -23,375 +20,271 @@ jobs:
   sdist:
     name: Build sdist
     runs-on: ubuntu-latest
-    needs: ["build_wheels", "build-win32-wheels"]
+    environment: release
+    permissions:
+      id-token: write
+    needs: ["upload_shared_wheels"]
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         name: Install Python
         with:
-          python-version: '3.7'
+          python-version: '3.10'
       - name: Install deps
-        run: pip install -U twine setuptools-rust
+        run: pip install -U setuptools-rust
       - name: Build sdist
         run: python setup.py sdist
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v4
         with:
           path: ./dist/*
-      - name: Upload to PyPI
-        run: twine upload ./dist/*
-        env:
-          TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
-          TWINE_USERNAME: retworkx-ci
+          name: sdist-rustworkx
+      - name: Publish package distributions to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
   build_wheels:
     name: Build wheels on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
+    environment: release
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        os: [ubuntu-latest, windows-latest, macos-13, macos-14]
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         name: Install Python
         with:
-          python-version: '3.7'
-      - uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
+          python-version: '3.10'
+      - uses: dtolnay/rust-toolchain@stable
       - name: Install cibuildwheel
         run: |
-          python -m pip install cibuildwheel==2.10.1 twine
+          python -m pip install cibuildwheel==2.17.0
       - name: Build wheels
         run: |
           python -m cibuildwheel --output-dir wheelhouse
-        env:
-          CIBW_BEFORE_ALL_LINUX: "yum install -y wget && {package}/tools/install_rust.sh"
-          CIBW_ENVIRONMENT_LINUX: 'PATH="$PATH:$HOME/.cargo/bin"'
-          CIBW_ENVIRONMENT_MACOS: MACOSX_DEPLOYMENT_TARGET=10.9
-          CIBW_MANYLINUX_X86_64_IMAGE: quay.io/pypa/manylinux2014_x86_64:latest
-          CIBW_MANYLINUX_I686_IMAGE: quay.io/pypa/manylinux2014_i686:latest
-          CIBW_SKIP: cp36-* pp* *win32 *musl*
-          CIBW_BEFORE_BUILD: pip install -U setuptools-rust
-          CIBW_TEST_REQUIRES: networkx testtools fixtures
-          CIBW_TEST_COMMAND: python -m unittest discover {project}/tests/rustworkx_tests
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v4
         with:
           path: ./wheelhouse/*.whl
-      - name: Upload to PyPI
-        run: twine upload ./wheelhouse/*.whl
-        env:
-          TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
-          TWINE_USERNAME: retworkx-ci
+          name: shared-wheel-builds-${{ matrix.os }}
+  upload_shared_wheels:
+    name: Upload shared build wheels
+    runs-on: ubuntu-latest
+    environment: release
+    permissions:
+      id-token: write
+    needs: ["build_wheels", "build-win32-wheels"]
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: shared-wheel-builds-*
+          merge-multiple: true
+          path: deploy
+      - name: Publish package distributions to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: deploy
   build_wheels_aarch64:
     name: Build wheels on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
+    environment: release
+    permissions:
+      id-token: write
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         name: Install Python
         with:
-          python-version: '3.7'
-      - uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
+          python-version: '3.10'
+      - uses: dtolnay/rust-toolchain@stable
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v1
+        uses: docker/setup-qemu-action@v2
         with:
           platforms: all
       - name: Install cibuildwheel
         run: |
-          python -m pip install cibuildwheel==2.10.1 twine
+          python -m pip install cibuildwheel==2.17.0
       - name: Build wheels
         run: |
           python -m cibuildwheel --output-dir wheelhouse
         env:
-          CIBW_BEFORE_ALL_LINUX: "yum install -y wget && {package}/tools/install_rust.sh"
-          CIBW_ENVIRONMENT_LINUX: 'PATH="$PATH:$HOME/.cargo/bin" CARGO_NET_GIT_FETCH_WITH_CLI="true"'
-          CIBW_ENVIRONMENT_MACOS: MACOSX_DEPLOYMENT_TARGET=10.9
-          CIBW_MANYLINUX_X86_64_IMAGE: quay.io/pypa/manylinux2014_x86_64:latest
-          CIBW_MANYLINUX_I686_IMAGE: quay.io/pypa/manylinux2014_i686:latest
-          CIBW_SKIP: cp36-* pp* *win32 *musl*
-          CIBW_BEFORE_BUILD: pip install -U setuptools-rust
-          CIBW_TEST_REQUIRES: networkx testtools fixtures
-          CIBW_TEST_COMMAND: python -m unittest discover {project}/tests/rustworkx_tests
           CIBW_ARCHS_LINUX: aarch64
-      - uses: actions/upload-artifact@v2
+          CIBW_SKIP: cp36-* cp37-* pp* *musl*
+      - uses: actions/upload-artifact@v4
         with:
           path: ./wheelhouse/*.whl
-      - name: Upload to PyPI
-        run: twine upload ./wheelhouse/*.whl
+          name: wheel-builds-aarch64
+      - name: Publish package distributions to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: wheelhouse/
+  build_wheels_musl_aarch64:
+    name: Build wheels on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    environment: release
+    permissions:
+      id-token: write
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        name: Install Python
+        with:
+          python-version: '3.10'
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+        with:
+          platforms: all
+      - name: Install cibuildwheel
+        run: |
+          python -m pip install cibuildwheel==2.17.0
+      - name: Build wheels
+        run: |
+          python -m cibuildwheel --output-dir wheelhouse
         env:
-          TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
-          TWINE_USERNAME: retworkx-ci
+          CIBW_ARCHS_LINUX: aarch64
+          CIBW_SKIP: cp36-* cp37-* *many*
+          CIBW_TEST_SKIP: cp37-* cp38-* cp39-* cp310-* cp311-* cp312-* *many*
+      - uses: actions/upload-artifact@v4
+        with:
+          path: ./wheelhouse/*.whl
+          name: wheel-builds-musl-aarch64
+      - name: Publish package distributions to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: wheelhouse/
   build_wheels_ppc64le:
     name: Build wheels on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
+    environment: release
+    permissions:
+      id-token: write
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         name: Install Python
         with:
-          python-version: '3.7'
-      - uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
+          python-version: '3.10'
+      - uses: dtolnay/rust-toolchain@stable
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v1
+        uses: docker/setup-qemu-action@v2
         with:
           platforms: all
       - name: Install cibuildwheel
         run: |
-          python -m pip install cibuildwheel==2.10.1 twine
+          python -m pip install cibuildwheel==2.17.0
       - name: Build wheels
         run: |
           python -m cibuildwheel --output-dir wheelhouse
         env:
-          CIBW_BEFORE_ALL_LINUX: "yum install -y wget && {package}/tools/install_rust.sh"
-          CIBW_ENVIRONMENT_LINUX: 'PATH="$PATH:$HOME/.cargo/bin" CARGO_NET_GIT_FETCH_WITH_CLI="true"'
-          CIBW_ENVIRONMENT_MACOS: MACOSX_DEPLOYMENT_TARGET=10.9
-          CIBW_MANYLINUX_X86_64_IMAGE: quay.io/pypa/manylinux2014_x86_64:latest
-          CIBW_MANYLINUX_I686_IMAGE: quay.io/pypa/manylinux2014_i686:latest
-          CIBW_SKIP: cp36-* cp39-* cp310-* pp* *win32 *musl*
-          CIBW_BEFORE_BUILD: pip install -U setuptools-rust
-          CIBW_TEST_REQUIRES: networkx testtools fixtures
-          CIBW_TEST_COMMAND: python -m unittest discover {project}/tests/rustworkx_tests
+          CIBW_SKIP: cp36-* cp37-* pp* *win32 *musl*
           CIBW_ARCHS_LINUX: ppc64le
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v4
         with:
           path: ./wheelhouse/*.whl
-      - name: Upload to PyPI
-        run: twine upload ./wheelhouse/*.whl
-        env:
-          TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
-          TWINE_USERNAME: retworkx-ci
-  build_wheels_ppc64le_part2:
-    name: Build wheels on ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest]
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
-        name: Install Python
+          name: wheel-builds-ppc64le
+      - name: Publish package distributions to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
         with:
-          python-version: '3.7'
-      - uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v1
-        with:
-          platforms: all
-      - name: Install cibuildwheel
-        run: |
-          python -m pip install cibuildwheel==2.10.1 twine
-      - name: Build wheels
-        run: |
-          python -m cibuildwheel --output-dir wheelhouse
-        env:
-          CIBW_BEFORE_ALL_LINUX: "yum install -y wget && {package}/tools/install_rust.sh"
-          CIBW_ENVIRONMENT_LINUX: 'PATH="$PATH:$HOME/.cargo/bin" CARGO_NET_GIT_FETCH_WITH_CLI="true"'
-          CIBW_ENVIRONMENT_MACOS: MACOSX_DEPLOYMENT_TARGET=10.9
-          CIBW_MANYLINUX_X86_64_IMAGE: quay.io/pypa/manylinux2014_x86_64:latest
-          CIBW_MANYLINUX_I686_IMAGE: quay.io/pypa/manylinux2014_i686:latest
-          CIBW_SKIP: cp36-* cp37-* cp38-* pp* *win32 *musl*
-          CIBW_BEFORE_BUILD: pip install -U setuptools-rust
-          CIBW_TEST_REQUIRES: networkx testtools fixtures
-          CIBW_TEST_COMMAND: python -m unittest discover {project}/tests/rustworkx_tests
-          CIBW_ARCHS_LINUX: ppc64le
-      - uses: actions/upload-artifact@v2
-        with:
-          path: ./wheelhouse/*.whl
-      - name: Upload to PyPI
-        run: twine upload ./wheelhouse/*.whl
-        env:
-          TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
-          TWINE_USERNAME: retworkx-ci
+          packages-dir: wheelhouse/
   build_wheels_s390x:
     name: Build wheels on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
+    environment: release
+    permissions:
+      id-token: write
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         name: Install Python
         with:
-          python-version: '3.7'
-      - uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
+          python-version: '3.10'
+      - uses: dtolnay/rust-toolchain@stable
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v1
+        uses: docker/setup-qemu-action@v2
         with:
           platforms: all
       - name: Install cibuildwheel
         run: |
-          python -m pip install cibuildwheel==2.10.1 twine
+          python -m pip install cibuildwheel==2.17.0
       - name: Build wheels
         run: |
           python -m cibuildwheel --output-dir wheelhouse
         env:
-          CIBW_BEFORE_ALL_LINUX: "yum install -y wget && {package}/tools/install_rust.sh"
-          CIBW_ENVIRONMENT_LINUX: 'PATH="$PATH:$HOME/.cargo/bin" CARGO_NET_GIT_FETCH_WITH_CLI="true"'
-          CIBW_ENVIRONMENT_MACOS: MACOSX_DEPLOYMENT_TARGET=10.9
-          CIBW_MANYLINUX_X86_64_IMAGE: quay.io/pypa/manylinux2014_x86_64:latest
-          CIBW_MANYLINUX_I686_IMAGE: quay.io/pypa/manylinux2014_i686:latest
-          CIBW_SKIP: cp36-* cp39-* cp310-* pp* *win32 *musl*
-          CIBW_BEFORE_BUILD: pip install -U setuptools-rust
-          CIBW_TEST_REQUIRES: networkx testtools fixtures
-          CIBW_TEST_COMMAND: python -m unittest discover {project}/tests/rustworkx_tests
+          CIBW_SKIP: cp36-* cp37-* pp* *win32 *musl*
           CIBW_ARCHS_LINUX: s390x
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v4
         with:
           path: ./wheelhouse/*.whl
-      - name: Upload to PyPI
-        run: twine upload ./wheelhouse/*.whl
-        env:
-          TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
-          TWINE_USERNAME: retworkx-ci
-  build_wheels_s390x_part2:
-    name: Build wheels on ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest]
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
-        name: Install Python
+          name: wheel-builds-s390x
+      - name: Publish package distributions to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
         with:
-          python-version: '3.7'
-      - uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v1
-        with:
-          platforms: all
-      - name: Install cibuildwheel
-        run: |
-          python -m pip install cibuildwheel==2.10.1 twine
-      - name: Build wheels
-        run: |
-          python -m cibuildwheel --output-dir wheelhouse
-        env:
-          CIBW_BEFORE_ALL_LINUX: "yum install -y wget && {package}/tools/install_rust.sh"
-          CIBW_ENVIRONMENT_LINUX: 'PATH="$PATH:$HOME/.cargo/bin" CARGO_NET_GIT_FETCH_WITH_CLI="true"'
-          CIBW_ENVIRONMENT_MACOS: MACOSX_DEPLOYMENT_TARGET=10.9
-          CIBW_MANYLINUX_X86_64_IMAGE: quay.io/pypa/manylinux2014_x86_64:latest
-          CIBW_MANYLINUX_I686_IMAGE: quay.io/pypa/manylinux2014_i686:latest
-          CIBW_SKIP: cp36-* cp37-* cp38-* pp* *win32 *musl*
-          CIBW_BEFORE_BUILD: pip install -U setuptools-rust
-          CIBW_TEST_REQUIRES: networkx testtools fixtures
-          CIBW_TEST_COMMAND: python -m unittest discover {project}/tests/rustworkx_tests
-          CIBW_ARCHS_LINUX: s390x
-      - uses: actions/upload-artifact@v2
-        with:
-          path: ./wheelhouse/*.whl
-      - name: Upload to PyPI
-        run: twine upload ./wheelhouse/*.whl
-        env:
-          TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
-          TWINE_USERNAME: retworkx-ci
-  build-mac-arm-wheels:
-    name: Build wheels on macos for arm and universal2
-    runs-on: macos-10.15
-    steps:
-      - uses: actions/checkout@v2
-      - name: Build wheels
-        uses: joerick/cibuildwheel@v2.10.1
-        env:
-          CIBW_BEFORE_ALL: rustup target add aarch64-apple-darwin
-          CIBW_ARCHS_MACOS: arm64 universal2
-          CIBW_BEFORE_BUILD: pip install -U setuptools-rust
-          CIBW_ENVIRONMENT: CARGO_BUILD_TARGET="aarch64-apple-darwin" PYO3_CROSS_LIB_DIR="/Library/Frameworks/Python.framework/Versions/$(python -c 'import sys; print(str(sys.version_info[0])+"."+str(sys.version_info[1]))')/lib/python$(python -c 'import sys; print(str(sys.version_info[0])+"."+str(sys.version_info[1]))')"
-      - uses: actions/upload-artifact@v2
-        with:
-          path: ./wheelhouse/*.whl
-      - uses: actions/setup-python@v2
-        name: Install Python
-        with:
-          python-version: '3.8'
-      - name: Install twine
-        run: |
-          python -m pip install twine
-      - name: Upload to PyPI
-        run: twine upload ./wheelhouse/*.whl
-        env:
-          TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
-          TWINE_USERNAME: retworkx-ci
+          packages-dir: wheelhouse/
   build-win32-wheels:
     name: Build wheels on win32
     runs-on: windows-latest
+    environment: release
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         name: Install Python
         with:
-          python-version: '3.7'
+          python-version: '3.10'
           architecture: 'x86'
-      - uses: actions-rs/toolchain@v1
+      - uses: dtolnay/rust-toolchain@stable
         with:
-          toolchain: stable
-          target: i686-pc-windows-msvc
-          default: true
+          targets: i686-pc-windows-msvc
       - name: Force win32 rust
         run: rustup default stable-i686-pc-windows-msvc
       - name: Install cibuildwheel
         run: |
-          python -m pip install cibuildwheel==2.10.1 twine
+          python -m pip install cibuildwheel==2.17.0
       - name: Build wheels
         run: |
           python -m cibuildwheel --output-dir wheelhouse
         env:
-          CIBW_ENVIRONMENT_MACOS: MACOSX_DEPLOYMENT_TARGET=10.9
-          CIBW_SKIP: cp36-* pp* *amd64 *musl*
-          CIBW_BEFORE_BUILD: pip install -U setuptools-rust
-          CIBW_TEST_REQUIRES: networkx testtools fixtures
-          CIBW_TEST_COMMAND: python -m unittest discover {project}/tests/rustworkx_tests
-      - uses: actions/upload-artifact@v2
+          CIBW_SKIP: cp36-* cp37-* pp* *amd64 *musl*
+      - uses: actions/upload-artifact@v4
         with:
           path: ./wheelhouse/*.whl
-      - name: Upload to PyPI
-        run: twine upload ./wheelhouse/*.whl
-        env:
-          TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
-          TWINE_USERNAME: retworkx-ci
+          name: shared-wheel-builds-win32
   retworkx-compat-build:
     name: Build retworkx
     runs-on: ubuntu-latest
-    needs: ["build_wheels", "build-win32-wheels"]
+    environment: release
+    permissions:
+      id-token: write
+    needs: ["upload_shared_wheels"]
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         name: Install Python
         with:
-          python-version: '3.7'
+          python-version: '3.10'
       - name: Install deps
-        run: pip install -U twine setuptools-rust
+        run: pip install -U setuptools-rust wheel build
       - name: Build sdist
-        run: python setup.py sdist bdist_wheel
+        run: python setup.py bdist_wheel
         env:
           RUSTWORKX_PKG_NAME: retworkx
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v4
         with:
           path: ./dist/*
-      - name: Upload to PyPI
-        run: twine upload ./dist/*
-        env:
-          TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
-          TWINE_USERNAME: retworkx-ci
+          name: sdist-retworkx
+      - name: Publish package distributions to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1

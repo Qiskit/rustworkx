@@ -1,0 +1,7 @@
+---
+features:
+  - |
+    Added a new ``generators`` module to the ``rustworkx-core`` crate. This
+    module contains functions for generating graphs. These functions are
+    generic on the output graph type and can be used to create graph objects
+    for any type that implement the required petgraph traits.

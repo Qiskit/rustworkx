@@ -1,11 +1,11 @@
 m2r2
-sphinx>=3.0.0
-sphinx_rtd_theme
+sphinx>=5.0
 jupyter-sphinx
 pydot
 pillow>=4.2.1
 reno>=3.4.0
-qiskit-sphinx-theme>=1.7
+qiskit-sphinx-theme~=1.14.0rc1
 matplotlib>=3.4
 sphinx-reredirects
 sphinxemoji
+ipykernel

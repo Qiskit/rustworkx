@@ -35,7 +35,7 @@ pub fn num_shortest_paths_unweighted<Ty: EdgeType>(
             source
         )));
     }
-    let mut bfs = Bfs::new(&graph, node_index);
+    let mut bfs = Bfs::new(graph, node_index);
     let mut distance: Vec<Option<usize>> = vec![None; graph.node_bound()];
     distance[node_index.index()] = Some(0);
     out_map[source] = 1.to_biguint().unwrap();
@@ -46,7 +46,7 @@ pub fn num_shortest_paths_unweighted<Ty: EdgeType>(
             let neighbor: usize = neighbor_index.index();
             if distance[neighbor].is_none() {
                 distance[neighbor] = Some(dist_plus_one);
-                out_map[neighbor] = count_current.clone();
+                out_map[neighbor].clone_from(&count_current)
             } else if distance[neighbor] == Some(dist_plus_one) {
                 out_map[neighbor] += &count_current;
             }

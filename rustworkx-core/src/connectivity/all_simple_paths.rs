@@ -136,9 +136,96 @@ where
     output
 }
 
+/// Returns the longest of all the simple paths from `from` node to all nodes in `to`, which contains at least `min_intermediate_nodes` nodes
+/// and at most `max_intermediate_nodes`, if given, or limited by the graph's order otherwise. The simple path is a path without repetitions.
+///
+/// # Example
+/// ```
+/// use petgraph::prelude::*;
+/// use hashbrown::HashSet;
+/// use rustworkx_core::connectivity::longest_simple_path_multiple_targets;
+///
+/// let mut graph = DiGraph::<&str, i32>::new();
+///
+/// let a = graph.add_node("a");
+/// let b = graph.add_node("b");
+/// let c = graph.add_node("c");
+/// let d = graph.add_node("d");
+///
+/// graph.extend_with_edges(&[(a, b, 1), (b, c, 1), (c, d, 1), (a, b, 1), (b, d, 1)]);
+///
+/// let mut to_set = HashSet::new();
+/// to_set.insert(d);
+///
+/// let path = longest_simple_path_multiple_targets(&graph, a, &to_set);
+///
+/// let expected = vec![a, b, c, d];
+/// assert_eq!(path.unwrap(), expected);
+/// ```
+pub fn longest_simple_path_multiple_targets<G>(
+    graph: G,
+    from: G::NodeId,
+    to: &HashSet<G::NodeId>,
+) -> Option<Vec<G::NodeId>>
+where
+    G: NodeCount,
+    G: IntoNeighborsDirected,
+    G::NodeId: Eq + Hash,
+{
+    // list of visited nodes
+    let mut visited: IndexSet<G::NodeId> = IndexSet::from_iter(Some(from));
+    // list of childs of currently exploring path nodes,
+    // last elem is list of childs of last visited node
+    let mut stack = vec![graph.neighbors_directed(from, Outgoing)];
+
+    let mut output_path: Option<Vec<G::NodeId>> = None;
+
+    let update_path = |new_path: Vec<G::NodeId>,
+                       output_path: &Option<Vec<G::NodeId>>|
+     -> Option<Vec<G::NodeId>> {
+        match output_path.as_ref() {
+            None => Some(new_path),
+            Some(path) => {
+                if path.len() < new_path.len() {
+                    Some(new_path)
+                } else {
+                    None
+                }
+            }
+        }
+    };
+
+    while let Some(children) = stack.last_mut() {
+        if let Some(child) = children.next() {
+            if !visited.contains(&child) {
+                if to.contains(&child) {
+                    let new_path: Vec<G::NodeId> =
+                        visited.iter().chain(&[child]).copied().collect();
+                    let temp = update_path(new_path, &output_path);
+                    if temp.is_some() {
+                        output_path = temp;
+                    }
+                }
+                visited.insert(child);
+                if to.iter().any(|n| !visited.contains(n)) {
+                    stack.push(graph.neighbors_directed(child, Outgoing));
+                } else {
+                    visited.pop();
+                }
+            }
+        } else {
+            stack.pop();
+            visited.pop();
+        }
+    }
+    output_path
+}
+
 #[cfg(test)]
 mod tests {
-    use crate::connectivity::all_simple_paths_multiple_targets;
+    use crate::connectivity::{
+        all_simple_paths_multiple_targets, longest_simple_path_multiple_targets,
+    };
     use hashbrown::HashSet;
     use petgraph::prelude::*;
 
@@ -152,7 +239,7 @@ mod tests {
         let d = graph.add_node(3);
         let e = graph.add_node(4);
 
-        graph.extend_with_edges(&[(a, b, 1), (b, c, 1), (c, d, 1), (d, e, 1)]);
+        graph.extend_with_edges([(a, b, 1), (b, c, 1), (c, d, 1), (d, e, 1)]);
 
         let mut to_set = HashSet::new();
         to_set.insert(d);
@@ -172,7 +259,7 @@ mod tests {
         let d = graph.add_node(3);
         let e = graph.add_node(4);
 
-        graph.extend_with_edges(&[(a, b, 1), (b, c, 1), (c, d, 1), (d, e, 1), (c, e, 1)]);
+        graph.extend_with_edges([(a, b, 1), (b, c, 1), (c, d, 1), (d, e, 1), (c, e, 1)]);
 
         let mut to_set = HashSet::new();
         to_set.insert(d);
@@ -200,7 +287,7 @@ mod tests {
         let d = graph.add_node(3);
         let e = graph.add_node(4);
 
-        graph.extend_with_edges(&[(a, b, 1), (b, c, 1), (c, d, 1), (d, e, 1), (c, e, 1)]);
+        graph.extend_with_edges([(a, b, 1), (b, c, 1), (c, d, 1), (d, e, 1), (c, e, 1)]);
 
         let mut to_set = HashSet::new();
         to_set.insert(d);
@@ -225,7 +312,7 @@ mod tests {
         let d = graph.add_node(3);
         let e = graph.add_node(4);
 
-        graph.extend_with_edges(&[
+        graph.extend_with_edges([
             (a, b, 1),
             (a, c, 1),
             (a, d, 1),
@@ -263,7 +350,7 @@ mod tests {
         let d = graph.add_node(3);
         let e = graph.add_node(4);
 
-        graph.extend_with_edges(&[(a, b, 1), (b, c, 1), (c, d, 1), (d, e, 1), (c, e, 1)]);
+        graph.extend_with_edges([(a, b, 1), (b, c, 1), (c, d, 1), (d, e, 1), (c, e, 1)]);
 
         let mut to_set = HashSet::new();
         to_set.insert(d);
@@ -285,7 +372,7 @@ mod tests {
         let d = graph.add_node(3);
         let e = graph.add_node(4);
 
-        graph.extend_with_edges(&[(a, b, 1), (b, c, 1), (c, d, 1), (d, e, 1), (c, e, 1)]);
+        graph.extend_with_edges([(a, b, 1), (b, c, 1), (c, d, 1), (d, e, 1), (c, e, 1)]);
 
         let mut to_set = HashSet::new();
         to_set.insert(d);
@@ -307,7 +394,7 @@ mod tests {
         let d = graph.add_node(3);
         let e = graph.add_node(4);
 
-        graph.extend_with_edges(&[(a, b, 1), (b, c, 1), (c, d, 1), (d, e, 1)]);
+        graph.extend_with_edges([(a, b, 1), (b, c, 1), (c, d, 1), (d, e, 1)]);
 
         let mut to_set = HashSet::new();
         to_set.insert(c);
@@ -328,7 +415,7 @@ mod tests {
         let c = graph.add_node(2);
         let d = graph.add_node(3);
 
-        graph.extend_with_edges(&[(a, b, 1), (b, c, 1), (c, d, 1), (d, a, 1), (b, d, 1)]);
+        graph.extend_with_edges([(a, b, 1), (b, c, 1), (c, d, 1), (d, a, 1), (b, d, 1)]);
 
         let mut to_set = HashSet::new();
         to_set.insert(d);
@@ -347,7 +434,7 @@ mod tests {
         let c = graph.add_node(2);
         let d = graph.add_node(3);
 
-        graph.extend_with_edges(&[(a, b, 1), (b, c, 1), (c, d, 1), (d, a, 1), (b, d, 1)]);
+        graph.extend_with_edges([(a, b, 1), (b, c, 1), (c, d, 1), (d, a, 1), (b, d, 1)]);
 
         let mut to_set = HashSet::new();
         to_set.insert(c);
@@ -369,7 +456,7 @@ mod tests {
         let d = graph.add_node(3);
         let e = graph.add_node(4);
 
-        graph.extend_with_edges(&[(a, b, 1), (b, c, 1), (c, d, 1), (d, e, 1)]);
+        graph.extend_with_edges([(a, b, 1), (b, c, 1), (c, d, 1), (d, e, 1)]);
 
         let mut to_set = HashSet::new();
         to_set.insert(a);
@@ -390,7 +477,7 @@ mod tests {
         let e = graph.add_node(4);
         let f = graph.add_node(5);
 
-        graph.extend_with_edges(&[
+        graph.extend_with_edges([
             (a, b, 1),
             (b, c, 1),
             (c, d, 1),
@@ -445,5 +532,142 @@ mod tests {
             paths.get(&d).unwrap(),
             &vec![vec![b, d], vec![b, f, e, d], vec![b, c, d]]
         );
+    }
+
+    #[test]
+    fn test_longest_simple_path() {
+        // create a path graph
+        let mut graph = Graph::new_undirected();
+        let a = graph.add_node(0);
+        let b = graph.add_node(1);
+        let c = graph.add_node(2);
+        let d = graph.add_node(3);
+        let e = graph.add_node(4);
+
+        graph.extend_with_edges([(a, b, 1), (b, c, 1), (c, d, 1), (d, e, 1)]);
+
+        let mut to_set = HashSet::new();
+        to_set.insert(d);
+
+        let path = longest_simple_path_multiple_targets(&graph, a, &to_set);
+
+        assert_eq!(path.unwrap(), vec![a, b, c, d]);
+    }
+
+    #[test]
+    fn test_longest_simple_path_with_two_targets_emits_two_paths() {
+        // create a path graph
+        let mut graph = Graph::new_undirected();
+        let a = graph.add_node(0);
+        let b = graph.add_node(1);
+        let c = graph.add_node(2);
+        let d = graph.add_node(3);
+        let e = graph.add_node(4);
+
+        graph.extend_with_edges([(a, b, 1), (b, c, 1), (c, d, 1), (d, e, 1), (c, e, 1)]);
+
+        let mut to_set = HashSet::new();
+        to_set.insert(d);
+        to_set.insert(e);
+
+        let path = longest_simple_path_multiple_targets(&graph, a, &to_set);
+
+        assert_eq!(path.unwrap(), vec![a, b, c, e, d]);
+    }
+
+    #[test]
+    fn test_digraph_longest_simple_path_with_two_targets_emits_two_paths() {
+        // create a path graph
+        let mut graph = Graph::new();
+        let a = graph.add_node(0);
+        let b = graph.add_node(1);
+        let c = graph.add_node(2);
+        let d = graph.add_node(3);
+        let e = graph.add_node(4);
+
+        graph.extend_with_edges([(a, b, 1), (b, c, 1), (c, d, 1), (d, e, 1), (c, e, 1)]);
+
+        let mut to_set = HashSet::new();
+        to_set.insert(d);
+        to_set.insert(e);
+
+        let path = longest_simple_path_multiple_targets(&graph, a, &to_set);
+
+        assert_eq!(path.unwrap(), vec![a, b, c, d, e]);
+    }
+
+    #[test]
+    fn test_longest_simple_paths_with_two_targets_in_line_emits_two_paths() {
+        // create a path graph
+        let mut graph = Graph::new_undirected();
+        let a = graph.add_node(0);
+        let b = graph.add_node(1);
+        let c = graph.add_node(2);
+        let d = graph.add_node(3);
+        let e = graph.add_node(4);
+
+        graph.extend_with_edges([(a, b, 1), (b, c, 1), (c, d, 1), (d, e, 1)]);
+
+        let mut to_set = HashSet::new();
+        to_set.insert(c);
+        to_set.insert(d);
+
+        let path = longest_simple_path_multiple_targets(&graph, a, &to_set);
+
+        assert_eq!(path.unwrap(), vec![a, b, c, d]);
+    }
+
+    #[test]
+    fn test_longest_simple_paths_source_target() {
+        // create a path graph
+        let mut graph = Graph::new_undirected();
+        let a = graph.add_node(0);
+        let b = graph.add_node(1);
+        let c = graph.add_node(2);
+        let d = graph.add_node(3);
+        let e = graph.add_node(4);
+
+        graph.extend_with_edges([(a, b, 1), (b, c, 1), (c, d, 1), (d, e, 1)]);
+
+        let mut to_set = HashSet::new();
+        to_set.insert(a);
+
+        let path = longest_simple_path_multiple_targets(&graph, a, &to_set);
+
+        assert_eq!(path, None);
+    }
+
+    #[test]
+    fn test_longest_simple_paths_on_non_trivial_graph() {
+        // create a path graph
+        let mut graph = Graph::new();
+        let a = graph.add_node(0);
+        let b = graph.add_node(1);
+        let c = graph.add_node(2);
+        let d = graph.add_node(3);
+        let e = graph.add_node(4);
+        let f = graph.add_node(5);
+
+        graph.extend_with_edges([
+            (a, b, 1),
+            (b, c, 1),
+            (c, d, 1),
+            (d, e, 1),
+            (e, f, 1),
+            (a, f, 1),
+            (b, f, 1),
+            (b, d, 1),
+            (f, e, 1),
+            (e, c, 1),
+            (e, d, 1),
+        ]);
+
+        let mut to_set = HashSet::new();
+        to_set.insert(c);
+        to_set.insert(d);
+
+        let path = longest_simple_path_multiple_targets(&graph, b, &to_set);
+
+        assert_eq!(path.unwrap(), vec![b, f, e, c, d],);
     }
 }

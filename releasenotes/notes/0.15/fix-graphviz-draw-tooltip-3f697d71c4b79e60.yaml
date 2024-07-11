@@ -1,0 +1,18 @@
+---
+fixes:
+  - |
+    Fixed an issue with the :func:`.graphviz_draw` where it would not correctly
+    escape special characters in all scenarios. This has been corrected so
+    you can now use special characters with the function, for example:
+
+    .. jupyter-execute::
+
+        import rustworkx as rx
+        from rustworkx.visualization import graphviz_draw
+
+        graphviz_draw(
+            rx.generators.path_graph(2),
+            node_attr_fn=lambda x: {"label": "the\nlabel", "tooltip": "the\ntooltip"},
+        )
+
+    Fixed: `#750 <https://github.com/Qiskit/rustworkx/issues/750>`__

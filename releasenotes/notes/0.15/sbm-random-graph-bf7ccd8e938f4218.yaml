@@ -1,0 +1,24 @@
+features:
+  - |
+    Adds new random graph generator in rustworkx for the stochastic block model.
+    There is a generator for directed :func:`.directed_sbm_random_graph` and
+    undirected graphs :func:`.undirected_sbm_random_graph`.
+
+    .. jupyter-execute::
+
+        import numpy as np
+
+        import rustworkx as rx
+        from rustworkx.visualization import mpl_draw
+
+        graph = rx.undirected_sbm_random_graph(
+            [2, 1],
+            np.array([[1, 1], [1, 0]], dtype=float),
+            False,
+        )
+        mpl_draw(graph)
+
+  - |
+    Adds new function ``sbm_random_graph`` to the rustworkx-core module
+    ``rustworkx_core::generators`` that samples a graph from the stochastic
+    block model.

@@ -1,0 +1,9 @@
+---
+features:
+  - |
+    Added a new function, :func:`~.PyDiGraph.clear` that clears all nodes and
+    edges from a :class:`.PyGraph` or :class:`.PyDiGraph`.
+  - |
+    Added a new function, :func:`~.PyDiGraph.clear_edges` that clears all edges
+    for :class:`.PyGraph` or :class:`rustworkx.PyDiGraph` without
+    modifying nodes.

@@ -98,7 +98,7 @@ Alternatively, you can use :func:`~rustworkx.visualization.graphviz_draw`:
         graph[node] = btw
 
     # Leverage matplotlib for color map
-    colormap = matplotlib.cm.get_cmap("magma")
+    colormap = matplotlib.colormaps["magma"]
     norm = matplotlib.colors.Normalize(
         vmin=min(centrality.values()),
         vmax=max(centrality.values())
