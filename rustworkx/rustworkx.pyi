@@ -292,7 +292,9 @@ def lexicographical_topological_sort(
     reverse: bool = ...,
     initial: Iterable[int] | None = ...,
 ) -> list[_S]: ...
-def transitive_reduction(graph: PyDiGraph[Any, Any], /) -> tuple[PyDiGraph[Any, Any], dict[int, int]]: ...
+def transitive_reduction(
+    graph: PyDiGraph[Any, Any], /
+) -> tuple[PyDiGraph[Any, Any], dict[int, int]]: ...
 def layers(
     dag: PyDiGraph[_S, _T],
     first_layer: list[int],
