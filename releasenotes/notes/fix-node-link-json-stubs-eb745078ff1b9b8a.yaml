@@ -1,0 +1,6 @@
+---
+fixes:
+  - |
+    Fixed a bug in the type hint for :func:`~rustworkx.node_link_json`.
+    Refer to `#1243<https://github.com/Qiskit/rustworkx/issues/1243>`__ for
+    more information.
