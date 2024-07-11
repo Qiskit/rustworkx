@@ -60,15 +60,15 @@ class ColoringStrategy:
 # Cartesian product
 
 def digraph_cartesian_product(
-    first: PyDiGraph,
-    second: PyDiGraph,
+    first: PyDiGraph[Any, Any],
+    second: PyDiGraph[Any, Any],
     /,
-) -> tuple[PyDiGraph, ProductNodeMap]: ...
+) -> tuple[PyDiGraph[Any, Any], ProductNodeMap]: ...
 def graph_cartesian_product(
-    first: PyGraph,
-    second: PyGraph,
+    first: PyGraph[Any, Any],
+    second: PyGraph[Any, Any],
     /,
-) -> tuple[PyGraph, ProductNodeMap]: ...
+) -> tuple[PyGraph[Any, Any], ProductNodeMap]: ...
 
 # Centrality
 
@@ -146,13 +146,13 @@ def graph_katz_centrality(
 # Coloring
 
 def graph_greedy_color(
-    graph: PyGraph,
+    graph: PyGraph[Any, Any],
     /,
     preset_color_fn: Callable[[int], int | None] | None = ...,
     strategy: int = ...,
 ) -> dict[int, int]: ...
 def graph_greedy_edge_color(
-    graph: PyGraph,
+    graph: PyGraph[Any, Any],
     /,
     preset_color_fn: Callable[[int], int | None] | None = ...,
     strategy: int = ...,
@@ -161,20 +161,20 @@ def graph_is_bipartite(graph: PyGraph) -> bool: ...
 def digraph_is_bipartite(graph: PyDiGraph) -> bool: ...
 def graph_two_color(graph: PyGraph) -> dict[int, int]: ...
 def digraph_two_color(graph: PyDiGraph) -> dict[int, int]: ...
-def graph_misra_gries_edge_color(graph: PyGraph, /) -> dict[int, int]: ...
-def graph_bipartite_edge_color(graph: PyGraph, /) -> dict[int, int]: ...
+def graph_misra_gries_edge_color(graph: PyGraph[Any, Any], /) -> dict[int, int]: ...
+def graph_bipartite_edge_color(graph: PyGraph[Any, Any], /) -> dict[int, int]: ...
 
 # Connectivity
 
-def connected_components(graph: PyGraph, /) -> list[set[int]]: ...
-def is_connected(graph: PyGraph, /) -> bool: ...
-def is_weakly_connected(graph: PyDiGraph, /) -> bool: ...
-def is_semi_connected(graph: PyDiGraph, /) -> bool: ...
-def number_connected_components(graph: PyGraph, /) -> int: ...
-def number_weakly_connected_components(graph: PyDiGraph, /) -> bool: ...
-def node_connected_component(graph: PyGraph, node: int, /) -> set[int]: ...
-def strongly_connected_components(graph: PyDiGraph, /) -> list[list[int]]: ...
-def weakly_connected_components(graph: PyDiGraph, /) -> list[set[int]]: ...
+def connected_components(graph: PyGraph[Any, Any], /) -> list[set[int]]: ...
+def is_connected(graph: PyGraph[Any, Any], /) -> bool: ...
+def is_weakly_connected(graph: PyDiGraph[Any, Any], /) -> bool: ...
+def is_semi_connected(graph: PyDiGraph[Any, Any], /) -> bool: ...
+def number_connected_components(graph: PyGraph[Any, Any], /) -> int: ...
+def number_weakly_connected_components(graph: PyDiGraph[Any, Any], /) -> bool: ...
+def node_connected_component(graph: PyGraph[Any, Any], node: int, /) -> set[int]: ...
+def strongly_connected_components(graph: PyDiGraph[Any, Any], /) -> list[list[int]]: ...
+def weakly_connected_components(graph: PyDiGraph[Any, Any], /) -> list[set[int]]: ...
 def digraph_adjacency_matrix(
     graph: PyDiGraph[_S, _T],
     /,
@@ -191,11 +191,11 @@ def graph_adjacency_matrix(
     null_value: float = ...,
     parallel_edge: str = ...,
 ) -> np.ndarray: ...
-def cycle_basis(graph: PyGraph, /, root: int | None = ...) -> list[list[int]]: ...
-def articulation_points(graph: PyGraph, /) -> set[int]: ...
-def bridges(graph: PyGraph, /) -> set[tuple[int]]: ...
-def biconnected_components(graph: PyGraph, /) -> BiconnectedComponents: ...
-def chain_decomposition(graph: PyGraph, /, source: int | None = ...) -> Chains: ...
+def cycle_basis(graph: PyGraph[Any, Any], /, root: int | None = ...) -> list[list[int]]: ...
+def articulation_points(graph: PyGraph[Any, Any], /) -> set[int]: ...
+def bridges(graph: PyGraph[Any, Any], /) -> set[tuple[int]]: ...
+def biconnected_components(graph: PyGraph[Any, Any], /) -> BiconnectedComponents: ...
+def chain_decomposition(graph: PyGraph[Any, Any], /, source: int | None = ...) -> Chains: ...
 def digraph_find_cycle(
     graph: PyDiGraph[_S, _T],
     /,
@@ -207,7 +207,7 @@ def graph_complement(
     /,
 ) -> PyGraph[_S, _T | None]: ...
 def digraph_all_simple_paths(
-    graph: PyDiGraph,
+    graph: PyDiGraph[Any, Any],
     origin: int,
     to: int,
     /,
@@ -215,7 +215,7 @@ def digraph_all_simple_paths(
     cutoff: int | None = ...,
 ) -> list[list[int]]: ...
 def graph_all_simple_paths(
-    graph: PyGraph,
+    graph: PyGraph[Any, Any],
     origin: int,
     to: int,
     /,
@@ -223,25 +223,25 @@ def graph_all_simple_paths(
     cutoff: int | None = ...,
 ) -> list[list[int]]: ...
 def digraph_all_pairs_all_simple_paths(
-    graph: PyDiGraph,
+    graph: PyDiGraph[Any, Any],
     /,
     min_depth: int | None = ...,
     cutoff: int | None = ...,
 ) -> AllPairsMultiplePathMapping: ...
 def graph_all_pairs_all_simple_paths(
-    graph: PyGraph,
+    graph: PyGraph[Any, Any],
     /,
     min_depth: int | None = ...,
     cutoff: int | None = ...,
 ) -> AllPairsMultiplePathMapping: ...
-def digraph_longest_simple_path(graph: PyDiGraph, /) -> NodeIndices | None: ...
-def graph_longest_simple_path(graph: PyGraph, /) -> NodeIndices | None: ...
+def digraph_longest_simple_path(graph: PyDiGraph[Any, Any], /) -> NodeIndices | None: ...
+def graph_longest_simple_path(graph: PyGraph[Any, Any], /) -> NodeIndices | None: ...
 def digraph_core_number(
-    graph: PyDiGraph,
+    graph: PyDiGraph[Any, Any],
     /,
 ) -> int: ...
 def graph_core_number(
-    graph: PyGraph,
+    graph: PyGraph[Any, Any],
     /,
 ) -> int: ...
 def stoer_wagner_min_cut(
@@ -249,10 +249,10 @@ def stoer_wagner_min_cut(
     /,
     weight_fn: Callable[[_T], float] | None = ...,
 ) -> tuple[float, NodeIndices] | None: ...
-def simple_cycles(graph: PyDiGraph, /) -> Iterator[NodeIndices]: ...
+def simple_cycles(graph: PyDiGraph[Any, Any], /) -> Iterator[NodeIndices]: ...
 def graph_isolates(graph: PyGraph) -> NodeIndices: ...
 def digraph_isolates(graph: PyDiGraph) -> NodeIndices: ...
-def connected_subgraphs(graph: PyGraph, k: int, /) -> list[list[int]]: ...
+def connected_subgraphs(graph: PyGraph[Any, Any], k: int, /) -> list[list[int]]: ...
 
 # DAG Algorithms
 
@@ -281,9 +281,9 @@ def dag_weighted_longest_path_length(
     weight_fn: Callable[[int, int, _T], float],
     /,
 ) -> float: ...
-def is_directed_acyclic_graph(graph: PyDiGraph, /) -> bool: ...
-def topological_sort(graph: PyDiGraph, /) -> NodeIndices: ...
-def topological_generations(dag: PyDiGraph, /) -> list[NodeIndices]: ...
+def is_directed_acyclic_graph(graph: PyDiGraph[Any, Any], /) -> bool: ...
+def topological_sort(graph: PyDiGraph[Any, Any], /) -> NodeIndices: ...
+def topological_generations(dag: PyDiGraph[Any, Any], /) -> list[NodeIndices]: ...
 def lexicographical_topological_sort(
     dag: PyDiGraph[_S, _T],
     /,
@@ -292,7 +292,7 @@ def lexicographical_topological_sort(
     reverse: bool = ...,
     initial: Iterable[int] | None = ...,
 ) -> list[_S]: ...
-def transitive_reduction(graph: PyDiGraph, /) -> tuple[PyDiGraph, dict[int, int]]: ...
+def transitive_reduction(graph: PyDiGraph[Any, Any], /) -> tuple[PyDiGraph[Any, Any], dict[int, int]]: ...
 def layers(
     dag: PyDiGraph[_S, _T],
     first_layer: list[int],
@@ -303,7 +303,7 @@ def layers(
 class TopologicalSorter:
     def __init__(
         self,
-        dag: PyDiGraph,
+        dag: PyDiGraph[Any, Any],
         /,
         check_cycle: bool,
         *,
@@ -381,7 +381,7 @@ def graph_vf2_mapping(
 # Layout
 
 def digraph_bipartite_layout(
-    graph: PyDiGraph,
+    graph: PyDiGraph[Any, Any],
     first_nodes: set[int],
     /,
     horizontal: bool | None = ...,
@@ -390,7 +390,7 @@ def digraph_bipartite_layout(
     aspect_ratio: float | None = ...,
 ) -> Pos2DMapping: ...
 def graph_bipartite_layout(
-    graph: PyGraph,
+    graph: PyGraph[Any, Any],
     first_nodes: set[int],
     /,
     horizontal: bool | None = ...,
@@ -399,31 +399,31 @@ def graph_bipartite_layout(
     aspect_ratio: float | None = ...,
 ) -> Pos2DMapping: ...
 def digraph_circular_layout(
-    graph: PyDiGraph,
+    graph: PyDiGraph[Any, Any],
     /,
     scale: float | None = ...,
     center: tuple[float, float] | None = ...,
 ) -> Pos2DMapping: ...
 def graph_circular_layout(
-    graph: PyGraph,
+    graph: PyGraph[Any, Any],
     /,
     scale: float | None = ...,
     center: tuple[float, float] | None = ...,
 ) -> Pos2DMapping: ...
 def digraph_random_layout(
-    graph: PyDiGraph,
+    graph: PyDiGraph[Any, Any],
     /,
     center: tuple[float, float] | None = ...,
     seed: int | None = ...,
 ) -> Pos2DMapping: ...
 def graph_random_layout(
-    graph: PyGraph,
+    graph: PyGraph[Any, Any],
     /,
     center: tuple[float, float] | None = ...,
     seed: int | None = ...,
 ) -> Pos2DMapping: ...
 def digraph_shell_layout(
-    graph: PyDiGraph,
+    graph: PyDiGraph[Any, Any],
     /,
     nlist: list[list[int]] | None = ...,
     rotate: float | None = ...,
@@ -431,7 +431,7 @@ def digraph_shell_layout(
     center: tuple[float, float] | None = ...,
 ) -> Pos2DMapping: ...
 def graph_shell_layout(
-    graph: PyGraph,
+    graph: PyGraph[Any, Any],
     /,
     nlist: list[list[int]] | None = ...,
     rotate: float | None = ...,
@@ -439,7 +439,7 @@ def graph_shell_layout(
     center: tuple[float, float] | None = ...,
 ) -> Pos2DMapping: ...
 def digraph_spiral_layout(
-    graph: PyDiGraph,
+    graph: PyDiGraph[Any, Any],
     /,
     scale: float | None = ...,
     center: tuple[float, float] | None = ...,
@@ -447,7 +447,7 @@ def digraph_spiral_layout(
     equidistant: bool | None = ...,
 ) -> Pos2DMapping: ...
 def graph_spiral_layout(
-    graph: PyGraph,
+    graph: PyGraph[Any, Any],
     /,
     scale: float | None = ...,
     center: tuple[float, float] | None = ...,
@@ -489,7 +489,7 @@ def graph_spring_layout(
 
 # Line graph
 
-def graph_line_graph(graph: PyGraph, /) -> tuple[PyGraph, dict[int, int]]: ...
+def graph_line_graph(graph: PyGraph[Any, Any], /) -> tuple[PyGraph[Any, Any], dict[int, int]]: ...
 
 # Link Analysis
 
@@ -525,12 +525,12 @@ def max_weight_matching(
     verify_optimum: bool = ...,
 ) -> set[tuple[int, int]]: ...
 def is_matching(
-    graph: PyGraph,
+    graph: PyGraph[Any, Any],
     matching: set[tuple[int, int]],
     /,
 ) -> bool: ...
 def is_maximal_matching(
-    graph: PyGraph,
+    graph: PyGraph[Any, Any],
     matching: set[tuple[int, int]],
     /,
 ) -> bool: ...
@@ -541,7 +541,7 @@ def digraph_maximum_bisimulation(graph: PyDiGraph) -> RelationalCoarsestPartitio
 
 # Planar
 
-def is_planar(graph: PyGraph, /) -> bool: ...
+def is_planar(graph: PyGraph[Any, Any], /) -> bool: ...
 
 # Random Graph
 
@@ -550,39 +550,39 @@ def directed_gnm_random_graph(
     num_edges: int,
     /,
     seed: int | None = ...,
-) -> PyDiGraph: ...
+) -> PyDiGraph[Any, Any]: ...
 def undirected_gnm_random_graph(
     num_nodes: int,
     num_edges: int,
     /,
     seed: int | None = ...,
-) -> PyGraph: ...
+) -> PyGraph[Any, Any]: ...
 def directed_gnp_random_graph(
     num_nodes: int,
     probability: float,
     /,
     seed: int | None = ...,
-) -> PyDiGraph: ...
+) -> PyDiGraph[Any, Any]: ...
 def undirected_gnp_random_graph(
     num_nodes: int,
     probability: float,
     /,
     seed: int | None = ...,
-) -> PyGraph: ...
+) -> PyGraph[Any, Any]: ...
 def directed_sbm_random_graph(
     sizes: list[int],
     probabilities: np.ndarray,
     loops: bool,
     /,
     seed: int | None = ...,
-) -> PyDiGraph: ...
+) -> PyDiGraph[Any, Any]: ...
 def undirected_sbm_random_graph(
     sizes: list[int],
     probabilities: np.ndarray,
     loops: bool,
     /,
     seed: int | None = ...,
-) -> PyGraph: ...
+) -> PyGraph[Any, Any]: ...
 def random_geometric_graph(
     num_nodes: int,
     radius: float,
@@ -591,44 +591,44 @@ def random_geometric_graph(
     pos: list[list[float]] | None = ...,
     p: float = ...,
     seed: int | None = ...,
-) -> PyGraph: ...
+) -> PyGraph[Any, Any]: ...
 def hyperbolic_random_graph(
     pos: list[list[float]],
     r: float,
     beta: float | None,
     /,
     seed: int | None = ...,
-) -> PyGraph: ...
+) -> PyGraph[Any, Any]: ...
 def barabasi_albert_graph(
     n: int,
     m: int,
     seed: int | None = ...,
-    initial_graph: PyGraph | None = ...,
-) -> PyGraph: ...
+    initial_graph: PyGraph[Any, Any] | None = ...,
+) -> PyGraph[Any, Any]: ...
 def directed_barabasi_albert_graph(
     n: int,
     m: int,
     seed: int | None = ...,
-    initial_graph: PyDiGraph | None = ...,
-) -> PyDiGraph: ...
+    initial_graph: PyDiGraph[Any, Any] | None = ...,
+) -> PyDiGraph[Any, Any]: ...
 def undirected_random_bipartite_graph(
     num_l_nodes: int,
     num_r_nodes: int,
     probability: float,
     /,
     seed: int | None = ...,
-) -> PyGraph: ...
+) -> PyGraph[Any, Any]: ...
 def directed_random_bipartite_graph(
     num_l_nodes: int,
     num_r_nodes: int,
     probability: float,
     /,
     seed: int | None = ...,
-) -> PyDiGraph: ...
+) -> PyDiGraph[Any, Any]: ...
 
 # Read Write
 
-def read_graphml(path: str, /) -> list[PyGraph | PyDiGraph]: ...
+def read_graphml(path: str, /) -> list[PyGraph[Any, Any] | PyDiGraph[Any, Any]]: ...
 def digraph_node_link_json(
     graph: PyDiGraph[_S, _T],
     /,
@@ -795,49 +795,49 @@ def graph_k_shortest_path_lengths(
     goal: int | None = ...,
 ) -> PathLengthMapping: ...
 def digraph_has_path(
-    graph: PyDiGraph,
+    graph: PyDiGraph[Any, Any],
     source: int,
     target: int,
     /,
     as_undirected: bool | None = ...,
 ) -> bool: ...
 def graph_has_path(
-    graph: PyGraph,
+    graph: PyGraph[Any, Any],
     source: int,
     target: int,
 ) -> bool: ...
 def digraph_num_shortest_paths_unweighted(
-    graph: PyDiGraph,
+    graph: PyDiGraph[Any, Any],
     source: int,
     /,
 ) -> NodesCountMapping: ...
 def graph_num_shortest_paths_unweighted(
-    graph: PyGraph,
+    graph: PyGraph[Any, Any],
     source: int,
     /,
 ) -> NodesCountMapping: ...
 def digraph_unweighted_average_shortest_path_length(
-    graph: PyDiGraph,
+    graph: PyDiGraph[Any, Any],
     /,
     parallel_threshold: int | None = ...,
     as_undirected: bool | None = ...,
     disconnected: bool | None = ...,
 ) -> float: ...
 def graph_unweighted_average_shortest_path_length(
-    graph: PyGraph,
+    graph: PyGraph[Any, Any],
     /,
     parallel_threshold: int | None = ...,
     disconnected: bool | None = ...,
 ) -> float: ...
 def digraph_distance_matrix(
-    graph: PyDiGraph,
+    graph: PyDiGraph[Any, Any],
     /,
     parallel_threshold: int | None = ...,
     as_undirected: bool | None = ...,
     null_value: float | None = ...,
 ) -> np.ndarray: ...
 def graph_distance_matrix(
-    graph: PyGraph,
+    graph: PyGraph[Any, Any],
     /,
     parallel_threshold: int | None = ...,
     null_value: float | None = ...,
@@ -918,20 +918,20 @@ def graph_all_shortest_paths(
 # Tensor Product
 
 def digraph_tensor_product(
-    first: PyDiGraph,
-    second: PyDiGraph,
+    first: PyDiGraph[Any, Any],
+    second: PyDiGraph[Any, Any],
     /,
-) -> tuple[PyDiGraph, ProductNodeMap]: ...
+) -> tuple[PyDiGraph[Any, Any], ProductNodeMap]: ...
 def graph_tensor_product(
-    first: PyGraph,
-    second: PyGraph,
+    first: PyGraph[Any, Any],
+    second: PyGraph[Any, Any],
     /,
-) -> tuple[PyGraph, ProductNodeMap]: ...
+) -> tuple[PyGraph[Any, Any], ProductNodeMap]: ...
 
 # Token Swapper
 
 def graph_token_swapper(
-    graph: PyGraph,
+    graph: PyGraph[Any, Any],
     mapping: dict[int, int],
     /,
     trials: int | None = ...,
@@ -941,8 +941,8 @@ def graph_token_swapper(
 
 # Transitivity
 
-def digraph_transitivity(graph: PyDiGraph, /) -> float: ...
-def graph_transitivity(graph: PyGraph, /) -> float: ...
+def digraph_transitivity(graph: PyDiGraph[Any, Any], /) -> float: ...
+def graph_transitivity(graph: PyGraph[Any, Any], /) -> float: ...
 
 # Traversal
 
@@ -951,43 +951,43 @@ _DFSVisitor = TypeVar("_DFSVisitor", bound=DFSVisitor)
 _DijkstraVisitor = TypeVar("_DijkstraVisitor", bound=DijkstraVisitor)
 
 def digraph_bfs_search(
-    graph: PyDiGraph,
+    graph: PyDiGraph[Any, Any],
     source: Sequence[int] | None = ...,
     visitor: _BFSVisitor | None = ...,
 ) -> None: ...
 def graph_bfs_search(
-    graph: PyGraph,
+    graph: PyGraph[Any, Any],
     source: Sequence[int] | None = ...,
     visitor: _BFSVisitor | None = ...,
 ) -> None: ...
 def digraph_dfs_search(
-    graph: PyDiGraph,
+    graph: PyDiGraph[Any, Any],
     source: Sequence[int] | None = ...,
     visitor: _DFSVisitor | None = ...,
 ) -> None: ...
 def graph_dfs_search(
-    graph: PyGraph,
+    graph: PyGraph[Any, Any],
     source: Sequence[int] | None = ...,
     visitor: _DFSVisitor | None = ...,
 ) -> None: ...
 def digraph_dijkstra_search(
-    graph: PyDiGraph,
+    graph: PyDiGraph[Any, Any],
     source: Sequence[int] | None = ...,
     weight_fn: Callable[[Any], float] | None = ...,
     visitor: _DijkstraVisitor | None = ...,
 ) -> None: ...
 def graph_dijkstra_search(
-    graph: PyGraph,
+    graph: PyGraph[Any, Any],
     source: Sequence[int] | None = ...,
     weight_fn: Callable[[Any], float] | None = ...,
     visitor: _DijkstraVisitor | None = ...,
 ) -> None: ...
 def digraph_dfs_edges(graph: PyDiGraph[_S, _T], /, source: int | None = ...) -> EdgeList: ...
 def graph_dfs_edges(graph: PyGraph[_S, _T], /, source: int | None = ...) -> EdgeList: ...
-def ancestors(graph: PyDiGraph, node: int, /) -> set[int]: ...
-def bfs_predecessors(graph: PyDiGraph, node: int, /) -> BFSPredecessors: ...
-def bfs_successors(graph: PyDiGraph, node: int, /) -> BFSSuccessors: ...
-def descendants(graph: PyDiGraph, node: int, /) -> set[int]: ...
+def ancestors(graph: PyDiGraph[Any, Any], node: int, /) -> set[int]: ...
+def bfs_predecessors(graph: PyDiGraph[Any, Any], node: int, /) -> BFSPredecessors: ...
+def bfs_successors(graph: PyDiGraph[Any, Any], node: int, /) -> BFSSuccessors: ...
+def descendants(graph: PyDiGraph[Any, Any], node: int, /) -> set[int]: ...
 
 # Tree
 
@@ -1011,7 +1011,7 @@ def metric_closure(
     graph: PyGraph[_S, _T],
     weight_fn: Callable[[_T], float],
     /,
-) -> PyGraph: ...
+) -> PyGraph[Any, Any]: ...
 
 # Union
 
@@ -1233,7 +1233,7 @@ class PyGraph(Generic[_S, _T]):
         comment: str | None = ...,
         deliminator: str | None = ...,
         labels: bool = ...,
-    ) -> PyGraph: ...
+    ) -> PyGraph[Any, Any]: ...
     def remove_edge(self, node_a: int, node_b: int, /) -> None: ...
     def remove_edge_from_index(self, edge: int, /) -> None: ...
     def remove_edges_from(self, index_list: Sequence[tuple[int, int]], /) -> None: ...
@@ -1407,7 +1407,7 @@ class PyDiGraph(Generic[_S, _T]):
         comment: str | None = ...,
         deliminator: str | None = ...,
         labels: bool = ...,
-    ) -> PyDiGraph: ...
+    ) -> PyDiGraph[Any, Any]: ...
     def remove_edge(self, parent: int, child: int, /) -> None: ...
     def remove_edge_from_index(self, edge: int, /) -> None: ...
     def remove_edges_from(self, index_list: Sequence[tuple[int, int]], /) -> None: ...
