@@ -196,9 +196,13 @@ def graphviz_draw(
             )
         prog = method
 
+    extra_args = []
+    if prog == "neato":
+        extra_args.append("-x")
+
     if not filename:
         dot_result = subprocess.run(
-            [prog, "-x", "-T", output_format],
+            [prog, "-T", output_format] + extra_args,
             input=dot_str.encode("utf-8"),
             capture_output=True,
             encoding=None,
@@ -210,7 +214,7 @@ def graphviz_draw(
         return image
     else:
         subprocess.run(
-            [prog, "-x", "-T", output_format, "-o", filename],
+            [prog, "-x", "-T", output_format, "-o", filename] + extra_args,
             input=dot_str,
             check=True,
             encoding="utf8",
