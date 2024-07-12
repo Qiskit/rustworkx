@@ -198,7 +198,7 @@ def graphviz_draw(
 
     if not filename:
         dot_result = subprocess.run(
-            [prog, "-T", output_format],
+            [prog, "-x", "-T", output_format],
             input=dot_str.encode("utf-8"),
             capture_output=True,
             encoding=None,
@@ -210,7 +210,7 @@ def graphviz_draw(
         return image
     else:
         subprocess.run(
-            [prog, "-T", output_format, "-o", filename],
+            [prog, "-x", "-T", output_format, "-o", filename],
             input=dot_str,
             check=True,
             encoding="utf8",
