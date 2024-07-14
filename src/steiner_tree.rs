@@ -22,10 +22,12 @@ use pyo3::Python;
 use petgraph::stable_graph::{EdgeIndex, EdgeReference, NodeIndex};
 use petgraph::visit::{EdgeRef, IntoEdgeReferences};
 
-use crate::{graph, is_valid_weight};
+use crate::{declare_rustworkx_module, graph, is_valid_weight};
 
 use rustworkx_core::steiner_tree::metric_closure as core_metric_closure;
 use rustworkx_core::steiner_tree::steiner_tree as core_steiner_tree;
+
+declare_rustworkx_module!(metric_closure, steiner_tree);
 
 /// Return the metric closure of a graph
 ///

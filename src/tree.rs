@@ -12,7 +12,7 @@
 
 use std::cmp::Ordering;
 
-use super::{graph, weight_callable};
+use super::{declare_rustworkx_module, graph, weight_callable};
 
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
@@ -26,6 +26,8 @@ use petgraph::visit::{IntoEdgeReferences, NodeIndexable};
 use rayon::prelude::*;
 
 use crate::iterators::WeightedEdgeList;
+
+declare_rustworkx_module!(minimum_spanning_edges, minimum_spanning_tree);
 
 /// Find the edges in the minimum spanning tree or forest of a graph
 /// using Kruskal's algorithm.

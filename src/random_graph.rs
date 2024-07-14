@@ -12,7 +12,7 @@
 
 #![allow(clippy::float_cmp)]
 
-use crate::{digraph, graph, StablePyGraph};
+use crate::{declare_rustworkx_module, digraph, graph, StablePyGraph};
 
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
@@ -30,6 +30,21 @@ use rand::prelude::*;
 use rand_pcg::Pcg64;
 
 use rustworkx_core::generators as core_generators;
+
+declare_rustworkx_module!(
+    directed_gnp_random_graph,
+    undirected_gnp_random_graph,
+    directed_gnm_random_graph,
+    undirected_gnm_random_graph,
+    undirected_sbm_random_graph,
+    directed_sbm_random_graph,
+    random_geometric_graph,
+    hyperbolic_random_graph,
+    barabasi_albert_graph,
+    directed_barabasi_albert_graph,
+    directed_random_bipartite_graph,
+    undirected_random_bipartite_graph
+);
 
 /// Return a :math:`G_{np}` directed random graph, also known as an
 /// Erdős-Rényi graph or a binomial graph.

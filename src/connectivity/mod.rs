@@ -78,7 +78,10 @@ declare_rustworkx_module!(
     graph_all_pairs_all_simple_paths,
     digraph_all_pairs_all_simple_paths,
     graph_longest_simple_path,
-    digraph_longest_simple_path
+    digraph_longest_simple_path,
+    graph_core_number,
+    digraph_core_number,
+    connected_subgraphs
 );
 
 /// Return a list of cycles which form a basis for cycles of a given PyGraph

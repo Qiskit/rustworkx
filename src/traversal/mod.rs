@@ -24,7 +24,7 @@ use rustworkx_core::traversal::{
     descendants as core_descendants, dfs_edges, dijkstra_search,
 };
 
-use super::{digraph, graph, iterators, CostFn};
+use super::{declare_rustworkx_module, digraph, graph, iterators, CostFn};
 
 use std::convert::TryFrom;
 
@@ -37,6 +37,21 @@ use pyo3::Python;
 use petgraph::graph::NodeIndex;
 
 use crate::iterators::EdgeList;
+
+declare_rustworkx_module!(
+    digraph_dfs_edges,
+    graph_dfs_edges,
+    digraph_bfs_search,
+    graph_bfs_search,
+    digraph_dfs_search,
+    graph_dfs_search,
+    digraph_dijkstra_search,
+    graph_dijkstra_search,
+    bfs_successors,
+    bfs_predecessors,
+    descendants,
+    ancestors
+);
 
 /// Get an edge list of the tree edges from a depth-first traversal
 ///
