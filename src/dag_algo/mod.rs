@@ -17,7 +17,9 @@ use rustworkx_core::dag_algo::layers as core_layers;
 use rustworkx_core::dictmap::InitWithHasher;
 
 use super::iterators::NodeIndices;
-use crate::{digraph, DAGHasCycle, InvalidNode, RxPyResult, StablePyGraph};
+use crate::{
+    declare_rustworkx_module, digraph, DAGHasCycle, InvalidNode, RxPyResult, StablePyGraph,
+};
 
 use rustworkx_core::dag_algo::collect_bicolor_runs as core_collect_bicolor_runs;
 use rustworkx_core::dag_algo::collect_runs as core_collect_runs;
@@ -36,6 +38,21 @@ use petgraph::stable_graph::EdgeReference;
 use petgraph::visit::NodeIndexable;
 
 use num_traits::{Num, Zero};
+
+declare_rustworkx_module!(
+    dag_longest_path,
+    dag_longest_path_length,
+    dag_weighted_longest_path,
+    dag_weighted_longest_path_length,
+    is_directed_acyclic_graph,
+    transitive_reduction,
+    topological_sort,
+    topological_generations,
+    lexicographical_topological_sort,
+    collect_runs,
+    collect_bicolor_runs,
+    layers
+);
 
 /// Calculate the longest path in a directed acyclic graph (DAG).
 ///

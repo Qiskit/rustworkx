@@ -17,7 +17,8 @@ mod johnson_simple_cycles;
 mod subgraphs;
 
 use super::{
-    declare_rustworkx_module, digraph, get_edge_iter_with_weights, graph, score, weight_callable, InvalidNode, NullGraph,
+    declare_rustworkx_module, digraph, get_edge_iter_with_weights, graph, score, weight_callable,
+    InvalidNode, NullGraph,
 };
 
 use hashbrown::{HashMap, HashSet};
@@ -52,7 +53,32 @@ declare_rustworkx_module!(
     strongly_connected_components,
     digraph_find_cycle,
     number_connected_components,
-    connected_components
+    connected_components,
+    node_connected_component,
+    is_connected,
+    number_weakly_connected_components,
+    weakly_connected_components,
+    is_weakly_connected,
+    is_semi_connected,
+    digraph_adjacency_matrix,
+    graph_adjacency_matrix,
+    graph_complement,
+    digraph_complement,
+    digraph_is_bipartite,
+    graph_is_bipartite,
+    graph_isolates,
+    digraph_isolates,
+    chain_decomposition,
+    biconnected_components,
+    bridges,
+    articulation_points,
+    stoer_wagner_min_cut,
+    graph_all_simple_paths,
+    digraph_all_simple_paths,
+    graph_all_pairs_all_simple_paths,
+    digraph_all_pairs_all_simple_paths,
+    graph_longest_simple_path,
+    digraph_longest_simple_path
 );
 
 /// Return a list of cycles which form a basis for cycles of a given PyGraph

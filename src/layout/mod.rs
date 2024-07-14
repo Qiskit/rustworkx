@@ -17,7 +17,7 @@ mod shell;
 mod spiral;
 mod spring;
 
-use crate::{digraph, graph};
+use crate::{declare_rustworkx_module, digraph, graph};
 use spring::Point;
 
 use hashbrown::{HashMap, HashSet};
@@ -26,6 +26,21 @@ use pyo3::prelude::*;
 use pyo3::Python;
 
 use crate::iterators::Pos2DMapping;
+
+declare_rustworkx_module!(
+    graph_random_layout,
+    digraph_random_layout,
+    graph_bipartite_layout,
+    digraph_bipartite_layout,
+    graph_circular_layout,
+    digraph_circular_layout,
+    graph_shell_layout,
+    digraph_shell_layout,
+    graph_spiral_layout,
+    digraph_spiral_layout,
+    graph_spring_layout,
+    digraph_spring_layout
+);
 
 /// Position nodes using Fruchterman-Reingold force-directed algorithm.
 ///

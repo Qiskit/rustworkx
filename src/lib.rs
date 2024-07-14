@@ -49,14 +49,12 @@ use dag_algo::*;
 use graphml::*;
 use isomorphism::*;
 use json::*;
-use layout::*;
 use line_graph::*;
 use link_analysis::*;
 
 use matching::*;
 use planar::*;
 use random_graph::*;
-use shortest_path::*;
 use steiner_tree::*;
 use tensor_product::*;
 use token_swapper::*;
@@ -438,7 +436,9 @@ fn rustworkx(py: Python<'_>, m: &Bound<PyModule>) -> PyResult<()> {
 
     centrality::rustworkx_module(m)?;
     connectivity::rustworkx_module(m)?;
+    dag_algo::rustworkx_module(m)?;
     shortest_path::rustworkx_module(m)?;
+    layout::rustworkx_module(m)?;
 
     m.add_wrapped(wrap_pyfunction!(bfs_successors))?;
     m.add_wrapped(wrap_pyfunction!(bfs_predecessors))?;
@@ -446,18 +446,7 @@ fn rustworkx(py: Python<'_>, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(digraph_bfs_search))?;
     m.add_wrapped(wrap_pyfunction!(graph_dijkstra_search))?;
     m.add_wrapped(wrap_pyfunction!(digraph_dijkstra_search))?;
-    m.add_wrapped(wrap_pyfunction!(dag_longest_path))?;
-    m.add_wrapped(wrap_pyfunction!(dag_longest_path_length))?;
-    m.add_wrapped(wrap_pyfunction!(dag_weighted_longest_path))?;
-    m.add_wrapped(wrap_pyfunction!(dag_weighted_longest_path_length))?;
     m.add_wrapped(wrap_pyfunction!(transitive_reduction))?;
-    m.add_wrapped(wrap_pyfunction!(is_connected))?;
-    m.add_wrapped(wrap_pyfunction!(node_connected_component))?;
-    m.add_wrapped(wrap_pyfunction!(number_weakly_connected_components))?;
-    m.add_wrapped(wrap_pyfunction!(weakly_connected_components))?;
-    m.add_wrapped(wrap_pyfunction!(is_weakly_connected))?;
-    m.add_wrapped(wrap_pyfunction!(is_semi_connected))?;
-    m.add_wrapped(wrap_pyfunction!(is_directed_acyclic_graph))?;
     m.add_wrapped(wrap_pyfunction!(digraph_is_isomorphic))?;
     m.add_wrapped(wrap_pyfunction!(graph_is_isomorphic))?;
     m.add_wrapped(wrap_pyfunction!(digraph_is_subgraph_isomorphic))?;
@@ -469,34 +458,14 @@ fn rustworkx(py: Python<'_>, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(digraph_maximum_bisimulation))?;
     m.add_wrapped(wrap_pyfunction!(digraph_cartesian_product))?;
     m.add_wrapped(wrap_pyfunction!(graph_cartesian_product))?;
-    m.add_wrapped(wrap_pyfunction!(topological_sort))?;
-    m.add_wrapped(wrap_pyfunction!(topological_generations))?;
     m.add_wrapped(wrap_pyfunction!(descendants))?;
     m.add_wrapped(wrap_pyfunction!(ancestors))?;
-    m.add_wrapped(wrap_pyfunction!(lexicographical_topological_sort))?;
-    m.add_wrapped(wrap_pyfunction!(collect_runs))?;
-    m.add_wrapped(wrap_pyfunction!(collect_bicolor_runs))?;
-    m.add_wrapped(wrap_pyfunction!(layers))?;
-    m.add_wrapped(wrap_pyfunction!(graph_distance_matrix))?;
-    m.add_wrapped(wrap_pyfunction!(digraph_distance_matrix))?;
-    m.add_wrapped(wrap_pyfunction!(digraph_adjacency_matrix))?;
-    m.add_wrapped(wrap_pyfunction!(graph_adjacency_matrix))?;
-    m.add_wrapped(wrap_pyfunction!(graph_all_pairs_all_simple_paths))?;
-    m.add_wrapped(wrap_pyfunction!(digraph_all_pairs_all_simple_paths))?;
-    m.add_wrapped(wrap_pyfunction!(graph_longest_simple_path))?;
-    m.add_wrapped(wrap_pyfunction!(digraph_longest_simple_path))?;
-    m.add_wrapped(wrap_pyfunction!(graph_all_simple_paths))?;
-    m.add_wrapped(wrap_pyfunction!(digraph_all_simple_paths))?;
-    m.add_wrapped(wrap_pyfunction!(graph_has_path))?;
-    m.add_wrapped(wrap_pyfunction!(digraph_has_path))?;
     m.add_wrapped(wrap_pyfunction!(graph_greedy_color))?;
     m.add_wrapped(wrap_pyfunction!(graph_misra_gries_edge_color))?;
     m.add_wrapped(wrap_pyfunction!(graph_greedy_edge_color))?;
     m.add_wrapped(wrap_pyfunction!(graph_bipartite_edge_color))?;
     m.add_wrapped(wrap_pyfunction!(graph_two_color))?;
     m.add_wrapped(wrap_pyfunction!(digraph_two_color))?;
-    m.add_wrapped(wrap_pyfunction!(graph_is_bipartite))?;
-    m.add_wrapped(wrap_pyfunction!(digraph_is_bipartite))?;
     m.add_wrapped(wrap_pyfunction!(graph_line_graph))?;
     m.add_wrapped(wrap_pyfunction!(graph_tensor_product))?;
     m.add_wrapped(wrap_pyfunction!(digraph_tensor_product))?;
@@ -514,8 +483,6 @@ fn rustworkx(py: Python<'_>, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(undirected_random_bipartite_graph))?;
     m.add_wrapped(wrap_pyfunction!(digraph_dfs_edges))?;
     m.add_wrapped(wrap_pyfunction!(graph_dfs_edges))?;
-    m.add_wrapped(wrap_pyfunction!(digraph_k_shortest_path_lengths))?;
-    m.add_wrapped(wrap_pyfunction!(graph_k_shortest_path_lengths))?;
     m.add_wrapped(wrap_pyfunction!(is_matching))?;
     m.add_wrapped(wrap_pyfunction!(is_maximal_matching))?;
     m.add_wrapped(wrap_pyfunction!(max_weight_matching))?;
@@ -526,39 +493,10 @@ fn rustworkx(py: Python<'_>, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(graph_token_swapper))?;
     m.add_wrapped(wrap_pyfunction!(graph_core_number))?;
     m.add_wrapped(wrap_pyfunction!(digraph_core_number))?;
-    m.add_wrapped(wrap_pyfunction!(graph_complement))?;
-    m.add_wrapped(wrap_pyfunction!(digraph_complement))?;
-    m.add_wrapped(wrap_pyfunction!(graph_random_layout))?;
-    m.add_wrapped(wrap_pyfunction!(digraph_random_layout))?;
-    m.add_wrapped(wrap_pyfunction!(graph_bipartite_layout))?;
-    m.add_wrapped(wrap_pyfunction!(digraph_bipartite_layout))?;
-    m.add_wrapped(wrap_pyfunction!(graph_circular_layout))?;
-    m.add_wrapped(wrap_pyfunction!(digraph_circular_layout))?;
-    m.add_wrapped(wrap_pyfunction!(graph_shell_layout))?;
-    m.add_wrapped(wrap_pyfunction!(digraph_shell_layout))?;
-    m.add_wrapped(wrap_pyfunction!(graph_spiral_layout))?;
-    m.add_wrapped(wrap_pyfunction!(digraph_spiral_layout))?;
-    m.add_wrapped(wrap_pyfunction!(graph_spring_layout))?;
-    m.add_wrapped(wrap_pyfunction!(digraph_spring_layout))?;
-    m.add_wrapped(wrap_pyfunction!(digraph_num_shortest_paths_unweighted))?;
-    m.add_wrapped(wrap_pyfunction!(graph_num_shortest_paths_unweighted))?;
-    m.add_wrapped(wrap_pyfunction!(
-        digraph_unweighted_average_shortest_path_length
-    ))?;
-    m.add_wrapped(wrap_pyfunction!(
-        graph_unweighted_average_shortest_path_length
-    ))?;
     m.add_wrapped(wrap_pyfunction!(metric_closure))?;
-    m.add_wrapped(wrap_pyfunction!(stoer_wagner_min_cut))?;
     m.add_wrapped(wrap_pyfunction!(steiner_tree::steiner_tree))?;
     m.add_wrapped(wrap_pyfunction!(digraph_dfs_search))?;
     m.add_wrapped(wrap_pyfunction!(graph_dfs_search))?;
-    m.add_wrapped(wrap_pyfunction!(articulation_points))?;
-    m.add_wrapped(wrap_pyfunction!(bridges))?;
-    m.add_wrapped(wrap_pyfunction!(biconnected_components))?;
-    m.add_wrapped(wrap_pyfunction!(chain_decomposition))?;
-    m.add_wrapped(wrap_pyfunction!(graph_isolates))?;
-    m.add_wrapped(wrap_pyfunction!(digraph_isolates))?;
     m.add_wrapped(wrap_pyfunction!(connected_subgraphs))?;
     m.add_wrapped(wrap_pyfunction!(is_planar))?;
     m.add_wrapped(wrap_pyfunction!(read_graphml))?;

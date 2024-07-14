@@ -74,7 +74,17 @@ declare_rustworkx_module!(
     graph_astar_shortest_path,
     digraph_astar_shortest_path,
     negative_edge_cycle,
-    find_negative_cycle
+    find_negative_cycle,
+    digraph_k_shortest_path_lengths,
+    graph_k_shortest_path_lengths,
+    digraph_num_shortest_paths_unweighted,
+    graph_num_shortest_paths_unweighted,
+    digraph_unweighted_average_shortest_path_length,
+    graph_unweighted_average_shortest_path_length,
+    digraph_has_path,
+    graph_has_path,
+    graph_distance_matrix,
+    digraph_distance_matrix
 );
 
 /// Find the shortest path from a node
