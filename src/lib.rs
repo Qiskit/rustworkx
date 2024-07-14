@@ -41,8 +41,6 @@ mod traversal;
 mod tree;
 mod union;
 
-use matching::*;
-
 use hashbrown::HashMap;
 use numpy::Complex64;
 
@@ -51,7 +49,6 @@ use pyo3::exceptions::PyException;
 use pyo3::exceptions::PyValueError;
 use pyo3::import_exception;
 use pyo3::prelude::*;
-use pyo3::wrap_pyfunction;
 use pyo3::wrap_pymodule;
 use pyo3::Python;
 
