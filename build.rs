@@ -42,7 +42,7 @@ fn main() {
     let dest_path = path::PathBuf::from(out_dir).join("generated_include_rustworkx_modules.rs");
 
     // Create the file and write the contents to it
-    let mut f = fs::File::create(&dest_path).unwrap();
+    let mut f = fs::File::create(dest_path).unwrap();
 
     let mut rustworkx_modules = BTreeSet::new();
 
