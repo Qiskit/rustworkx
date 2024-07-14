@@ -41,15 +41,7 @@ mod traversal;
 mod tree;
 mod union;
 
-use coloring::*;
-use graphml::*;
-use line_graph::*;
-
 use matching::*;
-use planar::*;
-use tensor_product::*;
-use token_swapper::*;
-use transitivity::*;
 
 use hashbrown::HashMap;
 use numpy::Complex64;
@@ -425,36 +417,27 @@ fn rustworkx(py: Python<'_>, m: &Bound<PyModule>) -> PyResult<()> {
     bisimulation::rustworkx_module(m)?;
     cartesian_product::rustworkx_module(m)?;
     centrality::rustworkx_module(m)?;
+    coloring::rustworkx_module(m)?;
     connectivity::rustworkx_module(m)?;
     dag_algo::rustworkx_module(m)?;
+    graphml::rustworkx_module(m)?;
     isomorphism::rustworkx_module(m)?;
     json::rustworkx_module(m)?;
     layout::rustworkx_module(m)?;
+    line_graph::rustworkx_module(m)?;
     link_analysis::rustworkx_module(m)?;
+    matching::rustworkx_module(m)?;
+    planar::rustworkx_module(m)?;
     random_graph::rustworkx_module(m)?;
     shortest_path::rustworkx_module(m)?;
     steiner_tree::rustworkx_module(m)?;
+    tensor_product::rustworkx_module(m)?;
+    token_swapper::rustworkx_module(m)?;
+    transitivity::rustworkx_module(m)?;
     traversal::rustworkx_module(m)?;
     tree::rustworkx_module(m)?;
     union::rustworkx_module(m)?;
 
-    m.add_wrapped(wrap_pyfunction!(graph_greedy_color))?;
-    m.add_wrapped(wrap_pyfunction!(graph_misra_gries_edge_color))?;
-    m.add_wrapped(wrap_pyfunction!(graph_greedy_edge_color))?;
-    m.add_wrapped(wrap_pyfunction!(graph_bipartite_edge_color))?;
-    m.add_wrapped(wrap_pyfunction!(graph_two_color))?;
-    m.add_wrapped(wrap_pyfunction!(digraph_two_color))?;
-    m.add_wrapped(wrap_pyfunction!(graph_line_graph))?;
-    m.add_wrapped(wrap_pyfunction!(graph_tensor_product))?;
-    m.add_wrapped(wrap_pyfunction!(digraph_tensor_product))?;
-    m.add_wrapped(wrap_pyfunction!(is_matching))?;
-    m.add_wrapped(wrap_pyfunction!(is_maximal_matching))?;
-    m.add_wrapped(wrap_pyfunction!(max_weight_matching))?;
-    m.add_wrapped(wrap_pyfunction!(graph_transitivity))?;
-    m.add_wrapped(wrap_pyfunction!(digraph_transitivity))?;
-    m.add_wrapped(wrap_pyfunction!(graph_token_swapper))?;
-    m.add_wrapped(wrap_pyfunction!(is_planar))?;
-    m.add_wrapped(wrap_pyfunction!(read_graphml))?;
     m.add_class::<digraph::PyDiGraph>()?;
     m.add_class::<graph::PyGraph>()?;
     m.add_class::<toposort::TopologicalSorter>()?;
@@ -481,7 +464,7 @@ fn rustworkx(py: Python<'_>, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_class::<iterators::NodeMap>()?;
     m.add_class::<iterators::ProductNodeMap>()?;
     m.add_class::<iterators::BiconnectedComponents>()?;
-    m.add_class::<ColoringStrategy>()?;
+    m.add_class::<coloring::ColoringStrategy>()?;
     m.add_wrapped(wrap_pymodule!(generators::generators))?;
     Ok(())
 }

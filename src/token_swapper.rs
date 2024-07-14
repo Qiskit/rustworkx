@@ -10,6 +10,7 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
+use crate::declare_rustworkx_module;
 use crate::graph;
 use crate::iterators::EdgeList;
 use crate::InvalidMapping;
@@ -18,6 +19,8 @@ use hashbrown::HashMap;
 use petgraph::graph::NodeIndex;
 use pyo3::prelude::*;
 use rustworkx_core::token_swapper;
+
+declare_rustworkx_module!(graph_token_swapper);
 
 /// This module performs an approximately optimal Token Swapping algorithm
 /// Supports partial mappings (i.e. not-permutations) for graphs with missing tokens.

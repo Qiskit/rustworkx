@@ -31,11 +31,12 @@ you for an overview of our simplified source tree:
 │   │   └── more_pure_rust_code.rs
 ```
 
-#### Module exports in `lib.rs`
+#### Exporting new functions
 
-To add new functions, you will need to export them in `lib.rs`. `lib.rs` will
-import functions defined in Rust modules (see the next section), and export
-them to Python using `m.add_wrapped(wrap_pyfunction!(your_new_function))?;`
+To add new functions, you will need to export them in the
+`declare_rustworkx_module!` statement in the Rust file you are editing.
+If  the function is not added to that statement, the Rust compiler
+will complain about dead-code and Python will not find the function.
 
 #### Adding and changing functions in modules
 
@@ -66,7 +67,9 @@ pub fn your_new_function(
 > __NOTE:__  If you create a new `your_module.rs`, remember to declare and import it in `lib.rs`:
 > ```rust
 > mod your_module;
-> use your_module::*;
+> // more code follows
+> // inside the function named rustworkx
+> `your_module::rustworkx_module(m)?;`
 > ```
 
 #### Module directories: when a single file is not enough
