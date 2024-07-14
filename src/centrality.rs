@@ -14,6 +14,7 @@
 
 use std::convert::TryFrom;
 
+use crate::declare_rustworkx_module;
 use crate::digraph;
 use crate::graph;
 use crate::iterators::{CentralityMapping, EdgeCentralityMapping};
@@ -28,6 +29,19 @@ use petgraph::visit::IntoNodeIdentifiers;
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use rustworkx_core::centrality;
+
+declare_rustworkx_module!(
+    graph_betweenness_centrality,
+    digraph_betweenness_centrality,
+    graph_closeness_centrality,
+    digraph_closeness_centrality,
+    graph_edge_betweenness_centrality,
+    digraph_edge_betweenness_centrality,
+    graph_eigenvector_centrality,
+    digraph_eigenvector_centrality,
+    graph_katz_centrality,
+    digraph_katz_centrality
+);
 
 /// Compute the betweenness centrality of all nodes in a PyGraph.
 ///

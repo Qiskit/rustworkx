@@ -43,7 +43,6 @@ mod union;
 
 use bisimulation::*;
 use cartesian_product::*;
-use centrality::*;
 use coloring::*;
 use connectivity::*;
 use dag_algo::*;
@@ -436,6 +435,11 @@ fn rustworkx(py: Python<'_>, m: &Bound<PyModule>) -> PyResult<()> {
         "JSONDeserializationError",
         py.get_type_bound::<JSONDeserializationError>(),
     )?;
+
+    centrality::rustworkx_module(m)?;
+    connectivity::rustworkx_module(m)?;
+    shortest_path::rustworkx_module(m)?;
+
     m.add_wrapped(wrap_pyfunction!(bfs_successors))?;
     m.add_wrapped(wrap_pyfunction!(bfs_predecessors))?;
     m.add_wrapped(wrap_pyfunction!(graph_bfs_search))?;
@@ -447,8 +451,6 @@ fn rustworkx(py: Python<'_>, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(dag_weighted_longest_path))?;
     m.add_wrapped(wrap_pyfunction!(dag_weighted_longest_path_length))?;
     m.add_wrapped(wrap_pyfunction!(transitive_reduction))?;
-    m.add_wrapped(wrap_pyfunction!(number_connected_components))?;
-    m.add_wrapped(wrap_pyfunction!(connected_components))?;
     m.add_wrapped(wrap_pyfunction!(is_connected))?;
     m.add_wrapped(wrap_pyfunction!(node_connected_component))?;
     m.add_wrapped(wrap_pyfunction!(number_weakly_connected_components))?;
@@ -472,16 +474,6 @@ fn rustworkx(py: Python<'_>, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(descendants))?;
     m.add_wrapped(wrap_pyfunction!(ancestors))?;
     m.add_wrapped(wrap_pyfunction!(lexicographical_topological_sort))?;
-    m.add_wrapped(wrap_pyfunction!(graph_floyd_warshall))?;
-    m.add_wrapped(wrap_pyfunction!(digraph_floyd_warshall))?;
-    m.add_wrapped(wrap_pyfunction!(graph_floyd_warshall_numpy))?;
-    m.add_wrapped(wrap_pyfunction!(digraph_floyd_warshall_numpy))?;
-    m.add_wrapped(wrap_pyfunction!(
-        graph_floyd_warshall_successor_and_distance
-    ))?;
-    m.add_wrapped(wrap_pyfunction!(
-        digraph_floyd_warshall_successor_and_distance
-    ))?;
     m.add_wrapped(wrap_pyfunction!(collect_runs))?;
     m.add_wrapped(wrap_pyfunction!(collect_bicolor_runs))?;
     m.add_wrapped(wrap_pyfunction!(layers))?;
@@ -495,46 +487,8 @@ fn rustworkx(py: Python<'_>, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(digraph_longest_simple_path))?;
     m.add_wrapped(wrap_pyfunction!(graph_all_simple_paths))?;
     m.add_wrapped(wrap_pyfunction!(digraph_all_simple_paths))?;
-    m.add_wrapped(wrap_pyfunction!(graph_dijkstra_shortest_paths))?;
-    m.add_wrapped(wrap_pyfunction!(digraph_dijkstra_shortest_paths))?;
-    m.add_wrapped(wrap_pyfunction!(graph_all_shortest_paths))?;
-    m.add_wrapped(wrap_pyfunction!(digraph_all_shortest_paths))?;
     m.add_wrapped(wrap_pyfunction!(graph_has_path))?;
     m.add_wrapped(wrap_pyfunction!(digraph_has_path))?;
-    m.add_wrapped(wrap_pyfunction!(graph_dijkstra_shortest_path_lengths))?;
-    m.add_wrapped(wrap_pyfunction!(digraph_dijkstra_shortest_path_lengths))?;
-    m.add_wrapped(wrap_pyfunction!(graph_bellman_ford_shortest_paths))?;
-    m.add_wrapped(wrap_pyfunction!(digraph_bellman_ford_shortest_paths))?;
-    m.add_wrapped(wrap_pyfunction!(graph_bellman_ford_shortest_path_lengths))?;
-    m.add_wrapped(wrap_pyfunction!(digraph_bellman_ford_shortest_path_lengths))?;
-    m.add_wrapped(wrap_pyfunction!(negative_edge_cycle))?;
-    m.add_wrapped(wrap_pyfunction!(find_negative_cycle))?;
-    m.add_wrapped(wrap_pyfunction!(digraph_all_pairs_dijkstra_path_lengths))?;
-    m.add_wrapped(wrap_pyfunction!(digraph_all_pairs_dijkstra_shortest_paths))?;
-    m.add_wrapped(wrap_pyfunction!(graph_all_pairs_dijkstra_path_lengths))?;
-    m.add_wrapped(wrap_pyfunction!(graph_all_pairs_dijkstra_shortest_paths))?;
-    m.add_wrapped(wrap_pyfunction!(
-        digraph_all_pairs_bellman_ford_path_lengths
-    ))?;
-    m.add_wrapped(wrap_pyfunction!(
-        digraph_all_pairs_bellman_ford_shortest_paths
-    ))?;
-    m.add_wrapped(wrap_pyfunction!(graph_all_pairs_bellman_ford_path_lengths))?;
-    m.add_wrapped(wrap_pyfunction!(
-        graph_all_pairs_bellman_ford_shortest_paths
-    ))?;
-    m.add_wrapped(wrap_pyfunction!(graph_betweenness_centrality))?;
-    m.add_wrapped(wrap_pyfunction!(digraph_betweenness_centrality))?;
-    m.add_wrapped(wrap_pyfunction!(graph_closeness_centrality))?;
-    m.add_wrapped(wrap_pyfunction!(digraph_closeness_centrality))?;
-    m.add_wrapped(wrap_pyfunction!(graph_edge_betweenness_centrality))?;
-    m.add_wrapped(wrap_pyfunction!(digraph_edge_betweenness_centrality))?;
-    m.add_wrapped(wrap_pyfunction!(graph_eigenvector_centrality))?;
-    m.add_wrapped(wrap_pyfunction!(digraph_eigenvector_centrality))?;
-    m.add_wrapped(wrap_pyfunction!(graph_katz_centrality))?;
-    m.add_wrapped(wrap_pyfunction!(digraph_katz_centrality))?;
-    m.add_wrapped(wrap_pyfunction!(graph_astar_shortest_path))?;
-    m.add_wrapped(wrap_pyfunction!(digraph_astar_shortest_path))?;
     m.add_wrapped(wrap_pyfunction!(graph_greedy_color))?;
     m.add_wrapped(wrap_pyfunction!(graph_misra_gries_edge_color))?;
     m.add_wrapped(wrap_pyfunction!(graph_greedy_edge_color))?;
@@ -558,12 +512,8 @@ fn rustworkx(py: Python<'_>, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(directed_barabasi_albert_graph))?;
     m.add_wrapped(wrap_pyfunction!(directed_random_bipartite_graph))?;
     m.add_wrapped(wrap_pyfunction!(undirected_random_bipartite_graph))?;
-    m.add_wrapped(wrap_pyfunction!(cycle_basis))?;
-    m.add_wrapped(wrap_pyfunction!(simple_cycles))?;
-    m.add_wrapped(wrap_pyfunction!(strongly_connected_components))?;
     m.add_wrapped(wrap_pyfunction!(digraph_dfs_edges))?;
     m.add_wrapped(wrap_pyfunction!(graph_dfs_edges))?;
-    m.add_wrapped(wrap_pyfunction!(digraph_find_cycle))?;
     m.add_wrapped(wrap_pyfunction!(digraph_k_shortest_path_lengths))?;
     m.add_wrapped(wrap_pyfunction!(graph_k_shortest_path_lengths))?;
     m.add_wrapped(wrap_pyfunction!(is_matching))?;
@@ -647,4 +597,17 @@ fn rustworkx(py: Python<'_>, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_class::<ColoringStrategy>()?;
     m.add_wrapped(wrap_pymodule!(generators::generators))?;
     Ok(())
+}
+
+#[macro_export]
+macro_rules! declare_rustworkx_module {
+    ($($v:ident),*) => {
+
+        pub fn rustworkx_module(m: &pyo3::Bound<pyo3::types::PyModule>) ->  pyo3::prelude::PyResult<()> {
+            $(
+                m.add_wrapped(pyo3::wrap_pyfunction!($v))?;
+            )*
+            Ok(())
+        }
+    }
 }

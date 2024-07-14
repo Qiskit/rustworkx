@@ -19,7 +19,10 @@ mod num_shortest_path;
 
 use std::convert::TryFrom;
 
-use crate::{digraph, edge_weights_from_callable, graph, CostFn, NegativeCycle, NoPathFound};
+use crate::{
+    declare_rustworkx_module, digraph, edge_weights_from_callable, graph, CostFn, NegativeCycle,
+    NoPathFound,
+};
 
 use pyo3::prelude::*;
 use pyo3::Python;
@@ -42,6 +45,37 @@ use crate::iterators::{
     AllPairsPathLengthMapping, AllPairsPathMapping, NodeIndices, NodesCountMapping,
     PathLengthMapping, PathMapping,
 };
+
+declare_rustworkx_module!(
+    graph_dijkstra_shortest_paths,
+    digraph_dijkstra_shortest_paths,
+    graph_all_shortest_paths,
+    digraph_all_shortest_paths,
+    graph_dijkstra_shortest_path_lengths,
+    digraph_dijkstra_shortest_path_lengths,
+    graph_bellman_ford_shortest_paths,
+    digraph_bellman_ford_shortest_paths,
+    graph_bellman_ford_shortest_path_lengths,
+    digraph_bellman_ford_shortest_path_lengths,
+    graph_floyd_warshall,
+    digraph_floyd_warshall,
+    graph_floyd_warshall_numpy,
+    digraph_floyd_warshall_numpy,
+    graph_floyd_warshall_successor_and_distance,
+    digraph_floyd_warshall_successor_and_distance,
+    digraph_all_pairs_bellman_ford_path_lengths,
+    digraph_all_pairs_bellman_ford_shortest_paths,
+    graph_all_pairs_bellman_ford_path_lengths,
+    graph_all_pairs_bellman_ford_shortest_paths,
+    digraph_all_pairs_dijkstra_path_lengths,
+    digraph_all_pairs_dijkstra_shortest_paths,
+    graph_all_pairs_dijkstra_path_lengths,
+    graph_all_pairs_dijkstra_shortest_paths,
+    graph_astar_shortest_path,
+    digraph_astar_shortest_path,
+    negative_edge_cycle,
+    find_negative_cycle
+);
 
 /// Find the shortest path from a node
 ///
