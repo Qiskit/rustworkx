@@ -57,10 +57,14 @@ fn main() {
         }
     }
 
+    writeln!(f, "fn register_rustworkx_modules(m: &pyo3::Bound<pyo3::types::PyModule>) ->  pyo3::prelude::PyResult<()>").expect("could not write function signature");
+    writeln!(f, "{{").expect("could not write function body");
+
     for module in rustworkx_modules {
-        println!("cargo:warning={}::rustworkx_module(m)?;", module.clone());
         writeln!(f, "{}::rustworkx_module(m)?;", module.clone()).expect("could not write to file");
     }
+    writeln!(f, "Ok(())").expect("could not write function body");
+    writeln!(f, "}}").expect("could not write function body");
 }
 
 fn module_name_from_file_name(filename: String) -> String {

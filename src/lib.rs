@@ -379,6 +379,11 @@ create_exception!(rustworkx, FailedToConverge, PyException);
 // Graph is not bipartite
 create_exception!(rustworkx, GraphNotBipartite, PyException);
 
+include!(concat!(
+    env!("OUT_DIR"),
+    "/generated_include_rustworkx_modules.rs"
+));
+
 #[pymodule]
 fn rustworkx(py: Python<'_>, m: &Bound<PyModule>) -> PyResult<()> {
     m.add("__version__", env!("CARGO_PKG_VERSION"))?;
@@ -411,29 +416,7 @@ fn rustworkx(py: Python<'_>, m: &Bound<PyModule>) -> PyResult<()> {
         py.get_type_bound::<JSONDeserializationError>(),
     )?;
 
-    bisimulation::rustworkx_module(m)?;
-    cartesian_product::rustworkx_module(m)?;
-    centrality::rustworkx_module(m)?;
-    coloring::rustworkx_module(m)?;
-    connectivity::rustworkx_module(m)?;
-    dag_algo::rustworkx_module(m)?;
-    graphml::rustworkx_module(m)?;
-    isomorphism::rustworkx_module(m)?;
-    json::rustworkx_module(m)?;
-    layout::rustworkx_module(m)?;
-    line_graph::rustworkx_module(m)?;
-    link_analysis::rustworkx_module(m)?;
-    matching::rustworkx_module(m)?;
-    planar::rustworkx_module(m)?;
-    random_graph::rustworkx_module(m)?;
-    shortest_path::rustworkx_module(m)?;
-    steiner_tree::rustworkx_module(m)?;
-    tensor_product::rustworkx_module(m)?;
-    token_swapper::rustworkx_module(m)?;
-    transitivity::rustworkx_module(m)?;
-    traversal::rustworkx_module(m)?;
-    tree::rustworkx_module(m)?;
-    union::rustworkx_module(m)?;
+    register_rustworkx_modules(m)?;
 
     m.add_class::<digraph::PyDiGraph>()?;
     m.add_class::<graph::PyGraph>()?;
