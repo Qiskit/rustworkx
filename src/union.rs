@@ -10,7 +10,7 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-use crate::{digraph, find_node_by_weight, graph, StablePyGraph};
+use crate::{declare_rustworkx_module, digraph, find_node_by_weight, graph, StablePyGraph};
 
 use petgraph::stable_graph::NodeIndex;
 use petgraph::visit::{EdgeRef, IntoEdgeReferences, NodeIndexable};
@@ -18,6 +18,8 @@ use petgraph::{algo, EdgeType};
 
 use pyo3::prelude::*;
 use pyo3::Python;
+
+declare_rustworkx_module!(graph_union, digraph_union);
 
 #[derive(Copy, Clone)]
 enum Entry<T> {

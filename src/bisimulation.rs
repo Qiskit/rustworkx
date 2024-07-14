@@ -8,9 +8,11 @@ use hashbrown::hash_map::Entry;
 use hashbrown::{HashMap, HashSet};
 
 use crate::iterators::{IndexPartitionBlock, RelationalCoarsestPartition};
-use crate::{digraph, Directed, StablePyGraph};
+use crate::{declare_rustworkx_module, digraph, Directed, StablePyGraph};
 use petgraph::graph;
 use petgraph::Direction::{Incoming, Outgoing};
+
+declare_rustworkx_module!(digraph_maximum_bisimulation);
 
 type Block = Vec<graph::NodeIndex>;
 type Counterimage = HashMap<graph::NodeIndex, Vec<graph::NodeIndex>>;

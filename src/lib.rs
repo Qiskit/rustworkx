@@ -41,21 +41,15 @@ mod traversal;
 mod tree;
 mod union;
 
-use bisimulation::*;
-use cartesian_product::*;
 use coloring::*;
 use graphml::*;
-use isomorphism::*;
-use json::*;
 use line_graph::*;
-use link_analysis::*;
 
 use matching::*;
 use planar::*;
 use tensor_product::*;
 use token_swapper::*;
 use transitivity::*;
-use union::*;
 
 use hashbrown::HashMap;
 use numpy::Complex64;
@@ -428,27 +422,22 @@ fn rustworkx(py: Python<'_>, m: &Bound<PyModule>) -> PyResult<()> {
         py.get_type_bound::<JSONDeserializationError>(),
     )?;
 
+    bisimulation::rustworkx_module(m)?;
+    cartesian_product::rustworkx_module(m)?;
     centrality::rustworkx_module(m)?;
     connectivity::rustworkx_module(m)?;
     dag_algo::rustworkx_module(m)?;
+    isomorphism::rustworkx_module(m)?;
+    json::rustworkx_module(m)?;
     layout::rustworkx_module(m)?;
+    link_analysis::rustworkx_module(m)?;
     random_graph::rustworkx_module(m)?;
     shortest_path::rustworkx_module(m)?;
     steiner_tree::rustworkx_module(m)?;
     traversal::rustworkx_module(m)?;
     tree::rustworkx_module(m)?;
+    union::rustworkx_module(m)?;
 
-    m.add_wrapped(wrap_pyfunction!(digraph_is_isomorphic))?;
-    m.add_wrapped(wrap_pyfunction!(graph_is_isomorphic))?;
-    m.add_wrapped(wrap_pyfunction!(digraph_is_subgraph_isomorphic))?;
-    m.add_wrapped(wrap_pyfunction!(graph_is_subgraph_isomorphic))?;
-    m.add_wrapped(wrap_pyfunction!(digraph_vf2_mapping))?;
-    m.add_wrapped(wrap_pyfunction!(graph_vf2_mapping))?;
-    m.add_wrapped(wrap_pyfunction!(digraph_union))?;
-    m.add_wrapped(wrap_pyfunction!(graph_union))?;
-    m.add_wrapped(wrap_pyfunction!(digraph_maximum_bisimulation))?;
-    m.add_wrapped(wrap_pyfunction!(digraph_cartesian_product))?;
-    m.add_wrapped(wrap_pyfunction!(graph_cartesian_product))?;
     m.add_wrapped(wrap_pyfunction!(graph_greedy_color))?;
     m.add_wrapped(wrap_pyfunction!(graph_misra_gries_edge_color))?;
     m.add_wrapped(wrap_pyfunction!(graph_greedy_edge_color))?;
@@ -466,12 +455,6 @@ fn rustworkx(py: Python<'_>, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(graph_token_swapper))?;
     m.add_wrapped(wrap_pyfunction!(is_planar))?;
     m.add_wrapped(wrap_pyfunction!(read_graphml))?;
-    m.add_wrapped(wrap_pyfunction!(digraph_node_link_json))?;
-    m.add_wrapped(wrap_pyfunction!(graph_node_link_json))?;
-    m.add_wrapped(wrap_pyfunction!(from_node_link_json_file))?;
-    m.add_wrapped(wrap_pyfunction!(parse_node_link_json))?;
-    m.add_wrapped(wrap_pyfunction!(pagerank))?;
-    m.add_wrapped(wrap_pyfunction!(hits))?;
     m.add_class::<digraph::PyDiGraph>()?;
     m.add_class::<graph::PyGraph>()?;
     m.add_class::<toposort::TopologicalSorter>()?;
