@@ -52,16 +52,16 @@ fn main() {
         let mut content = String::new();
         file.read_to_string(&mut content)
             .expect("could not read contents of the file");
-        if content.contains("declare_rustworkx_module!") {
+        if content.contains("export_rustworkx_functions!") {
             rustworkx_modules.insert(module_name_from_file_name(path.clone()));
         }
     }
 
-    writeln!(f, "fn register_rustworkx_modules(m: &pyo3::Bound<pyo3::types::PyModule>) ->  pyo3::prelude::PyResult<()>").expect("could not write function signature");
+    writeln!(f, "fn register_rustworkx_everything(m: &pyo3::Bound<pyo3::types::PyModule>) ->  pyo3::prelude::PyResult<()>").expect("could not write function signature");
     writeln!(f, "{{").expect("could not write function body");
 
     for module in rustworkx_modules {
-        writeln!(f, "{}::rustworkx_module(m)?;", module.clone()).expect("could not write to file");
+        writeln!(f, "{}::register_rustworkx_functions(m)?;", module.clone()).expect("could not write to file");
     }
     writeln!(f, "Ok(())").expect("could not write function body");
     writeln!(f, "}}").expect("could not write function body");

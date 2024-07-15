@@ -379,7 +379,7 @@ create_exception!(rustworkx, FailedToConverge, PyException);
 // Graph is not bipartite
 create_exception!(rustworkx, GraphNotBipartite, PyException);
 
-// auto-generated register_rustworkx_modules function.
+// auto-generated register_rustworkx_everything function.
 // it registers nearly all functions
 include!(concat!(
     env!("OUT_DIR"),
@@ -418,7 +418,7 @@ fn rustworkx(py: Python<'_>, m: &Bound<PyModule>) -> PyResult<()> {
         py.get_type_bound::<JSONDeserializationError>(),
     )?;
 
-    register_rustworkx_modules(m)?;
+    register_rustworkx_everything(m)?;
 
     m.add_class::<digraph::PyDiGraph>()?;
     m.add_class::<graph::PyGraph>()?;
@@ -452,10 +452,10 @@ fn rustworkx(py: Python<'_>, m: &Bound<PyModule>) -> PyResult<()> {
 }
 
 #[macro_export]
-macro_rules! declare_rustworkx_module {
+macro_rules! export_rustworkx_functions {
     ($($v:ident),*) => {
 
-        pub fn rustworkx_module(m: &pyo3::Bound<pyo3::types::PyModule>) ->  pyo3::prelude::PyResult<()> {
+        pub fn register_rustworkx_functions(m: &pyo3::Bound<pyo3::types::PyModule>) ->  pyo3::prelude::PyResult<()> {
             $(
                 m.add_wrapped(pyo3::wrap_pyfunction!($v))?;
             )*

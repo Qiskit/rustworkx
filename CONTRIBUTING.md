@@ -67,9 +67,6 @@ pub fn your_new_function(
 > __NOTE:__  If you create a new `your_module.rs`, remember to declare and import it in `lib.rs`:
 > ```rust
 > mod your_module;
-> // more code follows
-> // inside the function named rustworkx
-> your_module::register_rustworkx_functions(m)?;
 > ```
 
 #### Module directories: when a single file is not enough
