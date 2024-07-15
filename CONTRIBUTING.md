@@ -69,7 +69,7 @@ pub fn your_new_function(
 > mod your_module;
 > // more code follows
 > // inside the function named rustworkx
-> `your_module::register_rustworkx_functions(m)?;`
+> your_module::register_rustworkx_functions(m)?;
 > ```
 
 #### Module directories: when a single file is not enough
