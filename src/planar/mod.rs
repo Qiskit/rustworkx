@@ -10,13 +10,13 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-use crate::declare_rustworkx_module;
+use crate::export_rustworkx_functions;
 use crate::graph::PyGraph;
 use rustworkx_core::planar;
 
 use pyo3::prelude::*;
 
-declare_rustworkx_module!(is_planar);
+export_rustworkx_functions!(is_planar);
 
 /// Check if an undirected graph is planar.
 ///

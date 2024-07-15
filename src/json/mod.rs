@@ -15,13 +15,13 @@ mod node_link_data;
 use std::fs::File;
 use std::io::BufReader;
 
-use crate::{declare_rustworkx_module, digraph, graph, JSONDeserializationError, StablePyGraph};
+use crate::{export_rustworkx_functions, digraph, graph, JSONDeserializationError, StablePyGraph};
 use petgraph::{algo, Directed, Undirected};
 
 use pyo3::prelude::*;
 use pyo3::Python;
 
-declare_rustworkx_module!(
+export_rustworkx_functions!(
     digraph_node_link_json,
     graph_node_link_json,
     from_node_link_json_file,

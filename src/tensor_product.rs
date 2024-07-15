@@ -11,7 +11,7 @@
 // under the License.
 
 use crate::iterators::ProductNodeMap;
-use crate::{declare_rustworkx_module, digraph, graph, StablePyGraph};
+use crate::{export_rustworkx_functions, digraph, graph, StablePyGraph};
 
 use hashbrown::HashMap;
 
@@ -21,7 +21,7 @@ use petgraph::{algo, EdgeType};
 use pyo3::prelude::*;
 use pyo3::Python;
 
-declare_rustworkx_module!(graph_tensor_product, digraph_tensor_product);
+export_rustworkx_functions!(graph_tensor_product, digraph_tensor_product);
 
 fn tensor_product<Ty: EdgeType>(
     py: Python,

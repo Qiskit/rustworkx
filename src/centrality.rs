@@ -14,7 +14,7 @@
 
 use std::convert::TryFrom;
 
-use crate::declare_rustworkx_module;
+use crate::export_rustworkx_functions;
 use crate::digraph;
 use crate::graph;
 use crate::iterators::{CentralityMapping, EdgeCentralityMapping};
@@ -30,7 +30,7 @@ use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use rustworkx_core::centrality;
 
-declare_rustworkx_module!(
+export_rustworkx_functions!(
     graph_betweenness_centrality,
     digraph_betweenness_centrality,
     graph_closeness_centrality,

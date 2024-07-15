@@ -24,7 +24,7 @@ use rustworkx_core::traversal::{
     descendants as core_descendants, dfs_edges, dijkstra_search,
 };
 
-use super::{declare_rustworkx_module, digraph, graph, iterators, CostFn};
+use super::{export_rustworkx_functions, digraph, graph, iterators, CostFn};
 
 use std::convert::TryFrom;
 
@@ -38,7 +38,7 @@ use petgraph::graph::NodeIndex;
 
 use crate::iterators::EdgeList;
 
-declare_rustworkx_module!(
+export_rustworkx_functions!(
     digraph_dfs_edges,
     graph_dfs_edges,
     digraph_bfs_search,

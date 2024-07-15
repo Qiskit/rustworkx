@@ -20,7 +20,7 @@ mod num_shortest_path;
 use std::convert::TryFrom;
 
 use crate::{
-    declare_rustworkx_module, digraph, edge_weights_from_callable, graph, CostFn, NegativeCycle,
+    export_rustworkx_functions, digraph, edge_weights_from_callable, graph, CostFn, NegativeCycle,
     NoPathFound,
 };
 
@@ -46,7 +46,7 @@ use crate::iterators::{
     PathLengthMapping, PathMapping,
 };
 
-declare_rustworkx_module!(
+export_rustworkx_functions!(
     graph_dijkstra_shortest_paths,
     digraph_dijkstra_shortest_paths,
     graph_all_shortest_paths,

@@ -34,7 +34,7 @@ you for an overview of our simplified source tree:
 #### Exporting new functions
 
 To add new functions, you will need to export them in the
-`declare_rustworkx_module!` statement in the Rust file you are editing.
+`export_rustworkx_functions!` statement in the Rust file you are editing.
 If  the function is not added to that statement, the Rust compiler
 will complain about dead-code and Python will not find the function.
 
@@ -69,7 +69,7 @@ pub fn your_new_function(
 > mod your_module;
 > // more code follows
 > // inside the function named rustworkx
-> `your_module::rustworkx_module(m)?;`
+> `your_module::register_rustworkx_functions(m)?;`
 > ```
 
 #### Module directories: when a single file is not enough

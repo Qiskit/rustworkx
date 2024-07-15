@@ -411,29 +411,29 @@ fn rustworkx(py: Python<'_>, m: &Bound<PyModule>) -> PyResult<()> {
         py.get_type_bound::<JSONDeserializationError>(),
     )?;
 
-    bisimulation::rustworkx_module(m)?;
-    cartesian_product::rustworkx_module(m)?;
-    centrality::rustworkx_module(m)?;
-    coloring::rustworkx_module(m)?;
-    connectivity::rustworkx_module(m)?;
-    dag_algo::rustworkx_module(m)?;
-    graphml::rustworkx_module(m)?;
-    isomorphism::rustworkx_module(m)?;
-    json::rustworkx_module(m)?;
-    layout::rustworkx_module(m)?;
-    line_graph::rustworkx_module(m)?;
-    link_analysis::rustworkx_module(m)?;
-    matching::rustworkx_module(m)?;
-    planar::rustworkx_module(m)?;
-    random_graph::rustworkx_module(m)?;
-    shortest_path::rustworkx_module(m)?;
-    steiner_tree::rustworkx_module(m)?;
-    tensor_product::rustworkx_module(m)?;
-    token_swapper::rustworkx_module(m)?;
-    transitivity::rustworkx_module(m)?;
-    traversal::rustworkx_module(m)?;
-    tree::rustworkx_module(m)?;
-    union::rustworkx_module(m)?;
+    bisimulation::register_rustworkx_functions(m)?;
+    cartesian_product::register_rustworkx_functions(m)?;
+    centrality::register_rustworkx_functions(m)?;
+    coloring::register_rustworkx_functions(m)?;
+    connectivity::register_rustworkx_functions(m)?;
+    dag_algo::register_rustworkx_functions(m)?;
+    graphml::register_rustworkx_functions(m)?;
+    isomorphism::register_rustworkx_functions(m)?;
+    json::register_rustworkx_functions(m)?;
+    layout::register_rustworkx_functions(m)?;
+    line_graph::register_rustworkx_functions(m)?;
+    link_analysis::register_rustworkx_functions(m)?;
+    matching::register_rustworkx_functions(m)?;
+    planar::register_rustworkx_functions(m)?;
+    random_graph::register_rustworkx_functions(m)?;
+    shortest_path::register_rustworkx_functions(m)?;
+    steiner_tree::register_rustworkx_functions(m)?;
+    tensor_product::register_rustworkx_functions(m)?;
+    token_swapper::register_rustworkx_functions(m)?;
+    transitivity::register_rustworkx_functions(m)?;
+    traversal::register_rustworkx_functions(m)?;
+    tree::register_rustworkx_functions(m)?;
+    union::register_rustworkx_functions(m)?;
 
     m.add_class::<digraph::PyDiGraph>()?;
     m.add_class::<graph::PyGraph>()?;
@@ -467,10 +467,10 @@ fn rustworkx(py: Python<'_>, m: &Bound<PyModule>) -> PyResult<()> {
 }
 
 #[macro_export]
-macro_rules! declare_rustworkx_module {
+macro_rules! export_rustworkx_functions {
     ($($v:ident),*) => {
 
-        pub fn rustworkx_module(m: &pyo3::Bound<pyo3::types::PyModule>) ->  pyo3::prelude::PyResult<()> {
+        pub fn register_rustworkx_functions(m: &pyo3::Bound<pyo3::types::PyModule>) ->  pyo3::prelude::PyResult<()> {
             $(
                 m.add_wrapped(pyo3::wrap_pyfunction!($v))?;
             )*
