@@ -379,6 +379,8 @@ create_exception!(rustworkx, FailedToConverge, PyException);
 // Graph is not bipartite
 create_exception!(rustworkx, GraphNotBipartite, PyException);
 
+// auto-generated register_rustworkx_modules function.
+// it registers nearly all functions
 include!(concat!(
     env!("OUT_DIR"),
     "/generated_include_rustworkx_modules.rs"
