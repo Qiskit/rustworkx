@@ -61,7 +61,8 @@ fn main() {
     writeln!(f, "{{").expect("could not write function body");
 
     for module in rustworkx_modules {
-        writeln!(f, "{}::register_rustworkx_functions(m)?;", module.clone()).expect("could not write to file");
+        writeln!(f, "{}::register_rustworkx_functions(m)?;", module.clone())
+            .expect("could not write to file");
     }
     writeln!(f, "Ok(())").expect("could not write function body");
     writeln!(f, "}}").expect("could not write function body");

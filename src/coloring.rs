@@ -11,7 +11,7 @@
 // under the License.
 
 use crate::GraphNotBipartite;
-use crate::{export_rustworkx_functions, digraph, graph, EdgeIndex, NodeIndex};
+use crate::{digraph, export_rustworkx_functions, graph, EdgeIndex, NodeIndex};
 
 use pyo3::prelude::*;
 use pyo3::types::PyDict;

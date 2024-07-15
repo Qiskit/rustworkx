@@ -10,7 +10,7 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-use super::{export_rustworkx_functions, digraph, graph};
+use super::{digraph, export_rustworkx_functions, graph};
 use hashbrown::HashSet;
 
 use pyo3::prelude::*;

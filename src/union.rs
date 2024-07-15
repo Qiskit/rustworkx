@@ -10,7 +10,7 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-use crate::{export_rustworkx_functions, digraph, find_node_by_weight, graph, StablePyGraph};
+use crate::{digraph, export_rustworkx_functions, find_node_by_weight, graph, StablePyGraph};
 
 use petgraph::stable_graph::NodeIndex;
 use petgraph::visit::{EdgeRef, IntoEdgeReferences, NodeIndexable};

@@ -20,7 +20,7 @@ mod num_shortest_path;
 use std::convert::TryFrom;
 
 use crate::{
-    export_rustworkx_functions, digraph, edge_weights_from_callable, graph, CostFn, NegativeCycle,
+    digraph, edge_weights_from_callable, export_rustworkx_functions, graph, CostFn, NegativeCycle,
     NoPathFound,
 };
 

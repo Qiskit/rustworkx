@@ -15,7 +15,7 @@ mod node_link_data;
 use std::fs::File;
 use std::io::BufReader;
 
-use crate::{export_rustworkx_functions, digraph, graph, JSONDeserializationError, StablePyGraph};
+use crate::{digraph, export_rustworkx_functions, graph, JSONDeserializationError, StablePyGraph};
 use petgraph::{algo, Directed, Undirected};
 
 use pyo3::prelude::*;
