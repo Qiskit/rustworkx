@@ -11,7 +11,7 @@
 // under the License.
 
 use crate::iterators::ProductNodeMap;
-use crate::{export_rustworkx_functions, digraph, graph, StablePyGraph};
+use crate::{digraph, export_rustworkx_functions, graph, StablePyGraph};
 
 use hashbrown::HashMap;
 

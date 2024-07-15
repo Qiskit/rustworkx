@@ -8,7 +8,7 @@ use hashbrown::hash_map::Entry;
 use hashbrown::{HashMap, HashSet};
 
 use crate::iterators::{IndexPartitionBlock, RelationalCoarsestPartition};
-use crate::{export_rustworkx_functions, digraph, Directed, StablePyGraph};
+use crate::{digraph, export_rustworkx_functions, Directed, StablePyGraph};
 use petgraph::graph;
 use petgraph::Direction::{Incoming, Outgoing};
 

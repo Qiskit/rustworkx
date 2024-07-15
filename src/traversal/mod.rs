@@ -24,7 +24,7 @@ use rustworkx_core::traversal::{
     descendants as core_descendants, dfs_edges, dijkstra_search,
 };
 
-use super::{export_rustworkx_functions, digraph, graph, iterators, CostFn};
+use super::{digraph, export_rustworkx_functions, graph, iterators, CostFn};
 
 use std::convert::TryFrom;
 

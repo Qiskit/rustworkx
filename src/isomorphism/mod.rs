@@ -14,7 +14,7 @@
 
 mod vf2;
 
-use crate::{export_rustworkx_functions, digraph, graph};
+use crate::{digraph, export_rustworkx_functions, graph};
 
 use std::cmp::Ordering;
 

@@ -12,7 +12,7 @@
 
 #![allow(clippy::float_cmp)]
 
-use crate::{export_rustworkx_functions, digraph, graph, StablePyGraph};
+use crate::{digraph, export_rustworkx_functions, graph, StablePyGraph};
 
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;

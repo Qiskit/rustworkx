@@ -14,8 +14,8 @@
 
 use std::convert::TryFrom;
 
-use crate::export_rustworkx_functions;
 use crate::digraph;
+use crate::export_rustworkx_functions;
 use crate::graph;
 use crate::iterators::{CentralityMapping, EdgeCentralityMapping};
 use crate::CostFn;

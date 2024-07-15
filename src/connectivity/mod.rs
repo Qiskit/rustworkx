@@ -17,7 +17,7 @@ mod johnson_simple_cycles;
 mod subgraphs;
 
 use super::{
-    export_rustworkx_functions, digraph, get_edge_iter_with_weights, graph, score, weight_callable,
+    digraph, export_rustworkx_functions, get_edge_iter_with_weights, graph, score, weight_callable,
     InvalidNode, NullGraph,
 };
 

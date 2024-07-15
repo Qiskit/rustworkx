@@ -17,7 +17,7 @@ mod shell;
 mod spiral;
 mod spring;
 
-use crate::{export_rustworkx_functions, digraph, graph};
+use crate::{digraph, export_rustworkx_functions, graph};
 use spring::Point;
 
 use hashbrown::{HashMap, HashSet};

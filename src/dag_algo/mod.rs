@@ -18,7 +18,7 @@ use rustworkx_core::dictmap::InitWithHasher;
 
 use super::iterators::NodeIndices;
 use crate::{
-    export_rustworkx_functions, digraph, DAGHasCycle, InvalidNode, RxPyResult, StablePyGraph,
+    digraph, export_rustworkx_functions, DAGHasCycle, InvalidNode, RxPyResult, StablePyGraph,
 };
 
 use rustworkx_core::dag_algo::collect_bicolor_runs as core_collect_bicolor_runs;
