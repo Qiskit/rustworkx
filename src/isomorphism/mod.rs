@@ -14,14 +14,14 @@
 
 mod vf2;
 
-use crate::{declare_rustworkx_module, digraph, graph};
+use crate::{export_rustworkx_functions, digraph, graph};
 
 use std::cmp::Ordering;
 
 use pyo3::prelude::*;
 use pyo3::Python;
 
-declare_rustworkx_module!(
+export_rustworkx_functions!(
     graph_is_isomorphic,
     digraph_is_isomorphic,
     graph_is_subgraph_isomorphic,

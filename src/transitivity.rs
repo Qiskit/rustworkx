@@ -10,7 +10,7 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-use super::{declare_rustworkx_module, digraph, graph};
+use super::{export_rustworkx_functions, digraph, graph};
 use hashbrown::HashSet;
 
 use pyo3::prelude::*;
@@ -18,7 +18,7 @@ use pyo3::prelude::*;
 use petgraph::graph::NodeIndex;
 use rayon::prelude::*;
 
-declare_rustworkx_module!(digraph_transitivity, graph_transitivity);
+export_rustworkx_functions!(digraph_transitivity, graph_transitivity);
 
 fn _graph_triangles(graph: &graph::PyGraph, node: usize) -> (usize, usize) {
     let mut triangles: usize = 0;

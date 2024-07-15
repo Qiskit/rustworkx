@@ -11,7 +11,7 @@
 // under the License.
 
 use crate::GraphNotBipartite;
-use crate::{declare_rustworkx_module, digraph, graph, EdgeIndex, NodeIndex};
+use crate::{export_rustworkx_functions, digraph, graph, EdgeIndex, NodeIndex};
 
 use pyo3::prelude::*;
 use pyo3::types::PyDict;
@@ -27,7 +27,7 @@ use rustworkx_core::coloring::{
 
 pub use rustworkx_core::coloring::ColoringStrategy as ColoringStrategyCore;
 
-declare_rustworkx_module!(
+export_rustworkx_functions!(
     graph_greedy_color,
     graph_misra_gries_edge_color,
     graph_greedy_edge_color,

@@ -17,7 +17,7 @@ mod shell;
 mod spiral;
 mod spring;
 
-use crate::{declare_rustworkx_module, digraph, graph};
+use crate::{export_rustworkx_functions, digraph, graph};
 use spring::Point;
 
 use hashbrown::{HashMap, HashSet};
@@ -27,7 +27,7 @@ use pyo3::Python;
 
 use crate::iterators::Pos2DMapping;
 
-declare_rustworkx_module!(
+export_rustworkx_functions!(
     graph_random_layout,
     digraph_random_layout,
     graph_bipartite_layout,

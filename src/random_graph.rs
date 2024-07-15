@@ -12,7 +12,7 @@
 
 #![allow(clippy::float_cmp)]
 
-use crate::{declare_rustworkx_module, digraph, graph, StablePyGraph};
+use crate::{export_rustworkx_functions, digraph, graph, StablePyGraph};
 
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
@@ -31,7 +31,7 @@ use rand_pcg::Pcg64;
 
 use rustworkx_core::generators as core_generators;
 
-declare_rustworkx_module!(
+export_rustworkx_functions!(
     directed_gnp_random_graph,
     undirected_gnp_random_graph,
     directed_gnm_random_graph,

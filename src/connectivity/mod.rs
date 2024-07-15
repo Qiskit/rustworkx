@@ -17,7 +17,7 @@ mod johnson_simple_cycles;
 mod subgraphs;
 
 use super::{
-    declare_rustworkx_module, digraph, get_edge_iter_with_weights, graph, score, weight_callable,
+    export_rustworkx_functions, digraph, get_edge_iter_with_weights, graph, score, weight_callable,
     InvalidNode, NullGraph,
 };
 
@@ -47,7 +47,7 @@ use rustworkx_core::coloring::two_color;
 use rustworkx_core::connectivity;
 use rustworkx_core::dag_algo::longest_path;
 
-declare_rustworkx_module!(
+export_rustworkx_functions!(
     cycle_basis,
     simple_cycles,
     strongly_connected_components,
