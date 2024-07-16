@@ -128,7 +128,7 @@ where
         None => graph.node_identifiers().collect(),
     };
 
-    let mut parent = vec![std::usize::MAX; graph.node_bound()];
+    let mut parent = vec![usize::MAX; graph.node_bound()];
     let mut back_edges: HashMap<G::NodeId, Vec<G::NodeId>> = HashMap::new();
 
     // depth-first-index (DFI) ordered nodes.
@@ -180,7 +180,7 @@ mod tests {
 
     #[test]
     fn test_decomposition() {
-        let graph = UnGraph::<(), ()>::from_edges(&[
+        let graph = UnGraph::<(), ()>::from_edges([
             //  DFS tree edges.
             (1, 2),
             (2, 3),

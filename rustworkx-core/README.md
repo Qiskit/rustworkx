@@ -1,7 +1,7 @@
 # rustworkx-core
 
 [![License](https://img.shields.io/github/license/Qiskit/rustworkx.svg?style=popout-square)](https://opensource.org/licenses/Apache-2.0)
-[![Minimum rustc 1.41.1](https://img.shields.io/badge/rustc-1.41.1+-blue.svg)](https://rust-lang.github.io/rfcs/2495-min-rust-version.html)
+[![Minimum rustc 1.70](https://img.shields.io/badge/rustc-1.70+-blue.svg)](https://rust-lang.github.io/rfcs/2495-min-rust-version.html)
 
 > :warning: The retworkx-core project has been renamed to **rustworkx-core**.
 > If you're using retworkx-core 0.11.0 you will need to change your requirement

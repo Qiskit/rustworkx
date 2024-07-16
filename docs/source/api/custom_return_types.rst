@@ -22,3 +22,5 @@ Custom Return Types
    rustworkx.NodeMap
    rustworkx.ProductNodeMap
    rustworkx.BiconnectedComponents
+   rustworkx.RelationalCoarsestPartition
+   rustworkx.IndexPartitionBlock

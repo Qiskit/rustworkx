@@ -1,0 +1,9 @@
+---
+features:
+  - |
+    :func:`.lexicographical_topological_sort` and :class:`.TopologicalSorter` now both accept an
+    ``initial`` keyword argument, which can be used to limit the returned topological orderings to
+    be only over the nodes that are dominated by the ``initial`` set.  This can provide performance
+    improvements by removing the need for a search over all graph nodes to determine the initial set
+    of nodes with zero in degree; this is particularly relevant to :class:`.TopologicalSorter`,
+    where the user may terminate the search after only examining part of the order.

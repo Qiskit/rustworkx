@@ -1,0 +1,16 @@
+features:
+  - |
+    Added a new function :func:`~rustworkx.digraph_maximum_bisimulation` to
+    compute the maximum bisimulation or relational coarsest partition of a
+    graph. This function is based on the algorithm described in the publication
+    "Three partition refinement algorithms" by Paige and Tarjan. This function
+    recieves a graph and returns a
+    :class:`~rustworkx.RelationalCoarsestPartition`.
+  - |
+    Added a new class :class:`~rustworkx.RelationalCoarsestPartition` to output
+    the maximum bisimulation or relational coarsest partition of a graph. This
+    class contains instances of :class:`~rustworkx.IndexPartitionBlock` and can be
+    iterated over.
+  - |
+    Added a new class :class:`~rustworkx.IndexPartitionBlock` to output
+    a block of a node partition. This class is an iterator over node indices.

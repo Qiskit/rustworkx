@@ -64,6 +64,8 @@ where
     Ok(())
 }
 
+static ATTRS_TO_ESCAPE: [&str; 2] = ["label", "tooltip"];
+
 /// Convert an attr map to an output string
 fn attr_map_to_string<'a>(
     py: Python,
@@ -82,11 +84,10 @@ fn attr_map_to_string<'a>(
     if attrs.is_empty() {
         return Ok("".to_string());
     }
-
     let attr_string = attrs
         .iter()
         .map(|(key, value)| {
-            if key == "label" {
+            if ATTRS_TO_ESCAPE.contains(&key.as_str()) {
                 format!("{}=\"{}\"", key, value)
             } else {
                 format!("{}={}", key, value)

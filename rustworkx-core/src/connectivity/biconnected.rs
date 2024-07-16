@@ -23,13 +23,134 @@ use petgraph::{
 
 use crate::traversal::{depth_first_search, DfsEvent};
 
-const NULL: usize = std::usize::MAX;
+const NULL: usize = usize::MAX;
 
 type Edge<G> = (<G as GraphBase>::NodeId, <G as GraphBase>::NodeId);
 
 #[inline]
 fn is_root(parent: &[usize], u: usize) -> bool {
     parent[u] == NULL
+}
+
+fn _articulation_points<G>(
+    graph: G,
+    components: Option<&mut HashMap<Edge<G>, usize>>,
+    bridges: Option<&mut HashSet<Edge<G>>>,
+) -> HashSet<G::NodeId>
+where
+    G: GraphProp<EdgeType = Undirected>
+        + EdgeCount
+        + IntoEdges
+        + Visitable
+        + NodeIndexable
+        + IntoNodeIdentifiers,
+    G::NodeId: Eq + Hash,
+{
+    let num_nodes = graph.node_bound();
+
+    let mut low = vec![NULL; num_nodes];
+    let mut disc = vec![NULL; num_nodes];
+    let mut parent = vec![NULL; num_nodes];
+
+    let mut root_children: usize = 0;
+    let mut points = HashSet::new();
+
+    let mut edge_stack = Vec::new();
+    let need_components = components.is_some();
+    let mut tmp_components = if need_components {
+        HashMap::with_capacity(graph.edge_count())
+    } else {
+        HashMap::new()
+    };
+    let need_bridges = bridges.is_some();
+    let mut tmp_bridges = if need_bridges {
+        HashSet::with_capacity(graph.edge_count())
+    } else {
+        HashSet::new()
+    };
+    let mut num_components: usize = 0;
+
+    depth_first_search(graph, graph.node_identifiers(), |event| match event {
+        DfsEvent::Discover(u_id, Time(t)) => {
+            let u = graph.to_index(u_id);
+            low[u] = t;
+            disc[u] = t;
+        }
+        DfsEvent::TreeEdge(u_id, v_id, _) => {
+            let u = graph.to_index(u_id);
+            let v = graph.to_index(v_id);
+            parent[v] = u;
+            if is_root(&parent, u) {
+                root_children += 1;
+            }
+            if need_components {
+                edge_stack.push((u_id, v_id));
+            }
+        }
+        DfsEvent::BackEdge(u_id, v_id, _) => {
+            let u = graph.to_index(u_id);
+            let v = graph.to_index(v_id);
+
+            // do *not* consider ``(u, v)`` as a back edge if ``(v, u)`` is a tree edge.
+            if v != parent[u] {
+                low[u] = low[u].min(disc[v]);
+                if need_components {
+                    edge_stack.push((u_id, v_id));
+                }
+            }
+        }
+        DfsEvent::Finish(u_id, _) => {
+            let u = graph.to_index(u_id);
+            if is_root(&parent, u) {
+                if root_children > 1 {
+                    points.insert(u_id);
+                }
+                // restart ``root_children`` for the remaining connected components
+                root_children = 0;
+            } else {
+                let pu = parent[u];
+                let pu_id = graph.from_index(pu);
+                low[pu] = low[pu].min(low[u]);
+
+                if !is_root(&parent, pu) && low[u] >= disc[pu] {
+                    points.insert(pu_id);
+                    // now find a biconnected component that the
+                    // current articulation point belongs.
+                    if need_components {
+                        if let Some(at) = edge_stack.iter().rposition(|&x| x == (pu_id, u_id)) {
+                            tmp_components.extend(
+                                edge_stack[at..].iter().map(|edge| (*edge, num_components)),
+                            );
+                            edge_stack.truncate(at);
+                            num_components += 1;
+                        }
+                    }
+                    if need_bridges && low[u] != disc[pu] {
+                        tmp_bridges.insert((pu_id, u_id));
+                    }
+                }
+
+                if is_root(&parent, pu) && need_components {
+                    if let Some(at) = edge_stack.iter().position(|&x| x == (pu_id, u_id)) {
+                        tmp_components
+                            .extend(edge_stack[at..].iter().map(|edge| (*edge, num_components)));
+                        edge_stack.truncate(at);
+                        num_components += 1;
+                    }
+                }
+            }
+        }
+        _ => (),
+    });
+
+    if let Some(x) = components {
+        *x = tmp_components;
+    }
+    if let Some(x) = bridges {
+        *x = tmp_bridges;
+    }
+
+    points
 }
 
 /// Return the articulation points of an undirected graph.
@@ -89,103 +210,55 @@ where
         + IntoNodeIdentifiers,
     G::NodeId: Eq + Hash,
 {
-    let num_nodes = graph.node_bound();
+    _articulation_points(graph, components, None)
+}
 
-    let mut low = vec![NULL; num_nodes];
-    let mut disc = vec![NULL; num_nodes];
-    let mut parent = vec![NULL; num_nodes];
-
-    let mut root_children: usize = 0;
-    let mut points = HashSet::new();
-
-    let mut edge_stack = Vec::new();
-    let mut tmp_components = if components.is_some() {
-        HashMap::with_capacity(graph.edge_count())
-    } else {
-        HashMap::new()
-    };
-    let mut num_components: usize = 0;
-
-    depth_first_search(graph, graph.node_identifiers(), |event| match event {
-        DfsEvent::Discover(u_id, Time(t)) => {
-            let u = graph.to_index(u_id);
-            low[u] = t;
-            disc[u] = t;
-        }
-        DfsEvent::TreeEdge(u_id, v_id, _) => {
-            let u = graph.to_index(u_id);
-            let v = graph.to_index(v_id);
-            parent[v] = u;
-            if is_root(&parent, u) {
-                root_children += 1;
-            }
-            if components.is_some() {
-                edge_stack.push((u_id, v_id));
-            }
-        }
-        DfsEvent::BackEdge(u_id, v_id, _) => {
-            let u = graph.to_index(u_id);
-            let v = graph.to_index(v_id);
-
-            // do *not* consider ``(u, v)`` as a back edge if ``(v, u)`` is a tree edge.
-            if v != parent[u] {
-                low[u] = low[u].min(disc[v]);
-                if components.is_some() {
-                    edge_stack.push((u_id, v_id));
-                }
-            }
-        }
-        DfsEvent::Finish(u_id, _) => {
-            let u = graph.to_index(u_id);
-            if is_root(&parent, u) {
-                if root_children > 1 {
-                    points.insert(u_id);
-                }
-                // restart ``root_children`` for the remaining connected components
-                root_children = 0;
-            } else {
-                let pu = parent[u];
-                let pu_id = graph.from_index(pu);
-                low[pu] = low[pu].min(low[u]);
-
-                if !is_root(&parent, pu) && low[u] >= disc[pu] {
-                    points.insert(pu_id);
-                    // now find a biconnected component that the
-                    // current articulation point belongs.
-                    if components.is_some() {
-                        if let Some(at) = edge_stack.iter().rposition(|&x| x == (pu_id, u_id)) {
-                            tmp_components.extend(
-                                edge_stack[at..].iter().map(|edge| (*edge, num_components)),
-                            );
-                            edge_stack.truncate(at);
-                            num_components += 1;
-                        }
-                    }
-                }
-
-                if is_root(&parent, pu) && components.is_some() {
-                    if let Some(at) = edge_stack.iter().position(|&x| x == (pu_id, u_id)) {
-                        tmp_components
-                            .extend(edge_stack[at..].iter().map(|edge| (*edge, num_components)));
-                        edge_stack.truncate(at);
-                        num_components += 1;
-                    }
-                }
-            }
-        }
-        _ => {}
-    });
-
-    if let Some(x) = components {
-        *x = tmp_components;
-    }
-
-    points
+/// Return the bridges of an undirected graph.
+///
+/// Bridges are edges that, if removed, would increase the number of
+/// connected components of a graph.
+///
+/// # Note
+/// The function implicitly assumes that there are no parallel edges
+/// or self loops. It may produce incorrect/unexpected results if the
+/// input graph has self loops or parallel edges.
+///
+///
+/// # Example:
+/// ```rust
+/// use std::iter::FromIterator;
+/// use hashbrown::{HashMap, HashSet};
+///
+/// use rustworkx_core::connectivity::bridges;
+/// use rustworkx_core::petgraph::graph::UnGraph;
+/// use rustworkx_core::petgraph::graph::node_index as nx;
+///
+/// let graph = UnGraph::<(), ()>::from_edges(&[
+///    (0, 1), (0, 2), (1, 2), (1, 3),
+/// ]);
+///
+/// let bridges = bridges(&graph);
+///
+/// assert_eq!(bridges, HashSet::from_iter([(nx(1), nx(3))]));
+/// ```
+pub fn bridges<G>(graph: G) -> HashSet<Edge<G>>
+where
+    G: GraphProp<EdgeType = Undirected>
+        + EdgeCount
+        + IntoEdges
+        + Visitable
+        + NodeIndexable
+        + IntoNodeIdentifiers,
+    G::NodeId: Eq + Hash,
+{
+    let mut bridges = HashSet::new();
+    _articulation_points(graph, None, Some(&mut bridges));
+    bridges
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::connectivity::articulation_points;
+    use crate::connectivity::{articulation_points, bridges};
     use hashbrown::{HashMap, HashSet};
     use petgraph::graph::node_index as nx;
     use petgraph::prelude::*;
@@ -193,7 +266,7 @@ mod tests {
 
     #[test]
     fn test_articulation_points_repetitions() {
-        let graph = UnGraph::<(), ()>::from_edges(&[(0, 1), (1, 2), (1, 3)]);
+        let graph = UnGraph::<(), ()>::from_edges([(0, 1), (1, 2), (1, 3)]);
 
         let a_points = articulation_points(&graph, None);
 
@@ -203,8 +276,7 @@ mod tests {
     #[test]
     fn test_articulation_points_cycle() {
         // create a cycle graph
-        let graph =
-            UnGraph::<(), ()>::from_edges(&[(0, 1), (1, 2), (2, 0), (1, 3), (3, 4), (4, 1)]);
+        let graph = UnGraph::<(), ()>::from_edges([(0, 1), (1, 2), (2, 0), (1, 3), (3, 4), (4, 1)]);
 
         let a_points = articulation_points(&graph, None);
 
@@ -212,10 +284,39 @@ mod tests {
     }
 
     #[test]
+    fn test_single_bridge() {
+        let graph = UnGraph::<(), ()>::from_edges([
+            (1, 2),
+            (2, 3),
+            (3, 4),
+            (3, 5),
+            (5, 6),
+            (6, 7),
+            (7, 8),
+            (5, 9),
+            (9, 10),
+            // Nontree edges.
+            (1, 3),
+            (1, 4),
+            (2, 5),
+            (5, 10),
+            (6, 8),
+        ]);
+
+        assert_eq!(bridges(&graph), HashSet::from_iter([(nx(5), nx(6))]));
+    }
+
+    #[test]
+    // generate test cases for bridges
+    fn test_bridges_cycle() {
+        let graph = UnGraph::<(), ()>::from_edges([(0, 1), (1, 2), (2, 0), (1, 3), (3, 4), (4, 1)]);
+        assert_eq!(bridges(&graph), HashSet::from_iter([]));
+    }
+
+    #[test]
     fn test_biconnected_components_cycle() {
         // create a cycle graph
-        let graph =
-            UnGraph::<(), ()>::from_edges(&[(0, 1), (1, 2), (2, 0), (1, 3), (3, 4), (4, 1)]);
+        let graph = UnGraph::<(), ()>::from_edges([(0, 1), (1, 2), (2, 0), (1, 3), (3, 4), (4, 1)]);
 
         let mut components = HashMap::new();
         let _ = articulation_points(&graph, Some(&mut components));
@@ -236,7 +337,7 @@ mod tests {
     #[test]
     fn test_biconnected_components1() {
         // exmaple from https://web.archive.org/web/20121229123447/http://www.ibluemojo.com/school/articul_algorithm.html
-        let graph = UnGraph::<(), ()>::from_edges(&[
+        let graph = UnGraph::<(), ()>::from_edges([
             (0, 1),
             (0, 5),
             (0, 6),
@@ -315,7 +416,7 @@ mod tests {
         let i = graph.add_node("I");
         let j = graph.add_node("J");
 
-        graph.extend_with_edges(&[
+        graph.extend_with_edges([
             (a, b),
             (b, c),
             (c, a),
@@ -362,8 +463,10 @@ mod tests {
 
         let mut components = HashMap::new();
         let a_points = articulation_points(&graph, Some(&mut components));
+        let bridges = bridges(&graph);
 
         assert_eq!(a_points, HashSet::new());
+        assert_eq!(bridges, HashSet::new());
         assert_eq!(components, HashMap::new());
     }
 }

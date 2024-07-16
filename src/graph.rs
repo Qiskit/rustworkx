@@ -20,13 +20,13 @@ use std::io::{BufReader, BufWriter};
 use std::str;
 
 use hashbrown::{HashMap, HashSet};
-use indexmap::IndexSet;
 use rustworkx_core::dictmap::*;
+use rustworkx_core::graph_ext::*;
 
 use pyo3::exceptions::PyIndexError;
 use pyo3::gc::PyVisit;
 use pyo3::prelude::*;
-use pyo3::types::{PyBool, PyDict, PyList, PyString, PyTuple};
+use pyo3::types::{IntoPyDict, PyBool, PyDict, PyList, PyString, PyTuple};
 use pyo3::PyTraverseError;
 use pyo3::Python;
 
@@ -40,10 +40,10 @@ use crate::iterators::NodeMap;
 use super::dot_utils::build_dot;
 use super::iterators::{EdgeIndexMap, EdgeIndices, EdgeList, NodeIndices, WeightedEdgeList};
 use super::{
-    find_node_by_weight, merge_duplicates, weight_callable, IsNan, NoEdgeBetweenNodes,
-    NodesRemoved, StablePyGraph,
+    find_node_by_weight, weight_callable, IsNan, NoEdgeBetweenNodes, NodesRemoved, StablePyGraph,
 };
 
+use crate::RxPyResult;
 use petgraph::algo;
 use petgraph::graph::{EdgeIndex, NodeIndex};
 use petgraph::prelude::*;
@@ -138,6 +138,14 @@ use petgraph::visit::{
 /// :param attrs: An optional attributes payload to assign to the
 ///     :attr:`~.PyGraph.attrs` attribute. This can be any Python object. If
 ///     it is not specified :attr:`~.PyGraph.attrs` will be set to ``None``.
+/// :param int node_count_hint: An optional hint that will allocate enough capacity to store this
+///     many nodes before needing to grow. This does not prepopulate any nodes with data, it is
+///     only a potential performance optimization if the complete size of the graph is known in
+///     advance.
+/// :param int edge_count_hint: An optional hint that will allocate enough capacity to store this
+///     many edges before needing to grow.  This does not prepopulate any edges with data, it is
+///     only a potential performance optimization if the complete size of the graph is known in
+///     advance.
 #[pyclass(mapping, module = "rustworkx", subclass)]
 #[derive(Clone)]
 pub struct PyGraph {
@@ -183,18 +191,38 @@ impl PyGraph {
 #[pymethods]
 impl PyGraph {
     #[new]
-    #[pyo3(signature=(multigraph=true, attrs=None), text_signature = "(/, multigraph=True, attrs=None)")]
-    fn new(py: Python, multigraph: bool, attrs: Option<PyObject>) -> Self {
+    #[pyo3(signature=(multigraph=true, attrs=None, *, node_count_hint=None, edge_count_hint=None))]
+    fn new(
+        py: Python,
+        multigraph: bool,
+        attrs: Option<PyObject>,
+        node_count_hint: Option<usize>,
+        edge_count_hint: Option<usize>,
+    ) -> Self {
         PyGraph {
-            graph: StablePyGraph::<Undirected>::default(),
+            graph: StablePyGraph::<Undirected>::with_capacity(
+                node_count_hint.unwrap_or_default(),
+                edge_count_hint.unwrap_or_default(),
+            ),
             node_removed: false,
             multigraph,
             attrs: attrs.unwrap_or_else(|| py.None()),
         }
     }
 
+    fn __getnewargs_ex__<'py>(&self, py: Python<'py>) -> (Py<PyTuple>, Bound<'py, PyDict>) {
+        (
+            (self.multigraph, self.attrs.clone_ref(py)).into_py(py),
+            [
+                ("node_count_hint", self.graph.node_bound()),
+                ("edge_count_hint", self.graph.edge_bound()),
+            ]
+            .into_py_dict_bound(py),
+        )
+    }
+
     fn __getstate__(&self, py: Python) -> PyResult<PyObject> {
-        let mut nodes: Vec<PyObject> = Vec::with_capacity(self.graph.node_count());
+        let mut nodes: Vec<PyObject> = Vec::with_capacity(self.graph.node_bound());
         let mut edges: Vec<PyObject> = Vec::with_capacity(self.graph.edge_bound());
 
         // save nodes to a list along with its index
@@ -216,43 +244,27 @@ impl PyGraph {
             edges.push(edge);
         }
 
-        let out_dict = PyDict::new(py);
-        let nodes_lst: PyObject = PyList::new(py, nodes).into();
-        let edges_lst: PyObject = PyList::new(py, edges).into();
+        let out_dict = PyDict::new_bound(py);
+        let nodes_lst: PyObject = PyList::new_bound(py, nodes).into();
+        let edges_lst: PyObject = PyList::new_bound(py, edges).into();
         out_dict.set_item("nodes", nodes_lst)?;
         out_dict.set_item("edges", edges_lst)?;
         out_dict.set_item("nodes_removed", self.node_removed)?;
-        out_dict.set_item("multigraph", self.multigraph)?;
-        out_dict.set_item("attrs", self.attrs.clone_ref(py))?;
         Ok(out_dict.into())
     }
 
     fn __setstate__(&mut self, py: Python, state: PyObject) -> PyResult<()> {
-        let dict_state = state.downcast::<PyDict>(py)?;
-        let nodes_lst = dict_state
-            .get_item("nodes")?
-            .unwrap()
-            .downcast::<PyList>()?;
-        let edges_lst = dict_state
-            .get_item("edges")?
-            .unwrap()
-            .downcast::<PyList>()?;
+        let dict_state = state.downcast_bound::<PyDict>(py)?;
+        let binding = dict_state.get_item("nodes")?.unwrap();
+        let nodes_lst = binding.downcast::<PyList>()?;
+        let binding = dict_state.get_item("edges")?.unwrap();
+        let edges_lst = binding.downcast::<PyList>()?;
 
-        self.graph = StablePyGraph::<Undirected>::default();
-        self.multigraph = dict_state
-            .get_item("multigraph")?
-            .unwrap()
-            .downcast::<PyBool>()?
-            .extract()?;
         self.node_removed = dict_state
             .get_item("nodes_removed")?
             .unwrap()
             .downcast::<PyBool>()?
             .extract()?;
-        self.attrs = match dict_state.get_item("attrs")? {
-            Some(attr) => attr.into(),
-            None => py.None(),
-        };
         // graph is empty, stop early
         if nodes_lst.is_empty() {
             return Ok(());
@@ -271,11 +283,8 @@ impl PyGraph {
             }
         } else if nodes_lst.len() == 1 {
             // graph has only one node, handle logic here to save one if in the loop later
-            let item = nodes_lst
-                .get_item(0)
-                .unwrap()
-                .downcast::<PyTuple>()
-                .unwrap();
+            let binding = nodes_lst.get_item(0).unwrap();
+            let item = binding.downcast::<PyTuple>().unwrap();
             let node_idx: usize = item.get_item(0).unwrap().extract().unwrap();
             let node_w = item.get_item(1).unwrap().extract().unwrap();
 
@@ -287,11 +296,8 @@ impl PyGraph {
                 self.graph.remove_node(NodeIndex::new(i));
             }
         } else {
-            let last_item = nodes_lst
-                .get_item(nodes_lst.len() - 1)
-                .unwrap()
-                .downcast::<PyTuple>()
-                .unwrap();
+            let binding = nodes_lst.get_item(nodes_lst.len() - 1).unwrap();
+            let last_item = binding.downcast::<PyTuple>().unwrap();
 
             // list of temporary nodes that will be removed later to re-create holes
             let node_bound_1: usize = last_item.get_item(0).unwrap().extract().unwrap();
@@ -360,18 +366,7 @@ impl PyGraph {
         if !self.multigraph {
             return false;
         }
-        let mut edges: HashSet<[NodeIndex; 2]> =
-            HashSet::with_capacity(2 * self.graph.edge_count());
-        for edge in self.graph.edge_references() {
-            let endpoints = [edge.source(), edge.target()];
-            let endpoints_rev = [edge.target(), edge.source()];
-            if edges.contains(&endpoints) || edges.contains(&endpoints_rev) {
-                return true;
-            }
-            edges.insert(endpoints);
-            edges.insert(endpoints_rev);
-        }
-        false
+        self.graph.has_parallel_edges()
     }
 
     /// Clears all nodes and edges
@@ -422,6 +417,24 @@ impl PyGraph {
         }
     }
 
+    /// Return a list of indices of all edges between specified nodes
+    ///
+    /// :returns: A list of all the edge indices connecting the specified start and end node
+    /// :rtype: EdgeIndices
+    pub fn edge_indices_from_endpoints(&self, node_a: usize, node_b: usize) -> EdgeIndices {
+        let node_a_index = NodeIndex::new(node_a);
+        let node_b_index = NodeIndex::new(node_b);
+
+        EdgeIndices {
+            edges: self
+                .graph
+                .edges_directed(node_a_index, petgraph::Direction::Outgoing)
+                .filter(|edge| edge.target() == node_b_index)
+                .map(|edge| edge.id().index())
+                .collect(),
+        }
+    }
+
     /// Return a list of all node data.
     ///
     /// :returns: A list of all the node data objects in the graph
@@ -458,6 +471,18 @@ impl PyGraph {
     #[pyo3(text_signature = "(self)")]
     pub fn node_indexes(&self) -> NodeIndices {
         self.node_indices()
+    }
+
+    /// Return True if there is a node.
+    ///
+    /// :param int node: The index for the node
+    ///
+    /// :returns: True if there is a node false if there is no node
+    /// :rtype: bool
+    #[pyo3(text_signature = "(self, node, /)")]
+    pub fn has_node(&self, node: usize) -> bool {
+        let index = NodeIndex::new(node);
+        self.graph.contains_node(index)
     }
 
     /// Return True if there is an edge between ``node_a`` and ``node_b``.
@@ -1241,7 +1266,7 @@ impl PyGraph {
                 let mut file = Vec::<u8>::new();
                 build_dot(py, &self.graph, &mut file, graph_attr, node_attr, edge_attr)?;
                 Ok(Some(
-                    PyString::new(py, str::from_utf8(&file)?).to_object(py),
+                    PyString::new_bound(py, str::from_utf8(&file)?).to_object(py),
                 ))
             }
         }
@@ -1354,7 +1379,7 @@ impl PyGraph {
                     Some(del) => pieces[2..].join(del),
                     None => pieces[2..].join(&' '.to_string()),
                 };
-                PyString::new(py, &weight_str).into()
+                PyString::new_bound(py, &weight_str).into()
             } else {
                 py.None()
             };
@@ -1608,7 +1633,7 @@ impl PyGraph {
                 weight.clone_ref(py),
             );
         }
-        let out_dict = PyDict::new(py);
+        let out_dict = PyDict::new_bound(py);
         for (orig_node, new_node) in new_node_map.iter() {
             out_dict.set_item(orig_node.index(), new_node.index())?;
         }
@@ -1799,50 +1824,22 @@ impl PyGraph {
         nodes: Vec<usize>,
         obj: PyObject,
         weight_combo_fn: Option<PyObject>,
-    ) -> PyResult<usize> {
-        let mut indices_to_remove: IndexSet<NodeIndex, ahash::RandomState> =
-            nodes.into_iter().map(NodeIndex::new).collect();
-
-        // Create new node.
-        let node_index = self.graph.add_node(obj);
-
-        // Sanitize new node index from user input.
-        indices_to_remove.remove(&node_index);
-
-        // Determine edges for new node.
-        // note: `edges_directed` returns all edges with `i` as
-        // an endpoint. `Direction::Incoming` configures `edge.target()`
-        // to return `i` and `edge.source()` to return the other node.
-        let mut edges: Vec<_> = indices_to_remove
-            .iter()
-            .flat_map(|&i| self.graph.edges_directed(i, Direction::Incoming))
-            .filter_map(|edge| {
-                let pred = edge.source();
-                if !indices_to_remove.contains(&pred) {
-                    Some((pred, edge.weight().clone_ref(py)))
-                } else {
-                    None
-                }
-            })
-            .collect();
-
-        // Remove nodes that will be replaced.
-        for index in indices_to_remove {
-            self.remove_node(index.index())?;
-        }
-
-        // If `weight_combo_fn` was specified, merge edges according
-        // to that function, even if this is a multigraph. If unspecified,
-        // defer parallel edge handling to `add_edge`.
-        if let Some(merge_fn) = weight_combo_fn {
-            edges = merge_duplicates(edges, |w1, w2| merge_fn.call1(py, (w1, w2)))?;
-        }
-
-        for (source, weight) in edges {
-            self.add_edge(source.index(), node_index.index(), weight)?;
-        }
-
-        Ok(node_index.index())
+    ) -> RxPyResult<usize> {
+        let nodes = nodes.into_iter().map(|i| NodeIndex::new(i));
+        let res = match (weight_combo_fn, &self.multigraph) {
+            (Some(user_callback), _) => {
+                self.graph
+                    .contract_nodes_simple(nodes, obj, |w1, w2| user_callback.call1(py, (w1, w2)))?
+            }
+            (None, false) => {
+                // By default, just take first edge.
+                self.graph.contract_nodes_simple(nodes, obj, move |w1, _| {
+                    Ok::<_, PyErr>(w1.clone_ref(py))
+                })?
+            }
+            (None, true) => self.graph.contract_nodes(nodes, obj),
+        };
+        Ok(res.index())
     }
 
     /// Return a new PyGraph object for a subgraph of this graph
@@ -2031,7 +2028,7 @@ impl PyGraph {
     /// required to return a boolean value stating whether the node's data payload fits some criteria.
     ///
     /// For example::
-    ///     
+    ///
     ///     from rustworkx import PyGraph
     ///
     ///     graph = PyGraph()
@@ -2079,8 +2076,8 @@ impl PyGraph {
     ///     def my_filter_function(edge):
     ///         if edge:
     ///             return edge == 'B'
-    ///         return False  
-    ///        
+    ///         return False
+    ///
     ///     indices = graph.filter_edges(my_filter_function)
     ///     assert indices == [1]
     ///

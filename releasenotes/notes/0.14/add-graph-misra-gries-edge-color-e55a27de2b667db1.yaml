@@ -1,0 +1,22 @@
+---
+features:
+  - |
+    Added a new function, :func:`~.graph_misra_gries_edge_color` to color edges
+    of a :class:`~.PyGraph` object using the Misra-Gries edge coloring algorithm.
+    
+    The above algorithm is described in the paper paper: "A constructive proof of 
+    Vizing's theorem" by Misra and Gries, 1992.
+    
+    The coloring produces at most :math:`d + 1` colors where :math:`d` is the maximum degree
+    of the graph.
+    
+    .. jupyter-execute::
+    
+        import rustworkx as rx
+        from rustworkx.visualization import mpl_draw
+    
+        graph = rx.generators.cycle_graph(7)
+        edge_colors = rx.graph_misra_gries_edge_color(graph)
+        assert edge_colors == {0: 0, 1: 1, 2: 2, 3: 0, 4: 1, 5: 0, 6: 2}
+        mpl_draw(graph, edge_color=[edge_colors[i] for i in range(graph.num_edges())])
+

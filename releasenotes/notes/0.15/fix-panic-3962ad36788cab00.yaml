@@ -1,0 +1,15 @@
+---
+fixes:
+  - |
+    Fixed an issue with the Dijkstra path functions:
+
+      * :func:`rustworkx.dijkstra_shortest_paths`
+      * :func:`rustworkx.dijkstra_shortest_path_lengths`
+      * :func:`rustworkx.bellman_ford_shortest_path_lengths`
+      * :func:`rustworkx.bellman_ford_shortest_paths`
+      * :func:`rustworkx.astar_shortest_path`
+
+    where a ``PanicException`` was raised without much detail when an
+    invalid node index was passed in to the ``source`` argument. This has been
+    corrected so an ``IndexError`` is raised instead.
+    Fixed `#1117 <https://github.com/Qiskit/rustworkx/issues/1117>`__

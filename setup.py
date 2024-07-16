@@ -26,11 +26,12 @@ mpl_extras = ["matplotlib>=3.0"]
 graphviz_extras = ["pillow>=5.4"]
 
 PKG_NAME = os.getenv("RUSTWORKX_PKG_NAME", "rustworkx")
-PKG_VERSION = "0.14.0"
+PKG_VERSION = "0.16.0"
 PKG_PACKAGES = ["rustworkx", "rustworkx.visualization"]
-PKG_INSTALL_REQUIRES = ["numpy>=1.16.0,<2"]
+PKG_INSTALL_REQUIRES = ["numpy>=1.16.0,<3"]
 RUST_EXTENSIONS = [RustExtension("rustworkx.rustworkx", "Cargo.toml",
                                  binding=Binding.PyO3, debug=rustworkx_debug)]
+RUST_OPTS ={"bdist_wheel": {"py_limited_api": "cp38"}}
 
 retworkx_readme_compat = """# retworkx
 
@@ -79,7 +80,7 @@ setup(
     project_urls={
         "Bug Tracker": "https://github.com/Qiskit/rustworkx/issues",
         "Source Code": "https://github.com/Qiskit/rustworkx",
-        "Documentation": "https://qiskit.org/ecosystem/rustworkx/",
+        "Documentation": "https://www.rustworkx.org/",
     },
     rust_extensions=RUST_EXTENSIONS,
     include_package_data=True,
@@ -91,5 +92,6 @@ setup(
         "mpl": mpl_extras,
         "graphviz": graphviz_extras,
         "all": mpl_extras + graphviz_extras,
-    }
+    },
+    options=RUST_OPTS,
 )

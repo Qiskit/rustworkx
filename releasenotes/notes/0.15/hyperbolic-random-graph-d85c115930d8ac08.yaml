@@ -1,0 +1,21 @@
+features:
+  - |
+    Adds new random graph generator function, :func:`.hyperbolic_random_graph`
+    to sample the hyperbolic random graph model. For example:
+
+    .. jupyter-execute::
+
+        import math
+
+        import rustworkx as rx
+        from rustworkx.visualization import mpl_draw
+
+        graph = rx.hyperbolic_random_graph(
+          [[math.sinh(0.5), 0, 3.14159], [-math.sinh(1), 0, -3.14159]],
+            2.55,
+            None,
+        )
+        mpl_draw(graph)
+  - |
+    Adds new function to the rustworkx-core module ``rustworkx_core::generators``
+    ``hyperbolic_random_graph()`` that samples the hyperbolic random graph model.

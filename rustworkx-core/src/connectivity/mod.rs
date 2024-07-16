@@ -26,6 +26,7 @@ pub use all_simple_paths::{
     all_simple_paths_multiple_targets, longest_simple_path_multiple_targets,
 };
 pub use biconnected::articulation_points;
+pub use biconnected::bridges;
 pub use chain::chain_decomposition;
 pub use conn_components::bfs_undirected;
 pub use conn_components::connected_components;

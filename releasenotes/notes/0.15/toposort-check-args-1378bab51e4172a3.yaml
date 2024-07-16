@@ -1,0 +1,8 @@
+---
+features:
+  - |
+    :class:`.TopologicalSorter` now has a ``check_args`` keyword argument, which can be set to
+    ``False`` to disable the runtime detection of invalid arguments to
+    :meth:`~.TopologicalSorter.done`.  This provides a memory and runtime improvement to the online
+    sorter, at the cost that the results will be undefined and likely meaningless if invalid values
+    are given.

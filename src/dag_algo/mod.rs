@@ -10,18 +10,19 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-mod longest_path;
-
 use super::DictMap;
-use hashbrown::{HashMap, HashSet};
+use hashbrown::HashMap;
 use indexmap::IndexSet;
+use rustworkx_core::dag_algo::layers as core_layers;
 use rustworkx_core::dictmap::InitWithHasher;
-use std::cmp::Ordering;
-use std::collections::BinaryHeap;
 
 use super::iterators::NodeIndices;
-use crate::{digraph, DAGHasCycle, InvalidNode, StablePyGraph};
+use crate::{digraph, DAGHasCycle, InvalidNode, RxPyResult, StablePyGraph};
 
+use rustworkx_core::dag_algo::collect_bicolor_runs as core_collect_bicolor_runs;
+use rustworkx_core::dag_algo::collect_runs as core_collect_runs;
+use rustworkx_core::dag_algo::lexicographical_topological_sort as core_lexico_topo_sort;
+use rustworkx_core::dag_algo::longest_path as core_longest_path;
 use rustworkx_core::traversal::dfs_edges;
 
 use pyo3::exceptions::PyValueError;
@@ -30,9 +31,66 @@ use pyo3::types::PyList;
 use pyo3::Python;
 
 use petgraph::algo;
-use petgraph::graph::NodeIndex;
 use petgraph::prelude::*;
-use petgraph::visit::NodeCount;
+use petgraph::stable_graph::EdgeReference;
+use petgraph::visit::NodeIndexable;
+
+use num_traits::{Num, Zero};
+
+/// Calculate the longest path in a directed acyclic graph (DAG).
+///
+/// This function interfaces with the Python `PyDiGraph` object to compute the longest path
+/// using the provided weight function.
+///
+/// # Arguments
+/// * `graph`: Reference to a `PyDiGraph` object.
+/// * `weight_fn`: A callable that takes the source node index, target node index, and the weight
+///   object and returns the weight of the edge as a `PyResult<T>`.
+///
+/// # Type Parameters
+/// * `F`: Type of the weight function.
+/// * `T`: The type of the edge weight. Must implement `Num`, `Zero`, `PartialOrd`, and `Copy`.
+///
+/// # Returns
+/// * `PyResult<(Vec<G::NodeId>, T)>` representing the longest path as a sequence of node indices and its total weight.
+fn longest_path<F, T>(graph: &digraph::PyDiGraph, mut weight_fn: F) -> PyResult<(Vec<usize>, T)>
+where
+    F: FnMut(usize, usize, &PyObject) -> PyResult<T>,
+    T: Num + Zero + PartialOrd + Copy,
+{
+    let dag = &graph.graph;
+
+    // Create a new weight function that matches the required signature
+    let edge_cost = |edge_ref: EdgeReference<'_, PyObject>| -> Result<T, PyErr> {
+        let source = edge_ref.source().index();
+        let target = edge_ref.target().index();
+        let weight = edge_ref.weight();
+        weight_fn(source, target, weight)
+    };
+
+    let (path, path_weight) = match core_longest_path(dag, edge_cost) {
+        Ok(Some((path, path_weight))) => (
+            path.into_iter().map(NodeIndex::index).collect(),
+            path_weight,
+        ),
+        Ok(None) => return Err(DAGHasCycle::new_err("The graph contains a cycle")),
+        Err(e) => return Err(e),
+    };
+
+    Ok((path, path_weight))
+}
+
+/// Return a pair of [`petgraph::Direction`] values corresponding to the "forwards" and "backwards"
+/// direction of graph traversal, based on whether the graph is being traved forwards (following
+/// the edges) or backward (reversing along edges).  The order of returns is (forwards, backwards).
+#[inline(always)]
+pub fn traversal_directions(reverse: bool) -> (petgraph::Direction, petgraph::Direction) {
+    if reverse {
+        (petgraph::Direction::Outgoing, petgraph::Direction::Incoming)
+    } else {
+        (petgraph::Direction::Incoming, petgraph::Direction::Outgoing)
+    }
+}
 
 /// Find the longest path in a DAG
 ///
@@ -70,7 +128,7 @@ pub fn dag_longest_path(
             }
         };
     Ok(NodeIndices {
-        nodes: longest_path::longest_path(graph, edge_weight_callable)?.0,
+        nodes: longest_path(graph, edge_weight_callable)?.0,
     })
 }
 
@@ -109,7 +167,7 @@ pub fn dag_longest_path_length(
                 None => Ok(1),
             }
         };
-    let (_, path_weight) = longest_path::longest_path(graph, edge_weight_callable)?;
+    let (_, path_weight) = longest_path(graph, edge_weight_callable)?;
     Ok(path_weight)
 }
 
@@ -151,7 +209,7 @@ pub fn dag_weighted_longest_path(
         Ok(float_res)
     };
     Ok(NodeIndices {
-        nodes: longest_path::longest_path(graph, edge_weight_callable)?.0,
+        nodes: longest_path(graph, edge_weight_callable)?.0,
     })
 }
 
@@ -192,7 +250,7 @@ pub fn dag_weighted_longest_path_length(
         }
         Ok(float_res)
     };
-    let (_, path_weight) = longest_path::longest_path(graph, edge_weight_callable)?;
+    let (_, path_weight) = longest_path(graph, edge_weight_callable)?;
     Ok(path_weight)
 }
 
@@ -239,193 +297,174 @@ pub fn layers(
     first_layer: Vec<usize>,
     index_output: bool,
 ) -> PyResult<PyObject> {
-    let mut output_indices: Vec<Vec<usize>> = Vec::new();
-    let mut output: Vec<Vec<&PyObject>> = Vec::new();
-    // Convert usize to NodeIndex
-    let mut first_layer_index: Vec<NodeIndex> = Vec::new();
-    for index in first_layer {
-        first_layer_index.push(NodeIndex::new(index));
-    }
-
-    let mut cur_layer = first_layer_index;
-    let mut next_layer: Vec<NodeIndex> = Vec::new();
-    let mut predecessor_count: HashMap<NodeIndex, usize> = HashMap::new();
-
-    let mut layer_node_data: Vec<&PyObject> = Vec::new();
-    if !index_output {
-        for layer_node in &cur_layer {
-            let node_data = match dag.graph.node_weight(*layer_node) {
-                Some(data) => data,
-                None => {
-                    return Err(InvalidNode::new_err(format!(
-                        "An index input in 'first_layer' {} is not a valid node index in the graph",
-                        layer_node.index()
-                    )))
-                }
-            };
-            layer_node_data.push(node_data);
+    for layer_node in &first_layer {
+        if !dag.graph.contains_node(NodeIndex::new(*layer_node)) {
+            return Err(InvalidNode::new_err(format!(
+                "An index input in 'first_layer' {} is not a valid node index in the graph",
+                layer_node
+            )));
         }
-        output.push(layer_node_data);
+    }
+    let result = core_layers(
+        &dag.graph,
+        first_layer
+            .iter()
+            .map(|x| dag.graph.from_index(*x))
+            .collect(),
+    );
+    if index_output {
+        let pylist = PyList::empty_bound(py);
+        for layer in result {
+            match layer {
+                Ok(layer) => pylist.append(
+                    layer
+                        .iter()
+                        .map(|x| dag.graph.to_index(*x))
+                        .collect::<Vec<usize>>(),
+                )?,
+                Err(e) => return Err(DAGHasCycle::new_err(e.0)),
+            }
+        }
+        Ok(pylist.into())
     } else {
-        for layer_node in &cur_layer {
-            if !dag.graph.contains_node(*layer_node) {
-                return Err(InvalidNode::new_err(format!(
-                    "An index input in 'first_layer' {} is not a valid node index in the graph",
-                    layer_node.index()
-                )));
+        let pylist = PyList::empty_bound(py);
+        for layer in result {
+            match layer {
+                Ok(layer) => pylist.append(
+                    layer
+                        .iter()
+                        .map(|x| dag.graph.node_weight(*x))
+                        .collect::<Vec<Option<&PyObject>>>(),
+                )?,
+                Err(e) => return Err(DAGHasCycle::new_err(e.0)),
             }
         }
-        output_indices.push(cur_layer.iter().map(|x| x.index()).collect());
-    }
-
-    // Iterate until there are no more
-    while !cur_layer.is_empty() {
-        for node in &cur_layer {
-            let children = dag
-                .graph
-                .neighbors_directed(*node, petgraph::Direction::Outgoing);
-            let mut used_indices: HashSet<NodeIndex> = HashSet::new();
-            for succ in children {
-                // Skip duplicate successors
-                if used_indices.contains(&succ) {
-                    continue;
-                }
-                used_indices.insert(succ);
-                let mut multiplicity: usize = 0;
-                let raw_edges = dag
-                    .graph
-                    .edges_directed(*node, petgraph::Direction::Outgoing);
-                for edge in raw_edges {
-                    if edge.target() == succ {
-                        multiplicity += 1;
-                    }
-                }
-                predecessor_count
-                    .entry(succ)
-                    .and_modify(|e| *e -= multiplicity)
-                    .or_insert(dag.in_degree(succ.index()) - multiplicity);
-                if *predecessor_count.get(&succ).unwrap() == 0 {
-                    next_layer.push(succ);
-                    predecessor_count.remove(&succ);
-                }
-            }
-        }
-        if !index_output {
-            let mut layer_node_data: Vec<&PyObject> = Vec::new();
-
-            for layer_node in &next_layer {
-                layer_node_data.push(&dag.graph[*layer_node]);
-            }
-            if !layer_node_data.is_empty() {
-                output.push(layer_node_data);
-            }
-        } else if !next_layer.is_empty() {
-            output_indices.push(next_layer.iter().map(|x| x.index()).collect());
-        }
-        cur_layer = next_layer;
-        next_layer = Vec::new();
-    }
-    if !index_output {
-        Ok(PyList::new(py, output).into())
-    } else {
-        Ok(PyList::new(py, output_indices).into())
+        Ok(pylist.into())
     }
 }
-
 /// Get the lexicographical topological sorted nodes from the provided DAG
 ///
 /// This function returns a list of nodes data in a graph lexicographically
 /// topologically sorted using the provided key function. A topological sort
 /// is a linear ordering of vertices such that for every directed edge from
 /// node :math:`u` to node :math:`v`, :math:`u` comes before :math:`v`
-/// in the ordering.
+/// in the ordering.  If ``reverse`` is set to ``False``, the edges are treated
+/// as if they pointed in the opposite direction.
 ///
 /// This function differs from :func:`~rustworkx.topological_sort` because
 /// when there are ties between nodes in the sort order this function will
 /// use the string returned by the ``key`` argument to determine the output
-/// order used.
+/// order used.  The ``reverse`` argument does not affect the ordering of keys
+/// from this function, only the edges of the graph.
 ///
 /// :param PyDiGraph dag: The DAG to get the topological sorted nodes from
 /// :param callable key: key is a python function or other callable that
 ///     gets passed a single argument the node data from the graph and is
 ///     expected to return a string which will be used for resolving ties
 ///     in the sorting order.
+/// :param bool reverse: If ``False`` (the default), perform a regular
+///     topological ordering.  If ``True``, return the lexicographical
+///     topological order that would have been found if all the edges in the
+///     graph were reversed.  This does not affect the comparisons from the
+///     ``key``.
+/// :param Iterable[int] initial: If given, the initial node indices to start the topological
+///     ordering from.  If not given, the topological ordering will certainly contain every node in
+///     the graph.  If given, only the ``initial`` nodes and nodes that are dominated by the
+///     ``initial`` set will be in the ordering.  Notably, any node that has a natural in degree of
+///     zero will not be in the output ordering if ``initial`` is given and the zero-in-degree node
+///     is not in it.  It is a :exc:`ValueError` to give an `initial` set where the nodes have even
+///     a partial topological order between themselves.
 ///
 /// :returns: A list of node's data lexicographically topologically sorted.
 /// :rtype: list
 #[pyfunction]
-#[pyo3(text_signature = "(dag, key, /)")]
+#[pyo3(signature = (dag, /, key, *, reverse=false, initial=None))]
 pub fn lexicographical_topological_sort(
     py: Python,
     dag: &digraph::PyDiGraph,
     key: PyObject,
-) -> PyResult<PyObject> {
-    let key_callable = |a: &PyObject| -> PyResult<PyObject> {
-        let res = key.call1(py, (a,))?;
-        Ok(res.to_object(py))
+    reverse: bool,
+    initial: Option<&Bound<PyAny>>,
+) -> RxPyResult<PyObject> {
+    let key_callable = |a: NodeIndex| -> PyResult<String> {
+        let weight = &dag.graph[a];
+        let res: String = key.call1(py, (weight,))?.extract(py)?;
+        Ok(res)
     };
-    // HashMap of node_index indegree
-    let node_count = dag.node_count();
-    let mut in_degree_map: HashMap<NodeIndex, usize> = HashMap::with_capacity(node_count);
+    let initial: Option<Vec<NodeIndex>> = match initial {
+        Some(initial) => {
+            let mut initial_vec: Vec<NodeIndex> = Vec::new();
+            for maybe_index in initial.iter()? {
+                let node = NodeIndex::new(maybe_index?.extract::<usize>()?);
+                initial_vec.push(node);
+            }
+            Some(initial_vec)
+        }
+        None => None,
+    };
+    let out_list = core_lexico_topo_sort(&dag.graph, key_callable, reverse, initial.as_deref())?;
+    Ok(PyList::new_bound(
+        py,
+        out_list
+            .into_iter()
+            .map(|node| dag.graph[node].clone_ref(py)),
+    )
+    .into())
+}
+
+/// Return the topological generations of a DAG
+///
+/// A topological generation is node collection in which ancestors of a node in each
+/// generation are guaranteed to be in a previous generation, and any descendants of
+/// a node are guaranteed to be in a following generation. Nodes are guaranteed to
+/// be in the earliest possible generation that they can belong to.
+///
+/// :param PyDiGraph graph: The DAG to get the topological generations from
+///
+/// :returns: A list of topological generations.
+/// :rtype: list
+///
+/// :raises DAGHasCycle: if a cycle is encountered while sorting the graph
+#[pyfunction]
+#[pyo3(text_signature = "(dag, /)")]
+pub fn topological_generations(dag: &digraph::PyDiGraph) -> PyResult<Vec<NodeIndices>> {
+    let mut in_degree_map: HashMap<NodeIndex, usize> = HashMap::new();
+    let mut zero_in_degree: Vec<NodeIndex> = Vec::new();
     for node in dag.graph.node_indices() {
-        in_degree_map.insert(node, dag.in_degree(node.index()));
-    }
-
-    #[derive(Clone, Eq, PartialEq)]
-    struct State {
-        key: String,
-        node: NodeIndex,
-    }
-
-    impl Ord for State {
-        fn cmp(&self, other: &State) -> Ordering {
-            // Notice that the we flip the ordering on costs.
-            // In case of a tie we compare positions - this step is necessary
-            // to make implementations of `PartialEq` and `Ord` consistent.
-            other
-                .key
-                .cmp(&self.key)
-                .then_with(|| other.node.index().cmp(&self.node.index()))
+        let in_degree = dag.in_degree(node.index());
+        if in_degree == 0 {
+            zero_in_degree.push(node);
+        } else {
+            in_degree_map.insert(node, in_degree);
         }
     }
 
-    // `PartialOrd` needs to be implemented as well.
-    impl PartialOrd for State {
-        fn partial_cmp(&self, other: &State) -> Option<Ordering> {
-            Some(self.cmp(other))
-        }
-    }
-    let mut zero_indegree = BinaryHeap::with_capacity(node_count);
-    for (node, degree) in in_degree_map.iter() {
-        if *degree == 0 {
-            let map_key_raw = key_callable(&dag.graph[*node])?;
-            let map_key: String = map_key_raw.extract(py)?;
-            zero_indegree.push(State {
-                key: map_key,
-                node: *node,
-            });
-        }
-    }
-    let mut out_list: Vec<&PyObject> = Vec::with_capacity(node_count);
+    let mut generations: Vec<NodeIndices> = Vec::new();
     let dir = petgraph::Direction::Outgoing;
-    while let Some(State { node, .. }) = zero_indegree.pop() {
-        let neighbors = dag.graph.neighbors_directed(node, dir);
-        for child in neighbors {
-            let child_degree = in_degree_map.get_mut(&child).unwrap();
-            *child_degree -= 1;
-            if *child_degree == 0 {
-                let map_key_raw = key_callable(&dag.graph[child])?;
-                let map_key: String = map_key_raw.extract(py)?;
-                zero_indegree.push(State {
-                    key: map_key,
-                    node: child,
-                });
-                in_degree_map.remove(&child);
+    while !zero_in_degree.is_empty() {
+        let this_generation = zero_in_degree.clone();
+        zero_in_degree.clear();
+        for node in this_generation.iter() {
+            let neighbors = dag.graph.neighbors_directed(*node, dir);
+            for child in neighbors {
+                let child_degree = in_degree_map.get_mut(&child).unwrap();
+                *child_degree -= 1;
+                if *child_degree == 0 {
+                    zero_in_degree.push(child);
+                    in_degree_map.remove(&child);
+                }
             }
         }
-        out_list.push(&dag.graph[node])
+        generations.push(NodeIndices {
+            nodes: this_generation.iter().map(|node| node.index()).collect(),
+        });
     }
-    Ok(PyList::new(py, out_list).into())
+
+    // Check for cycle
+    if !in_degree_map.is_empty() {
+        return Err(DAGHasCycle::new_err("Topological sort encountered a cycle"));
+    }
+    Ok(generations)
 }
 
 /// Return the topological sort of node indices from the provided graph
@@ -470,50 +509,31 @@ pub fn collect_runs(
     graph: &digraph::PyDiGraph,
     filter_fn: PyObject,
 ) -> PyResult<Vec<Vec<PyObject>>> {
-    let mut out_list: Vec<Vec<PyObject>> = Vec::new();
-    let mut seen: HashSet<NodeIndex> = HashSet::with_capacity(graph.node_count());
-
-    let filter_node = |node: &PyObject| -> PyResult<bool> {
-        let res = filter_fn.call1(py, (node,))?;
-        res.extract(py)
+    let filter_node = |node_id| -> Result<bool, PyErr> {
+        let py_node = graph.graph.node_weight(node_id);
+        filter_fn.call1(py, (py_node,))?.extract::<bool>(py)
     };
 
-    let nodes = match algo::toposort(&graph.graph, None) {
-        Ok(nodes) => nodes,
-        Err(_err) => return Err(DAGHasCycle::new_err("Sort encountered a cycle")),
+    let core_runs = match core_collect_runs(&graph.graph, filter_node) {
+        Some(runs) => runs,
+        None => return Err(DAGHasCycle::new_err("The DAG contains a cycle")),
     };
-    for node in nodes {
-        if !filter_node(&graph.graph[node])? || seen.contains(&node) {
-            continue;
-        }
-        seen.insert(node);
-        let mut group: Vec<PyObject> = vec![graph.graph[node].clone_ref(py)];
-        let mut successors: Vec<NodeIndex> = graph
-            .graph
-            .neighbors_directed(node, petgraph::Direction::Outgoing)
+
+    let mut result: Vec<Vec<PyObject>> = Vec::with_capacity(core_runs.size_hint().1.unwrap_or(0));
+    for run_result in core_runs {
+        // This is where a filter function error will be returned, otherwise Result is stripped away
+        let py_run: Vec<PyObject> = run_result?
+            .iter()
+            .map(|node| return graph.graph.node_weight(*node).into_py(py))
             .collect();
-        successors.dedup();
 
-        while successors.len() == 1
-            && filter_node(&graph.graph[successors[0]])?
-            && !seen.contains(&successors[0])
-        {
-            group.push(graph.graph[successors[0]].clone_ref(py));
-            seen.insert(successors[0]);
-            successors = graph
-                .graph
-                .neighbors_directed(successors[0], petgraph::Direction::Outgoing)
-                .collect();
-            successors.dedup();
-        }
-        if !group.is_empty() {
-            out_list.push(group);
-        }
+        result.push(py_run)
     }
-    Ok(out_list)
+
+    Ok(result)
 }
 
-/// Collect runs that match a filter function given edge colors
+/// Collect runs that match a filter function given edge colors.
 ///
 /// A bicolor run is a list of group of nodes connected by edges of exactly
 /// two colors. In addition, all nodes in the group must match the given
@@ -543,101 +563,36 @@ pub fn collect_bicolor_runs(
     filter_fn: PyObject,
     color_fn: PyObject,
 ) -> PyResult<Vec<Vec<PyObject>>> {
-    let mut pending_list: Vec<Vec<PyObject>> = Vec::new();
-    let mut block_id: Vec<Option<usize>> = Vec::new();
-    let mut block_list: Vec<Vec<PyObject>> = Vec::new();
+    let dag = &graph.graph;
 
-    let filter_node = |node: &PyObject| -> PyResult<Option<bool>> {
-        let res = filter_fn.call1(py, (node,))?;
+    let filter_fn_wrapper = |node_index| -> Result<Option<bool>, PyErr> {
+        let node_weight = dag.node_weight(node_index).expect("Invalid NodeId");
+        let res = filter_fn.call1(py, (node_weight,))?;
         res.extract(py)
     };
 
-    let color_edge = |edge: &PyObject| -> PyResult<Option<usize>> {
-        let res = color_fn.call1(py, (edge,))?;
+    let color_fn_wrapper = |edge_index| -> Result<Option<usize>, PyErr> {
+        let edge_weight = dag.edge_weight(edge_index).expect("Invalid EdgeId");
+        let res = color_fn.call1(py, (edge_weight,))?;
         res.extract(py)
     };
 
-    let nodes = match algo::toposort(&graph.graph, None) {
-        Ok(nodes) => nodes,
-        Err(_err) => return Err(DAGHasCycle::new_err("Sort encountered a cycle")),
+    let block_list = match core_collect_bicolor_runs(dag, filter_fn_wrapper, color_fn_wrapper) {
+        Ok(Some(block_list)) => block_list
+            .into_iter()
+            .map(|index_list| {
+                index_list
+                    .into_iter()
+                    .map(|node_index| {
+                        let node_weight = dag.node_weight(node_index).expect("Invalid NodeId");
+                        node_weight.into_py(py)
+                    })
+                    .collect()
+            })
+            .collect(),
+        Ok(None) => return Err(DAGHasCycle::new_err("The graph contains a cycle")),
+        Err(e) => return Err(e),
     };
-
-    // Utility for ensuring pending_list has the color index
-    macro_rules! ensure_vector_has_index {
-        ($pending_list: expr, $block_id: expr, $color: expr) => {
-            if $color >= $pending_list.len() {
-                $pending_list.resize($color + 1, Vec::new());
-                $block_id.resize($color + 1, None);
-            }
-        };
-    }
-
-    for node in nodes {
-        if let Some(is_match) = filter_node(&graph.graph[node])? {
-            let raw_edges = graph
-                .graph
-                .edges_directed(node, petgraph::Direction::Outgoing);
-
-            // Remove all edges that do not yield errors from color_fn
-            let colors = raw_edges
-                .map(|edge| {
-                    let edge_weight = edge.weight();
-                    color_edge(edge_weight)
-                })
-                .collect::<PyResult<Vec<Option<usize>>>>()?;
-
-            // Remove null edges from color_fn
-            let colors = colors.into_iter().flatten().collect::<Vec<usize>>();
-
-            if colors.len() <= 2 && is_match {
-                if colors.len() == 1 {
-                    let c0 = colors[0];
-                    ensure_vector_has_index!(pending_list, block_id, c0);
-                    if let Some(c0_block_id) = block_id[c0] {
-                        block_list[c0_block_id].push(graph.graph[node].clone_ref(py));
-                    } else {
-                        pending_list[c0].push(graph.graph[node].clone_ref(py));
-                    }
-                } else if colors.len() == 2 {
-                    let c0 = colors[0];
-                    let c1 = colors[1];
-                    ensure_vector_has_index!(pending_list, block_id, c0);
-                    ensure_vector_has_index!(pending_list, block_id, c1);
-
-                    if block_id[c0].is_some()
-                        && block_id[c1].is_some()
-                        && block_id[c0] == block_id[c1]
-                    {
-                        block_list[block_id[c0].unwrap_or_default()]
-                            .push(graph.graph[node].clone_ref(py));
-                    } else {
-                        let mut new_block: Vec<PyObject> =
-                            Vec::with_capacity(pending_list[c0].len() + pending_list[c1].len() + 1);
-
-                        // Clears pending lits and add to new block
-                        new_block.append(&mut pending_list[c0]);
-                        new_block.append(&mut pending_list[c1]);
-
-                        new_block.push(graph.graph[node].clone_ref(py));
-
-                        // Create new block, assign its id to color pair
-                        block_id[c0] = Some(block_list.len());
-                        block_id[c1] = Some(block_list.len());
-                        block_list.push(new_block);
-                    }
-                }
-            } else {
-                for color in colors {
-                    ensure_vector_has_index!(pending_list, block_id, color);
-                    if let Some(color_block_id) = block_id[color] {
-                        block_list[color_block_id].append(&mut pending_list[color]);
-                    }
-                    block_id[color] = None;
-                    pending_list[color].clear();
-                }
-            }
-        }
-    }
 
     Ok(block_list)
 }
@@ -693,12 +648,12 @@ pub fn transitive_reduction(
                     descendants.insert(v, dfs);
                 }
                 for desc in &descendants[&v] {
-                    u_nbrs.remove(&NodeIndex::new(desc.1));
+                    u_nbrs.swap_remove(&NodeIndex::new(desc.1));
                 }
             }
             *check_count.get_mut(&v).unwrap() -= 1;
             if check_count[&v] == 0 {
-                descendants.remove(&v);
+                descendants.swap_remove(&v);
             }
         }
         for v in u_nbrs {

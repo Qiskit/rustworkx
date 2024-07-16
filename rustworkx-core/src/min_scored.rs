@@ -35,7 +35,7 @@ pub struct MinScored<K, T>(pub K, pub T);
 impl<K: PartialOrd, T> PartialEq for MinScored<K, T> {
     #[inline]
     fn eq(&self, other: &MinScored<K, T>) -> bool {
-        self.cmp(other) == Ordering::Equal
+        self.cmp(other).is_eq()
     }
 }
 

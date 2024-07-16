@@ -55,11 +55,7 @@ where
         .edges(a)
         .filter_map(|edge| {
             let e = (edge.source(), edge.target());
-            if filter(&e) {
-                Some(e)
-            } else {
-                None
-            }
+            filter(&e).then_some(e)
         })
         .collect::<Vec<_>>();
     edges.sort_by_key(compare);
@@ -186,7 +182,7 @@ where
             (Some(l_low), Some(r_low)) => lr_state.lowpt[l_low].min(lr_state.lowpt[r_low]),
             (Some(l_low), None) => lr_state.lowpt[l_low],
             (None, Some(r_low)) => lr_state.lowpt[r_low],
-            (None, None) => std::usize::MAX,
+            (None, None) => usize::MAX,
         }
     }
 }
@@ -335,7 +331,7 @@ where
                     }
                 }
             }
-            _ => {}
+            _ => (),
         }
     }
 

@@ -14,8 +14,8 @@ Some Key Differences
 rustworkx (as the name implies) was inspired by networkx and the goal of the
 project is to provide a similar level of functionality and utility to what
 networkx offers but with much faster performance. However, because of
-limitations in the boundary between rust and python, different design
-decisions, and other differences the libraries are not identical.
+limitations in the boundary between rust and python, design
+decisions and other aspects of the libraries are not identical.
 
 The biggest difference to keep in mind is networkx is a very dynamic in how it
 can be used. It allows you to treat a graph object associatively (like a python
@@ -95,7 +95,7 @@ or more concisely::
 The other large difference to keep in mind is that many functions in rustworkx
 are explicitly typed. This means that they either always return or accept
 either a :class:`~rustworkx.PyDiGraph` or a :class:`~rustworkx.PyGraph` but not
-both. Generally, functions prefixed with `graph_*` and `digraph_*` explicitly typed.
+both. Generally, functions prefixed with `graph_*` and `digraph_*` are explicitly typed.
 Explicitly typed functions also indicate their type on the docstrings.
 This is different from networkx where everything is pretty much dynamically
 typed and you can pass a graph object to any function and it will work as
@@ -137,7 +137,7 @@ networkx has a concept of
 `graph <https://networkx.org/documentation/stable/tutorial.html#graph-attributes>`__,
 `node <https://networkx.org/documentation/stable/tutorial.html#node-attributes>`__,
 and `edge attributes <https://networkx.org/documentation/stable/tutorial.html#edge-attributes>`__
-in addition to the hashable object used for a node's payload. Retworkx has
+in addition to the hashable object used for a node's payload. Rustworkx has
 graph attributes similar to NetworkX however instead of being treated like
 a dictionary on the graph object itself they're accessible from a dedicated
 :class:`~.PyGraph.attrs` attribute. This attribute can be any Python object
@@ -411,9 +411,9 @@ networkx graph then you can use :func:`rustworkx.networkx_converter` to convert
 that networkx ``Graph`` object into an equivalent rustworkx
 :class:`~rustworkx.PyGraph` or :class:`~rustworkx.PyDiGraph` object. Note that
 networkx is **not** a dependency for rustworkx and you are responsible for
-installing networkx to use this function. Accordingly, there is not equivalent
-function provided to convert the reverse direction (because doing so would add
-an unwanted dependency on networkx, even an optional one) but writing such a
+installing networkx to use this function. Accordingly, there isn't an equivalent
+function provided to convert in the reverse direction (because doing so would add
+an unwanted dependency on networkx, even if it is an optional one). However, writing such a
 function is straightforward, for example::
 
     import networkx as nx

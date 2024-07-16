@@ -1,0 +1,6 @@
+---
+features:
+  - |
+    Added a new function ``collect_bicolor_runs`` to rustworkx-core's ``dag_algo`` module. 
+    Previously, the :func:`~.collect_bicolor_runs` functionality for DAGs was only exposed
+    via the Python interface. Now Rust users can take advantage of this functionality in ``rustworkx-core``. 

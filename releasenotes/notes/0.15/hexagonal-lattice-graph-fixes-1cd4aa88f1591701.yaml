@@ -1,0 +1,10 @@
+---
+fixes:
+  - |
+    Fixed two bugs in the node position calculation done by the generator functions
+    :func:`.hexagonal_lattice_graph` and :func:`.directed_hexagonal_lattice_graph` when 
+    ``with_positions = True``:
+
+      * Corrected a scale factor that made all the hexagons in the lattice irregular
+      * Corrected an indexing bug that positioned the nodes in the last column of
+        the lattice incorrectly when ``periodic = False`` and ``cols`` is odd

@@ -17,6 +17,7 @@ typed API based on the data type.
    rustworkx.graph_distance_matrix
    rustworkx.graph_floyd_warshall
    rustworkx.graph_floyd_warshall_numpy
+   rustworkx.graph_floyd_warshall_successor_and_distance
    rustworkx.graph_adjacency_matrix
    rustworkx.graph_all_simple_paths
    rustworkx.graph_all_pairs_all_simple_paths
@@ -30,6 +31,7 @@ typed API based on the data type.
    rustworkx.graph_bellman_ford_shortest_path_lengths
    rustworkx.graph_all_pairs_bellman_ford_shortest_paths
    rustworkx.graph_all_pairs_bellman_ford_path_lengths
+   rustworkx.graph_all_shortest_paths
    rustworkx.graph_dfs_edges
    rustworkx.graph_dfs_search
    rustworkx.graph_transitivity
