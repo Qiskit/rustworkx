@@ -57,3 +57,14 @@ class TestAdj(unittest.TestCase):
         dag = rustworkx.PyDAG()
         node_a = dag.add_node("a")
         self.assertEqual([], dag.neighbors(node_a))
+
+    def test_undirected_neighbors(self):
+        dag = rustworkx.PyDAG()
+        node_a = dag.add_node("a")
+        node_b = dag.add_child(node_a, "b", {"a": 1})
+
+        directed = dag.neighbors(node_b)
+        self.assertEqual([], directed)
+
+        undirected = dag.neighbors_undirected(node_b)
+        self.assertEqual([node_a], undirected)

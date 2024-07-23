@@ -1720,6 +1720,25 @@ impl PyDiGraph {
         }
     }
 
+    /// Get the direction-agnostic neighbors (i.e. successors and predecessors) of a node.
+    ///
+    /// :param int node: The index of the node to get the neighbors of
+    ///
+    /// :returns: A list of the neighbor node indices
+    /// :rtype: NodeIndices
+    #[pyo3(text_signature = "(self, node, /)")]
+    pub fn neighbors_undirected(&self, node: usize) -> NodeIndices {
+        NodeIndices {
+            nodes: self
+                .graph
+                .neighbors_undirected(NodeIndex::new(node))
+                .map(|node| node.index())
+                .collect::<HashSet<usize>>()
+                .drain()
+                .collect(),
+        }
+    }
+
     /// Get the successor indices of a node.
     ///
     /// This will return a list of the node indicies for the succesors of
