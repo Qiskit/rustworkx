@@ -78,4 +78,4 @@ class TestAdj(unittest.TestCase):
         for node in dag.node_indices():
             undirected_neighbors = dag.neighbors_undirected(node)
             expected_neighbors = undirected_dag.neighbors(node)
-            self.assertEqual(undirected_neighbors, expected_neighbors)
+            self.assertEqual(sorted(undirected_neighbors), sorted(expected_neighbors))

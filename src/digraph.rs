@@ -1733,7 +1733,7 @@ impl PyDiGraph {
     ///     neighbors = dag.neighbors_undirected(node)
     ///     same_neighbors = dag.to_undirected().neighbors(node)
     ///
-    ///     assert neighbors == same_neighbors
+    ///     assert sorted(neighbors) == sorted(same_neighbors)
     ///
     /// :param int node: The index of the node to get the neighbors of
     ///
