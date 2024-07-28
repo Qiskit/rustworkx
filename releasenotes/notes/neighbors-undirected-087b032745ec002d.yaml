@@ -1,0 +1,6 @@
+---
+features:
+  - |
+    Added a new method :meth:`~rustworkx.PyDiGraph.neighbors_undirected` to 
+    obtain the neighbors of a node in a directed graph, irrespective of the 
+    edge directionality.
