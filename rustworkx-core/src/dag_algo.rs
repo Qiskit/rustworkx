@@ -249,8 +249,8 @@ type LongestPathResult<G, T, E> = Result<Option<(Vec<NodeId<G>>, T)>, E>;
 /// # Arguments
 /// * `graph`: Reference to a directed graph.
 /// * `weight_fn` - An input callable that will be passed the `EdgeRef` for each edge in the graph.
-///  The callable should return the weight of the edge as `Result<T, E>`. The weight must be a type that implements
-/// `Num`, `Zero`, `PartialOrd`, and `Copy`.
+///   The callable should return the weight of the edge as `Result<T, E>`. The weight must be a type that implements
+///   `Num`, `Zero`, `PartialOrd`, and `Copy`.
 ///
 /// # Type Parameters
 /// * `G`: Type of the graph. Must be a directed graph.
