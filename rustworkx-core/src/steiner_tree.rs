@@ -303,7 +303,7 @@ where
 ///   - there is an edge `(u, v)` in the graph and path pass through this edge.
 ///   - node `s` is the closest node to  `u` among all `terminal_nodes`
 ///   - node `t` is the closest node to `v` among all `terminal_nodes`
-/// and wraps the result inside a `MetricClosureEdge`
+///     and wraps the result inside a `MetricClosureEdge`
 ///
 /// For example, if all vertices are terminals, it returns the original edges of the graph.
 fn fast_metric_edges<G, F, E>(
