@@ -70,8 +70,8 @@ use hashbrown::HashMap;
 use numpy::Complex64;
 
 use pyo3::create_exception;
-use pyo3::exceptions::PyException;
 use pyo3::exceptions::PyValueError;
+use pyo3::exceptions::{PyException, PyIndexError};
 use pyo3::import_exception;
 use pyo3::prelude::*;
 use pyo3::wrap_pyfunction;
@@ -88,9 +88,11 @@ use petgraph::EdgeType;
 
 use rustworkx_core::dag_algo::TopologicalSortError;
 use std::convert::TryFrom;
+use std::fmt::Debug;
 
 use rustworkx_core::dictmap::*;
 use rustworkx_core::err::{ContractError, ContractSimpleError};
+use rustworkx_core::graph_ext::substitution::SubstituteNodeWithGraphError;
 
 /// An ergonomic error type used to map Rustworkx core errors to
 /// [PyErr] automatically, via [From::from].
@@ -139,6 +141,21 @@ impl From<ContractSimpleError<PyErr>> for RxPyErr {
             pyerr: match value {
                 ContractSimpleError::DAGWouldCycle => map_dag_would_cycle(value),
                 ContractSimpleError::MergeError(e) => e,
+            },
+        }
+    }
+}
+
+impl<N: Debug> From<SubstituteNodeWithGraphError<N, PyErr, PyErr, PyErr>> for RxPyErr {
+    fn from(value: SubstituteNodeWithGraphError<N, PyErr, PyErr, PyErr>) -> Self {
+        RxPyErr {
+            pyerr: match value {
+                SubstituteNodeWithGraphError::EdgeMapErr(e)
+                | SubstituteNodeWithGraphError::NodeFilterErr(e)
+                | SubstituteNodeWithGraphError::EdgeWeightTransformErr(e) => e,
+                SubstituteNodeWithGraphError::ReplacementGraphIndexError(_) => {
+                    PyIndexError::new_err(format!("{}", value))
+                }
             },
         }
     }
