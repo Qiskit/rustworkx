@@ -22,7 +22,10 @@ use petgraph::graph::NodeIndex;
 use petgraph::prelude::*;
 use petgraph::visit::IntoEdgeReferences;
 
+use crate::export_rustworkx_functions;
 use crate::weight_callable;
+
+export_rustworkx_functions!(is_matching, is_maximal_matching, max_weight_matching);
 
 /// Compute a maximum-weighted matching for a :class:`~rustworkx.PyGraph`
 ///
