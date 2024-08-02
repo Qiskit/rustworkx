@@ -2550,6 +2550,10 @@ impl PyDiGraph {
     ///    when iterated over (although the same object will have a consistent
     ///    order when iterated over multiple times).
     ///
+    ///    If the replacement graph ``other`` contains cycles or is not a
+    ///    multigraph, then this graph will also contain cycles or become
+    ///    a multigraph after the substitution.
+    ///
     #[pyo3(
         text_signature = "(self, node, other, edge_map_fn, /, node_filter=None, edge_weight_map=None)"
     )]
@@ -2561,109 +2565,61 @@ impl PyDiGraph {
         edge_map_fn: PyObject,
         node_filter: Option<PyObject>,
         edge_weight_map: Option<PyObject>,
-    ) -> PyResult<NodeMap> {
-        let weight_map_fn = |obj: &PyObject, weight_fn: &Option<PyObject>| -> PyResult<PyObject> {
-            match weight_fn {
-                Some(weight_fn) => weight_fn.call1(py, (obj,)),
-                None => Ok(obj.clone_ref(py)),
-            }
+    ) -> RxPyResult<NodeMap> {
+        let node_index: NodeIndex = NodeIndex::new(node);
+        if self.graph.node_weight(node_index).is_none() {
+            return Err(PyIndexError::new_err(format!(
+                "Specified node {} is not in this graph",
+                node
+            ))
+            .into());
+        }
+
+        let edge_map_fn = |direction: Direction,
+                           node: NodeIndex,
+                           weight: &PyObject|
+         -> PyResult<Option<NodeIndex>> {
+            let edge = match direction {
+                Direction::Incoming => (node.index(), node_index.index(), weight),
+                Direction::Outgoing => (node_index.index(), node.index(), weight),
+            };
+            let res = edge_map_fn.call1(py, edge)?;
+            let index: Option<usize> = res.extract(py)?;
+            Ok(index.map(|i| NodeIndex::new(i)))
         };
-        let map_fn = |source: usize, target: usize, weight: &PyObject| -> PyResult<Option<usize>> {
-            let res = edge_map_fn.call1(py, (source, target, weight))?;
-            res.extract(py)
-        };
-        let filter_fn = |obj: &PyObject, filter_fn: &Option<PyObject>| -> PyResult<bool> {
-            match filter_fn {
-                Some(filter) => {
+
+        let node_filter = move |obj: &PyObject| -> PyResult<bool> {
+            match node_filter {
+                Some(ref filter) => {
                     let res = filter.call1(py, (obj,))?;
                     res.extract(py)
                 }
                 None => Ok(true),
             }
         };
-        let node_index: NodeIndex = NodeIndex::new(node);
-        if self.graph.node_weight(node_index).is_none() {
-            return Err(PyIndexError::new_err(format!(
-                "Specified node {} is not in this graph",
-                node
-            )));
-        }
-        // Copy nodes from other to self
-        let mut out_map: DictMap<usize, usize> = DictMap::with_capacity(other.node_count());
-        for node in other.graph.node_indices() {
-            let node_weight = other.graph[node].clone_ref(py);
-            if !filter_fn(&node_weight, &node_filter)? {
-                continue;
+
+        let weight_map_fn = move |obj: &PyObject| -> PyResult<PyObject> {
+            match edge_weight_map {
+                Some(ref weight_fn) => weight_fn.call1(py, (obj,)),
+                None => Ok(obj.clone_ref(py)),
             }
-            let new_index = self.graph.add_node(node_weight);
-            out_map.insert(node.index(), new_index.index());
-        }
-        // If no nodes are copied bail here since there is nothing left
-        // to do.
-        if out_map.is_empty() {
-            self.remove_node(node_index.index())?;
-            // Return a new empty map to clear allocation from out_map
-            return Ok(NodeMap {
-                node_map: DictMap::new(),
-            });
-        }
-        // Copy edges from other to self
-        for edge in other.graph.edge_references().filter(|edge| {
-            out_map.contains_key(&edge.target().index())
-                && out_map.contains_key(&edge.source().index())
-        }) {
-            self._add_edge(
-                NodeIndex::new(out_map[&edge.source().index()]),
-                NodeIndex::new(out_map[&edge.target().index()]),
-                weight_map_fn(edge.weight(), &edge_weight_map)?,
-            )?;
-        }
-        // Add edges to/from node to nodes in other
-        let in_edges: Vec<(NodeIndex, NodeIndex, PyObject)> = self
-            .graph
-            .edges_directed(node_index, petgraph::Direction::Incoming)
-            .map(|edge| (edge.source(), edge.target(), edge.weight().clone_ref(py)))
-            .collect();
-        let out_edges: Vec<(NodeIndex, NodeIndex, PyObject)> = self
-            .graph
-            .edges_directed(node_index, petgraph::Direction::Outgoing)
-            .map(|edge| (edge.source(), edge.target(), edge.weight().clone_ref(py)))
-            .collect();
-        for (source, target, weight) in in_edges {
-            let old_index = map_fn(source.index(), target.index(), &weight)?;
-            let target_out = match old_index {
-                Some(old_index) => match out_map.get(&old_index) {
-                    Some(new_index) => NodeIndex::new(*new_index),
-                    None => {
-                        return Err(PyIndexError::new_err(format!(
-                            "No mapped index {} found",
-                            old_index
-                        )))
-                    }
-                },
-                None => continue,
-            };
-            self._add_edge(source, target_out, weight)?;
-        }
-        for (source, target, weight) in out_edges {
-            let old_index = map_fn(source.index(), target.index(), &weight)?;
-            let source_out = match old_index {
-                Some(old_index) => match out_map.get(&old_index) {
-                    Some(new_index) => NodeIndex::new(*new_index),
-                    None => {
-                        return Err(PyIndexError::new_err(format!(
-                            "No mapped index {} found",
-                            old_index
-                        )))
-                    }
-                },
-                None => continue,
-            };
-            self._add_edge(source_out, target, weight)?;
-        }
-        // Remove node
-        self.remove_node(node_index.index())?;
-        Ok(NodeMap { node_map: out_map })
+        };
+
+        let out_map = self.graph.substitute_node_with_graph(
+            node_index,
+            &other.graph,
+            edge_map_fn,
+            node_filter,
+            weight_map_fn,
+        )?;
+
+        self.node_removed = true;
+        Ok(NodeMap {
+            node_map: out_map
+                .into_iter()
+                .map(|(k, v)| (k.index(), v.index()))
+                .collect(),
+        })
     }
 
     /// Substitute a set of nodes with a single new node.

@@ -21,19 +21,25 @@ use petgraph::visit::{
 use petgraph::{Directed, Direction};
 use std::convert::Infallible;
 use std::error::Error;
-use std::fmt::{Display, Formatter};
+use std::fmt::{Debug, Display, Formatter};
 use std::hash::Hash;
 
 #[derive(Debug)]
-pub enum SubstituteNodeWithGraphError<EME, NFE, ETE> {
+pub enum SubstituteNodeWithGraphError<N, EME, NFE, ETE> {
+    ReplacementGraphIndexError(N),
     EdgeMapErr(EME),
     NodeFilterErr(NFE),
     EdgeWeightTransformErr(ETE),
 }
 
-impl<EME: Error, NFE: Error, ETE: Error> Display for SubstituteNodeWithGraphError<EME, NFE, ETE> {
+impl<N: Debug, EME: Error, NFE: Error, ETE: Error> Display
+    for SubstituteNodeWithGraphError<N, EME, NFE, ETE>
+{
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
+            SubstituteNodeWithGraphError::ReplacementGraphIndexError(n) => {
+                write!(f, "Node {:?} was not found in the replacement graph.", n)
+            }
             SubstituteNodeWithGraphError::EdgeMapErr(e) => {
                 write!(f, "Edge map callback failed with: {}", e)
             }
@@ -47,24 +53,22 @@ impl<EME: Error, NFE: Error, ETE: Error> Display for SubstituteNodeWithGraphErro
     }
 }
 
-impl<EME: Error, NFE: Error, ETE: Error> Error for SubstituteNodeWithGraphError<EME, NFE, ETE> {}
+impl<N: Debug, EME: Error, NFE: Error, ETE: Error> Error
+    for SubstituteNodeWithGraphError<N, EME, NFE, ETE>
+{
+}
 
 pub struct NoCallback;
 
-pub trait NodeFilter<G0: GraphBase> {
+pub trait NodeFilter<G: GraphBase> {
     type Error;
-    fn enabled(&self) -> bool;
-    fn filter(&mut self, _g0: &G0, _n0: G0::NodeId) -> Result<bool, Self::Error>;
+    fn filter(&mut self, graph: &G, node: G::NodeId) -> Result<bool, Self::Error>;
 }
 
-impl<G0: GraphBase> NodeFilter<G0> for NoCallback {
+impl<G: GraphBase> NodeFilter<G> for NoCallback {
     type Error = Infallible;
     #[inline]
-    fn enabled(&self) -> bool {
-        false
-    }
-    #[inline]
-    fn filter(&mut self, _g0: &G0, _n0: G0::NodeId) -> Result<bool, Self::Error> {
+    fn filter(&mut self, _graph: &G, _node: G::NodeId) -> Result<bool, Self::Error> {
         Ok(true)
     }
 }
@@ -76,12 +80,8 @@ where
 {
     type Error = E;
     #[inline]
-    fn enabled(&self) -> bool {
-        true
-    }
-    #[inline]
-    fn filter(&mut self, g0: &G0, n0: G0::NodeId) -> Result<bool, Self::Error> {
-        if let Some(x) = g0.node_weight(n0) {
+    fn filter(&mut self, graph: &G0, node: G0::NodeId) -> Result<bool, Self::Error> {
+        if let Some(x) = graph.node_weight(node) {
             self(x)
         } else {
             Ok(false)
@@ -92,8 +92,7 @@ where
 pub trait EdgeWeightMapper<G: Data> {
     type Error;
     type MappedWeight;
-
-    fn map(&mut self, g: &G, e: G::EdgeId) -> Result<Self::MappedWeight, Self::Error>;
+    fn map(&mut self, graph: &G, edge: G::EdgeId) -> Result<Self::MappedWeight, Self::Error>;
 }
 
 impl<G: DataMap> EdgeWeightMapper<G> for NoCallback
@@ -103,84 +102,94 @@ where
     type Error = Infallible;
     type MappedWeight = G::EdgeWeight;
     #[inline]
-    fn map(&mut self, g: &G, e: G::EdgeId) -> Result<Self::MappedWeight, Self::Error> {
-        Ok(g.edge_weight(e).unwrap().clone())
+    fn map(&mut self, graph: &G, edge: G::EdgeId) -> Result<Self::MappedWeight, Self::Error> {
+        Ok(graph.edge_weight(edge).unwrap().clone())
     }
 }
 
-impl<G0, EW, F, E> EdgeWeightMapper<G0> for F
+impl<G, EW, F, E> EdgeWeightMapper<G> for F
 where
-    G0: GraphBase + DataMap,
-    F: FnMut(&G0::EdgeWeight) -> Result<EW, E>,
+    G: GraphBase + DataMap,
+    F: FnMut(&G::EdgeWeight) -> Result<EW, E>,
 {
     type Error = E;
     type MappedWeight = EW;
 
     #[inline]
-    fn map(&mut self, g0: &G0, e0: G0::EdgeId) -> Result<Self::MappedWeight, Self::Error> {
-        if let Some(x) = g0.edge_weight(e0) {
+    fn map(&mut self, graph: &G, edge: G::EdgeId) -> Result<Self::MappedWeight, Self::Error> {
+        if let Some(x) = graph.edge_weight(edge) {
             self(x)
         } else {
             panic!("Edge MUST exist in graph.")
         }
     }
 }
+
 pub trait SubstituteNodeWithGraph: DataMap {
     /// The error type returned by the substitution.
-    type Error<EME: Error, NME: Error, ETE: Error>: Error;
+    type Error<GN: Debug, EME: Error, NME: Error, ETE: Error>: Error;
 
     /// Substitute a node with a Graph.
     ///
-    /// The specified `node` is replaced with the Graph `other`.
+    /// The nodes and edges of Graph `other` are cloned into this
+    /// graph and connected to its preexisting nodes using an edge mapping
+    /// function, `edge_map_fn`.
     ///
-    /// To control the
+    /// The specified `edge_map_fn` is called for each of the edges between
+    /// the `node` being replaced and the rest of the graph and is expected
+    /// to return an index in `other` that the edge should be connected
+    /// to after the replacement, i.e. the node in `graph` that the edge
+    /// should be connected to once `node` is gone. It is also acceptable
+    /// for `edge_map_fn` to return `None`, in which case the edge is
+    /// ignored and will be dropped.
     ///
-    /// :param int node: The node to replace with the PyDiGraph object
-    /// :param PyDiGraph other: The other graph to replace ``node`` with
-    /// :param callable edge_map_fn: A callable object that will take 3 position
-    ///     parameters, ``(source, target, weight)`` to represent an edge either to
-    ///     or from ``node`` in this graph. The expected return value from this
-    ///     callable is the node index of the node in ``other`` that an edge should
-    ///     be to/from. If None is returned, that edge will be skipped and not
-    ///     be copied.
-    /// :param callable node_filter: An optional callable object that when used
-    ///     will receive a node's payload object from ``other`` and return
-    ///     ``True`` if that node is to be included in the graph or not.
-    /// :param callable edge_weight_map: An optional callable object that when
-    ///     used will receive an edge's weight/data payload from ``other`` and
-    ///     will return an object to use as the weight for a newly created edge
-    ///     after the edge is mapped from ``other``. If not specified the weight
-    ///     from the edge in ``other`` will be copied by reference and used.
+    /// It accepts the following three arguments:
+    ///   - The [Direction], which designates whether the original edge was
+    ///     incoming or outgoing to `node`.
+    ///   - The [Self::NodeId] of the _other_ node of the original edge (i.e. the
+    ///     one that isn't `node`).
+    ///   - A reference to the edge weight of the original edge.
     ///
-    /// :returns: A mapping of node indices in ``other`` to the equivalent node
-    ///     in this graph.
-    /// :rtype: NodeMap
+    /// An optional `node_filter` can be provided to ignore nodes in `other` that
+    /// should not be copied into this graph. This parameter accepts implementations
+    /// of the trait [NodeFilter], which has a blanket implementation for callables
+    /// which are `FnMut(&G1::NodeWeight) -> Result<bool, E>`, i.e. functions which
+    /// take a reference to a node weight in `other` and return a boolean to indicate
+    /// if the node corresponding to this weight should be included or not. To disable
+    /// filtering, simply provide [NoCallback].
     ///
-    /// .. note::
+    /// A _sometimes_ optional `edge_weight_map` can be provided to transform edge weights from
+    /// the source graph `other` into weights of this graph. This parameter accepts
+    /// implementations of the trait [EdgeWeightMapper], which has a blanket
+    /// implementation for callables which are
+    /// `F: FnMut(&G1::EdgeWeight) -> Result<Self::EdgeWeight, E>`,
+    /// i.e. functions which take a reference to an edge weight in `graph` and return
+    /// an owned weight typed for this graph. An `edge_weight_map` must be provided
+    /// when `other` uses a different type for its edge weights, but can otherwise
+    /// be specified as [NoCallback] to disable mapping.
     ///
-    ///    The return type is a :class:`rustworkx.NodeMap` which is an unordered
-    ///    type. So it does not provide a deterministic ordering between objects
-    ///    when iterated over (although the same object will have a consistent
-    ///    order when iterated over multiple times).
-    fn substitute_node_with_graph<G1, EM, NF, ET, EME: Error>(
+    /// This method returns a mapping of nodes in `other` to the copied node in
+    /// this graph.
+    #[allow(clippy::type_complexity)]
+    fn substitute_node_with_graph<G, EM, NF, ET, EME: Error>(
         &mut self,
         node: Self::NodeId,
-        other: &G1,
+        other: &G,
         edge_map_fn: EM,
         node_filter: NF,
         edge_weight_map: ET,
-    ) -> Result<DictMap<G1::NodeId, Self::NodeId>, Self::Error<EME, NF::Error, ET::Error>>
+    ) -> Result<DictMap<G::NodeId, Self::NodeId>, Self::Error<G::NodeId, EME, NF::Error, ET::Error>>
     where
-        G1: Data<NodeWeight = Self::NodeWeight> + DataMap + NodeCount,
-        G1::NodeId: Hash + Eq,
-        G1::NodeWeight: Clone,
-        for<'a> &'a G1: GraphBase<NodeId = G1::NodeId, EdgeId = G1::EdgeId>
-            + Data<NodeWeight = G1::NodeWeight, EdgeWeight = G1::EdgeWeight>
+        G: Data<NodeWeight = Self::NodeWeight> + DataMap + NodeCount,
+        G::NodeId: Debug + Hash + Eq,
+        G::NodeWeight: Clone,
+        for<'a> &'a G: GraphBase<NodeId = G::NodeId, EdgeId = G::EdgeId>
+            + Data<NodeWeight = G::NodeWeight, EdgeWeight = G::EdgeWeight>
             + IntoNodeReferences
             + IntoEdgeReferences,
-        EM: FnMut(Direction, Self::NodeId, &Self::EdgeWeight) -> Result<Option<G1::NodeId>, EME>,
-        NF: NodeFilter<G1>,
-        ET: EdgeWeightMapper<G1, MappedWeight = Self::EdgeWeight>,
+        EM: FnMut(Direction, Self::NodeId, &Self::EdgeWeight) -> Result<Option<G::NodeId>, EME>,
+        NF: NodeFilter<G>,
+        ET: EdgeWeightMapper<G, MappedWeight = Self::EdgeWeight>,
         NF::Error: Error,
         ET::Error: Error;
 }
@@ -190,27 +199,28 @@ where
     Ix: stable_graph::IndexType,
     E: Clone,
 {
-    type Error<EME: Error, NFE: Error, ETE: Error> = SubstituteNodeWithGraphError<EME, NFE, ETE>;
+    type Error<GN: Debug, EME: Error, NFE: Error, ETE: Error> =
+        SubstituteNodeWithGraphError<GN, EME, NFE, ETE>;
 
-    fn substitute_node_with_graph<G1, EM, NF, ET, EME: Error>(
+    fn substitute_node_with_graph<G, EM, NF, ET, EME: Error>(
         &mut self,
         node: Self::NodeId,
-        other: &G1,
+        other: &G,
         mut edge_map_fn: EM,
         mut node_filter: NF,
         mut edge_weight_map: ET,
-    ) -> Result<DictMap<G1::NodeId, Self::NodeId>, Self::Error<EME, NF::Error, ET::Error>>
+    ) -> Result<DictMap<G::NodeId, Self::NodeId>, Self::Error<G::NodeId, EME, NF::Error, ET::Error>>
     where
-        G1: Data<NodeWeight = Self::NodeWeight> + DataMap + NodeCount,
-        G1::NodeId: Hash + Eq,
-        G1::NodeWeight: Clone,
-        for<'a> &'a G1: GraphBase<NodeId = G1::NodeId, EdgeId = G1::EdgeId>
-            + Data<NodeWeight = G1::NodeWeight, EdgeWeight = G1::EdgeWeight>
+        G: Data<NodeWeight = Self::NodeWeight> + DataMap + NodeCount,
+        G::NodeId: Debug + Hash + Eq,
+        G::NodeWeight: Clone,
+        for<'a> &'a G: GraphBase<NodeId = G::NodeId, EdgeId = G::EdgeId>
+            + Data<NodeWeight = G::NodeWeight, EdgeWeight = G::EdgeWeight>
             + IntoNodeReferences
             + IntoEdgeReferences,
-        EM: FnMut(Direction, Self::NodeId, &Self::EdgeWeight) -> Result<Option<G1::NodeId>, EME>,
-        NF: NodeFilter<G1>,
-        ET: EdgeWeightMapper<G1, MappedWeight = Self::EdgeWeight>,
+        EM: FnMut(Direction, Self::NodeId, &Self::EdgeWeight) -> Result<Option<G::NodeId>, EME>,
+        NF: NodeFilter<G>,
+        ET: EdgeWeightMapper<G, MappedWeight = Self::EdgeWeight>,
         NF::Error: Error,
         ET::Error: Error,
     {
@@ -219,13 +229,12 @@ where
             panic!("Node `node` MUST be present in graph.");
         }
         // Copy nodes from other to self
-        let mut out_map: DictMap<G1::NodeId, Self::NodeId> =
+        let mut out_map: DictMap<G::NodeId, Self::NodeId> =
             DictMap::with_capacity(other.node_count());
         for node in other.node_references() {
-            if node_filter.enabled()
-                && !node_filter
-                    .filter(other, node.id())
-                    .map_err(|e| SubstituteNodeWithGraphError::NodeFilterErr(e))?
+            if !node_filter
+                .filter(other, node.id())
+                .map_err(|e| SubstituteNodeWithGraphError::NodeFilterErr(e))?
             {
                 continue;
             }
@@ -261,7 +270,11 @@ where
                 else {
                     return Ok(None);
                 };
-                let target_in_self = out_map.get(&target_in_other).unwrap();
+                let Some(target_in_self) = out_map.get(&target_in_other) else {
+                    return Err(SubstituteNodeWithGraphError::ReplacementGraphIndexError(
+                        target_in_other,
+                    ));
+                };
                 Ok(Some((
                     edge.source(),
                     *target_in_self,
@@ -278,7 +291,11 @@ where
                 else {
                     return Ok(None);
                 };
-                let source_in_self = out_map.get(&source_in_other).unwrap();
+                let Some(source_in_self) = out_map.get(&source_in_other) else {
+                    return Err(SubstituteNodeWithGraphError::ReplacementGraphIndexError(
+                        source_in_other,
+                    ));
+                };
                 Ok(Some((
                     *source_in_self,
                     edge.target(),
