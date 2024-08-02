@@ -10,7 +10,7 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-use crate::{graph, StablePyGraph};
+use crate::{export_rustworkx_functions, graph, StablePyGraph};
 
 use hashbrown::HashMap;
 
@@ -22,6 +22,8 @@ use rustworkx_core::line_graph::line_graph;
 
 use pyo3::prelude::*;
 use pyo3::Python;
+
+export_rustworkx_functions!(graph_line_graph);
 
 /// Constructs the line graph of a :class:`~.PyGraph` object.
 ///
