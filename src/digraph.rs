@@ -1720,6 +1720,38 @@ impl PyDiGraph {
         }
     }
 
+    /// Get the direction-agnostic neighbors (i.e. successors and predecessors) of a node.
+    ///
+    /// This is functionally equivalent to converting the directed graph to an undirected
+    /// graph, and calling ``neighbors`` thereon. For example::
+    ///
+    ///     import rustworkx
+    ///
+    ///     dag = rustworkx.generators.directed_cycle_graph(num_nodes=10, bidirectional=False)
+    ///
+    ///     node = 3
+    ///     neighbors = dag.neighbors_undirected(node)
+    ///     same_neighbors = dag.to_undirected().neighbors(node)
+    ///
+    ///     assert sorted(neighbors) == sorted(same_neighbors)
+    ///
+    /// :param int node: The index of the node to get the neighbors of
+    ///
+    /// :returns: A list of the neighbor node indices
+    /// :rtype: NodeIndices
+    #[pyo3(text_signature = "(self, node, /)")]
+    pub fn neighbors_undirected(&self, node: usize) -> NodeIndices {
+        NodeIndices {
+            nodes: self
+                .graph
+                .neighbors_undirected(NodeIndex::new(node))
+                .map(|node| node.index())
+                .collect::<HashSet<usize>>()
+                .drain()
+                .collect(),
+        }
+    }
+
     /// Get the successor indices of a node.
     ///
     /// This will return a list of the node indicies for the succesors of
