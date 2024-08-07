@@ -1,0 +1,7 @@
+---
+features:
+  - |
+    Added a new function ``transitive_closure`` to rustworkx which returns the 
+    transitive closure of a graph. The transitive closure of G = (V,E) is a graph 
+    G+ = (V,E+) such that for all v, w in V there is an edge (v, w) in E+ if and 
+    only if there is a path from v to w in G.
