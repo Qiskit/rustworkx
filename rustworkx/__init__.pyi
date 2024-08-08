@@ -272,13 +272,13 @@ _DijkstraVisitor = TypeVar("_DijkstraVisitor", bound=visit.DijkstraVisitor)
 class PyDAG(Generic[_S, _T], PyDiGraph[_S, _T]): ...
 
 def distance_matrix(
-    graph: PyGraph | PyDiGraph,
+    graph: PyGraph[Any, Any] | PyDiGraph[Any, Any],
     parallel_threshold: int = ...,
     as_undirected: bool = ...,
     null_value: float = ...,
 ) -> np.ndarray: ...
 def unweighted_average_shortest_path_length(
-    graph: PyGraph | PyDiGraph,
+    graph: PyGraph[Any, Any] | PyDiGraph[Any, Any],
     parallel_threshold: int = ...,
     disconnected: bool = ...,
 ) -> float: ...
@@ -289,7 +289,7 @@ def adjacency_matrix(
     null_value: float = ...,
 ) -> np.ndarray: ...
 def all_simple_paths(
-    graph: PyGraph | PyDiGraph,
+    graph: PyGraph[Any, Any] | PyDiGraph[Any, Any],
     from_: int,
     to: int,
     min_depth: int | None = ...,
@@ -336,7 +336,7 @@ def all_pairs_dijkstra_shortest_paths(
     edge_cost_fn: Callable[[_T], float] | None,
 ) -> AllPairsPathMapping: ...
 def all_pairs_all_simple_paths(
-    graph: PyGraph | PyDiGraph,
+    graph: PyGraph[Any, Any] | PyDiGraph[Any, Any],
     min_depth: int | None = ...,
     cutoff: int | None = ...,
 ) -> AllPairsMultiplePathMapping: ...
@@ -443,7 +443,9 @@ def spring_layout(
     center: tuple[float, float] | None = ...,
     seed: int | None = ...,
 ) -> Pos2DMapping: ...
-def networkx_converter(graph: Any, keep_attributes: bool = ...) -> PyGraph | PyDiGraph: ...
+def networkx_converter(
+    graph: Any, keep_attributes: bool = ...
+) -> PyGraph[Any, Any] | PyDiGraph[Any, Any]: ...
 def bipartite_layout(
     graph: PyGraph[_S, _T] | PyDiGraph[_S, _T],
     first_nodes,
@@ -542,36 +544,36 @@ def union(
 ) -> PyDiGraph[_S, _T]: ...
 @overload
 def tensor_product(
-    first: PyGraph,
-    second: PyGraph,
-) -> tuple[PyGraph, ProductNodeMap]: ...
+    first: PyGraph[Any, Any],
+    second: PyGraph[Any, Any],
+) -> tuple[PyGraph[Any, Any], ProductNodeMap]: ...
 @overload
 def tensor_product(
-    first: PyDiGraph,
-    second: PyDiGraph,
-) -> tuple[PyDiGraph, ProductNodeMap]: ...
+    first: PyDiGraph[Any, Any],
+    second: PyDiGraph[Any, Any],
+) -> tuple[PyDiGraph[Any, Any], ProductNodeMap]: ...
 @overload
 def cartesian_product(
-    first: PyGraph,
-    second: PyGraph,
-) -> tuple[PyGraph, ProductNodeMap]: ...
+    first: PyGraph[Any, Any],
+    second: PyGraph[Any, Any],
+) -> tuple[PyGraph[Any, Any], ProductNodeMap]: ...
 @overload
 def cartesian_product(
-    first: PyDiGraph,
-    second: PyDiGraph,
-) -> tuple[PyDiGraph, ProductNodeMap]: ...
+    first: PyDiGraph[Any, Any],
+    second: PyDiGraph[Any, Any],
+) -> tuple[PyDiGraph[Any, Any], ProductNodeMap]: ...
 def bfs_search(
-    graph: PyGraph | PyDiGraph,
+    graph: PyGraph[Any, Any] | PyDiGraph[Any, Any],
     source: Sequence[int] | None,
     visitor: _BFSVisitor,
 ) -> None: ...
 def dfs_search(
-    graph: PyGraph | PyDiGraph,
+    graph: PyGraph[Any, Any] | PyDiGraph[Any, Any],
     source: Sequence[int] | None,
     visitor: _DFSVisitor,
 ) -> None: ...
 def dijkstra_search(
-    graph: PyGraph | PyDiGraph,
+    graph: PyGraph[Any, Any] | PyDiGraph[Any, Any],
     source: Sequence[int] | None,
     weight_fn: Callable[[Any], float],
     visitor: _DijkstraVisitor,
