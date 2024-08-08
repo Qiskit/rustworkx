@@ -1,0 +1,880 @@
+
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Contributing &mdash; rustworkx 0.12.1 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!-- <link rel="stylesheet" href="_static/pygments.css" type="text/css" /> -->
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/jupyter-sphinx.css" type="text/css" />
+  <link rel="stylesheet" href="_static/thebelab.css" type="text/css" />
+  <link rel="stylesheet" href="_static/style.css" type="text/css" />
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="rustworkx for NetworkX users" href="networkx.html" />
+    <link rel="prev" title="Release Notes" href="release_notes.html" /> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="pytorch-body">
+
+   
+
+    
+
+    <div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    <span class="rst-current-version-label">0.12</span>
+    <span class="rst-versions-dropdown-icon"></span>
+  </span>
+  <div class="rst-other-versions">
+    <dl>
+      <dt>Versions</dt>
+          <dd><a class="version" href="/documentation/retworkx/index.html">Current Release</a></dd>
+          <dd><a class="version" href="/documentation/retworkx/dev/index.html">Development</a></dd>
+      <dt>Previous Releases</dt>
+        
+            <dd><a class="version" href="/documentation/retworkx/stable/0.12/index.html">0.12</a></dd>
+        
+    </dl>
+  </div>
+  <script>
+    jQuery('.version').click((evt) => {
+      const hash = window.location.hash
+      const complete_url = evt.target.href + hash
+      window.location = complete_url
+      evt.preventDefault()
+    })
+  </script>
+</div>
+
+    <div class="table-of-contents-link-wrapper">
+      <span>Table of Contents</span>
+      <a href="#" class="toggle-table-of-contents" data-behavior="toggle-table-of-contents"></a>
+    </div>
+
+    <nav data-toggle="wy-nav-shift" class="pytorch-left-menu" id="pytorch-left-menu">
+      <div class="pytorch-side-scroll">
+        <div class="pytorch-menu pytorch-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          <div class="pytorch-left-menu-search">
+            
+
+            
+              
+              
+                <div class="version">
+                  0.12.1
+                </div>
+              
+            
+
+            
+
+
+  
+
+
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search Docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+            
+          </div>
+
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="install.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="install.html#installing-rustworkx">Installing Rustworkx</a></li>
+<li class="toctree-l1"><a class="reference internal" href="install.html#platform-support">Platform Support</a></li>
+<li class="toctree-l1"><a class="reference internal" href="install.html#using-rustworkx">Using rustworkx</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorial/index.html">Rustworkx Tutorials and Guides</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">Rustworkx API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="visualization.html">Visualization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="release_notes.html">Release Notes</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Contributing Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="networkx.html">rustworkx for NetworkX users</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <div class="pytorch-container">
+      <div class="pytorch-page-level-bar" id="pytorch-page-level-bar">
+        <div class="pytorch-breadcrumbs-wrapper">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="pytorch-breadcrumbs">
+    
+      <li>
+        <a href="index.html">
+          
+            Docs
+          
+        </a> &gt;
+      </li>
+
+        
+      <li>Contributing</li>
+    
+    
+      <li class="pytorch-breadcrumbs-aside">
+        
+            
+            <a href="_sources/CONTRIBUTING.md.txt" rel="nofollow"><img src="_static/images/view-page-source-icon.svg"></a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+</div>
+        </div>
+
+        <div class="pytorch-shortcuts-wrapper" id="pytorch-shortcuts-wrapper">
+          Shortcuts
+        </div>
+      </div>
+
+      <section data-toggle="wy-nav-shift" id="pytorch-content-wrap" class="pytorch-content-wrap">
+        <div class="pytorch-content-left">
+          
+          <div class="rst-content style-external-links">
+          
+            <div role="main" class="main-content" itemscope="itemscope" itemtype="http://schema.org/Article">
+             <article itemprop="articleBody" id="pytorch-article" class="pytorch-article">
+              
+  <section id="contributing">
+<h1>Contributing<a class="headerlink" href="#contributing" title="Permalink to this heading">¶</a></h1>
+<p>First read the overall Qiskit project contribution guidelines. These are all
+included in the Qiskit documentation:</p>
+<p><a class="reference external" href="https://qiskit.org/documentation/contributing_to_qiskit.html">https://qiskit.org/documentation/contributing_to_qiskit.html</a></p>
+<p>While it’s not all directly applicable since most of it is about the Qiskit
+project itself and rustworkx is an independent library developed in tandem
+with Qiskit; the general guidelines and advice still apply here.</p>
+<section id="contributing-to-rustworkx">
+<h2>Contributing to rustworkx<a class="headerlink" href="#contributing-to-rustworkx" title="Permalink to this heading">¶</a></h2>
+<p>In addition to the general guidelines there are specific details for
+contributing to rustworkx, these are documented below.</p>
+<section id="making-changes-to-the-code">
+<h3>Making changes to the code<a class="headerlink" href="#making-changes-to-the-code" title="Permalink to this heading">¶</a></h3>
+<p>Rustworkx is implemented primarily in Rust with a thin layer of Python.
+Because of that, most of your code changes will involve modifications to
+Rust files in <code class="docutils literal notranslate"><span class="pre">src</span></code>. To understand which files you need to change, we invite
+you for an overview of our simplified source tree:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>├── src/
+│   ├── lib.rs
+│   ├── tiny.rs
+│   ├── large/
+│   │   ├── mod.rs
+│   │   ├── pure_rust_code.rs
+│   │   └── more_pure_rust_code.rs
+</pre></div>
+</div>
+<section id="module-exports-in-lib-rs">
+<h4>Module exports in <code class="docutils literal notranslate"><span class="pre">lib.rs</span></code><a class="headerlink" href="#module-exports-in-lib-rs" title="Permalink to this heading">¶</a></h4>
+<p>To add new functions, you will need to export them in <code class="docutils literal notranslate"><span class="pre">lib.rs</span></code>. <code class="docutils literal notranslate"><span class="pre">lib.rs</span></code> will
+import functions defined in Rust modules (see the next section), and export
+them to Python using <code class="docutils literal notranslate"><span class="pre">m.add_wrapped(wrap_pyfunction!(your_new_function))?;</span></code></p>
+</section>
+<section id="adding-and-changing-functions-in-modules">
+<h4>Adding and changing functions in modules<a class="headerlink" href="#adding-and-changing-functions-in-modules" title="Permalink to this heading">¶</a></h4>
+<p>To add and change functions, you will need to modify module files. Modules contain pyfunctions
+that will be exported, and can be defined either as a single file such as <code class="docutils literal notranslate"><span class="pre">tiny.rs</span></code> or as a
+directory with <code class="docutils literal notranslate"><span class="pre">mod.rs</span></code> such as <code class="docutils literal notranslate"><span class="pre">large/</span></code>.</p>
+<p>Rust functions that are exported to Python are annotated with <code class="docutils literal notranslate"><span class="pre">#[pyfunction]</span></code>. The
+annotation gives them power to interact both with the Python interpreter and pure
+Rust code. To change an existing function, search for its name and edit the code that
+already exists.</p>
+<p>If you want to add a new function, find the module you’d like to insert it in
+or create a new one like <code class="docutils literal notranslate"><span class="pre">your_module.rs</span></code>. Then, start with the boilerplate bellow:</p>
+<div class="highlight-rust notranslate"><div class="highlight"><pre><span></span><span class="sd">/// Docstring containing description of the function</span>
+<span class="cp">#[pyfunction]</span>
+<span class="cp">#[pyo3(text_signature = </span><span class="s">&quot;(graph, /)&quot;</span><span class="cp">)]</span>
+<span class="k">pub</span><span class="w"> </span><span class="k">fn</span> <span class="nf">your_new_function</span><span class="p">(</span>
+<span class="w">    </span><span class="n">py</span>: <span class="nc">Python</span><span class="p">,</span>
+<span class="w">    </span><span class="n">graph</span>: <span class="kp">&amp;</span><span class="nc">graph</span>::<span class="n">PyGraph</span><span class="p">,</span>
+<span class="p">)</span><span class="w"> </span>-&gt; <span class="nc">PyResult</span><span class="o">&lt;</span><span class="p">()</span><span class="o">&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="cm">/* Your code goes here */</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<blockquote>
+<div><p><strong>NOTE:</strong>  If you create a new <code class="docutils literal notranslate"><span class="pre">your_module.rs</span></code>, remember to declare and import it in <code class="docutils literal notranslate"><span class="pre">lib.rs</span></code>:</p>
+<div class="highlight-rust notranslate"><div class="highlight"><pre><span></span><span class="k">mod</span> <span class="nn">your_module</span><span class="p">;</span>
+<span class="k">use</span><span class="w"> </span><span class="n">your_module</span>::<span class="o">*</span><span class="p">;</span>
+</pre></div>
+</div>
+</div></blockquote>
+</section>
+<section id="module-directories-when-a-single-file-is-not-enough">
+<h4>Module directories: when a single file is not enough<a class="headerlink" href="#module-directories-when-a-single-file-is-not-enough" title="Permalink to this heading">¶</a></h4>
+<p>Sometimes you will find that it is hard to organize a module in a tiny
+file like <code class="docutils literal notranslate"><span class="pre">tiny.rs</span></code>. In those cases, we suggest moving the files to a directory
+and splitting them following the structure of <code class="docutils literal notranslate"><span class="pre">large/</span></code>.</p>
+<p>Module directories have a <code class="docutils literal notranslate"><span class="pre">mod.rs</span></code> file containing the pyfunctions. The pyfunctions
+in that file then delegate most of logic by importing and calling pure Rust code from
+<code class="docutils literal notranslate"><span class="pre">pure_rust_code.rs</span></code> and <code class="docutils literal notranslate"><span class="pre">more_pure_rust_code.rs</span></code>.</p>
+<blockquote>
+<div><p><strong>NOTE:</strong> Do you still have questions about making your contribution?
+Contact us at the <a class="reference external" href="https://qiskit.slack.com/messages/rustworkx/">#rustworkx channel in Qiskit Slack</a></p>
+</div></blockquote>
+</section>
+</section>
+<section id="rustworkx-core">
+<h3>rustworkx-core<a class="headerlink" href="#rustworkx-core" title="Permalink to this heading">¶</a></h3>
+<p>If you’re working on writing a pure rust function and it can be made generic
+such that it works for any petgraph graph (if applicable) and that it has
+no dependency on Python or pyo3, it probably makes sense in <code class="docutils literal notranslate"><span class="pre">rustworkx-core</span></code>.
+<code class="docutils literal notranslate"><span class="pre">rustworkx-core</span></code> is a standalone rust library that’s used to provide a Rust API
+to both rustworkx and other rust applications or libraries. Unlike rustworkx
+it’s a Rust library and not a Python library and is designed to be an add-on
+library on top of petgraph that provides additional graph algorithms and
+functionality.</p>
+<p>When contributing to rustworkx-core the key differences to keep in mind are that
+the public rust interface needs to be treated as a stable interface, which is
+different from rustworkx where the stable rust interface compatibility doesn’t
+matter only the exported Python API. Additionally documentation and testing
+should be done via cargo doc and cargo test. It is expected that any new
+functionality or changes to rustworkx-core is also being used by rustworkx so
+test coverage is needed both via python in the rustworkx tests and via the
+rustworkx-core rust interface.</p>
+</section>
+<section id="tests">
+<h3>Tests<a class="headerlink" href="#tests" title="Permalink to this heading">¶</a></h3>
+<p>Once you’ve made a code change, it is important to verify that your change
+does not break any existing tests and that any new tests that you’ve added
+also run successfully. Before you open a new pull request for your change,
+you’ll want to run the test suite locally.</p>
+<p>The easiest way to run the test suite is to use
+<a class="reference external" href="https://tox.readthedocs.io/en/latest/#">**tox**</a>. You can install tox
+with pip: <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">-U</span> <span class="pre">tox</span></code>. Tox provides several advantages, but the
+biggest one is that it builds an isolated virtualenv for running tests. This
+means it does not pollute your system python when running. However, by default
+tox will recompile rustworkx from source every time it is run even if there
+are no changes made to the rust code. To avoid this you can use the
+<code class="docutils literal notranslate"><span class="pre">--skip-pkg-install</span></code> package if you’d like to rerun tests without recompiling.
+Note, you only want to use this flag if you recently ran tox and there are no
+rust code (or packaged python code) changes to the repo since then. Otherwise
+the rustworkx package tox installs in it’s virtualenv will be out of date (or
+missing).</p>
+<p>Note, if you run tests outside of tox that you can <strong>not</strong> run the tests from
+the root of the repo, this is because rustworkx packaging shim will conflict
+with imports from rustworkx the installed version of rustworkx (which contains
+the compiled extension).</p>
+<section id="running-subsets-of-tests">
+<h4>Running subsets of tests<a class="headerlink" href="#running-subsets-of-tests" title="Permalink to this heading">¶</a></h4>
+<p>If you just want to run a subset of tests you can pass a selection regex to the
+test runner. For example, if you want to run all tests that have “dag” in the
+test id you can run: <code class="docutils literal notranslate"><span class="pre">tox</span> <span class="pre">-epy</span> <span class="pre">--</span> <span class="pre">dag</span></code>. You can pass arguments directly to the
+test runner after the bare <code class="docutils literal notranslate"><span class="pre">--</span></code>. To see all the options on test selection you
+can refer to the stestr manual:</p>
+<p><a class="reference external" href="https://stestr.readthedocs.io/en/stable/MANUAL.html#test-selection">https://stestr.readthedocs.io/en/stable/MANUAL.html#test-selection</a></p>
+<p>If you want to run a single test module, test class, or individual test method
+you can do this faster with the <code class="docutils literal notranslate"><span class="pre">-n</span></code>/<code class="docutils literal notranslate"><span class="pre">--no-discover</span></code> option. For example:</p>
+<p>to run a module:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">tox</span> <span class="o">-</span><span class="n">epy</span> <span class="o">--</span> <span class="o">-</span><span class="n">n</span> <span class="n">test_max_weight_matching</span>
+</pre></div>
+</div>
+<p>or to run the same module by path:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">tox</span> <span class="o">-</span><span class="n">epy</span> <span class="o">--</span> <span class="o">-</span><span class="n">n</span> <span class="n">graph</span><span class="o">/</span><span class="n">test_nodes</span><span class="o">.</span><span class="n">py</span>
+</pre></div>
+</div>
+<p>to run a class:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">tox</span> <span class="o">-</span><span class="n">epy</span> <span class="o">--</span> <span class="o">-</span><span class="n">n</span> <span class="n">graph</span><span class="o">.</span><span class="n">test_nodes</span><span class="o">.</span><span class="n">TestNodes</span>
+</pre></div>
+</div>
+<p>to run a method:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">tox</span> <span class="o">-</span><span class="n">epy</span> <span class="o">--</span> <span class="o">-</span><span class="n">n</span> <span class="n">graph</span><span class="o">.</span><span class="n">test_nodes</span><span class="o">.</span><span class="n">TestNodes</span><span class="o">.</span><span class="n">test_no_nodes</span>
+</pre></div>
+</div>
+<p>It’s important to note that tox will be running from the <code class="docutils literal notranslate"><span class="pre">tests/</span></code> directory in
+the repo, so any paths you pass to the test runner via path need to be relative
+to that directory.</p>
+</section>
+<section id="visualization-tests">
+<h4>Visualization Tests<a class="headerlink" href="#visualization-tests" title="Permalink to this heading">¶</a></h4>
+<p>When running the visualization tests, each test will generate a visualization
+and only fail if an exception is raised by the call. Each test saves the output
+image to the current working directory (which if running tests with <code class="docutils literal notranslate"><span class="pre">tox</span></code> is
+<code class="docutils literal notranslate"><span class="pre">tests/</span></code>) to ensure the generated image is usable. However to not clutter the
+system each test cleans up this generated image and by default a test run does
+not include any way to view the images from the visualization tests.</p>
+<p>If you want to inspect the output from the visualization tests (which is common
+if you’re working on visualizations) you can set the
+<code class="docutils literal notranslate"><span class="pre">RETWORKX_TEST_PRESERVE_IMAGES</span></code> environment variable to any value and this will
+skip the cleanup. This will enable you to look at the output image and ensure the
+visualization is correct. For example, running:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">RETWORKX_TEST_PRESERVE_IMAGES</span><span class="o">=</span><span class="mi">1</span> <span class="n">tox</span> <span class="o">-</span><span class="n">epy</span>
+</pre></div>
+</div>
+<p>will run the visualization tests and preserve the generated image files after
+the run finishes so you can inspect the output.</p>
+</section>
+<section id="rustworkx-core-tests">
+<h4>rustworkx-core tests<a class="headerlink" href="#rustworkx-core-tests" title="Permalink to this heading">¶</a></h4>
+<p>As rustworkx-core is a standalone rust crate with it’s own public interface it
+needs it’s own testing. These tests can be a combination of doc tests (embedded
+code examples in the docstrings in the rust code) or standalone tests. You
+can refer to the rust book on how to add tests:</p>
+<p><a class="reference external" href="https://doc.rust-lang.org/book/ch11-01-writing-tests.html">https://doc.rust-lang.org/book/ch11-01-writing-tests.html</a></p>
+<p>The rustworkx-core tests can be run with:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cargo</span> <span class="n">test</span>
+</pre></div>
+</div>
+<p>from the <code class="docutils literal notranslate"><span class="pre">rustworkx-core</span></code> directory.</p>
+</section>
+</section>
+<section id="style">
+<h3>Style<a class="headerlink" href="#style" title="Permalink to this heading">¶</a></h3>
+<section id="rust">
+<h4>Rust<a class="headerlink" href="#rust" title="Permalink to this heading">¶</a></h4>
+<p>Rust is the primary language of rustworkx and all the functional code in the
+libraries is written in Rust. The Rust code in rustworkx uses
+<a class="reference external" href="https://github.com/rust-lang/rustfmt">rustfmt</a> to enforce consistent style.
+CI jobs are configured to ensure to check this. Luckily adapting your code is
+as simple as running:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>cargo<span class="w"> </span>fmt
+</pre></div>
+</div>
+<p>locally. This will automatically restyle the rust code in rustworkx to match
+what CI is checking.</p>
+<section id="lint">
+<h5>Lint<a class="headerlink" href="#lint" title="Permalink to this heading">¶</a></h5>
+<p>An additional step is to run <a class="reference external" href="https://github.com/rust-lang/rust-clippy">clippy</a>
+on your changes. You can run it by running:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>cargo<span class="w"> </span>clippy
+</pre></div>
+</div>
+</section>
+</section>
+<section id="python">
+<h4>Python<a class="headerlink" href="#python" title="Permalink to this heading">¶</a></h4>
+<p>Python is used primarily for tests and some small pieces of packaging
+and namespace configuration code in the actual library.
+<a class="reference external" href="https://github.com/psf/black">black</a> and <a class="reference external" href="https://flake8.pycqa.org/en/latest/">flake8</a> are used to enforce consistent
+style in the python code in the repository. You can run them via tox using:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>tox<span class="w"> </span>-elint
+</pre></div>
+</div>
+<p>This will also run <code class="docutils literal notranslate"><span class="pre">cargo</span> <span class="pre">fmt</span></code> in check mode to ensure that you ran <code class="docutils literal notranslate"><span class="pre">cargo</span> <span class="pre">fmt</span></code>
+and will fail if the Rust code doesn’t conform to the style rules.</p>
+<p>If black returns a code formatting error you can run <code class="docutils literal notranslate"><span class="pre">tox</span> <span class="pre">-eblack</span></code> to automatically
+update the code formatting to conform to the style.</p>
+</section>
+</section>
+<section id="building-documentation">
+<h3>Building documentation<a class="headerlink" href="#building-documentation" title="Permalink to this heading">¶</a></h3>
+<p>Just like with tests building documentation is done via tox. This will handle
+compiling rustworkx, installing the python dependencies, and then building the
+documentation in an isolated venv. You can run just the docs build with:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">tox</span> <span class="o">-</span><span class="n">edocs</span>
+</pre></div>
+</div>
+<p>which will output the html rendered documentation in <code class="docutils literal notranslate"><span class="pre">docs/build/html</span></code> which
+you can view locally in a web browser.</p>
+<section id="rustworkx-core-documentation">
+<h4>rustworkx-core documentation<a class="headerlink" href="#rustworkx-core-documentation" title="Permalink to this heading">¶</a></h4>
+<p>To build the rustworkx-core documentation you will use rust-doc. You can do this
+by running:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cargo</span> <span class="n">doc</span>
+</pre></div>
+</div>
+<p>from the <code class="docutils literal notranslate"><span class="pre">rustworkx-core</span></code> directory (which is the root of the <code class="docutils literal notranslate"><span class="pre">rustworkx-core</span></code>
+crate. After it’s built the compiled documentation will be located in
+<code class="docutils literal notranslate"><span class="pre">target/doc/rustworkx_core</span></code> (which is off the repo root not the <code class="docutils literal notranslate"><span class="pre">rustworkx-core</span></code>
+dir)</p>
+<p>You can build and open the documentation directly in your configured default
+web browser by running:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cargo</span> <span class="n">doc</span> <span class="o">--</span><span class="nb">open</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="release-notes">
+<h3>Release Notes<a class="headerlink" href="#release-notes" title="Permalink to this heading">¶</a></h3>
+<p>It is important to document any end user facing changes when we release a new
+version of rustworkx.  The expectation is that if your code contribution has
+user facing changes that you will write the release documentation for these
+changes. This documentation must explain what was changed, why it was changed,
+and how users can either use or adapt to the change. The idea behind release
+documentation is that when a naive user with limited internal knowledge of the
+project is upgrading from the previous release to the new one, they should be
+able to read the release notes, understand if they need to update their
+program which uses rustworkx, and how they would go about doing that. It
+ideally should explain why they need to make this change too, to provide the
+necessary context.</p>
+<p>To make sure we don’t forget a release note or if the details of user facing
+changes over a release cycle we require that all user facing changes include
+documentation at the same time as the code. To accomplish this we use the
+<a class="reference external" href="https://docs.openstack.org/reno/latest/">reno</a> tool which enables a git based
+workflow for writing and compiling release notes.</p>
+<section id="adding-a-new-release-note">
+<h4>Adding a new release note<a class="headerlink" href="#adding-a-new-release-note" title="Permalink to this heading">¶</a></h4>
+<p>Making a new release note is quite straightforward. Ensure that you have reno
+installed with:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="o">-</span><span class="n">U</span> <span class="n">reno</span>
+</pre></div>
+</div>
+<p>Once you have reno installed you can make a new release note by running in
+your local repository checkout’s root:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">reno</span> <span class="n">new</span> <span class="n">short</span><span class="o">-</span><span class="n">description</span><span class="o">-</span><span class="n">string</span>
+</pre></div>
+</div>
+<p>where short-description-string is a brief string (with no spaces) that describes
+what’s in the release note. This will become the prefix for the release note
+file. Once that is run it will create a new yaml file in releasenotes/notes.
+Then open that yaml file in a text editor and write the release note. The basic
+structure of a release note is restructured text in yaml lists under category
+keys. You add individual items under each category and they will be grouped
+automatically by release when the release notes are compiled. A single file
+can have as many entries in it as needed, but to avoid potential conflicts
+you’ll want to create a new file for each pull request that has user facing
+changes. When you open the newly created file it will be a full template of
+the different categories with a description of a category as a single entry
+in each category. You’ll want to delete all the sections you aren’t using and
+update the contents for those you are. For example, the end result should
+look something like:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">features</span><span class="p">:</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">|</span>
+<span class="w">    </span><span class="no">Added a new function, :func:`~rustworkx.foo` that adds support for doing</span>
+<span class="w">    </span><span class="no">something to :class:`~rustworkx.PyDiGraph` objects.</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">|</span>
+<span class="w">    </span><span class="no">The :class:`~rustworkx.PyDiGraph` class has a new method</span>
+<span class="w">    </span><span class="no">:meth:`~rustworkx.PyDiGraph.foo``. This is the equivalent of calling the</span>
+<span class="w">    </span><span class="no">:func:`~rustworkx.foo` function to do something to your</span>
+<span class="w">    </span><span class="no">:class:`~rustworkx.PyDiGraph` object, but provides the convenience of running</span>
+<span class="w">    </span><span class="no">it natively on an object. For example::</span>
+
+<span class="w">      </span><span class="no">from rustworkx import PyDiGraph</span>
+
+<span class="w">      </span><span class="no">g = PyDiGraph.</span>
+<span class="w">      </span><span class="no">g.foo()</span>
+
+<span class="nt">deprecations</span><span class="p">:</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">|</span>
+<span class="w">    </span><span class="no">The ``rustworkx.bar`` function has been deprecated and will be removed in a</span>
+<span class="w">    </span><span class="no">future release. It has been superseded by the</span>
+<span class="w">    </span><span class="no">:meth:`~rustworkx.PyDiGraph.foo` method and :func:`~rustworkx.foo` function</span>
+<span class="w">    </span><span class="no">which provides similar functionality but with more accurate results and</span>
+<span class="w">    </span><span class="no">better performance. You should update your calls</span>
+<span class="w">    </span><span class="no">``rustworkx.bar()`` calls to use ``rustworkx.foo()`` instead.</span>
+</pre></div>
+</div>
+<p>You can also look at other release notes for other examples.</p>
+<p>You can use any
+<a class="reference external" href="https://www.sphinx-doc.org/en/3.x/usage/restructuredtext/">sphinx feature</a>
+in them (code sections, tables, enumerated lists, bulleted list, etc) to express
+what is being changed as needed. In general you want the release notes to
+include as much detail as needed so that users will understand what has changed,
+why it changed, and how they’ll have to update their code.</p>
+<p>After you’ve finished writing your release notes you’ll want to add the note
+file to your commit with <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">add</span></code> and commit them to your PR branch to make
+sure they’re included with the code in your PR.</p>
+<section id="linking-to-issues">
+<h5>Linking to issues<a class="headerlink" href="#linking-to-issues" title="Permalink to this heading">¶</a></h5>
+<p>If you need to link to an issue or other Github artifact as part of the release
+note this should be done using an inline link with the text being the issue
+number. For example you would write a release note with a link to issue 12345
+as:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">fixes</span><span class="p">:</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">|</span>
+<span class="w">    </span><span class="no">Fixes a race condition in the function ``foo()``. Refer to</span>
+<span class="w">    </span><span class="no">`#12345 &lt;https://github.com/Qiskit/rustworkx/issues/12345&gt;`__ for more</span>
+<span class="w">    </span><span class="no">details.</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="generating-the-release-notes">
+<h4>Generating the release notes<a class="headerlink" href="#generating-the-release-notes" title="Permalink to this heading">¶</a></h4>
+<p>After release notes have been added if you want to see what the full output of
+the release notes. Reno is used to combine the release note yaml files into a
+single rst (ReStructuredText) document that
+<a class="reference external" href="https://www.sphinx-doc.org/en/master/">sphinx</a> will then compile for us as part
+of the documentation builds. If you want to generate the rst file you
+use the <code class="docutils literal notranslate"><span class="pre">reno</span> <span class="pre">report</span></code> command. If you want to generate the full rustworkx
+release notes for all releases (since we started using reno during 0.8) you just
+run:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">reno</span> <span class="n">report</span>
+</pre></div>
+</div>
+<p>but you can also use the <code class="docutils literal notranslate"><span class="pre">--version</span></code> argument to view a single release (after
+it has been tagged:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">reno</span> <span class="n">report</span> <span class="o">--</span><span class="n">version</span> <span class="mf">0.8.0</span>
+</pre></div>
+</div>
+</section>
+<section id="building-release-notes-locally">
+<h4>Building release notes locally<a class="headerlink" href="#building-release-notes-locally" title="Permalink to this heading">¶</a></h4>
+<p>Building the release notes is part of the standard rustworkx documentation
+builds. To check what the rendered html output of the release notes will look
+like for the current state of the repo you can run: <code class="docutils literal notranslate"><span class="pre">tox</span> <span class="pre">-edocs</span></code> which will
+build all the documentation into <code class="docutils literal notranslate"><span class="pre">docs/_build/html</span></code> and the release notes in
+particular will be located at <code class="docutils literal notranslate"><span class="pre">docs/_build/html/release_notes.html</span></code></p>
+</section>
+</section>
+<section id="pull-request-review-ci-and-merge-queue">
+<h3>Pull request review, CI, and merge queue<a class="headerlink" href="#pull-request-review-ci-and-merge-queue" title="Permalink to this heading">¶</a></h3>
+<p>After you’ve submitted a pull request to rustworkx it will need to pass CI and be
+reviewed by an approved by a core team reviewer. CI runs get triggered
+automatically when your pull request is opened and on every subsequent commit
+made to your pull request’s branch. Code review however may take some time,
+sometimes even weeks or months, there are many new pull requests opened every
+day and limited number of reviewers available, and while every proposed change
+is a valuable addition to the project not everything is the highest priority.
+You can help this process move more quickly by actively reviewing other open
+PRs. While only members of the rustworkx core team have permission to provide
+final approval and mark a PR as ready for merging, reviewing code is open to
+everyone and all reviews are welcome and extremely valued contributions.
+Helping with code review also helps reduce the burden on the core team and
+enables them to review code faster.</p>
+<p>The code review process is a bit of back and forth where you will receive
+feedback and questions about your proposed changes to the project. You will
+likely have multiple rounds of feedback with suggestions or changes requested
+before approval. Please do not get discouraged as this is normal and part of
+ensuring the quality of the rustworkx project and even what first appears as a
+straightforward or simple change might have larger implications that aren’t
+obvious at first. If you receive feedback feel free to request re-review from
+reviewers after you’ve adjusted your PR based on the comments received.</p>
+<p>Another thing to keep in mind is that CI time is a constrained resource and not
+infinite. While waiting for review and approval it is not necessary to keep your
+PR branch up to date on every change to the <code class="docutils literal notranslate"><span class="pre">main</span></code> branch. Doing it periodically
+is fine to make sure there are no regressions as the codebase changes, but
+doing it too often will just needlessly waste CI resources. This will contribute
+to resource starvation on CI, slowing down total throughput for the project. If
+possible try to bundle updating your branch to the current HEAD on the <code class="docutils literal notranslate"><span class="pre">main</span></code>
+branch with other changes made to the PR branch (like making adjustments from
+code review). This will result in a single CI run instead of doing standalone
+updates with no code changes.</p>
+<p>Once your PR has the necessary approvals it will be tagged with the <code class="docutils literal notranslate"><span class="pre">automerge</span></code>
+tag. This is a signal to the <a class="reference external" href="https://mergify.io/">mergify bot</a> that the PR has
+been approved and is ready for merging. The mergify bot will then enqueue the
+PR onto its merge queue. At this point the process of updating a PR to the
+current HEAD of the <code class="docutils literal notranslate"><span class="pre">main</span></code> branch is fully automated and once CI passes mergify
+will merge the PR automatically. In an effort to conserve CI resources and
+maximize throughput the mergify bot will only update a PR when it’s next in the
+merge queue. It might appear as activity on your PR is idle at this point, but
+this likely just means the mergify merge queue is deep and/or CI has a backlog.
+Do <strong>not</strong> manually update a PR branch to HEAD on the <code class="docutils literal notranslate"><span class="pre">main</span></code> branch after it
+has the necessary approvals and is tagged as <code class="docutils literal notranslate"><span class="pre">automerge</span></code> unless it has a merge
+conflict or has a failed CI run. Doing so will just waste CI resources and
+delay everything from merging, including your PR.</p>
+</section>
+<section id="stable-branch-policy-and-backporting">
+<h3>Stable Branch Policy and Backporting<a class="headerlink" href="#stable-branch-policy-and-backporting" title="Permalink to this heading">¶</a></h3>
+<p>The stable branch is intended to be a safe source of fixes for high-impact bugs,
+documentation fixes, and security issues that have been fixed on main since a
+release. When reviewing a stable branch PR, we must balance the risk of any given
+patch with the value that it will provide to users of the stable branch. Only a
+limited class of changes are appropriate for inclusion on the stable branch. A
+large, risky patch for a major issue might make sense, as might a trivial fix
+for a fairly obscure error-handling case. A number of factors must be weighed
+when considering a change:</p>
+<ul class="simple">
+<li><p>The risk of regression: even the tiniest changes carry some risk of breaking
+something, and we really want to avoid regressions on the stable branch.</p></li>
+<li><p>The user visibility benefit: are we fixing something that users might actually
+notice, and if so, how important is it?</p></li>
+<li><p>How self-contained the fix is: if it fixes a significant issue but also
+refactors a lot of code, it’s probably worth thinking about what a less risky
+fix might look like.</p></li>
+<li><p>Whether the fix is already on main: a change must be a backport of a change
+already merged onto main, unless the change simply does not make sense on
+main.</p></li>
+</ul>
+<p>Normally only bug fixes or non-code changes are allowed on a stable branch, the
+primary exception to this is adding support for new python versions. If a new
+python version is released backporting that feature change with that new support
+is an acceptable backport.</p>
+<p>In rustworkx at least until the 1.0 release we only maintaing a single stable
+branch at a time for the most recent minor version release.</p>
+<section id="backporting-procedure">
+<h4>Backporting procedure<a class="headerlink" href="#backporting-procedure" title="Permalink to this heading">¶</a></h4>
+<p>In the normal case to backport a pull request all that needs to be done is
+to tag it as <code class="docutils literal notranslate"><span class="pre">stable-backport-potential</span></code>, this will signal the
+<a class="reference external" href="https://mergify.io/">mergify bot</a> that the PR should be backported after it
+merged. Once a PR tagged as <code class="docutils literal notranslate"><span class="pre">stable-backport-potential</span></code> merges mergify will
+automatically open a new PR backporting it to the stable branch.</p>
+<section id="manual-backport-procedure">
+<h5>Manual backport procedure<a class="headerlink" href="#manual-backport-procedure" title="Permalink to this heading">¶</a></h5>
+<p>If the mergify approach doesn’t work for some reason and you need to manual
+backport a PR this can be done with the following procedure. When backporting a
+patch from main to stable, we want to keep a reference to the change on main.
+When you create the branch for the stable PR, use:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ git cherry-pick -x $main_commit_id
+</pre></div>
+</div>
+<p>However, this only works for small self-contained patches from main. If you
+need to backport a subset of a larger commit (from a squashed PR, for example)
+from main, do this manually. In these cases, add:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Backported</span> <span class="n">from</span><span class="p">:</span> <span class="c1">#main pr number</span>
+</pre></div>
+</div>
+<p>so that we can track the source of the change subset, even if a strict
+cherry-pick doesn’t make sense.</p>
+<p>If the patch you’re proposing will not cherry-pick cleanly, you can help by
+resolving the conflicts yourself and proposing the resulting patch. Please keep
+Conflicts lines in the commit message to help review of the stable patch.</p>
+</section>
+</section>
+</section>
+</section>
+</section>
+
+
+             </article>
+             
+            </div>
+            <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="networkx.html" class="btn btn-neutral float-right" title="rustworkx for NetworkX users" accesskey="n" rel="next">Next <img src="_static/images/chevron-right-orange.svg" class="next-page"></a>
+      
+      
+        <a href="release_notes.html" class="btn btn-neutral" title="Release Notes" accesskey="p" rel="prev"><img src="_static/images/chevron-right-orange.svg" class="previous-page"> Previous</a>
+      
+    </div>
+  
+
+  
+
+    <hr>
+
+  
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2021, rustworkx Contributors.
+
+    </p>
+  </div>
+    
+      <div>
+        Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+      </div>
+     
+
+</footer>
+
+          </div>
+        </div>
+
+        <div class="pytorch-content-right" id="pytorch-content-right">
+          <div class="pytorch-right-menu" id="pytorch-right-menu">
+            <div class="pytorch-side-scroll" id="pytorch-side-scroll-right">
+              <ul>
+<li><a class="reference internal" href="#">Contributing</a><ul>
+<li><a class="reference internal" href="#contributing-to-rustworkx">Contributing to rustworkx</a><ul>
+<li><a class="reference internal" href="#making-changes-to-the-code">Making changes to the code</a><ul>
+<li><a class="reference internal" href="#module-exports-in-lib-rs">Module exports in <code class="docutils literal notranslate"><span class="pre">lib.rs</span></code></a></li>
+<li><a class="reference internal" href="#adding-and-changing-functions-in-modules">Adding and changing functions in modules</a></li>
+<li><a class="reference internal" href="#module-directories-when-a-single-file-is-not-enough">Module directories: when a single file is not enough</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#rustworkx-core">rustworkx-core</a></li>
+<li><a class="reference internal" href="#tests">Tests</a><ul>
+<li><a class="reference internal" href="#running-subsets-of-tests">Running subsets of tests</a></li>
+<li><a class="reference internal" href="#visualization-tests">Visualization Tests</a></li>
+<li><a class="reference internal" href="#rustworkx-core-tests">rustworkx-core tests</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#style">Style</a><ul>
+<li><a class="reference internal" href="#rust">Rust</a><ul>
+<li><a class="reference internal" href="#lint">Lint</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#python">Python</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#building-documentation">Building documentation</a><ul>
+<li><a class="reference internal" href="#rustworkx-core-documentation">rustworkx-core documentation</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#release-notes">Release Notes</a><ul>
+<li><a class="reference internal" href="#adding-a-new-release-note">Adding a new release note</a><ul>
+<li><a class="reference internal" href="#linking-to-issues">Linking to issues</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#generating-the-release-notes">Generating the release notes</a></li>
+<li><a class="reference internal" href="#building-release-notes-locally">Building release notes locally</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#pull-request-review-ci-and-merge-queue">Pull request review, CI, and merge queue</a></li>
+<li><a class="reference internal" href="#stable-branch-policy-and-backporting">Stable Branch Policy and Backporting</a><ul>
+<li><a class="reference internal" href="#backporting-procedure">Backporting procedure</a><ul>
+<li><a class="reference internal" href="#manual-backport-procedure">Manual backport procedure</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+  
+
+     
+       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+         <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+         <script src="_static/jquery.js"></script>
+         <script src="_static/underscore.js"></script>
+         <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+         <script src="_static/doctools.js"></script>
+         <script src="_static/sphinx_highlight.js"></script>
+         <script src="_static/thebelab-helper.js"></script>
+         <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+         <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
+     
+
+  
+
+  <script type="text/javascript" src="_static/js/vendor/popper.min.js"></script>
+  <script type="text/javascript" src="_static/js/vendor/bootstrap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/list.js/1.5.0/list.min.js"></script>
+  <script type="text/javascript" src="_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+ <script type="text/javascript">
+    $(document).ready(function() {
+        $(".toggle > *").hide();
+        $(".toggle .header").show();
+        $(".toggle .header").click(function() {
+            $(this).parent().children().not(".header").toggle(400);
+            $(this).parent().children(".header").toggleClass("open");
+        })
+    });
+</script>
+
+
+  <div>
+    <br>
+  </div>
+
+  <!-- Begin Mobile Menu -->
+
+  <div class="mobile-main-menu">
+    <div class="container-fluid">
+      <div class="container">
+        <div class="mobile-main-menu-header-container">
+          <a class="header-logo" href="https://qiskit.org/" aria-label="PyTorch"></a>
+          <a class="main-menu-close-button" href="#" data-behavior="close-mobile-menu"></a>
+        </div>
+      </div>
+    </div>
+
+    <div class="mobile-main-menu-links-container">
+      <div class="main-menu">
+        <ul>
+          <li>
+            <a href="https://retworkx.readthedocs.io/en/stable/">Qiskit Documentation</a>
+          </li>
+
+          <li>
+            <a href="https://qiskit.org/learn" target="_blank">Learning Resources</a>
+          </li>
+
+          <li>
+            <a href="https://qiskit.slack.com" target="_blank">Slack Support</a>
+          </li>
+
+          <li>
+            <a href="https://github.com/Qiskit/retworkx" target="_blank">Github</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- End Mobile Menu -->
+
+  <script type="text/javascript" src="_static/js/vendor/anchor.min.js"></script>
+
+  <script type="text/javascript">
+    $(document).ready(function() {
+      mobileMenu.bind();
+      mobileTOC.bind();
+      pytorchAnchors.bind();
+      sideMenus.bind();
+      scrollToAnchor.bind();
+      highlightNavigation.bind();
+      mainMenuDropdown.bind();
+      filterTags.bind();
+
+      // Add class to links that have code blocks, since we cannot create links in code blocks
+      $("article.pytorch-article a span.pre").each(function(e) {
+        $(this).closest("a").addClass("has-code");
+      });
+    })
+  </script>
+</body>
+</html>

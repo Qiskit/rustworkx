@@ -1,0 +1,6 @@
+﻿rustworkx.topological\_generations
+==================================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: topological_generations
