@@ -10,7 +10,7 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-//! This module defines graph traits for node contraction.
+//! This module defines graph traits for node substitution.
 
 use crate::dictmap::{DictMap, InitWithHasher};
 use petgraph::data::DataMap;
