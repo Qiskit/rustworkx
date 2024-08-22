@@ -1,12 +1,9 @@
 use core::fmt;
-use num_traits::Num;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::error::Error;
 use std::hash::Hash;
-use std::ops::AddAssign;
-use std::vec::Vec;
 
-use petgraph::visit::{Data, EdgeRef, GraphBase, GraphProp, IntoEdgeReferences};
+use petgraph::visit::{Data, EdgeRef, GraphProp, IntoEdgeReferences};
 
 #[derive(Debug, PartialEq, Eq)]
 pub struct NotAPartitionError;
@@ -20,26 +17,32 @@ impl fmt::Display for NotAPartitionError {
     }
 }
 
-fn _total_edge_weight<G, W>(graph: &G) -> W
+pub trait ModularityGraph:
+    Data<EdgeWeight: Into<f64> + Copy, NodeId: Hash + Eq> + GraphProp + IntoEdgeReferences
+{
+}
+impl<G: Data<EdgeWeight: Into<f64> + Copy, NodeId: Hash + Eq> + GraphProp + IntoEdgeReferences>
+    ModularityGraph for G
+{
+}
+
+fn _total_edge_weight<G>(graph: &G) -> f64
 where
-    G: Data<EdgeWeight = W> + IntoEdgeReferences,
-    W: Num + Copy,
+    G: ModularityGraph,
 {
     graph
         .edge_references()
         .map(|edge| *edge.weight())
-        .fold(W::zero(), |s, e| s + e)
+        .fold(0.0, |s, e| s + e.into())
 }
 
-pub fn modularity<G, W>(
+pub fn modularity<G>(
     graph: G,
-    communities: &[Vec<G::NodeId>],
+    communities: &[HashSet<G::NodeId>],
     resolution: f64,
 ) -> Result<f64, NotAPartitionError>
 where
-    G: GraphProp + Data<EdgeWeight = W> + IntoEdgeReferences,
-    <G as GraphBase>::NodeId: Hash + Eq + Copy,
-    W: Num + Copy + Into<f64> + AddAssign,
+    G: ModularityGraph,
 {
     let mut node_to_community: HashMap<G::NodeId, usize> =
         HashMap::with_capacity(communities.iter().map(|v| v.len()).sum());
@@ -52,10 +55,10 @@ where
         }
     }
 
-    let mut internal_edge_weights = vec![W::zero(); communities.len()];
-    let mut outgoing_edge_weights = vec![W::zero(); communities.len()];
+    let mut internal_edge_weights = vec![0.0; communities.len()];
+    let mut outgoing_edge_weights = vec![0.0; communities.len()];
     let mut incoming_edge_weights_opt = if graph.is_directed() {
-        Some(vec![W::zero(); communities.len()])
+        Some(vec![0.0; communities.len()])
     } else {
         None
     };
@@ -65,13 +68,13 @@ where
         if let (Some(&c_a), Some(&c_b)) = (node_to_community.get(&a), node_to_community.get(&b)) {
             let &w = edge.weight();
             if c_a == c_b {
-                internal_edge_weights[c_a] += w;
+                internal_edge_weights[c_a] += w.into();
             }
-            outgoing_edge_weights[c_a] += w;
+            outgoing_edge_weights[c_a] += w.into();
             if let Some(ref mut incoming_edge_weights) = incoming_edge_weights_opt {
-                incoming_edge_weights[c_b] += w;
+                incoming_edge_weights[c_b] += w.into();
             } else {
-                outgoing_edge_weights[c_b] += w;
+                outgoing_edge_weights[c_b] += w.into();
             }
         } else {
             // At least one node was not included in `communities`
@@ -81,23 +84,15 @@ where
 
     let m: f64 = _total_edge_weight(&graph).into();
 
-    let sigma_internal: f64 = internal_edge_weights
-        .iter()
-        .fold(W::zero(), |s, &w| s + w)
-        .into();
+    let sigma_internal: f64 = internal_edge_weights.iter().fold(0.0, |s, &w| s + w);
 
     let sigma_total_squared: f64 = if let Some(incoming_edge_weights) = incoming_edge_weights_opt {
         incoming_edge_weights
             .iter()
             .zip(outgoing_edge_weights.iter())
-            .fold(W::zero(), |s, (&x, &y)| s + x * y)
-            .into()
+            .fold(0.0, |s, (&x, &y)| s + x * y)
     } else {
-        outgoing_edge_weights
-            .iter()
-            .fold(W::zero(), |s, &x| s + x * x)
-            .into()
-            / 4.0
+        outgoing_edge_weights.iter().fold(0.0, |s, &x| s + x * x) / 4.0
     };
 
     Ok(sigma_internal / m - resolution * sigma_total_squared / (m * m))
@@ -108,7 +103,7 @@ mod tests {
     use crate::generators::barbell_graph;
     use petgraph::graph::{DiGraph, UnGraph};
     use petgraph::visit::{GraphBase, IntoNodeIdentifiers};
-    use std::vec::Vec;
+    use std::collections::HashSet;
 
     use super::modularity;
 
@@ -120,7 +115,7 @@ mod tests {
         for n in 3..10 {
             let g: G = barbell_graph(Some(n), Some(0), None, None, || (), || 1.0f64).unwrap();
             let nodes: Vec<N> = g.node_identifiers().collect();
-            let communities: Vec<Vec<N>> = vec![
+            let communities: Vec<HashSet<N>> = vec![
                 (0..n).map(|ii| nodes[ii]).collect(),
                 (n..(2 * n)).map(|ii| nodes[ii]).collect(),
             ];
@@ -158,7 +153,7 @@ mod tests {
             g.add_edge(nodes[0], nodes[n], 1.0);
             g.add_edge(nodes[n + 1], nodes[1], 1.0);
 
-            let communities: Vec<Vec<N>> = vec![
+            let communities: Vec<HashSet<N>> = vec![
                 (0..n).map(|ii| nodes[ii]).collect(),
                 (n..2 * n).map(|ii| nodes[ii]).collect(),
             ];
