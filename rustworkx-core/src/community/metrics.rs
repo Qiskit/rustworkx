@@ -12,7 +12,7 @@ impl fmt::Display for NotAPartitionError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(
             f,
-            "The input communities do not form a partition of the input graph."
+            "The input subsets do not form a partition of the input graph."
         )
     }
 }
@@ -30,19 +30,20 @@ impl<
 {
 }
 
-pub struct Partition<G>
+pub struct Partition<'g, G>
 where
     G: ModularityComputable,
 {
-    graph: G,
+    graph: &'g G,
+    n_subsets: usize,
     node_to_subset: HashMap<G::NodeId, usize>,
 }
 
-impl<G: ModularityComputable> Partition<G> {
+impl<'g, G: ModularityComputable> Partition<'g, G> {
     pub fn new(
-        graph: G,
+        graph: &'g G,
         subsets: &[HashSet<G::NodeId>],
-    ) -> Result<Partition<G>, NotAPartitionError> {
+    ) -> Result<Partition<'g, G>, NotAPartitionError> {
         let mut node_to_subset: HashMap<G::NodeId, usize> =
             HashMap::with_capacity(subsets.iter().map(|v| v.len()).sum());
         for (ii, v) in subsets.iter().enumerate() {
@@ -58,8 +59,9 @@ impl<G: ModularityComputable> Partition<G> {
             return Err(NotAPartitionError {});
         }
 
-        Ok(Partition::<G> {
+        Ok(Partition::<'g, G> {
             graph: graph,
+            n_subsets: subsets.len(),
             node_to_subset: node_to_subset,
         })
     }
@@ -74,6 +76,51 @@ impl<G: ModularityComputable> Partition<G> {
     pub fn get_subset_id(&self, node: &G::NodeId) -> Option<&usize> {
         self.node_to_subset.get(node)
     }
+
+    pub fn modularity(&self, resolution: f64) -> Result<f64, NotAPartitionError> {
+        let mut internal_edge_weights = vec![0.0; self.n_subsets];
+        let mut outgoing_edge_weights = vec![0.0; self.n_subsets];
+
+        let directed = self.graph.is_directed();
+        let mut incoming_edge_weights = if directed {
+            vec![0.0; self.n_subsets]
+        } else {
+            vec![]
+        };
+
+        for edge in self.graph.edge_references() {
+            let (a, b) = (edge.source(), edge.target());
+            if let (Some(&c_a), Some(&c_b)) = (self.get_subset_id(&a), self.get_subset_id(&b)) {
+                let w: f64 = (*edge.weight()).into();
+                if c_a == c_b {
+                    internal_edge_weights[c_a] += w;
+                }
+                outgoing_edge_weights[c_a] += w;
+                if directed {
+                    incoming_edge_weights[c_b] += w;
+                } else {
+                    outgoing_edge_weights[c_b] += w;
+                }
+            } else {
+                return Err(NotAPartitionError {});
+            }
+        }
+
+        let sigma_internal: f64 = internal_edge_weights.iter().sum();
+
+        let sigma_total_squared: f64 = if directed {
+            incoming_edge_weights
+                .iter()
+                .zip(outgoing_edge_weights.iter())
+                .map(|(&x, &y)| x * y)
+                .sum()
+        } else {
+            outgoing_edge_weights.iter().map(|&x| x * x).sum::<f64>() / 4.0
+        };
+
+        let m: f64 = self.total_edge_weight();
+        Ok(sigma_internal / m - resolution * sigma_total_squared / (m * m))
+    }
 }
 
 pub fn modularity<G>(
@@ -84,46 +131,9 @@ pub fn modularity<G>(
 where
     G: ModularityComputable,
 {
-    let partition = Partition::new(graph, &communities)?;
+    let partition = Partition::new(&graph, &communities)?;
 
-    let mut internal_edge_weights = vec![0.0; communities.len()];
-    let mut outgoing_edge_weights = vec![0.0; communities.len()];
-    let mut incoming_edge_weights_opt = if graph.is_directed() {
-        Some(vec![0.0; communities.len()])
-    } else {
-        None
-    };
-
-    for edge in graph.edge_references() {
-        let (a, b) = (edge.source(), edge.target());
-        if let (Some(&c_a), Some(&c_b)) = (partition.get_subset_id(&a), partition.get_subset_id(&b))
-        {
-            let &w = edge.weight();
-            if c_a == c_b {
-                internal_edge_weights[c_a] += w.into();
-            }
-            outgoing_edge_weights[c_a] += w.into();
-            if let Some(ref mut incoming_edge_weights) = incoming_edge_weights_opt {
-                incoming_edge_weights[c_b] += w.into();
-            } else {
-                outgoing_edge_weights[c_b] += w.into();
-            }
-        }
-    }
-
-    let sigma_internal: f64 = internal_edge_weights.iter().fold(0.0, |s, &w| s + w);
-
-    let sigma_total_squared: f64 = if let Some(incoming_edge_weights) = incoming_edge_weights_opt {
-        incoming_edge_weights
-            .iter()
-            .zip(outgoing_edge_weights.iter())
-            .fold(0.0, |s, (&x, &y)| s + x * y)
-    } else {
-        outgoing_edge_weights.iter().fold(0.0, |s, &x| s + x * x) / 4.0
-    };
-
-    let m: f64 = partition.total_edge_weight();
-    Ok(sigma_internal / m - resolution * sigma_total_squared / (m * m))
+    partition.modularity(resolution)
 }
 
 #[cfg(test)]
