@@ -1,3 +1,4 @@
 mod metrics;
+pub use metrics::{modularity, ModularityComputable};
 
-pub use metrics::modularity;
+mod louvain;

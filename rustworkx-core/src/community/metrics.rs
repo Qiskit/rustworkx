@@ -3,7 +3,9 @@ use std::collections::{HashMap, HashSet};
 use std::error::Error;
 use std::hash::Hash;
 
-use petgraph::visit::{Data, EdgeRef, GraphProp, IntoEdgeReferences, NodeCount};
+use petgraph::visit::{
+    Data, EdgeRef, GraphProp, IntoEdgeReferences, IntoNodeReferences, NodeCount, NodeRef,
+};
 
 #[derive(Debug, PartialEq, Eq)]
 pub struct NotAPartitionError;
@@ -18,14 +20,19 @@ impl fmt::Display for NotAPartitionError {
 }
 
 pub trait ModularityComputable:
-    Data<EdgeWeight: Into<f64> + Copy, NodeId: Hash + Eq> + GraphProp + IntoEdgeReferences + NodeCount
+    Data<EdgeWeight: Into<f64> + Copy, NodeId: Hash + Eq + Copy>
+    + GraphProp
+    + IntoEdgeReferences
+    + NodeCount
+    + IntoNodeReferences
 {
 }
 impl<
-        G: Data<EdgeWeight: Into<f64> + Copy, NodeId: Hash + Eq>
+        G: Data<EdgeWeight: Into<f64> + Copy, NodeId: Hash + Eq + Copy>
             + GraphProp
             + IntoEdgeReferences
-            + NodeCount,
+            + NodeCount
+            + IntoNodeReferences,
     > ModularityComputable for G
 {
 }
@@ -64,6 +71,18 @@ impl<'g, G: ModularityComputable> Partition<'g, G> {
             n_subsets: subsets.len(),
             node_to_subset: node_to_subset,
         })
+    }
+
+    pub fn isolated_nodes_partition(graph: &'g G) -> Partition<'g, G> {
+        Partition::<'g, G> {
+            graph: graph,
+            n_subsets: graph.node_count(),
+            node_to_subset: graph
+                .node_references()
+                .enumerate()
+                .map(|(ii, n)| (n.id(), ii))
+                .collect(),
+        }
     }
 
     pub fn total_edge_weight(&self) -> f64 {
