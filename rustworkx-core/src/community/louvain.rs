@@ -3,6 +3,8 @@ use petgraph::{
     graph::UnGraph,
     visit::{EdgeRef, NodeRef},
 };
+use rand::SeedableRng;
+use rand_pcg::Pcg64;
 use std::collections::{HashMap, HashSet};
 
 fn _one_level_undirected<'g, G>(
@@ -10,6 +12,7 @@ fn _one_level_undirected<'g, G>(
     current_partition: &Partition<G>,
     m: f64,
     resolution: f64,
+    seed: Option<u64>,
 ) -> Option<Vec<HashSet<G::NodeId>>>
 where
     G: ModularityComputable,
@@ -42,7 +45,13 @@ where
     let mut improved = false;
     loop {
         let mut performed_move = false;
-        for node in 0..node_count {
+
+        let mut node_shuffle: Pcg64 = match seed {
+            Some(rng_seed) => Pcg64::seed_from_u64(rng_seed),
+            None => Pcg64::from_entropy(),
+        };
+
+        for node in rand::seq::index::sample(&mut node_shuffle, node_count, node_count) {
             let mut neighbor_weights: HashMap<usize, f64> = HashMap::new();
             for nbr in aggregated_graph.neighbors_undirected(node.into()) {
                 for e in aggregated_graph.edges_connecting(node.into(), nbr) {
@@ -136,7 +145,7 @@ where
 
     let mut n_levels = 0;
     while let Some(improved_partition) =
-        _one_level_undirected(&graph, &current_partition, m, resolution)
+        _one_level_undirected(&graph, &current_partition, m, resolution, seed)
     {
         result = improved_partition;
         current_partition = Partition::new(&graph, &result)?;
@@ -177,6 +186,8 @@ mod tests {
             let resolution = 1.0;
             let gain_threshold = 0.01;
             let result = louvain_communities(&g, resolution, gain_threshold, None, None)?;
+            // For a barbell graph, we expect the Louvain algorithm to identify
+            // the two complete subgraphs as the final communities
             assert_eq!(result.len(), 2);
             assert_eq!(result[0].len(), n);
             assert_eq!(result[1].len(), n);
