@@ -4,7 +4,7 @@ use std::error::Error;
 use std::hash::Hash;
 
 use petgraph::visit::{
-    Data, EdgeRef, GraphProp, IntoEdgeReferences, IntoNodeReferences, NodeCount, NodeRef,
+    Data, EdgeRef, GraphProp, IntoEdgeReferences, IntoNodeReferences, NodeCount,
 };
 
 #[derive(Debug, PartialEq, Eq)]
@@ -28,12 +28,12 @@ pub trait ModularityComputable:
 {
 }
 impl<
-        G: Data<EdgeWeight: Into<f64> + Copy, NodeId: Hash + Eq + Copy>
+        Graph: Data<EdgeWeight: Into<f64> + Copy, NodeId: Hash + Eq + Copy>
             + GraphProp
             + IntoEdgeReferences
             + NodeCount
             + IntoNodeReferences,
-    > ModularityComputable for G
+    > ModularityComputable for Graph
 {
 }
 
@@ -44,6 +44,11 @@ where
     graph: &'g G,
     n_subsets: usize,
     node_to_subset: HashMap<G::NodeId, usize>,
+}
+pub struct PartitionEdgeWeights {
+    pub internal: Vec<f64>,
+    pub outgoing: Vec<f64>,
+    pub incoming: Option<Vec<f64>>,
 }
 
 impl<'g, G: ModularityComputable> Partition<'g, G> {
@@ -72,19 +77,6 @@ impl<'g, G: ModularityComputable> Partition<'g, G> {
             node_to_subset: node_to_subset,
         })
     }
-
-    pub fn isolated_nodes_partition(graph: &'g G) -> Partition<'g, G> {
-        Partition::<'g, G> {
-            graph: graph,
-            n_subsets: graph.node_count(),
-            node_to_subset: graph
-                .node_references()
-                .enumerate()
-                .map(|(ii, n)| (n.id(), ii))
-                .collect(),
-        }
-    }
-
     pub fn total_edge_weight(&self) -> f64 {
         self.graph
             .edge_references()
@@ -96,15 +88,15 @@ impl<'g, G: ModularityComputable> Partition<'g, G> {
         self.node_to_subset.get(node)
     }
 
-    pub fn modularity(&self, resolution: f64) -> Result<f64, NotAPartitionError> {
+    pub fn partition_edge_weights(&self) -> Result<PartitionEdgeWeights, NotAPartitionError> {
         let mut internal_edge_weights = vec![0.0; self.n_subsets];
         let mut outgoing_edge_weights = vec![0.0; self.n_subsets];
 
         let directed = self.graph.is_directed();
         let mut incoming_edge_weights = if directed {
-            vec![0.0; self.n_subsets]
+            Some(vec![0.0; self.n_subsets])
         } else {
-            vec![]
+            None
         };
 
         for edge in self.graph.edge_references() {
@@ -115,8 +107,8 @@ impl<'g, G: ModularityComputable> Partition<'g, G> {
                     internal_edge_weights[c_a] += w;
                 }
                 outgoing_edge_weights[c_a] += w;
-                if directed {
-                    incoming_edge_weights[c_b] += w;
+                if let Some(ref mut incoming) = incoming_edge_weights {
+                    incoming[c_b] += w;
                 } else {
                     outgoing_edge_weights[c_b] += w;
                 }
@@ -125,16 +117,26 @@ impl<'g, G: ModularityComputable> Partition<'g, G> {
             }
         }
 
-        let sigma_internal: f64 = internal_edge_weights.iter().sum();
+        Ok(PartitionEdgeWeights {
+            internal: internal_edge_weights,
+            outgoing: outgoing_edge_weights,
+            incoming: incoming_edge_weights,
+        })
+    }
 
-        let sigma_total_squared: f64 = if directed {
-            incoming_edge_weights
+    pub fn modularity(&self, resolution: f64) -> Result<f64, NotAPartitionError> {
+        let weights = self.partition_edge_weights()?;
+
+        let sigma_internal: f64 = weights.internal.iter().sum();
+
+        let sigma_total_squared: f64 = if let Some(incoming) = weights.incoming {
+            incoming
                 .iter()
-                .zip(outgoing_edge_weights.iter())
+                .zip(weights.outgoing.iter())
                 .map(|(&x, &y)| x * y)
                 .sum()
         } else {
-            outgoing_edge_weights.iter().map(|&x| x * x).sum::<f64>() / 4.0
+            weights.outgoing.iter().map(|&x| x * x).sum::<f64>() / 4.0
         };
 
         let m: f64 = self.total_edge_weight();

@@ -98,6 +98,7 @@ pub mod bipartite_coloring;
 pub mod centrality;
 /// Module for coloring algorithms.
 pub mod coloring;
+/// Module for community detection algorithms.
 pub mod community;
 pub mod connectivity;
 /// Module for algorithms that work on DAGs.
