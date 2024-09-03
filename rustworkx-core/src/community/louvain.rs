@@ -1,4 +1,7 @@
-use super::metrics::{ModularityComputable, NotAPartitionError, Partition};
+use super::metrics::{ModularityComputable, Partition};
+use super::utils::total_edge_weight;
+
+use super::NotAPartitionError;
 use petgraph::{
     graph::UnGraph,
     visit::{EdgeRef, NodeRef},
@@ -12,6 +15,7 @@ fn _one_level_undirected<'g, G>(
     current_partition: &Partition<G>,
     m: f64,
     resolution: f64,
+    gain_threshold: f64,
     seed: Option<u64>,
 ) -> Option<Vec<HashSet<G::NodeId>>>
 where
@@ -19,13 +23,12 @@ where
 {
     let mut edges: HashMap<(usize, usize), f64> = HashMap::new();
     for e in graph.edge_references() {
-        if let (Some(&a), Some(&b)) = (
-            current_partition.get_subset_id(&e.source()),
-            current_partition.get_subset_id(&e.target()),
-        ) {
-            let w: f64 = (*e.weight()).into();
-            edges.entry((a, b)).and_modify(|x| *x += w).or_insert(w);
-        }
+        let (a, b) = (
+            current_partition.get_subset_id(e.source()),
+            current_partition.get_subset_id(e.target()),
+        );
+        let w: f64 = (*e.weight()).into();
+        edges.entry((a, b)).and_modify(|x| *x += w).or_insert(w);
     }
 
     let aggregated_graph: UnGraph<(), f64, usize> =
@@ -42,7 +45,7 @@ where
     }
     let mut s_tot = degrees.clone();
 
-    let mut improved = false;
+    let mut total_gain = 0.0;
     loop {
         let mut performed_move = false;
 
@@ -91,17 +94,16 @@ where
 
             if best_com != init_com {
                 performed_move = true;
+                total_gain += best_gain;
                 node_to_community[node] = best_com;
             }
         }
-        if performed_move {
-            improved = true;
-        } else {
+        if !performed_move {
             break;
         }
     }
 
-    if !improved {
+    if total_gain < gain_threshold {
         return None;
     }
 
@@ -109,8 +111,8 @@ where
     let mut final_partition: Vec<HashSet<G::NodeId>> = Vec::new();
 
     for n in graph.node_identifiers() {
-        let prev_com = current_partition.get_subset_id(&n).unwrap_or(&0);
-        let inner_com = node_to_community[*prev_com];
+        let prev_com = current_partition.get_subset_id(n);
+        let inner_com = node_to_community[prev_com];
         let new_com = if let Some(&c) = com_to_final_index.get(&inner_com) {
             c
         } else {
@@ -139,21 +141,27 @@ where
         .map(|n| HashSet::from([n.id()]))
         .collect();
     let mut current_partition = Partition::new(&graph, &result)?;
-    let m = current_partition.total_edge_weight();
 
-    let mut current_modularity = current_partition.modularity(resolution)?;
+    let m = total_edge_weight(&graph);
 
     let mut n_levels = 0;
-    while let Some(improved_partition) =
-        _one_level_undirected(&graph, &current_partition, m, resolution, seed)
-    {
+    while let Some(improved_partition) = _one_level_undirected(
+        &graph,
+        &current_partition,
+        m,
+        resolution,
+        gain_threshold,
+        seed,
+    ) {
+        let current_modularity = current_partition.modularity(resolution);
+
         result = improved_partition;
         current_partition = Partition::new(&graph, &result)?;
-        let improved_modularity = current_partition.modularity(resolution)?;
+
+        let improved_modularity = current_partition.modularity(resolution);
         if improved_modularity - current_modularity < gain_threshold {
             break;
         }
-        current_modularity = improved_modularity;
 
         match max_level {
             Some(t) => {
@@ -171,7 +179,7 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::community::metrics::NotAPartitionError;
+    use crate::community::NotAPartitionError;
     use crate::generators::barbell_graph;
     use petgraph::graph::UnGraph;
 
