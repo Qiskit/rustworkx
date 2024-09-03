@@ -13,6 +13,7 @@
 import unittest
 
 import rustworkx
+import rustworkx.generators
 
 
 class TestAdj(unittest.TestCase):
@@ -57,3 +58,24 @@ class TestAdj(unittest.TestCase):
         dag = rustworkx.PyDAG()
         node_a = dag.add_node("a")
         self.assertEqual([], dag.neighbors(node_a))
+
+    def test_undirected_neighbors(self):
+        dag = rustworkx.PyDAG()
+        node_a = dag.add_node("a")
+        node_b = dag.add_child(node_a, "b", {"a": 1})
+
+        directed = dag.neighbors(node_b)
+        self.assertEqual([], directed)
+
+        undirected = dag.neighbors_undirected(node_b)
+        self.assertEqual([node_a], undirected)
+
+    def test_undirected_neighbors_cycle(self):
+        num_nodes = 10
+        dag = rustworkx.generators.directed_cycle_graph(num_nodes, bidirectional=False)
+        undirected_dag = dag.to_undirected()
+
+        for node in dag.node_indices():
+            undirected_neighbors = dag.neighbors_undirected(node)
+            expected_neighbors = undirected_dag.neighbors(node)
+            self.assertEqual(sorted(undirected_neighbors), sorted(expected_neighbors))
