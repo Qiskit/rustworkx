@@ -7,6 +7,9 @@ use rand::SeedableRng;
 use rand_pcg::Pcg64;
 use std::collections::{HashMap, HashSet};
 
+/// Struct that holds an "inner graph" for one level of the Louvain algorithm,
+/// i.e. a graph in which each community from the previous level is treated
+/// as a single node.
 struct InnerGraph<'g, G>
 where
     G: ModularityComputable,
@@ -16,25 +19,37 @@ where
 }
 
 impl<'g, G: ModularityComputable> InnerGraph<'g, G> {
+    /// Compute the inner graph for a given partition.
+    /// ToDo: fix redundant arguments
     pub fn new(graph: &'g G, partition: &Partition<G>) -> InnerGraph<'g, G> {
         if partition.n_subsets() == graph.node_count() {
             // At the start of the Louvain algorithm we put each node from the
-            // input graph into an isolated partition. At this stage we want to
-            // avoid copying the entire input graph.
+            // input graph into its own commnuity, so the inner graph is the
+            // same as the input graph. We should avoid copying the input.
             return InnerGraph {
                 input_graph: graph,
                 inner_graph: None,
             };
         }
 
+        // Construct a new graph where:
+        //   - Node `n_i` corresponds to the `i`th community in the partition
+        //   - Nodes `n_i` and `n_j` have an edge with weight `w`, where `w` is
+        //     the sum of all edge weights connecting nodes in `n_i` and `n_j`.
+        //     (including self-loops)
         let mut edges: HashMap<(usize, usize), f64> = HashMap::new();
         for e in graph.edge_references() {
             let (a, b) = (
                 partition.subset_idx(e.source()),
                 partition.subset_idx(e.target()),
             );
+            let inner_edge = if graph.is_directed() {
+                (std::cmp::min(a, b), std::cmp::max(a, b))
+            } else {
+                (a, b)
+            };
             let w: f64 = (*e.weight()).into();
-            edges.entry((a, b)).and_modify(|x| *x += w).or_insert(w);
+            edges.entry(inner_edge).and_modify(|x| *x += w).or_insert(w);
         }
 
         InnerGraph {
@@ -45,6 +60,7 @@ impl<'g, G: ModularityComputable> InnerGraph<'g, G> {
         }
     }
 
+    /// Returns the number of nodes in the inner graph
     pub fn node_count(&self) -> usize {
         if let Some(g) = &self.inner_graph {
             g.node_count()
@@ -53,6 +69,8 @@ impl<'g, G: ModularityComputable> InnerGraph<'g, G> {
         }
     }
 
+    /// Returns a vector `w` where `w[i]` is the total weight of the
+    /// edges incident on the `i`th node.
     pub fn degrees(&self) -> Vec<f64> {
         let mut degrees = vec![0.0; self.node_count()];
         if let Some(g) = &self.inner_graph {
@@ -75,10 +93,13 @@ impl<'g, G: ModularityComputable> InnerGraph<'g, G> {
         degrees
     }
 
+    /// Given a node index `idx`, returns a map `w`. For each neighbor
+    /// `nbr` of `idx`, `w[nbr]` is the total weight of all the edges
+    /// connecting `idx` and `nbr`.
     pub fn neighbor_community_weights(
         &self,
         idx: usize,
-        node_to_community: &Vec<usize>,
+        node_to_community: &[usize],
     ) -> HashMap<usize, f64> {
         let mut weights = HashMap::new();
 
@@ -106,6 +127,18 @@ impl<'g, G: ModularityComputable> InnerGraph<'g, G> {
     }
 }
 
+/// Performs one level of the Louvain algorithm.
+///
+/// Arguments:
+///
+/// * `graph`: The input graph
+/// * `partition`: The current partition of the input graph
+/// * `m`: Total weight of the edges of `graph`
+/// * `resolution` : controls whether the algorithm favors larger communities (`resolution < 1`) or smaller communities (`resolution < 1`)
+/// * `gain_threshold` : minimum acceptable increase in modularity
+/// * `seed` : optional seed to determine the order in which we consider moving each node into a neighboring community
+///
+/// Returns true if it was possible to meet the specified `gain_threshold` by combining nodes into communities.
 fn one_level_undirected<G>(
     graph: &G,
     partition: &mut Partition<G>,
@@ -124,6 +157,7 @@ where
     let mut degrees = inner_graph.degrees();
     let mut s_tot = degrees.clone();
 
+    // Start by placing each node into its own community
     let mut node_to_community: Vec<usize> = (0..node_count).collect();
     let mut total_gain = 0.0;
     loop {
@@ -134,6 +168,9 @@ where
             None => Pcg64::from_entropy(),
         };
 
+        // Try moving each node into a neighboring community, in the order
+        // determined by `seed`. For each node, select the neighboring community
+        // that gives the largest increase in modularity (if any).
         for node in rand::seq::index::sample(&mut node_shuffle, node_count, node_count) {
             let neighbor_weights = inner_graph.neighbor_community_weights(node, &node_to_community);
 
@@ -177,6 +214,7 @@ where
         return false;
     }
 
+    // Compute the resulting new partition of the input graph
     let mut final_index = HashMap::new();
     let mut next_com = 0;
     let mut updated_partition: Vec<usize> = vec![0; node_count];
@@ -199,6 +237,16 @@ where
     true
 }
 
+/// Runs the Louvain community detection algorithm.
+///
+/// Arguments:
+///
+/// * `graph`: The input graph
+/// * `resolution` : controls whether the algorithm favors larger communities (`resolution < 1`) or smaller communities (`resolution < 1`)
+/// * `gain_threshold` : minimum acceptable increase in modularity at each level. The algorithm will
+///    terminate if it is not possible to meet this threshold by performing another level of aggregation.
+/// * `max_level` : Maximum number of levels (aggregation steps) to perform
+/// * `seed` : seed for RNG that determines the order in which we consider moving each node into a neighboring community
 pub fn louvain_communities<G>(
     graph: G,
     resolution: f64,
