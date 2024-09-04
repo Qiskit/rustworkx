@@ -2,7 +2,8 @@ use super::utils::total_edge_weight;
 use super::NotAPartitionError;
 
 use petgraph::visit::{
-    Data, EdgeRef, GraphProp, IntoEdgeReferences, IntoNodeReferences, NodeCount, NodeIndexable,
+    Data, EdgeRef, GraphProp, IntoEdgeReferences, IntoEdgesDirected, IntoNodeReferences, NodeCount,
+    NodeIndexable,
 };
 use std::collections::HashSet;
 use std::hash::Hash;
@@ -14,6 +15,7 @@ pub trait ModularityComputable:
     + NodeCount
     + IntoNodeReferences
     + NodeIndexable
+    + IntoEdgesDirected
 {
 }
 impl<
@@ -22,7 +24,8 @@ impl<
             + IntoEdgeReferences
             + NodeCount
             + IntoNodeReferences
-            + NodeIndexable,
+            + NodeIndexable
+            + IntoEdgesDirected,
     > ModularityComputable for Graph
 {
 }

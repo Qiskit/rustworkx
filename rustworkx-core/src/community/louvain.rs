@@ -1,12 +1,112 @@
 use super::metrics::{ModularityComputable, Partition};
 use super::utils::total_edge_weight;
 
+use petgraph::EdgeDirection;
 use petgraph::{graph::UnGraph, visit::EdgeRef};
 use rand::SeedableRng;
 use rand_pcg::Pcg64;
 use std::collections::{HashMap, HashSet};
 
-fn one_level_undirected<'g, G>(
+struct InnerGraph<'g, G>
+where
+    G: ModularityComputable,
+{
+    input_graph: &'g G,
+    inner_graph: Option<UnGraph<(), f64, usize>>,
+}
+
+impl<'g, G: ModularityComputable> InnerGraph<'g, G> {
+    pub fn new(graph: &'g G, partition: &Partition<G>) -> InnerGraph<'g, G> {
+        if partition.n_subsets() == graph.node_count() {
+            // At the start of the Louvain algorithm we put each node from the
+            // input graph into an isolated partition. At this stage we want to
+            // avoid copying the entire input graph.
+            return InnerGraph {
+                input_graph: graph,
+                inner_graph: None,
+            };
+        }
+
+        let mut edges: HashMap<(usize, usize), f64> = HashMap::new();
+        for e in graph.edge_references() {
+            let (a, b) = (
+                partition.subset_idx(e.source()),
+                partition.subset_idx(e.target()),
+            );
+            let w: f64 = (*e.weight()).into();
+            edges.entry((a, b)).and_modify(|x| *x += w).or_insert(w);
+        }
+
+        InnerGraph {
+            input_graph: graph,
+            inner_graph: Some(UnGraph::from_edges(
+                edges.iter().map(|(k, &v)| (k.0, k.1, v)),
+            )),
+        }
+    }
+
+    pub fn node_count(&self) -> usize {
+        if let Some(g) = &self.inner_graph {
+            g.node_count()
+        } else {
+            self.input_graph.node_count()
+        }
+    }
+
+    pub fn degrees(&self) -> Vec<f64> {
+        let mut degrees = vec![0.0; self.node_count()];
+        if let Some(g) = &self.inner_graph {
+            for e in g.edge_references() {
+                let w = e.weight();
+                degrees[e.source().index()] += w;
+                degrees[e.target().index()] += w;
+            }
+        } else {
+            for e in self.input_graph.edge_references() {
+                let w = (*e.weight()).into();
+                let (a, b) = (
+                    self.input_graph.to_index(e.source()),
+                    self.input_graph.to_index(e.target()),
+                );
+                degrees[a] += w;
+                degrees[b] += w;
+            }
+        }
+        degrees
+    }
+
+    pub fn neighbor_community_weights(
+        &self,
+        idx: usize,
+        node_to_community: &Vec<usize>,
+    ) -> HashMap<usize, f64> {
+        let mut weights = HashMap::new();
+
+        let mut add_weight = |n: usize, w: f64| {
+            let com = node_to_community[n];
+            weights.entry(com).and_modify(|x| *x += w).or_insert(w);
+        };
+
+        if let Some(g) = &self.inner_graph {
+            for edge in g.edges_directed(idx.into(), EdgeDirection::Outgoing) {
+                let n = edge.target().index();
+                add_weight(n, *edge.weight());
+            }
+        } else {
+            let node = self.input_graph.from_index(idx);
+            for edge in self
+                .input_graph
+                .edges_directed(node, EdgeDirection::Outgoing)
+            {
+                let n = self.input_graph.to_index(edge.target());
+                add_weight(n, (*edge.weight()).into());
+            }
+        }
+        weights
+    }
+}
+
+fn one_level_undirected<G>(
     graph: &G,
     partition: &mut Partition<G>,
     m: f64,
@@ -17,30 +117,14 @@ fn one_level_undirected<'g, G>(
 where
     G: ModularityComputable,
 {
-    let mut edges: HashMap<(usize, usize), f64> = HashMap::new();
-    for e in graph.edge_references() {
-        let (a, b) = (
-            partition.subset_idx(e.source()),
-            partition.subset_idx(e.target()),
-        );
-        let w: f64 = (*e.weight()).into();
-        edges.entry((a, b)).and_modify(|x| *x += w).or_insert(w);
-    }
+    let inner_graph = InnerGraph::new(graph, partition);
 
-    let aggregated_graph: UnGraph<(), f64, usize> =
-        UnGraph::from_edges(edges.iter().map(|(k, &v)| (k.0, k.1, v)));
-    let node_count = aggregated_graph.node_count();
+    let node_count = inner_graph.node_count();
 
-    let mut node_to_community: Vec<usize> = (0..node_count).collect();
-
-    let mut degrees = vec![0.0; node_count];
-    for e in aggregated_graph.edge_references() {
-        let w = e.weight();
-        degrees[e.source().index()] += w;
-        degrees[e.target().index()] += w;
-    }
+    let mut degrees = inner_graph.degrees();
     let mut s_tot = degrees.clone();
 
+    let mut node_to_community: Vec<usize> = (0..node_count).collect();
     let mut total_gain = 0.0;
     loop {
         let mut performed_move = false;
@@ -51,17 +135,7 @@ where
         };
 
         for node in rand::seq::index::sample(&mut node_shuffle, node_count, node_count) {
-            let mut neighbor_weights: HashMap<usize, f64> = HashMap::new();
-            for nbr in aggregated_graph.neighbors_undirected(node.into()) {
-                for e in aggregated_graph.edges_connecting(node.into(), nbr) {
-                    let w = e.weight();
-                    let com = node_to_community[nbr.index()];
-                    neighbor_weights
-                        .entry(com)
-                        .and_modify(|x| *x += w)
-                        .or_insert(*w);
-                }
-            }
+            let neighbor_weights = inner_graph.neighbor_community_weights(node, &node_to_community);
 
             let mut best_gain = 0.0;
             let init_com = node_to_community[node];
