@@ -46,7 +46,7 @@ where
 {
     graph: &'g G,
     n_subsets: usize,
-    pub node_to_subset: Vec<usize>,
+    node_to_subset: Vec<usize>,
 }
 struct PartitionEdgeWeights {
     pub internal: Vec<f64>,
@@ -87,9 +87,31 @@ impl<'g, G: ModularityComputable> Partition<'g, G> {
         })
     }
 
-    pub fn get_subset_id(&self, node: G::NodeId) -> usize {
+    pub fn new_isolated_nodes(graph: &'g G) -> Partition<'g, G> {
+        Partition {
+            graph: graph,
+            n_subsets: graph.node_count(),
+            node_to_subset: (0..graph.node_count()).collect(),
+        }
+    }
+
+    pub fn update(&mut self, new_partition: Vec<usize>) {
+        self.node_to_subset = new_partition;
+        self.n_subsets = *self.node_to_subset.iter().max().unwrap_or(&0) + 1;
+    }
+
+    pub fn subset_idx(&self, node: G::NodeId) -> usize {
         let idx = self.graph.to_index(node);
         self.node_to_subset[idx]
+    }
+
+    pub fn to_vec_of_hashsets(&self) -> Vec<HashSet<G::NodeId>> {
+        let mut v = vec![HashSet::new(); self.n_subsets];
+        for (idx, &s) in self.node_to_subset.iter().enumerate() {
+            let node = self.graph.from_index(idx);
+            v[s].insert(node);
+        }
+        v
     }
 
     fn partition_edge_weights(&self) -> PartitionEdgeWeights {
@@ -105,7 +127,7 @@ impl<'g, G: ModularityComputable> Partition<'g, G> {
 
         for edge in self.graph.edge_references() {
             let (a, b) = (edge.source(), edge.target());
-            let (c_a, c_b) = (self.get_subset_id(a), self.get_subset_id(b));
+            let (c_a, c_b) = (self.subset_idx(a), self.subset_idx(b));
             let w: f64 = (*edge.weight()).into();
             if c_a == c_b {
                 internal_edge_weights[c_a] += w;

@@ -1,31 +1,27 @@
 use super::metrics::{ModularityComputable, Partition};
 use super::utils::total_edge_weight;
 
-use super::NotAPartitionError;
-use petgraph::{
-    graph::UnGraph,
-    visit::{EdgeRef, NodeRef},
-};
+use petgraph::{graph::UnGraph, visit::EdgeRef};
 use rand::SeedableRng;
 use rand_pcg::Pcg64;
 use std::collections::{HashMap, HashSet};
 
-fn _one_level_undirected<'g, G>(
+fn one_level_undirected<'g, G>(
     graph: &G,
-    current_partition: &Partition<G>,
+    partition: &mut Partition<G>,
     m: f64,
     resolution: f64,
     gain_threshold: f64,
     seed: Option<u64>,
-) -> Option<Vec<HashSet<G::NodeId>>>
+) -> bool
 where
     G: ModularityComputable,
 {
     let mut edges: HashMap<(usize, usize), f64> = HashMap::new();
     for e in graph.edge_references() {
         let (a, b) = (
-            current_partition.get_subset_id(e.source()),
-            current_partition.get_subset_id(e.target()),
+            partition.subset_idx(e.source()),
+            partition.subset_idx(e.target()),
         );
         let w: f64 = (*e.weight()).into();
         edges.entry((a, b)).and_modify(|x| *x += w).or_insert(w);
@@ -104,26 +100,29 @@ where
     }
 
     if total_gain < gain_threshold {
-        return None;
+        return false;
     }
 
-    let mut com_to_final_index = HashMap::new();
-    let mut final_partition: Vec<HashSet<G::NodeId>> = Vec::new();
+    let mut final_index = HashMap::new();
+    let mut next_com = 0;
+    let mut updated_partition: Vec<usize> = vec![0; node_count];
 
     for n in graph.node_identifiers() {
-        let prev_com = current_partition.get_subset_id(n);
+        let prev_com = partition.subset_idx(n);
         let inner_com = node_to_community[prev_com];
-        let new_com = if let Some(&c) = com_to_final_index.get(&inner_com) {
+        let new_com = if let Some(&c) = final_index.get(&inner_com) {
             c
         } else {
-            let n_com = final_partition.len();
-            com_to_final_index.insert(inner_com, n_com);
-            final_partition.push(HashSet::new());
-            n_com
+            let c = next_com;
+            final_index.insert(inner_com, c);
+            next_com += 1;
+            c
         };
-        final_partition[new_com].insert(n);
+        updated_partition[graph.to_index(n)] = new_com;
     }
-    Some(final_partition)
+    partition.update(updated_partition);
+
+    true
 }
 
 pub fn louvain_communities<G>(
@@ -132,49 +131,25 @@ pub fn louvain_communities<G>(
     gain_threshold: f64,
     max_level: Option<u32>,
     seed: Option<u64>,
-) -> Result<Vec<HashSet<G::NodeId>>, NotAPartitionError>
+) -> Vec<HashSet<G::NodeId>>
 where
     G: ModularityComputable,
 {
-    let mut result: Vec<HashSet<G::NodeId>> = graph
-        .node_references()
-        .map(|n| HashSet::from([n.id()]))
-        .collect();
-    let mut current_partition = Partition::new(&graph, &result)?;
+    let mut partition = Partition::new_isolated_nodes(&graph);
 
     let m = total_edge_weight(&graph);
 
     let mut n_levels = 0;
-    while let Some(improved_partition) = _one_level_undirected(
-        &graph,
-        &current_partition,
-        m,
-        resolution,
-        gain_threshold,
-        seed,
-    ) {
-        let current_modularity = current_partition.modularity(resolution);
-
-        result = improved_partition;
-        current_partition = Partition::new(&graph, &result)?;
-
-        let improved_modularity = current_partition.modularity(resolution);
-        if improved_modularity - current_modularity < gain_threshold {
-            break;
-        }
-
-        match max_level {
-            Some(t) => {
-                n_levels += 1;
-                if n_levels >= t {
-                    break;
-                }
+    while one_level_undirected(&graph, &mut partition, m, resolution, gain_threshold, seed) {
+        if let Some(limit) = max_level {
+            n_levels += 1;
+            if n_levels >= limit {
+                break;
             }
-            None => (),
-        };
+        }
     }
 
-    Ok(result)
+    partition.to_vec_of_hashsets()
 }
 
 #[cfg(test)]
@@ -193,7 +168,7 @@ mod tests {
             let g: G = barbell_graph(Some(n), Some(0), None, None, || (), || 1.0f64).unwrap();
             let resolution = 1.0;
             let gain_threshold = 0.01;
-            let result = louvain_communities(&g, resolution, gain_threshold, None, None)?;
+            let result = louvain_communities(&g, resolution, gain_threshold, None, None);
             // For a barbell graph, we expect the Louvain algorithm to identify
             // the two complete subgraphs as the final communities
             assert_eq!(result.len(), 2);
