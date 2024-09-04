@@ -27,19 +27,6 @@ impl<
 {
 }
 
-// pub fn index_map_from_subsets<N>(subsets: &[HashSet<N>]) -> HashMap<N, usize>
-// where
-//     N: Hash + Copy + Eq,
-// {
-//     let mut h = HashMap::with_capacity(subsets.iter().map(|s| s.len()).sum());
-//     for (ii, s) in subsets.iter().enumerate() {
-//         for &n in s {
-//             h.insert(n, ii);
-//         }
-//     }
-//     h
-// }
-
 pub struct Partition<'g, G>
 where
     G: ModularityComputable,
@@ -48,18 +35,12 @@ where
     n_subsets: usize,
     node_to_subset: Vec<usize>,
 }
-struct PartitionEdgeWeights {
-    pub internal: Vec<f64>,
-    pub outgoing: Vec<f64>,
-    pub incoming: Option<Vec<f64>>,
-}
 
 impl<'g, G: ModularityComputable> Partition<'g, G> {
     pub fn new(
         graph: &'g G,
         subsets: &[HashSet<G::NodeId>],
     ) -> Result<Partition<'g, G>, NotAPartitionError> {
-        // Move this into a separate helper function
         let mut seen = vec![false; graph.node_count()];
 
         let mut node_to_subset = vec![0; graph.node_count()];
@@ -81,15 +62,15 @@ impl<'g, G: ModularityComputable> Partition<'g, G> {
         }
 
         Ok(Partition::<'g, G> {
-            graph: graph,
+            graph,
             n_subsets: subsets.len(),
-            node_to_subset: node_to_subset,
+            node_to_subset,
         })
     }
 
     pub fn new_isolated_nodes(graph: &'g G) -> Partition<'g, G> {
         Partition {
-            graph: graph,
+            graph,
             n_subsets: graph.node_count(),
             node_to_subset: (0..graph.node_count()).collect(),
         }
@@ -105,6 +86,10 @@ impl<'g, G: ModularityComputable> Partition<'g, G> {
         self.node_to_subset[idx]
     }
 
+    pub fn n_subsets(&self) -> usize {
+        self.n_subsets
+    }
+
     pub fn to_vec_of_hashsets(&self) -> Vec<HashSet<G::NodeId>> {
         let mut v = vec![HashSet::new(); self.n_subsets];
         for (idx, &s) in self.node_to_subset.iter().enumerate() {
@@ -114,12 +99,12 @@ impl<'g, G: ModularityComputable> Partition<'g, G> {
         v
     }
 
-    fn partition_edge_weights(&self) -> PartitionEdgeWeights {
-        let mut internal_edge_weights = vec![0.0; self.n_subsets];
-        let mut outgoing_edge_weights = vec![0.0; self.n_subsets];
+    pub fn modularity(&self, resolution: f64) -> f64 {
+        let mut internal_weights = vec![0.0; self.n_subsets];
+        let mut outgoing_weights = vec![0.0; self.n_subsets];
 
         let directed = self.graph.is_directed();
-        let mut incoming_edge_weights = if directed {
+        let mut incoming_weights = if directed {
             Some(vec![0.0; self.n_subsets])
         } else {
             None
@@ -130,36 +115,26 @@ impl<'g, G: ModularityComputable> Partition<'g, G> {
             let (c_a, c_b) = (self.subset_idx(a), self.subset_idx(b));
             let w: f64 = (*edge.weight()).into();
             if c_a == c_b {
-                internal_edge_weights[c_a] += w;
+                internal_weights[c_a] += w;
             }
-            outgoing_edge_weights[c_a] += w;
-            if let Some(ref mut incoming) = incoming_edge_weights {
+            outgoing_weights[c_a] += w;
+            if let Some(ref mut incoming) = incoming_weights {
                 incoming[c_b] += w;
             } else {
-                outgoing_edge_weights[c_b] += w;
+                outgoing_weights[c_b] += w;
             }
         }
 
-        PartitionEdgeWeights {
-            internal: internal_edge_weights,
-            outgoing: outgoing_edge_weights,
-            incoming: incoming_edge_weights,
-        }
-    }
+        let sigma_internal: f64 = internal_weights.iter().sum();
 
-    pub fn modularity(&self, resolution: f64) -> f64 {
-        let weights = self.partition_edge_weights();
-
-        let sigma_internal: f64 = weights.internal.iter().sum();
-
-        let sigma_total_squared: f64 = if let Some(incoming) = weights.incoming {
+        let sigma_total_squared: f64 = if let Some(incoming) = incoming_weights {
             incoming
                 .iter()
-                .zip(weights.outgoing.iter())
+                .zip(outgoing_weights.iter())
                 .map(|(&x, &y)| x * y)
                 .sum()
         } else {
-            weights.outgoing.iter().map(|&x| x * x).sum::<f64>() / 4.0
+            outgoing_weights.iter().map(|&x| x * x).sum::<f64>() / 4.0
         };
 
         let m: f64 = total_edge_weight(self.graph);
@@ -175,8 +150,7 @@ pub fn modularity<G>(
 where
     G: ModularityComputable,
 {
-    let partition = Partition::new(&graph, &communities)?;
-
+    let partition = Partition::new(&graph, communities)?;
     Ok(partition.modularity(resolution))
 }
 
