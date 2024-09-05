@@ -144,7 +144,6 @@ impl<'g, G: Modularity> LouvainAlgo<'g, G> for Partition<'g, G> {
         self.n_subsets = *self.node_to_subset.iter().max().unwrap_or(&0) + 1;
     }
 
-    /// Returns the current graph partition as a vector of sets of `NodeId`.
     fn to_vec_of_hashsets(&self) -> Vec<HashSet<G::NodeId>> {
         let mut v = vec![HashSet::new(); self.n_subsets];
         for (idx, &s) in self.node_to_subset.iter().enumerate() {
@@ -159,7 +158,6 @@ impl<'g, G: Modularity> LouvainAlgo<'g, G> for Partition<'g, G> {
 ///
 /// Arguments:
 ///
-/// * `graph`: The input graph
 /// * `partition`: The current partition of the input graph
 /// * `m`: Total weight of the edges of `graph`
 /// * `resolution` : controls whether the algorithm favors larger communities (`resolution < 1`) or smaller communities (`resolution < 1`)
@@ -168,7 +166,6 @@ impl<'g, G: Modularity> LouvainAlgo<'g, G> for Partition<'g, G> {
 ///
 /// Returns true if it was possible to meet the specified `gain_threshold` by combining nodes into communities.
 fn one_level_undirected<G>(
-    graph: &G,
     partition: &mut Partition<G>,
     m: f64,
     resolution: f64,
@@ -243,11 +240,12 @@ where
     }
 
     // Compute the resulting new partition of the input graph
+    let input_graph = &partition.graph;
     let mut final_index = HashMap::new();
     let mut next_com = 0;
-    let mut updated_partition: Vec<usize> = vec![0; graph.node_count()];
+    let mut updated_partition: Vec<usize> = vec![0; input_graph.node_count()];
 
-    for n in graph.node_identifiers() {
+    for n in input_graph.node_identifiers() {
         let prev_com = partition.subset_idx(n);
         let inner_com = node_to_community[prev_com];
         let new_com = if let Some(&c) = final_index.get(&inner_com) {
@@ -258,7 +256,7 @@ where
             next_com += 1;
             c
         };
-        updated_partition[graph.to_index(n)] = new_com;
+        updated_partition[input_graph.to_index(n)] = new_com;
     }
     partition.update(updated_partition);
 
@@ -290,7 +288,7 @@ where
     let m = total_edge_weight(&graph);
 
     let mut n_levels = 0;
-    while one_level_undirected(&graph, &mut partition, m, resolution, gain_threshold, seed) {
+    while one_level_undirected(&mut partition, m, resolution, gain_threshold, seed) {
         if let Some(limit) = max_level {
             n_levels += 1;
             if n_levels >= limit {
