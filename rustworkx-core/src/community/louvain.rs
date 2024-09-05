@@ -1,4 +1,4 @@
-use super::metrics::{ModularityComputable, Partition};
+use super::metrics::{Louvain, Partition};
 use super::utils::total_edge_weight;
 
 use petgraph::EdgeDirection;
@@ -7,18 +7,24 @@ use rand::SeedableRng;
 use rand_pcg::Pcg64;
 use std::collections::{HashMap, HashSet};
 
-/// Struct that holds an "inner graph" for one level of the Louvain algorithm,
+/// Enum that holds an "inner graph" for one level of the Louvain algorithm,
 /// i.e. a graph in which each community from the previous level is treated
 /// as a single node.
-struct InnerGraph<'g, G>
+///
+/// For the first stage of the algorithm, each node from the input graph
+/// start out in its own community, so the inner graph is the same as the
+/// input graph. In this case we avoid copying the input.
+enum InnerGraph<'g, G>
 where
-    G: ModularityComputable,
+    G: Louvain,
 {
-    input_graph: &'g G,
-    inner_graph: Option<UnGraph<(), f64, usize>>,
+    Init(&'g G),
+    Undirected(UnGraph<(), f64, usize>),
+    // Directed case is not implemented yet
+    // Directed(DiGraph<(), f64, usize>)
 }
 
-impl<'g, G: ModularityComputable> InnerGraph<'g, G> {
+impl<'g, G: Louvain> InnerGraph<'g, G> {
     /// Compute the inner graph for a given partition.
     /// ToDo: fix redundant arguments
     pub fn new(graph: &'g G, partition: &Partition<G>) -> InnerGraph<'g, G> {
@@ -26,10 +32,7 @@ impl<'g, G: ModularityComputable> InnerGraph<'g, G> {
             // At the start of the Louvain algorithm we put each node from the
             // input graph into its own commnuity, so the inner graph is the
             // same as the input graph. We should avoid copying the input.
-            return InnerGraph {
-                input_graph: graph,
-                inner_graph: None,
-            };
+            return InnerGraph::Init(graph);
         }
 
         // Construct a new graph where:
@@ -52,20 +55,16 @@ impl<'g, G: ModularityComputable> InnerGraph<'g, G> {
             edges.entry(inner_edge).and_modify(|x| *x += w).or_insert(w);
         }
 
-        InnerGraph {
-            input_graph: graph,
-            inner_graph: Some(UnGraph::from_edges(
-                edges.iter().map(|(k, &v)| (k.0, k.1, v)),
-            )),
-        }
+        InnerGraph::Undirected(UnGraph::from_edges(
+            edges.iter().map(|(k, &v)| (k.0, k.1, v)),
+        ))
     }
 
     /// Returns the number of nodes in the inner graph
     pub fn node_count(&self) -> usize {
-        if let Some(g) = &self.inner_graph {
-            g.node_count()
-        } else {
-            self.input_graph.node_count()
+        match self {
+            InnerGraph::Init(&g) => g.node_count(),
+            InnerGraph::Undirected(g) => g.node_count(),
         }
     }
 
@@ -73,21 +72,21 @@ impl<'g, G: ModularityComputable> InnerGraph<'g, G> {
     /// edges incident on the `i`th node.
     pub fn degrees(&self) -> Vec<f64> {
         let mut degrees = vec![0.0; self.node_count()];
-        if let Some(g) = &self.inner_graph {
-            for e in g.edge_references() {
-                let w = e.weight();
-                degrees[e.source().index()] += w;
-                degrees[e.target().index()] += w;
+        match self {
+            InnerGraph::Init(&g) => {
+                for e in g.edge_references() {
+                    let w = (*e.weight()).into();
+                    let (a, b) = (g.to_index(e.source()), g.to_index(e.target()));
+                    degrees[a] += w;
+                    degrees[b] += w;
+                }
             }
-        } else {
-            for e in self.input_graph.edge_references() {
-                let w = (*e.weight()).into();
-                let (a, b) = (
-                    self.input_graph.to_index(e.source()),
-                    self.input_graph.to_index(e.target()),
-                );
-                degrees[a] += w;
-                degrees[b] += w;
+            InnerGraph::Undirected(g) => {
+                for e in g.edge_references() {
+                    let w = e.weight();
+                    degrees[e.source().index()] += w;
+                    degrees[e.target().index()] += w;
+                }
             }
         }
         degrees
@@ -108,21 +107,22 @@ impl<'g, G: ModularityComputable> InnerGraph<'g, G> {
             weights.entry(com).and_modify(|x| *x += w).or_insert(w);
         };
 
-        if let Some(g) = &self.inner_graph {
-            for edge in g.edges_directed(idx.into(), EdgeDirection::Outgoing) {
-                let n = edge.target().index();
-                add_weight(n, *edge.weight());
+        match self {
+            InnerGraph::Init(&g) => {
+                let node = g.from_index(idx);
+                for edge in g.edges_directed(node, EdgeDirection::Outgoing) {
+                    let n = g.to_index(edge.target());
+                    add_weight(n, (*edge.weight()).into());
+                }
             }
-        } else {
-            let node = self.input_graph.from_index(idx);
-            for edge in self
-                .input_graph
-                .edges_directed(node, EdgeDirection::Outgoing)
-            {
-                let n = self.input_graph.to_index(edge.target());
-                add_weight(n, (*edge.weight()).into());
+            InnerGraph::Undirected(g) => {
+                for edge in g.edges_directed(idx.into(), EdgeDirection::Outgoing) {
+                    let n = edge.target().index();
+                    add_weight(n, *edge.weight());
+                }
             }
         }
+
         weights
     }
 }
@@ -148,7 +148,7 @@ fn one_level_undirected<G>(
     seed: Option<u64>,
 ) -> bool
 where
-    G: ModularityComputable,
+    G: Louvain,
 {
     let inner_graph = InnerGraph::new(graph, partition);
 
@@ -255,9 +255,9 @@ pub fn louvain_communities<G>(
     seed: Option<u64>,
 ) -> Vec<HashSet<G::NodeId>>
 where
-    G: ModularityComputable,
+    G: Louvain,
 {
-    let mut partition = Partition::new_isolated_nodes(&graph);
+    let mut partition = Partition::new(&graph);
 
     let m = total_edge_weight(&graph);
 

@@ -10,7 +10,7 @@ use std::hash::Hash;
 
 /// Trait for graphs for which it is possible to compute modularity
 /// and apply the Louvain community detection method.
-pub trait ModularityComputable:
+pub trait Louvain:
     Data<EdgeWeight: Into<f64> + Copy, NodeId: Hash + Eq + Copy>
     + GraphProp
     + IntoEdgeReferences
@@ -21,14 +21,14 @@ pub trait ModularityComputable:
 {
 }
 impl<
-        Graph: Data<EdgeWeight: Into<f64> + Copy, NodeId: Hash + Eq + Copy>
+        G: Data<EdgeWeight: Into<f64> + Copy, NodeId: Hash + Eq + Copy>
             + GraphProp
             + IntoEdgeReferences
             + NodeCount
             + IntoNodeReferences
             + NodeIndexable
             + IntoEdgesDirected,
-    > ModularityComputable for Graph
+    > Louvain for G
 {
 }
 
@@ -37,17 +37,27 @@ impl<
 /// the graph and node `i` belongs to subset `s_i`.
 pub struct Partition<'g, G>
 where
-    G: ModularityComputable,
+    G: Louvain,
 {
     graph: &'g G,
     n_subsets: usize,
     node_to_subset: Vec<usize>,
 }
 
-impl<'g, G: ModularityComputable> Partition<'g, G> {
+impl<'g, G: Louvain> Partition<'g, G> {
+    /// Creates a partition where each node of the input graph is placed
+    /// into its own subset, e.g. for the first step of the Louvain algorithm.
+    pub fn new(graph: &'g G) -> Partition<'g, G> {
+        Partition {
+            graph,
+            n_subsets: graph.node_count(),
+            node_to_subset: (0..graph.node_count()).collect(),
+        }
+    }
+
     /// Creates a `Partition` from sets of graph nodes. Checks whether the
     /// sets actually form a partition of the input graph.
-    pub fn new(
+    pub fn from_subsets(
         graph: &'g G,
         subsets: &[HashSet<G::NodeId>],
     ) -> Result<Partition<'g, G>, NotAPartitionError> {
@@ -76,16 +86,6 @@ impl<'g, G: ModularityComputable> Partition<'g, G> {
             n_subsets: subsets.len(),
             node_to_subset,
         })
-    }
-
-    /// Creates a partition where each node of the input graph is placed
-    /// into its own subset (e.g. for the first step of the Louvain algorithm).
-    pub fn new_isolated_nodes(graph: &'g G) -> Partition<'g, G> {
-        Partition {
-            graph,
-            n_subsets: graph.node_count(),
-            node_to_subset: (0..graph.node_count()).collect(),
-        }
     }
 
     /// Replaces the current partition. The argument `new_partition` should be
@@ -173,9 +173,9 @@ pub fn modularity<G>(
     resolution: f64,
 ) -> Result<f64, NotAPartitionError>
 where
-    G: ModularityComputable,
+    G: Louvain,
 {
-    let partition = Partition::new(&graph, communities)?;
+    let partition = Partition::from_subsets(&graph, communities)?;
     Ok(partition.modularity(resolution))
 }
 

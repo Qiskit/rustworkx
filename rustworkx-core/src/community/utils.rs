@@ -1,9 +1,9 @@
-use super::ModularityComputable;
+use super::Louvain;
 use petgraph::visit::EdgeRef;
 
 pub fn total_edge_weight<G>(graph: &G) -> f64
 where
-    G: ModularityComputable,
+    G: Louvain,
 {
     graph
         .edge_references()

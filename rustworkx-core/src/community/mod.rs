@@ -1,5 +1,5 @@
 mod metrics;
-pub use metrics::{modularity, ModularityComputable};
+pub use metrics::{modularity, Louvain};
 
 mod louvain;
 pub use louvain::louvain_communities;
