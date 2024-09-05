@@ -4,7 +4,7 @@ use super::utils::total_edge_weight;
 use petgraph::EdgeDirection;
 use petgraph::{graph::UnGraph, visit::EdgeRef};
 use rand::SeedableRng;
-use rand_pcg::Pcg64;
+use rand_pcg::Pcg32;
 use std::collections::{HashMap, HashSet};
 
 /// Enum that holds an "inner graph" for one level of the Louvain algorithm,
@@ -191,9 +191,9 @@ where
     loop {
         let mut performed_move = false;
 
-        let mut node_shuffle: Pcg64 = match seed {
-            Some(rng_seed) => Pcg64::seed_from_u64(rng_seed),
-            None => Pcg64::from_entropy(),
+        let mut node_shuffle: Pcg32 = match seed {
+            Some(rng_seed) => Pcg32::seed_from_u64(rng_seed),
+            None => Pcg32::from_entropy(),
         };
 
         // Try moving each node into a neighboring community, in the order
@@ -245,7 +245,7 @@ where
     // Compute the resulting new partition of the input graph
     let mut final_index = HashMap::new();
     let mut next_com = 0;
-    let mut updated_partition: Vec<usize> = vec![0; node_count];
+    let mut updated_partition: Vec<usize> = vec![0; graph.node_count()];
 
     for n in graph.node_identifiers() {
         let prev_com = partition.subset_idx(n);
@@ -304,14 +304,13 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::community::NotAPartitionError;
     use crate::generators::barbell_graph;
     use petgraph::graph::UnGraph;
 
     use super::louvain_communities;
 
     #[test]
-    fn test_louvain_barbell_graph() -> Result<(), NotAPartitionError> {
+    fn test_louvain_barbell_graph() {
         type G = UnGraph<(), f64>;
 
         for n in 3..10 {
@@ -325,6 +324,111 @@ mod tests {
             assert_eq!(result[0].len(), n);
             assert_eq!(result[1].len(), n);
         }
-        Ok(())
+    }
+
+    #[test]
+    fn test_louvain_karate_club_graph() {
+        let edges = [
+            (0, 1, 4.0),
+            (0, 2, 5.0),
+            (0, 3, 3.0),
+            (0, 4, 3.0),
+            (0, 5, 3.0),
+            (0, 6, 3.0),
+            (0, 7, 2.0),
+            (0, 8, 2.0),
+            (0, 10, 2.0),
+            (0, 11, 3.0),
+            (0, 12, 1.0),
+            (0, 13, 3.0),
+            (0, 17, 2.0),
+            (0, 19, 2.0),
+            (0, 21, 2.0),
+            (0, 31, 2.0),
+            (1, 2, 6.0),
+            (1, 3, 3.0),
+            (1, 7, 4.0),
+            (1, 13, 5.0),
+            (1, 17, 1.0),
+            (1, 19, 2.0),
+            (1, 21, 2.0),
+            (1, 30, 2.0),
+            (2, 3, 3.0),
+            (2, 7, 4.0),
+            (2, 8, 5.0),
+            (2, 9, 1.0),
+            (2, 13, 3.0),
+            (2, 27, 2.0),
+            (2, 28, 2.0),
+            (2, 32, 2.0),
+            (3, 7, 3.0),
+            (3, 12, 3.0),
+            (3, 13, 3.0),
+            (4, 6, 2.0),
+            (4, 10, 3.0),
+            (5, 6, 5.0),
+            (5, 10, 3.0),
+            (5, 16, 3.0),
+            (6, 16, 3.0),
+            (8, 30, 3.0),
+            (8, 32, 3.0),
+            (8, 33, 4.0),
+            (9, 33, 2.0),
+            (13, 33, 3.0),
+            (14, 32, 3.0),
+            (14, 33, 2.0),
+            (15, 32, 3.0),
+            (15, 33, 4.0),
+            (18, 32, 1.0),
+            (18, 33, 2.0),
+            (19, 33, 1.0),
+            (20, 32, 3.0),
+            (20, 33, 1.0),
+            (22, 32, 2.0),
+            (22, 33, 3.0),
+            (23, 25, 5.0),
+            (23, 27, 4.0),
+            (23, 29, 3.0),
+            (23, 32, 5.0),
+            (23, 33, 4.0),
+            (24, 25, 2.0),
+            (24, 27, 3.0),
+            (24, 31, 2.0),
+            (25, 31, 7.0),
+            (26, 29, 4.0),
+            (26, 33, 2.0),
+            (27, 33, 4.0),
+            (28, 31, 2.0),
+            (28, 33, 2.0),
+            (29, 32, 4.0),
+            (29, 33, 2.0),
+            (30, 32, 3.0),
+            (30, 33, 3.0),
+            (31, 32, 4.0),
+            (31, 33, 4.0),
+            (32, 33, 5.0),
+        ];
+        let graph: UnGraph<(), f64> = UnGraph::from_edges(edges.iter());
+        let communities = louvain_communities(&graph, 1.0, 0.01, None, Some(7));
+
+        // The result is very sensitive to the random seed. For this seed we
+        // happen to get the same result as:
+        //      import networkx as nx
+        //      g = nx.karate_club_graph()
+        //      communities = nx.community.louvain_communities(g, weight='weight', seed=12)
+        let mut vecs: Vec<Vec<usize>> = communities
+            .iter()
+            .map(|h| h.iter().map(|n| n.index()).collect::<Vec<usize>>())
+            .collect::<Vec<Vec<usize>>>();
+        for v in vecs.iter_mut() {
+            v.sort();
+        }
+        assert_eq!(vecs[0], vec![0, 1, 2, 3, 7, 11, 12, 13, 17, 19, 21]);
+        assert_eq!(vecs[1], vec![4, 5, 6, 10, 16]);
+        assert_eq!(
+            vecs[2],
+            vec![8, 9, 14, 15, 18, 20, 22, 23, 26, 27, 29, 30, 32, 33]
+        );
+        assert_eq!(vecs[3], vec![24, 25, 28, 31]);
     }
 }
