@@ -10,7 +10,7 @@ use std::hash::Hash;
 
 /// Trait for graphs for which it is possible to compute modularity
 /// and apply the Louvain community detection method.
-pub trait Louvain:
+pub trait Modularity:
     Data<EdgeWeight: Into<f64> + Copy, NodeId: Hash + Eq + Copy>
     + GraphProp
     + IntoEdgeReferences
@@ -28,7 +28,7 @@ impl<
             + IntoNodeReferences
             + NodeIndexable
             + IntoEdgesDirected,
-    > Louvain for G
+    > Modularity for G
 {
 }
 
@@ -37,14 +37,14 @@ impl<
 /// the graph and node `i` belongs to subset `s_i`.
 pub struct Partition<'g, G>
 where
-    G: Louvain,
+    G: Modularity,
 {
-    graph: &'g G,
-    n_subsets: usize,
-    node_to_subset: Vec<usize>,
+    pub graph: &'g G,
+    pub n_subsets: usize,
+    pub node_to_subset: Vec<usize>,
 }
 
-impl<'g, G: Louvain> Partition<'g, G> {
+impl<'g, G: Modularity> Partition<'g, G> {
     /// Creates a partition where each node of the input graph is placed
     /// into its own subset, e.g. for the first step of the Louvain algorithm.
     pub fn new(graph: &'g G) -> Partition<'g, G> {
@@ -88,32 +88,10 @@ impl<'g, G: Louvain> Partition<'g, G> {
         })
     }
 
-    /// Replaces the current partition. The argument `new_partition` should be
-    /// a vector of size `n` (where `n` is the number of nodes in `self.graph`).
-    pub fn update(&mut self, new_partition: Vec<usize>) {
-        self.node_to_subset = new_partition;
-        self.n_subsets = *self.node_to_subset.iter().max().unwrap_or(&0) + 1;
-    }
-
     /// Returns the index of the subset that contains `node`.
     pub fn subset_idx(&self, node: G::NodeId) -> usize {
         let idx = self.graph.to_index(node);
         self.node_to_subset[idx]
-    }
-
-    /// Returns the number of subsets in the current partition.
-    pub fn n_subsets(&self) -> usize {
-        self.n_subsets
-    }
-
-    /// Returns the current graph partition as a vector of sets of `NodeId`.
-    pub fn to_vec_of_hashsets(&self) -> Vec<HashSet<G::NodeId>> {
-        let mut v = vec![HashSet::new(); self.n_subsets];
-        for (idx, &s) in self.node_to_subset.iter().enumerate() {
-            let node = self.graph.from_index(idx);
-            v[s].insert(node);
-        }
-        v
     }
 
     /// Returns the modularity of the graph with the current partition.
@@ -173,7 +151,7 @@ pub fn modularity<G>(
     resolution: f64,
 ) -> Result<f64, NotAPartitionError>
 where
-    G: Louvain,
+    G: Modularity,
 {
     let partition = Partition::from_subsets(&graph, communities)?;
     Ok(partition.modularity(resolution))

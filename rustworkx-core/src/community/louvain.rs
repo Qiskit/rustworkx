@@ -1,4 +1,4 @@
-use super::metrics::{Louvain, Partition};
+use super::metrics::{Modularity, Partition};
 use super::utils::total_edge_weight;
 
 use petgraph::EdgeDirection;
@@ -16,7 +16,7 @@ use std::collections::{HashMap, HashSet};
 /// input graph. In this case we avoid copying the input.
 enum InnerGraph<'g, G>
 where
-    G: Louvain,
+    G: Modularity,
 {
     Init(&'g G),
     Undirected(UnGraph<(), f64, usize>),
@@ -24,42 +24,7 @@ where
     // Directed(DiGraph<(), f64, usize>)
 }
 
-impl<'g, G: Louvain> InnerGraph<'g, G> {
-    /// Compute the inner graph for a given partition.
-    /// ToDo: fix redundant arguments
-    pub fn new(graph: &'g G, partition: &Partition<G>) -> InnerGraph<'g, G> {
-        if partition.n_subsets() == graph.node_count() {
-            // At the start of the Louvain algorithm we put each node from the
-            // input graph into its own commnuity, so the inner graph is the
-            // same as the input graph. We should avoid copying the input.
-            return InnerGraph::Init(graph);
-        }
-
-        // Construct a new graph where:
-        //   - Node `n_i` corresponds to the `i`th community in the partition
-        //   - Nodes `n_i` and `n_j` have an edge with weight `w`, where `w` is
-        //     the sum of all edge weights connecting nodes in `n_i` and `n_j`.
-        //     (including self-loops)
-        let mut edges: HashMap<(usize, usize), f64> = HashMap::new();
-        for e in graph.edge_references() {
-            let (a, b) = (
-                partition.subset_idx(e.source()),
-                partition.subset_idx(e.target()),
-            );
-            let inner_edge = if graph.is_directed() {
-                (std::cmp::min(a, b), std::cmp::max(a, b))
-            } else {
-                (a, b)
-            };
-            let w: f64 = (*e.weight()).into();
-            edges.entry(inner_edge).and_modify(|x| *x += w).or_insert(w);
-        }
-
-        InnerGraph::Undirected(UnGraph::from_edges(
-            edges.iter().map(|(k, &v)| (k.0, k.1, v)),
-        ))
-    }
-
+impl<'g, G: Modularity> InnerGraph<'g, G> {
     /// Returns the number of nodes in the inner graph
     pub fn node_count(&self) -> usize {
         match self {
@@ -127,6 +92,69 @@ impl<'g, G: Louvain> InnerGraph<'g, G> {
     }
 }
 
+/// Trait for additional functions used int the Louvain algorithm. Since the idea
+/// is to compute increasingly coarse partitions of the input graph, we implement
+/// these for `Partition`.
+trait LouvainAlgo<'g, G>
+where
+    G: Modularity,
+{
+    /// Compute the inner graph for a given partition.
+    fn to_inner_graph(&self) -> InnerGraph<'g, G>;
+
+    /// Replaces the current partition. The argument `new_partition` should be
+    /// a vector of size `n` (where `n` is the number of nodes in `self.graph`).
+    fn update(&mut self, new_partition: Vec<usize>);
+
+    /// Returns the current graph partition as a vector of sets of `NodeId`, for
+    /// example to return to the Python layer.
+    fn to_vec_of_hashsets(&self) -> Vec<HashSet<G::NodeId>>;
+}
+
+impl<'g, G: Modularity> LouvainAlgo<'g, G> for Partition<'g, G> {
+    fn to_inner_graph(&self) -> InnerGraph<'g, G> {
+        if self.n_subsets == self.graph.node_count() {
+            return InnerGraph::Init(self.graph);
+        }
+
+        // Construct a new graph where:
+        //   - Node `n_i` corresponds to the `i`th community in the partition
+        //   - Nodes `n_i` and `n_j` have an edge with weight `w`, where `w` is
+        //     the sum of all edge weights connecting nodes in `n_i` and `n_j`.
+        //     (including self-loops)
+        let mut edges: HashMap<(usize, usize), f64> = HashMap::new();
+        for e in self.graph.edge_references() {
+            let (a, b) = (self.subset_idx(e.source()), self.subset_idx(e.target()));
+            let inner_edge = if self.graph.is_directed() {
+                (std::cmp::min(a, b), std::cmp::max(a, b))
+            } else {
+                (a, b)
+            };
+            let w: f64 = (*e.weight()).into();
+            edges.entry(inner_edge).and_modify(|x| *x += w).or_insert(w);
+        }
+
+        InnerGraph::Undirected(UnGraph::from_edges(
+            edges.iter().map(|(k, &v)| (k.0, k.1, v)),
+        ))
+    }
+
+    fn update(&mut self, new_partition: Vec<usize>) {
+        self.node_to_subset = new_partition;
+        self.n_subsets = *self.node_to_subset.iter().max().unwrap_or(&0) + 1;
+    }
+
+    /// Returns the current graph partition as a vector of sets of `NodeId`.
+    fn to_vec_of_hashsets(&self) -> Vec<HashSet<G::NodeId>> {
+        let mut v = vec![HashSet::new(); self.n_subsets];
+        for (idx, &s) in self.node_to_subset.iter().enumerate() {
+            let node = self.graph.from_index(idx);
+            v[s].insert(node);
+        }
+        v
+    }
+}
+
 /// Performs one level of the Louvain algorithm.
 ///
 /// Arguments:
@@ -148,9 +176,9 @@ fn one_level_undirected<G>(
     seed: Option<u64>,
 ) -> bool
 where
-    G: Louvain,
+    G: Modularity,
 {
-    let inner_graph = InnerGraph::new(graph, partition);
+    let inner_graph = partition.to_inner_graph();
 
     let node_count = inner_graph.node_count();
 
@@ -255,7 +283,7 @@ pub fn louvain_communities<G>(
     seed: Option<u64>,
 ) -> Vec<HashSet<G::NodeId>>
 where
-    G: Louvain,
+    G: Modularity,
 {
     let mut partition = Partition::new(&graph);
 
