@@ -201,7 +201,7 @@ where
 
             let mut best_gain = 0.0;
             let init_com = node_to_community[node];
-            let deg = degrees[init_com];
+            let deg = degrees[node];
             let mut best_com = init_com;
             let two_m_sq = 2.0 * m * m;
 
@@ -413,7 +413,7 @@ mod tests {
         // happen to get the same result as:
         //      import networkx as nx
         //      g = nx.karate_club_graph()
-        //      communities = nx.community.louvain_communities(g, weight='weight', seed=12)
+        //      nx.community.louvain_communities(g, weight='weight', resolution=1.0, threshold=1.0e-7, seed=12)
         let mut vecs: Vec<Vec<usize>> = communities
             .iter()
             .map(|h| h.iter().map(|n| n.index()).collect::<Vec<usize>>())
