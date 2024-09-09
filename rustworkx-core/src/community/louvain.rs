@@ -179,7 +179,7 @@ where
 
     let node_count = inner_graph.node_count();
 
-    let mut degrees = inner_graph.degrees();
+    let degrees = inner_graph.degrees();
     let mut s_tot = degrees.clone();
 
     // Start by placing each node into its own community
@@ -205,7 +205,7 @@ where
             let mut best_com = init_com;
             let two_m_sq = 2.0 * m * m;
 
-            degrees[best_com] -= deg;
+            s_tot[best_com] -= deg;
 
             let delta = if let Some(&w) = neighbor_weights.get(&best_com) {
                 w
