@@ -60,7 +60,7 @@ pub fn karate_club_graph<G, T, F, H, M>(
 where
     G: Build + Create + Data<NodeWeight = T, EdgeWeight = M> + NodeIndexable,
     F: FnMut() -> T,
-    H: FnMut() -> M,
+    H: FnMut(usize) -> M,
     G::NodeId: Eq + Hash,
 {
     let mut graph = G::with_capacity(0, 0);
@@ -75,7 +75,11 @@ where
 
         for (col, entry) in this_row.iter().enumerate() {
             if *entry >= 1 && row > col {
-                graph.add_edge(node_indices[row], node_indices[col], default_edge_weight());
+                graph.add_edge(
+                    node_indices[row],
+                    node_indices[col],
+                    default_edge_weight(*entry),
+                );
             }
         }
     }
