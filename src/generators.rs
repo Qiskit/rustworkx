@@ -1721,11 +1721,11 @@ pub fn dorogovtsev_goltsev_mendes_graph(py: Python, n: usize) -> PyResult<graph:
 )]
 pub fn karate_club_graph(py: Python, multigraph: bool) -> PyResult<graph::PyGraph> {
     let default_node_fn = || py.None();
-    let default_edge_fn = |w: usize| w.to_object(py);
+    let default_edge_fn = |w: usize| (w as f64).to_object(py);
     let graph: StablePyGraph<Undirected> =
         match core_generators::karate_club_graph(default_node_fn, default_edge_fn) {
             Ok(graph) => graph,
-            Err(_) => return Err(PyIndexError::new_err("error generating Karate club graph")),
+            Err(_) => return Err(PyValueError::new_err("error generating Karate club graph")),
         };
     Ok(graph::PyGraph {
         graph,

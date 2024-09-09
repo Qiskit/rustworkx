@@ -17,6 +17,8 @@ use petgraph::visit::{Data, NodeIndexable};
 
 use super::InvalidInputError;
 
+// Adapted from NetworkX, licensend under the MIT license
+// https://github.com/networkx/networkx/blob/409979eff35f02eff54f4eea3731736bd431dc2e/networkx/generators/social.py#L49
 const ZACHARY: &str = "\
 0 4 5 3 3 3 3 2 2 0 2 3 2 3 0 0 0 2 0 2 0 2 0 0 0 0 0 0 0 0 0 2 0 0\n\
 4 0 6 3 0 0 0 4 0 0 0 0 0 5 0 0 0 1 0 2 0 2 0 0 0 0 0 0 0 0 2 0 0 0\n\
@@ -51,7 +53,7 @@ const ZACHARY: &str = "\
 0 2 0 0 0 0 0 0 3 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 3 3\n\
 2 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 2 7 0 0 2 0 0 0 4 4\n\
 0 0 2 0 0 0 0 0 3 0 0 0 0 0 3 3 0 0 1 0 3 0 2 5 0 0 0 0 0 4 3 4 0 5\n\
-0 0 0 0 0 0 0 0 4 2 0 0 0 3 2 4 0 0 2 1 1 0 3 4 0 0 2 4 2 2 3 4 5 0\n";
+0 0 0 0 0 0 0 0 4 2 0 0 0 3 2 4 0 0 2 1 1 0 3 4 0 0 2 4 2 2 3 4 5 0";
 
 pub fn karate_club_graph<G, T, F, H, M>(
     mut default_node_weight: F,
@@ -76,8 +78,8 @@ where
         for (col, entry) in this_row.iter().enumerate() {
             if *entry >= 1 && row > col {
                 graph.add_edge(
-                    node_indices[row],
                     node_indices[col],
+                    node_indices[row],
                     default_edge_weight(*entry),
                 );
             }
