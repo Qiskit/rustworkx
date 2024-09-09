@@ -185,8 +185,9 @@ where
     // Start by placing each node into its own community
     let mut node_to_community: Vec<usize> = (0..node_count).collect();
     let mut total_gain = 0.0;
-    loop {
-        let mut performed_move = false;
+    let mut performed_move = true;
+    while performed_move {
+        performed_move = false;
 
         let mut node_shuffle: Pcg32 = match seed {
             Some(rng_seed) => Pcg32::seed_from_u64(rng_seed),
@@ -233,9 +234,6 @@ where
                 total_gain += best_gain;
                 node_to_community[node] = best_com;
             }
-        }
-        if !performed_move {
-            break;
         }
     }
 
