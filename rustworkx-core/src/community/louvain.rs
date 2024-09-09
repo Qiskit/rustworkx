@@ -207,15 +207,19 @@ where
 
             s_tot[best_com] -= deg;
 
-            let delta = if let Some(&w) = neighbor_weights.get(&best_com) {
-                w
-            } else {
-                0.0
+            let community_delta = |c: usize| -> f64 {
+                let delta = if let Some(&w) = neighbor_weights.get(&c) {
+                    w
+                } else {
+                    0.0
+                };
+                -delta / m + resolution * s_tot[c] * deg / two_m_sq
             };
-            let remove_cost = -delta / m + resolution * (s_tot[best_com] * deg) / two_m_sq;
 
-            for (&nbr_com, &wt) in neighbor_weights.iter() {
-                let gain = remove_cost + wt / m - resolution * s_tot[nbr_com] * deg / two_m_sq;
+            let remove_cost = community_delta(best_com);
+
+            for &nbr_com in neighbor_weights.keys() {
+                let gain = remove_cost - community_delta(nbr_com);
                 if gain > best_gain {
                     best_gain = gain;
                     best_com = nbr_com;
