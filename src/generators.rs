@@ -1719,15 +1719,13 @@ pub fn dorogovtsev_goltsev_mendes_graph(py: Python, n: usize) -> PyResult<graph:
 #[pyo3(
     signature=(multigraph=true),
 )]
-pub fn karate_club(py: Python, multigraph: bool) -> PyResult<graph::PyGraph> {
-    let graph: StablePyGraph<Undirected> = match core_generators::karate_club() {
-        Ok(graph) => graph,
-        Err(_) => {
-            return Err(PyIndexError::new_err(
-                "error generating Karate club graph",
-            ))
-        }
-    };
+pub fn karate_club_graph(py: Python, multigraph: bool) -> PyResult<graph::PyGraph> {
+    let default_node_fn = || py.None();
+    let graph: StablePyGraph<Undirected> =
+        match core_generators::karate_club_graph(default_node_fn, default_node_fn) {
+            Ok(graph) => graph,
+            Err(_) => return Err(PyIndexError::new_err("error generating Karate club graph")),
+        };
     Ok(graph::PyGraph {
         graph,
         node_removed: false,
@@ -1765,6 +1763,6 @@ pub fn generators(_py: Python, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(complete_graph))?;
     m.add_wrapped(wrap_pyfunction!(directed_complete_graph))?;
     m.add_wrapped(wrap_pyfunction!(dorogovtsev_goltsev_mendes_graph))?;
-    m.add_wrapped(wrap_pyfunction!(karate_club))?;
+    m.add_wrapped(wrap_pyfunction!(karate_club_graph))?;
     Ok(())
 }

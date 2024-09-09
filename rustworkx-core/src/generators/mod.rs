@@ -56,7 +56,7 @@ pub use grid_graph::grid_graph;
 pub use heavy_hex_graph::heavy_hex_graph;
 pub use heavy_square_graph::heavy_square_graph;
 pub use hexagonal_lattice_graph::{hexagonal_lattice_graph, hexagonal_lattice_graph_weighted};
-pub use karate_club::karate_club;
+pub use karate_club::karate_club_graph;
 pub use lollipop_graph::lollipop_graph;
 pub use path_graph::path_graph;
 pub use petersen_graph::petersen_graph;
