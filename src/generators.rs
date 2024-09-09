@@ -1730,7 +1730,7 @@ pub fn karate_club_graph(py: Python, multigraph: bool) -> PyResult<graph::PyGrap
     Ok(graph::PyGraph {
         graph,
         node_removed: false,
-        multigraph: multigraph,
+        multigraph,
         attrs: py.None(),
     })
 }
