@@ -250,13 +250,14 @@ where
     for n in input_graph.node_identifiers() {
         let prev_com = partition.subset_idx(n);
         let inner_com = node_to_community[prev_com];
-        let new_com = if let Some(&c) = final_index.get(&inner_com) {
-            c
-        } else {
-            let c = next_com;
-            final_index.insert(inner_com, c);
-            next_com += 1;
-            c
+        let new_com = match final_index.get(&inner_com) {
+            Some(&c) => c,
+            None => {
+                let c = next_com;
+                final_index.insert(inner_com, c);
+                next_com += 1;
+                c
+            }
         };
         updated_partition[input_graph.to_index(n)] = new_com;
     }
