@@ -134,7 +134,7 @@ impl<'g, G: Modularity> Partition<'g, G> {
         };
 
         let m: f64 = total_edge_weight(self.graph);
-        sigma_internal / m - resolution * sigma_total_squared / (m * m)
+        (sigma_internal - resolution * sigma_total_squared / m) / m
     }
 }
 

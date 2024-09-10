@@ -184,7 +184,13 @@ where
 
     // Start by placing each node into its own community
     let mut node_to_community: Vec<usize> = (0..node_count).collect();
+
+    // Keep track of the total modularity gain during this level of the
+    // algorithm. Note that we actually keep track of m * delta, where
+    // delta is the change in modularity. Later we will compare this
+    // against m * gain_threshold.
     let mut total_gain = 0.0;
+
     let mut performed_move = true;
     while performed_move {
         performed_move = false;
@@ -204,17 +210,18 @@ where
             let init_com = node_to_community[node];
             let deg = degrees[node];
             let mut best_com = init_com;
-            let two_m_sq = 2.0 * m * m;
 
             s_tot[best_com] -= deg;
 
             let community_delta = |c: usize| -> f64 {
-                let delta = if let Some(&w) = neighbor_weights.get(&c) {
+                let wt = if let Some(&w) = neighbor_weights.get(&c) {
                     w
                 } else {
                     0.0
                 };
-                -delta / m + resolution * s_tot[c] * deg / two_m_sq
+                // As mentioned above this is m times the change in modularity
+                // caused by moving a node out of the community.
+                -wt + 0.5 * resolution * s_tot[c] * deg / m
             };
 
             let remove_cost = community_delta(best_com);
@@ -237,7 +244,7 @@ where
         }
     }
 
-    if total_gain < gain_threshold {
+    if total_gain < m * gain_threshold {
         return false;
     }
 
