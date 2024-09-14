@@ -1740,7 +1740,6 @@ pub fn dorogovtsev_goltsev_mendes_graph(py: Python, n: usize) -> PyResult<graph:
 ///   import rustworkx.generators
 ///   from rustworkx.visualization import mpl_draw
 ///   
-///   # Petersen Graph is G(5, 2)
 ///   graph = rustworkx.generators.karate_club_graph()
 ///   layout = rustworkx.circular_layout(graph)
 ///   mpl_draw(graph, pos=layout)
