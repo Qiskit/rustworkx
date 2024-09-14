@@ -17,7 +17,7 @@ use petgraph::visit::{Data, NodeIndexable};
 
 use super::InvalidInputError;
 
-// Adapted from NetworkX, licensend under the MIT license
+// Adapted from NetworkX, licensed under the MIT license
 // https://github.com/networkx/networkx/blob/409979eff35f02eff54f4eea3731736bd431dc2e/networkx/generators/social.py#L49
 const ZACHARY: &str = "\
 0 4 5 3 3 3 3 2 2 0 2 3 2 3 0 0 0 2 0 2 0 2 0 0 0 0 0 0 0 0 0 2 0 0\n\
