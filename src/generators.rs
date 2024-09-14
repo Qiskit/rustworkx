@@ -1715,12 +1715,49 @@ pub fn dorogovtsev_goltsev_mendes_graph(py: Python, n: usize) -> PyResult<graph:
     })
 }
 
+/// Generates Zachary's Karate Club graph.
+///
+/// Zachary's Karate Club graph is a well-known social network that represents
+/// the relations between 34 members of a karate club, as described in the
+/// paper by Zachary [1]_.
+///
+/// The graph is undirected and contains 34 nodes (members) and 78 edges
+/// (interactions). Each node represents a club member, and each edge represents
+/// a relationship between two members.
+///
+/// :param bool multigraph: When set to ``False`` the output
+///     :class:`~rustworkx.PyGraph` object will not be not be a multigraph and
+///     won't allow parallel edges to be added. Instead
+///     calls which would create a parallel edge will update the existing edge.
+///
+/// :returns: The undirected graph representing the Karate club graph.
+///           Each node is labeled according to its assigned faction.
+///
+/// :rtype: PyGraph
+///
+/// .. jupyter-execute::
+///   
+///   import rustworkx.generators
+///   from rustworkx.visualization import mpl_draw
+///   
+///   # Petersen Graph is G(5, 2)
+///   graph = rustworkx.generators.karate_club_graph()
+///   layout = rustworkx.circular_layout(graph)
+///   mpl_draw(graph, pos=layout)
+///   
+/// .. [1] Zachary, Wayne W.
+///    "An information flow model for conflict and fission in small groups"
+///    Journal of Anthropological Research, 33, 452-473.
+///     https://doi.org/10.1086/jar.33.4.3629752
 #[pyfunction]
 #[pyo3(
     signature=(multigraph=true),
 )]
 pub fn karate_club_graph(py: Python, multigraph: bool) -> PyResult<graph::PyGraph> {
-    let default_node_fn = || py.None();
+    let default_node_fn = |w: bool| match w {
+        true => "Mr. Hi".to_object(py),
+        false => "Officer".to_object(py),
+    };
     let default_edge_fn = |w: usize| (w as f64).to_object(py);
     let graph: StablePyGraph<Undirected> =
         match core_generators::karate_club_graph(default_node_fn, default_edge_fn) {
