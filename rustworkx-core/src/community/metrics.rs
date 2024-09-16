@@ -2,16 +2,21 @@ use super::utils::total_edge_weight;
 use super::NotAPartitionError;
 
 use petgraph::visit::{
-    Data, EdgeRef, GraphProp, IntoEdgeReferences, IntoEdgesDirected, IntoNodeReferences, NodeCount,
-    NodeIndexable,
+    Data, EdgeRef, GraphBase, GraphProp, IntoEdgeReferences, IntoEdgesDirected, IntoNodeReferences,
+    NodeCount, NodeIndexable,
 };
 use std::collections::HashSet;
 use std::hash::Hash;
 
-/// Trait for graphs for which it is possible to compute modularity
+/// Traits for graphs for which it is possible to compute modularity
 /// and apply the Louvain community detection method.
+pub trait ModularityEdgeWeight: Into<f64> + Copy {}
+impl<E: Into<f64> + Copy> ModularityEdgeWeight for E {}
+pub trait ModularityNodeId: Hash + Eq + Copy {}
+impl<N: Hash + Eq + Copy> ModularityNodeId for N {}
+
 pub trait Modularity:
-    Data<EdgeWeight: Into<f64> + Copy, NodeId: Hash + Eq + Copy>
+    Data
     + GraphProp
     + IntoEdgeReferences
     + NodeCount
@@ -21,7 +26,7 @@ pub trait Modularity:
 {
 }
 impl<
-        G: Data<EdgeWeight: Into<f64> + Copy, NodeId: Hash + Eq + Copy>
+        G: Data
             + GraphProp
             + IntoEdgeReferences
             + NodeCount
@@ -38,13 +43,19 @@ impl<
 pub struct Partition<'g, G>
 where
     G: Modularity,
+    <G as Data>::EdgeWeight: ModularityEdgeWeight,
+    <G as GraphBase>::NodeId: ModularityNodeId,
 {
     pub graph: &'g G,
     pub n_subsets: usize,
     pub node_to_subset: Vec<usize>,
 }
 
-impl<'g, G: Modularity> Partition<'g, G> {
+impl<'g, G: Modularity> Partition<'g, G>
+where
+    <G as Data>::EdgeWeight: ModularityEdgeWeight,
+    <G as GraphBase>::NodeId: ModularityNodeId,
+{
     /// Creates a partition where each node of the input graph is placed
     /// into its own subset, e.g. for the first step of the Louvain algorithm.
     pub fn new(graph: &'g G) -> Partition<'g, G> {
@@ -152,6 +163,8 @@ pub fn modularity<G>(
 ) -> Result<f64, NotAPartitionError>
 where
     G: Modularity,
+    <G as Data>::EdgeWeight: ModularityEdgeWeight,
+    <G as GraphBase>::NodeId: ModularityNodeId,
 {
     let partition = Partition::from_subsets(&graph, communities)?;
     Ok(partition.modularity(resolution))

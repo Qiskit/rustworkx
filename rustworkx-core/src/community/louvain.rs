@@ -1,8 +1,9 @@
-use super::metrics::{Modularity, Partition};
+use super::metrics::{Modularity, ModularityEdgeWeight, ModularityNodeId, Partition};
 use super::utils::total_edge_weight;
 
+use petgraph::graph::UnGraph;
+use petgraph::visit::{Data, EdgeRef, GraphBase};
 use petgraph::EdgeDirection;
-use petgraph::{graph::UnGraph, visit::EdgeRef};
 use rand::SeedableRng;
 use rand_pcg::Pcg32;
 use std::collections::{HashMap, HashSet};
@@ -24,7 +25,10 @@ where
     // Directed(DiGraph<(), f64, usize>)
 }
 
-impl<'g, G: Modularity> InnerGraph<'g, G> {
+impl<'g, G: Modularity> InnerGraph<'g, G>
+where
+    <G as Data>::EdgeWeight: ModularityEdgeWeight,
+{
     /// Returns the number of nodes in the inner graph
     pub fn node_count(&self) -> usize {
         match self {
@@ -40,7 +44,7 @@ impl<'g, G: Modularity> InnerGraph<'g, G> {
         match self {
             InnerGraph::Init(&g) => {
                 for e in g.edge_references() {
-                    let w = (*e.weight()).into();
+                    let w: f64 = (*e.weight()).into();
                     let (a, b) = (g.to_index(e.source()), g.to_index(e.target()));
                     degrees[a] += w;
                     degrees[b] += w;
@@ -111,7 +115,11 @@ where
     fn to_vec_of_hashsets(&self) -> Vec<HashSet<G::NodeId>>;
 }
 
-impl<'g, G: Modularity> LouvainAlgo<'g, G> for Partition<'g, G> {
+impl<'g, G: Modularity> LouvainAlgo<'g, G> for Partition<'g, G>
+where
+    <G as Data>::EdgeWeight: ModularityEdgeWeight,
+    <G as GraphBase>::NodeId: ModularityNodeId,
+{
     fn to_inner_graph(&self) -> InnerGraph<'g, G> {
         if self.n_subsets == self.graph.node_count() {
             return InnerGraph::Init(self.graph);
@@ -174,6 +182,8 @@ fn one_level_undirected<G>(
 ) -> bool
 where
     G: Modularity,
+    <G as Data>::EdgeWeight: ModularityEdgeWeight,
+    <G as GraphBase>::NodeId: ModularityNodeId,
 {
     let inner_graph = partition.to_inner_graph();
 
@@ -292,6 +302,8 @@ pub fn louvain_communities<G>(
 ) -> Vec<HashSet<G::NodeId>>
 where
     G: Modularity,
+    <G as Data>::EdgeWeight: ModularityEdgeWeight,
+    <G as GraphBase>::NodeId: ModularityNodeId,
 {
     let mut partition = Partition::new(&graph);
 
