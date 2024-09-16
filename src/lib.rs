@@ -146,13 +146,11 @@ impl From<ContractSimpleError<PyErr>> for RxPyErr {
     }
 }
 
-impl<N: Debug> From<SubstituteNodeWithGraphError<N, PyErr, PyErr, PyErr>> for RxPyErr {
-    fn from(value: SubstituteNodeWithGraphError<N, PyErr, PyErr, PyErr>) -> Self {
+impl<N: Debug> From<SubstituteNodeWithGraphError<N, PyErr>> for RxPyErr {
+    fn from(value: SubstituteNodeWithGraphError<N, PyErr>) -> Self {
         RxPyErr {
             pyerr: match value {
-                SubstituteNodeWithGraphError::EdgeMapErr(e)
-                | SubstituteNodeWithGraphError::NodeFilterErr(e)
-                | SubstituteNodeWithGraphError::EdgeWeightTransformErr(e) => e,
+                SubstituteNodeWithGraphError::CallbackError(e) => e,
                 SubstituteNodeWithGraphError::ReplacementGraphIndexError(_) => {
                     PyIndexError::new_err(format!("{}", value))
                 }
