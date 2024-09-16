@@ -1,4 +1,4 @@
-use super::metrics::{ModularityEdgeWeight, Modularity};
+use super::metrics::{Modularity, ModularityEdgeWeight};
 use petgraph::visit::{Data, EdgeRef};
 
 pub fn total_edge_weight<G>(graph: &G) -> f64
