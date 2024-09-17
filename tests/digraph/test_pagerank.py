@@ -112,7 +112,7 @@ def pagerank_python(
         err = sum(abs(x[n] - xlast[n]) for n in x)
         if err < N * tol:
             return x
-    raise nx.PowerIterationFailedConvergence(max_iter)
+    raise ValueError(max_iter)
 
 
 class TestPageRank(unittest.TestCase):

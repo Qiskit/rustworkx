@@ -171,7 +171,7 @@ where
                     default_edge_weight(),
                 );
             }
-        } else if i % 2 == 1 {
+        } else {
             graph.add_edge(nodes_data[i * d], syndrome_chunk[0], default_edge_weight());
             graph.add_edge(
                 nodes_data[(i + 1) * d],
@@ -218,7 +218,7 @@ where
                     }
                 }
             }
-        } else if i % 2 == 1 {
+        } else {
             for (j, syndrome) in syndrome_chunk.iter().enumerate() {
                 if j != 0 {
                     graph.add_edge(

@@ -1,4 +1,0 @@
----
-fixes:
-  - |
-    Adds missing support for the Long attribute type to GraphML

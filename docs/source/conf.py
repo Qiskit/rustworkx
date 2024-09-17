@@ -24,9 +24,9 @@ copyright = '2021, rustworkx Contributors'
 docs_url_prefix = ""
 
 # The short X.Y version.
-version = '0.15'
+version = '0.16'
 # The full version, including alpha/beta/rc tags.
-release = '0.15.0'
+release = '0.16.0'
 
 extensions = ['sphinx.ext.autodoc',
               'sphinx.ext.autosummary',

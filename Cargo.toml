@@ -16,7 +16,7 @@ members = [
 ]
 
 [workspace.package]
-version = "0.15.0"
+version = "0.16.0"
 edition = "2021"
 rust-version = "1.70"
 authors = ["Matthew Treinish <mtreinish@kortar.org>"]
@@ -52,14 +52,14 @@ num-complex = "0.4"
 num-traits.workspace = true
 numpy.workspace = true
 petgraph.workspace = true
-quick-xml = "0.32"
+quick-xml = "0.36"
 rand.workspace = true
 rand_pcg.workspace = true
 rayon.workspace = true
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 smallvec = { version = "1.0", features = ["union"] }
-rustworkx-core = { path = "rustworkx-core", version = "=0.15.0" }
+rustworkx-core = { path = "rustworkx-core", version = "=0.16.0" }
 
 [dependencies.pyo3]
 version = "0.21.2"

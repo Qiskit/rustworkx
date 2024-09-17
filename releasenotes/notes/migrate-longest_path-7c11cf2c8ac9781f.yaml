@@ -1,7 +1,0 @@
----
-features:
-  - |
-    Added a new module ``dag_algo`` to rustworkx-core which contains a new function ``longest_path``
-    function to rustworkx-core. Previously the ``longest_path`` functionality for DAGs was only exposed
-    via the Python interface. Now Rust users can take advantage of this functionality in rustworkx-core. 
-    

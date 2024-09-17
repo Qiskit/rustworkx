@@ -1,0 +1,6 @@
+---
+fixes:
+  - |
+    Fixed a bug in the type hint for the :func:`~rustworkx.visualization.mpl_draw`.
+    Previously, the type hint indicated that all ``kwargs`` were required when calling the method. The type annotation has been updated to indicate that
+    ``kwargs`` with partial arguments is allowed.

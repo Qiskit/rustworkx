@@ -28,3 +28,4 @@ Connectivity and Cycles
    rustworkx.is_bipartite
    rustworkx.isolates
    rustworkx.has_path
+   rustworkx.connected_subgraphs
