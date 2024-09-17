@@ -28,7 +28,7 @@ ahash = "0.8.6"
 fixedbitset = "0.4.2"
 hashbrown = { version = ">=0.13, <0.15", features = ["rayon"] }
 indexmap = { version = ">=1.9, <3", features = ["rayon"] }
-ndarray = { version = "0.15.6", features = ["rayon"] }
+ndarray = { version = "0.16.1", features = ["rayon"] }
 num-traits = "0.2"
 numpy = "0.21.0"
 petgraph = "0.6.5"

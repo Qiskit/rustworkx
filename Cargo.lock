@@ -257,6 +257,21 @@ dependencies = [
  "num-integer",
  "num-traits",
  "rawpointer",
+]
+
+[[package]]
+name = "ndarray"
+version = "0.16.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "882ed72dce9365842bf196bdeedf5055305f11fc8c03dee7bb0194a6cad34841"
+dependencies = [
+ "matrixmultiply",
+ "num-complex 0.4.6",
+ "num-integer",
+ "num-traits",
+ "portable-atomic",
+ "portable-atomic-util",
+ "rawpointer",
  "rayon",
 ]
 
@@ -268,7 +283,7 @@ checksum = "af5a8477ac96877b5bd1fd67e0c28736c12943aba24eda92b127e036b0c8f400"
 dependencies = [
  "indexmap 1.9.3",
  "itertools 0.10.5",
- "ndarray",
+ "ndarray 0.15.6",
  "noisy_float",
  "num-integer",
  "num-traits",
@@ -349,7 +364,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ec170733ca37175f5d75a5bea5911d6ff45d2cd52849ce98b685394e4f2f37f4"
 dependencies = [
  "libc",
- "ndarray",
+ "ndarray 0.15.6",
  "num-complex 0.4.6",
  "num-integer",
  "num-traits",
@@ -401,6 +416,15 @@ name = "portable-atomic"
 version = "1.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "da544ee218f0d287a911e9c99a39a8c9bc8fcad3cb8db5959940044ecfc67265"
+
+[[package]]
+name = "portable-atomic-util"
+version = "0.2.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fcdd8420072e66d54a407b3316991fe946ce3ab1083a7f575b2463866624704d"
+dependencies = [
+ "portable-atomic",
+]
 
 [[package]]
 name = "ppv-lite86"
@@ -615,7 +639,7 @@ dependencies = [
  "fixedbitset",
  "hashbrown 0.14.5",
  "indexmap 2.5.0",
- "ndarray",
+ "ndarray 0.16.1",
  "ndarray-stats",
  "num-bigint",
  "num-complex 0.4.6",
@@ -642,7 +666,7 @@ dependencies = [
  "fixedbitset",
  "hashbrown 0.14.5",
  "indexmap 2.5.0",
- "ndarray",
+ "ndarray 0.16.1",
  "num-traits",
  "petgraph",
  "priority-queue",
@@ -709,7 +733,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "704ef26d974e8a452313ed629828cd9d4e4fa34667ca1ad9d6b1fffa43c6e166"
 dependencies = [
  "alga",
- "ndarray",
+ "ndarray 0.16.1",
  "num-complex 0.4.6",
  "num-traits",
  "num_cpus",
