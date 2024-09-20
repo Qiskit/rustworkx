@@ -14,13 +14,13 @@ use crate::petgraph::algo::Measure;
 use crate::petgraph::graph::{DiGraph, NodeIndex};
 use crate::petgraph::visit::{EdgeRef, IntoEdges, VisitMap, Visitable};
 
+use rand::Rng;
 use std::cmp::Ordering;
 use std::collections::hash_map::Entry::{Occupied, Vacant};
 use std::collections::{BinaryHeap, HashMap};
 use std::fmt::Debug;
 use std::hash::Hash;
 use std::{f32, thread};
-// use rand::Rng;
 
 #[derive(Debug, Clone)]
 pub struct SimplePath {
@@ -180,12 +180,22 @@ pub fn simple_paths_generator(
 ) -> Vec<SimplePath> {
     let mut result: Vec<SimplePath> = Vec::new();
     let mut count = 0;
-    let mut threads = vec![];
     for edge in graph.edge_indices() {
         if count == 0 {
-            let value_graph = graph.clone();
-            let t1 = thread::spawn(move || get_simple_path(&value_graph, source, target));
-            threads.push(t1);
+            let sim_path = get_simple_path(&graph, source, target);
+            match sim_path {
+                Some(path) => {
+                    let contains_target = result.iter().any(|v| v.Path == path.Path.to_vec());
+                    if !contains_target {
+                        let s = SimplePath {
+                            Score: path.Score,
+                            Path: path.Path.to_vec(),
+                        };
+                        result.push(s);
+                    }
+                }
+                None => {}
+            }
         }
 
         if let Some((s, t)) = graph.edge_endpoints(edge) {
@@ -195,28 +205,25 @@ pub fn simple_paths_generator(
                 };
                 let weight = *weight;
                 graph.remove_edge(edge);
-                let value_graph = graph.clone();
-                let t1 = thread::spawn(move || get_simple_path(&value_graph, source, target));
-                threads.push(t1);
+                let sim_path = get_simple_path(&graph, source, target);
+                match sim_path {
+                    Some(path) => {
+                        let contains_target = result.iter().any(|v| v.Path == path.Path.to_vec());
+                        if !contains_target {
+                            let s = SimplePath {
+                                Score: path.Score,
+                                Path: path.Path.to_vec(),
+                            };
+                            result.push(s);
+                        }
+                    }
+                    None => {}
+                }
+
                 graph.add_edge(s, t, weight);
             }
         }
         count = count + 1;
-    }
-    for t in threads {
-        match t.join() {
-            Ok(Some(path)) => {
-                let contains_target = result.iter().any(|v| v.Path == path.Path.to_vec());
-                if !contains_target {
-                    let s = SimplePath {
-                        Score: path.Score,
-                        Path: path.Path.to_vec(),
-                    };
-                    result.push(s);
-                }
-            }
-            _ => {}
-        }
     }
 
     result
@@ -229,11 +236,11 @@ pub fn simple_paths_generator(
 // path_finder(&mut graph,source,target);
 
 //  Testing Main function
-//  fn main() {
+// fn main() {
 //    	let mut graph = DiGraph::new();
-//    	let nodes: Vec<NodeIndex> = (0..1000).map(|_| graph.add_node(())).collect();
+//    	let nodes: Vec<NodeIndex> = (0..10000).map(|_| graph.add_node(())).collect();
 //    	let mut rng = rand::thread_rng();
-//      for _ in 0..5000 { // Adjust the number of edges as desired
+//      for _ in 0..50000 { // Adjust the number of edges as desired
 //        let a = rng.gen_range(0..nodes.len());
 //        let b = rng.gen_range(0..nodes.len());
 //        let weight = rng.gen_range(1..100); // Random weight between 1 and 100
@@ -242,7 +249,7 @@ pub fn simple_paths_generator(
 //        }
 //      }
 //      let source = nodes[10];
-//      let target = nodes[880];
+//      let target = nodes[8670];
 //      let result =  simple_paths_generator(&mut graph,source,target);
 //      println!("{:#?}",result) ;
 //   }
@@ -251,6 +258,7 @@ pub fn simple_paths_generator(
 // OUTPUT
 // ----------------------------------------------
 //  The function simple_paths_generator will return the Vector of Type SimplePath, which is a structure which contains { Score, Path }
+//  Consumes less memory but more time
 //
 //  Example :
 //   [
