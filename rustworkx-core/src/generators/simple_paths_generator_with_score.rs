@@ -183,7 +183,6 @@ pub fn simple_paths_generator(
 
     match sim_path {
         Some(path) => {
-            println!("Path - {:#?}", path.Path);
             let contains_target = result.iter().any(|v| v.Path == path.Path.to_vec());
             if !contains_target {
                 let s = SimplePath {
@@ -195,11 +194,6 @@ pub fn simple_paths_generator(
             let simple_graph = &path.Path;
 
             for index in 0..path.Path.len() - 1 {
-                println!(
-                    "Executing without edge {:#?} {:#?}",
-                    simple_graph[index],
-                    simple_graph[index + 1]
-                );
                 let edge_option = graph.find_edge(simple_graph[index], simple_graph[index + 1]);
                 match edge_option {
                     Some(edge) => {
