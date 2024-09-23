@@ -22,12 +22,113 @@ use std::hash::Hash;
 use std::{f32, thread};
 // use rand::Rng;
 
+///////////
+//             SimplePath
+// This is Structure which saves all the context about graph & iterating attributes
+// Score : the total weightage of the current shortest path
+// Path: Shorted path caulculated in this iteration
+// index: used for iterating over edged to delete one and calculate path once again
+// Source: to store the start point
+// Target: to store goal of path
+// graph: store the path to be used
+// unique_path: stores all unique_paths to verify that we are not returning same path again after random edge removal
+// switch : used for switching to next shortest path in case for one all possible paths are generated.
+/////////////
+
 #[derive(Debug, Clone)]
 pub struct SimplePath {
-    Score: f32,
-    Path: Vec<NodeIndex>,
+    pub Score: f32,
+    pub Path: Vec<NodeIndex>,
+    index: usize,
+    source: NodeIndex,
+    target: NodeIndex,
+    graph: DiGraph<(), f32>,
+    unique_paths: Vec<Vec<NodeIndex>>,
+    switch: usize,
 }
 
+impl SimplePath {
+    fn new(
+        graph: &mut DiGraph<(), f32>,
+        source: NodeIndex,
+        target: NodeIndex,
+    ) -> Option<SimplePath> {
+        let mut unique_paths: Vec<Vec<NodeIndex>> = vec![];
+        let (score, mut path) = dijkstra(&*graph, source, Some(target), |e| *e.weight());
+        let mut score_target: f32 = 0.0;
+        if score.contains_key(&target) {
+            score_target = *score.get(&target).expect("Error");
+        }
+        for (node, paths) in &mut path {
+            if *node == target {
+                paths.push(*node);
+                unique_paths.push(paths.to_vec());
+                let s = SimplePath {
+                    switch: 0,
+                    unique_paths: unique_paths,
+                    Score: score_target,
+                    Path: paths.to_vec(),
+                    index: 0,
+                    source: source,
+                    target: target,
+                    graph: graph.clone(),
+                };
+                return Some(s);
+            }
+        }
+        None
+    }
+}
+
+impl Iterator for SimplePath {
+    type Item = SimplePath;
+    fn next(&mut self) -> Option<Self::Item> {
+        let mut simple_graph = &self.unique_paths[self.switch];
+        let mut index: usize = self.index;
+        let mut graph = self.graph.clone();
+
+        if index + 1 == simple_graph.len() {
+            if self.switch < self.unique_paths.len() + 1 {
+                self.switch = self.switch + 1;
+                simple_graph = &self.unique_paths[self.switch];
+                self.index = 0;
+                index = 0;
+            } else {
+                return None;
+            }
+        }
+
+        let edge = graph.find_edge(simple_graph[index], simple_graph[index + 1]);
+        match edge {
+            Some(edge) => {
+                let (s, t) = (simple_graph[index], simple_graph[index + 1]);
+                let Some(weight) = graph.edge_weight(edge) else {
+                    return None;
+                };
+                let weight = *weight;
+                graph.remove_edge(edge);
+                index = index + 1;
+
+                let sim_path = get_simple_path(&mut graph, self);
+                graph.add_edge(s, t, weight);
+
+                match sim_path {
+                    None => {
+                        self.index = self.index + 1;
+                        return self.next();
+                    }
+                    _ => {
+                        return sim_path;
+                    }
+                }
+            }
+            None => {
+                self.index = self.index + 1;
+                return self.next();
+            }
+        }
+    }
+}
 // The code provides the shortest distance cost of all Nodes from the start Node
 #[derive(Copy, Clone, Debug)]
 struct MinScored<K, T>(pub K, pub T);
@@ -143,29 +244,38 @@ where
         }
         visited.visit(node);
     }
+
     (scores, tracing)
 }
 
-// This function is private to this module, will call Dijkstra algo to get all possible path & Scores & returns a Simple{Score, Path} as return value
+// This function is private to this module, will call Dijkstra algo to get all possible path & Scores & returns a Simple as return value
 
-fn get_simple_path(
-    graph: &DiGraph<(), f32>,
-    source: NodeIndex,
-    target: NodeIndex,
-) -> Option<SimplePath> {
-    let (score, mut path) = dijkstra(&*graph, source, Some(target), |e| *e.weight());
+fn get_simple_path(graph: &mut DiGraph<(), f32>, s: &mut SimplePath) -> Option<SimplePath> {
+    let (score, mut path) = dijkstra(&*graph, s.source, Some(s.target), |e| *e.weight());
     let mut score_target: f32 = 0.0;
-    if score.contains_key(&target) {
-        score_target = *score.get(&target).expect("Error");
+    let mut unique_paths = s.unique_paths.clone();
+
+    if score.contains_key(&s.target) {
+        score_target = *score.get(&s.target).expect("Error");
     }
     for (node, paths) in &mut path {
-        if *node == target {
+        if *node == s.target {
             paths.push(*node);
-            let s = SimplePath {
-                Score: score_target,
-                Path: paths.to_vec(),
-            };
-            return Some(s);
+            let contains_target = unique_paths.iter().any(|v| *v == paths.to_vec());
+            if !contains_target {
+                unique_paths.push(paths.to_vec());
+                let s = SimplePath {
+                    switch: s.switch,
+                    unique_paths: unique_paths,
+                    Score: score_target,
+                    Path: paths.to_vec(),
+                    index: s.index + 1,
+                    source: s.source,
+                    target: s.target,
+                    graph: graph.clone(),
+                };
+                return Some(s);
+            }
         }
     }
     None
@@ -173,90 +283,23 @@ fn get_simple_path(
 
 // This function call get_simple_path for each graph after removing one of the edges in between.
 
-pub fn simple_paths_generator(
-    graph: &mut DiGraph<(), f32>,
-    source: NodeIndex,
-    target: NodeIndex,
-) -> Vec<SimplePath> {
-    let mut result: Vec<SimplePath> = Vec::new();
-    let sim_path = get_simple_path(&graph, source, target);
-    let mut threads = vec![];
-
-    match sim_path {
-        Some(path) => {
-            let contains_target = result.iter().any(|v| v.Path == path.Path.to_vec());
-            if !contains_target {
-                let s = SimplePath {
-                    Score: path.Score,
-                    Path: path.Path.to_vec(),
-                };
-                result.push(s);
-            }
-            let simple_graph = &path.Path;
-            let mut thread_count = 0;
-
-            for index in 0..path.Path.len() - 1 {
-                let edge_option = graph.find_edge(simple_graph[index], simple_graph[index + 1]);
-                match edge_option {
-                    Some(edge) => {
-                        let (s, t) = (simple_graph[index], simple_graph[index + 1]);
-
-                        let Some(weight) = graph.edge_weight(edge) else {
-                            panic!("No weigh found")
-                        };
-                        let weight = *weight;
-                        graph.remove_edge(edge);
-                        let value_graph = graph.clone();
-                        thread_count = thread_count + 1;
-                        if thread_count < 10 {
-                            let t1 = thread::spawn(move || {
-                                get_simple_path(&value_graph, source, target)
-                            });
-                            threads.push(t1);
-                        } else {
-                            thread_count = 0;
-                            for t in threads {
-                                match t.join() {
-                                    Ok(Some(path)) => {
-                                        let contains_target =
-                                            result.iter().any(|v| v.Path == path.Path.to_vec());
-                                        if !contains_target {
-                                            let s = SimplePath {
-                                                Score: path.Score,
-                                                Path: path.Path.to_vec(),
-                                            };
-                                            result.push(s);
-                                        }
-                                    }
-                                    _ => {}
-                                }
-                            }
-                            threads = vec![];
-                        }
-                        graph.add_edge(s, t, weight);
-                    }
-                    None => {}
-                }
-            }
-        }
-        None => {}
-    }
-
-    result
-}
-
 // -------------------------------------------
 // INPUTS
 // -------------------------------------------
 // you can call the function with Input Graph, Source Node, Target Node
-// path_finder(&mut graph,source,target);
+// Create a SimplePath instance as -
+//       let path = SimplePath::new(&mut graph,source,target);
+//       Then iterate over it, as path.next() .
+// The Return type is a Option, so you have to handle the None Part as the End of Iterator
+////////////////////////////////////////////////
 
+//////////////////////////////////////////////
 //  Testing Main function
-//  fn main() {
+// fn main() {
 //    	let mut graph = DiGraph::new();
-//    	let nodes: Vec<NodeIndex> = (0..1000).map(|_| graph.add_node(())).collect();
+//    	let nodes: Vec<NodeIndex> = (0..10000).map(|_| graph.add_node(())).collect();
 //    	let mut rng = rand::thread_rng();
-//      for _ in 0..5000 { // Adjust the number of edges as desired
+//      for _ in 0..50000 { // Adjust the number of edges as desired
 //        let a = rng.gen_range(0..nodes.len());
 //        let b = rng.gen_range(0..nodes.len());
 //        let weight = rng.gen_range(1..100); // Random weight between 1 and 100
@@ -265,16 +308,25 @@ pub fn simple_paths_generator(
 //        }
 //      }
 //      let source = nodes[10];
-//      let target = nodes[880];
-//      let result =  simple_paths_generator(&mut graph,source,target);
-//      println!("{:#?}",result) ;
-//   }
+//      let target = nodes[800];
+//      let mut result =  SimplePath::new(&mut graph,source,target);
+//      println!("New Path {:#?}",result.clone().unwrap().Path);
+//
+//      while result.is_some()  {
+//        let mut result_new  = result.expect("REASON").next();
+//        if result_new.is_none() {
+//            break;
+//        }
+//        println!("New Path & Score {:#?}, {:#?}",result_new.clone().unwrap().Score, result_new.clone().unwrap().Path);
+//        result = result_new;
+//      }
+//    }
 
 // ----------------------------------------------
 // OUTPUT
 // ----------------------------------------------
 //  The function simple_paths_generator will return the Vector of Type SimplePath, which is a structure which contains { Score, Path }
-//  Consume High memory because of Many threads running at same.
+//
 //  Example :
 //   [
 //    SimplePath {
