@@ -248,7 +248,7 @@ where
     (scores, tracing)
 }
 
-// This function is private to this module, will call Dijkstra algo to get all possible path & Scores & returns a Simple as return value
+// This function is private to this module, will call Dijkstra algo to get the possible path & Scores & returns a SimplePath as return value
 
 fn get_simple_path(graph: &mut DiGraph<(), f32>, s: &mut SimplePath) -> Option<SimplePath> {
     let (score, mut path) = dijkstra(&*graph, s.source, Some(s.target), |e| *e.weight());
