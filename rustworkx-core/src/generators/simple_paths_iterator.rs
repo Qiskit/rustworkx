@@ -310,7 +310,7 @@ fn get_simple_path(graph: &mut DiGraph<(), f32>, s: &mut SimplePath) -> Option<S
 //      let source = nodes[10];
 //      let target = nodes[800];
 //      let mut result =  SimplePath::new(&mut graph,source,target);
-//      println!("New Path {:#?}",result.clone().unwrap().Path);
+//      println!("New Path & Score {:#?}, {:#?}",result.clone().unwrap().Score, result.clone().unwrap().Path);
 //
 //      while result.is_some()  {
 //        let mut result_new  = result.expect("REASON").next();
@@ -328,40 +328,29 @@ fn get_simple_path(graph: &mut DiGraph<(), f32>, s: &mut SimplePath) -> Option<S
 //  The function simple_paths_generator will return the Vector of Type SimplePath, which is a structure which contains { Score, Path }
 //
 //  Example :
-//   [
-//    SimplePath {
-//        Score: 154.0,
-//        Path: [
-//            NodeIndex(10),
-//            NodeIndex(49),
-//            NodeIndex(844),
-//            NodeIndex(83),
-//            NodeIndex(879),
-//            NodeIndex(477),
-//            NodeIndex(530),
-//            NodeIndex(318),
-//            NodeIndex(179),
-//            NodeIndex(433),
-//            NodeIndex(466),
-//            NodeIndex(629),
-//            NodeIndex(880),
-//        ],
-//    },
-//    SimplePath {
-//        Score: 154.0,
-//        Path: [
-//            NodeIndex(10),
-//            NodeIndex(871),
-//            NodeIndex(792),
-//            NodeIndex(449),
-//            NodeIndex(356),
-//            NodeIndex(169),
-//            NodeIndex(457),
-//            NodeIndex(642),
-//            NodeIndex(588),
-//            NodeIndex(189),
-//            NodeIndex(629),
-//            NodeIndex(880),
-//        ],
-//    },
-//   ]
+//New Path & Score 614.0, [
+//    NodeIndex(10),
+//    NodeIndex(2636),
+//    NodeIndex(8612),
+//    NodeIndex(7513),
+//    NodeIndex(800),
+//]
+//New Path & Score 675.0, [
+//    NodeIndex(10),
+//    NodeIndex(2636),
+//    NodeIndex(8612),
+//    NodeIndex(7513),
+//    NodeIndex(5367),
+//    NodeIndex(6520),
+//    NodeIndex(5590),
+//    NodeIndex(5745),
+//    NodeIndex(2596),
+//    NodeIndex(4981),
+//    NodeIndex(2837),
+//    NodeIndex(6319),
+//    NodeIndex(4025),
+//    NodeIndex(5631),
+//    NodeIndex(6935),
+//    NodeIndex(2784),
+//    NodeIndex(800),
+//]
