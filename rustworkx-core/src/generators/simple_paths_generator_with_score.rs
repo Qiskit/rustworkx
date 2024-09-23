@@ -179,53 +179,61 @@ pub fn simple_paths_generator(
     target: NodeIndex,
 ) -> Vec<SimplePath> {
     let mut result: Vec<SimplePath> = Vec::new();
-    let mut count = 0;
-    for edge in graph.edge_indices() {
-        if count == 0 {
-            let sim_path = get_simple_path(&graph, source, target);
-            match sim_path {
-                Some(path) => {
-                    let contains_target = result.iter().any(|v| v.Path == path.Path.to_vec());
-                    if !contains_target {
-                        let s = SimplePath {
-                            Score: path.Score,
-                            Path: path.Path.to_vec(),
-                        };
-                        result.push(s);
-                    }
-                }
-                None => {}
-            }
-        }
+    let sim_path = get_simple_path(&graph, source, target);
 
-        if let Some((s, t)) = graph.edge_endpoints(edge) {
-            if s >= source {
-                let Some(weight) = graph.edge_weight(edge) else {
-                    panic!("No weigh found")
+    match sim_path {
+        Some(path) => {
+            println!("Path - {:#?}", path.Path);
+            let contains_target = result.iter().any(|v| v.Path == path.Path.to_vec());
+            if !contains_target {
+                let s = SimplePath {
+                    Score: path.Score,
+                    Path: path.Path.to_vec(),
                 };
-                let weight = *weight;
-                graph.remove_edge(edge);
-                let sim_path = get_simple_path(&graph, source, target);
-                match sim_path {
-                    Some(path) => {
-                        let contains_target = result.iter().any(|v| v.Path == path.Path.to_vec());
-                        if !contains_target {
-                            let s = SimplePath {
-                                Score: path.Score,
-                                Path: path.Path.to_vec(),
-                            };
-                            result.push(s);
+                result.push(s);
+            }
+            let simple_graph = &path.Path;
+
+            for index in 0..path.Path.len() - 1 {
+                println!(
+                    "Executing without edge {:#?} {:#?}",
+                    simple_graph[index],
+                    simple_graph[index + 1]
+                );
+                let edge_option = graph.find_edge(simple_graph[index], simple_graph[index + 1]);
+                match edge_option {
+                    Some(edge) => {
+                        let (s, t) = (simple_graph[index], simple_graph[index + 1]);
+
+                        let Some(weight) = graph.edge_weight(edge) else {
+                            panic!("No weigh found")
+                        };
+                        let weight = *weight;
+                        graph.remove_edge(edge);
+                        let sim_path = get_simple_path(&graph, source, target);
+                        match sim_path {
+                            Some(path) => {
+                                let contains_target =
+                                    result.iter().any(|v| v.Path == path.Path.to_vec());
+                                if !contains_target {
+                                    let s = SimplePath {
+                                        Score: path.Score,
+                                        Path: path.Path.to_vec(),
+                                    };
+                                    result.push(s);
+                                }
+                            }
+                            None => {}
                         }
+
+                        graph.add_edge(s, t, weight);
                     }
                     None => {}
                 }
-
-                graph.add_edge(s, t, weight);
             }
         }
-        count = count + 1;
+        None => {}
     }
-
     result
 }
 

@@ -179,44 +179,67 @@ pub fn simple_paths_generator(
     target: NodeIndex,
 ) -> Vec<SimplePath> {
     let mut result: Vec<SimplePath> = Vec::new();
-    let mut count = 0;
+    let sim_path = get_simple_path(&graph, source, target);
     let mut threads = vec![];
-    for edge in graph.edge_indices() {
-        if count == 0 {
-            let value_graph = graph.clone();
-            let t1 = thread::spawn(move || get_simple_path(&value_graph, source, target));
-            threads.push(t1);
-        }
 
-        if let Some((s, t)) = graph.edge_endpoints(edge) {
-            if s >= source {
-                let Some(weight) = graph.edge_weight(edge) else {
-                    panic!("No weigh found")
+    match sim_path {
+        Some(path) => {
+            let contains_target = result.iter().any(|v| v.Path == path.Path.to_vec());
+            if !contains_target {
+                let s = SimplePath {
+                    Score: path.Score,
+                    Path: path.Path.to_vec(),
                 };
-                let weight = *weight;
-                graph.remove_edge(edge);
-                let value_graph = graph.clone();
-                let t1 = thread::spawn(move || get_simple_path(&value_graph, source, target));
-                threads.push(t1);
-                graph.add_edge(s, t, weight);
+                result.push(s);
             }
-        }
-        count = count + 1;
-    }
-    for t in threads {
-        match t.join() {
-            Ok(Some(path)) => {
-                let contains_target = result.iter().any(|v| v.Path == path.Path.to_vec());
-                if !contains_target {
-                    let s = SimplePath {
-                        Score: path.Score,
-                        Path: path.Path.to_vec(),
-                    };
-                    result.push(s);
+            let simple_graph = &path.Path;
+            let mut thread_count = 0;
+
+            for index in 0..path.Path.len() - 1 {
+                let edge_option = graph.find_edge(simple_graph[index], simple_graph[index + 1]);
+                match edge_option {
+                    Some(edge) => {
+                        let (s, t) = (simple_graph[index], simple_graph[index + 1]);
+
+                        let Some(weight) = graph.edge_weight(edge) else {
+                            panic!("No weigh found")
+                        };
+                        let weight = *weight;
+                        graph.remove_edge(edge);
+                        let value_graph = graph.clone();
+                        thread_count = thread_count + 1;
+                        if thread_count < 10 {
+                            let t1 = thread::spawn(move || {
+                                get_simple_path(&value_graph, source, target)
+                            });
+                            threads.push(t1);
+                        } else {
+                            thread_count = 0;
+                            for t in threads {
+                                match t.join() {
+                                    Ok(Some(path)) => {
+                                        let contains_target =
+                                            result.iter().any(|v| v.Path == path.Path.to_vec());
+                                        if !contains_target {
+                                            let s = SimplePath {
+                                                Score: path.Score,
+                                                Path: path.Path.to_vec(),
+                                            };
+                                            result.push(s);
+                                        }
+                                    }
+                                    _ => {}
+                                }
+                            }
+                            threads = vec![];
+                        }
+                        graph.add_edge(s, t, weight);
+                    }
+                    None => {}
                 }
             }
-            _ => {}
         }
+        None => {}
     }
 
     result
@@ -251,7 +274,7 @@ pub fn simple_paths_generator(
 // OUTPUT
 // ----------------------------------------------
 //  The function simple_paths_generator will return the Vector of Type SimplePath, which is a structure which contains { Score, Path }
-//  Consume High memory because of Many threads running at same. 
+//  Consume High memory because of Many threads running at same.
 //  Example :
 //   [
 //    SimplePath {
