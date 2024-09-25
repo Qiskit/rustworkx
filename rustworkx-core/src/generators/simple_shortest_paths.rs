@@ -10,17 +10,17 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-use crate::petgraph::algo::Measure;
+use crate::petgraph::algo::{Measure};
 use crate::petgraph::graph::{DiGraph, NodeIndex};
 use crate::petgraph::visit::{EdgeRef, IntoEdges, VisitMap, Visitable};
 
-use rand::Rng;
 use std::cmp::Ordering;
 use std::collections::hash_map::Entry::{Occupied, Vacant};
 use std::collections::{BinaryHeap, HashMap};
 use std::fmt::Debug;
 use std::hash::Hash;
 use std::{f32, thread};
+// use rand::Rng;
 ///////////
 //             SimplePath
 // This is Structure which saves all the context about graph & iterating attributes
@@ -42,7 +42,7 @@ pub struct SimplePath {
     source: NodeIndex,
     target: NodeIndex,
     graph: DiGraph<(), f32>,
-    pub unique_paths: Vec<Vec<NodeIndex>>,
+    unique_paths: Vec<Vec<NodeIndex>>,
     switch: usize,
 }
 
@@ -52,34 +52,37 @@ impl SimplePath {
         source: NodeIndex,
         target: NodeIndex,
     ) -> Option<SimplePath> {
-        let s = SimplePath {
-            switch: 0,
-            unique_paths: vec![],
-            Score: 0.0,
-            Path: vec![],
-            index: 0,
-            source: source,
-            target: target,
-            graph: graph.clone(),
+	let s = SimplePath {
+                    switch: 0,
+                    unique_paths: vec![],
+                    Score: 0.0,
+                    Path: vec!(),
+                    index: 0,
+                    source: source,
+                    target: target,
+		            graph: graph.clone(),
         };
         return Some(s);
+
     }
 }
 
 impl Iterator for SimplePath {
     type Item = SimplePath;
     fn next(&mut self) -> Option<Self::Item> {
-        let mut graph = self.graph.clone();
+        
         if self.unique_paths.len() == 0 {
-            let sim_path = get_simple_path(&graph, self);
+            let mut sim_path = get_simple_path(self);
             match sim_path {
                 None => {
                     return None;
                 }
-                _ => {
-                    return sim_path;
+                Some(mut s_path) => {
+                    s_path.index = 0;
+                    return Some(s_path)
                 }
             }
+            
         }
 
         let mut simple_graph = &self.unique_paths[self.switch];
@@ -96,26 +99,39 @@ impl Iterator for SimplePath {
             }
         }
 
-        let edge = graph.find_edge(simple_graph[index], simple_graph[index + 1]);
+        let edge = self.graph.find_edge(simple_graph[index], simple_graph[index + 1]);
         match edge {
             Some(edge) => {
                 let (s, t) = (simple_graph[index], simple_graph[index + 1]);
-                let Some(weight) = graph.edge_weight(edge) else {
+                let Some(weight) = self.graph.edge_weight(edge) else {
                     return None;
                 };
                 let weight = *weight;
+                
+                println!("Removing edge {:?} {:?}",s,t);
+                {
+                let graph = &mut self.graph;
                 graph.remove_edge(edge);
+                }
 
-                let sim_path = get_simple_path(&graph, self);
-                graph.add_edge(s, t, weight);
+                let sim_path = get_simple_path(self);
+
+
+                
 
                 match sim_path {
                     None => {
                         self.index = self.index + 1;
+                        let graph = &mut self.graph;
+                        graph.add_edge(s, t, weight);
                         return self.next();
                     }
-                    _ => {
-                        return sim_path;
+                    Some(mut s_path) => {
+                        {   
+                            let graph = &mut s_path.graph;
+                            graph.add_edge(s, t, weight);
+                        }
+                        return Some(s_path);
                     }
                 }
             }
@@ -175,7 +191,7 @@ fn dijkstra<G, F, K>(
     start: G::NodeId,
     goal: Option<G::NodeId>,
     mut edge_cost: F,
-) -> (HashMap<G::NodeId, K>, HashMap<G::NodeId, G::NodeId>)
+) -> (HashMap<G::NodeId, K>, HashMap<G::NodeId,G::NodeId>)
 where
     G: IntoEdges + Visitable,
     G::NodeId: Eq + Hash,
@@ -214,6 +230,7 @@ where
                             tracing.insert(next, node);
                             todo!()
                         };
+                        
                     }
                 }
                 Vacant(ent) => {
@@ -230,50 +247,51 @@ where
 
 // This function is private to this module, will call Dijkstra algo to get the possible path & Scores & returns a SimplePath as return value
 
-fn get_simple_path(graph: &DiGraph<(), f32>, s: &mut SimplePath) -> Option<SimplePath> {
-    let (score, path) = dijkstra(&*graph, s.source, Some(s.target), |e| *e.weight());
+fn get_simple_path(s: &mut SimplePath) -> Option<SimplePath> {
+    let (score, path) = dijkstra(&s.graph, s.source, Some(s.target), |e| *e.weight());
     let mut score_target: f32 = 0.0;
     let mut unique_paths = s.unique_paths.clone();
-    let mut paths: Vec<NodeIndex> = vec![];
+    let mut paths :Vec<NodeIndex> = vec!();
 
     if score.contains_key(&s.target) {
         score_target = *score.get(&s.target).expect("Error");
     }
-
-    if path.contains_key(&s.target) {
+    
+    if path.contains_key(&s.target)  {
         paths.push(s.target);
         let mut node = &s.target;
-        loop {
+        loop { 
             let pre_node = path.get(node).expect("Error");
             paths.push(*pre_node);
-            if *pre_node == s.source {
+            if *pre_node == s.source { 
                 break;
             }
             node = pre_node;
-        }
+            }
     }
 
     if paths.len() == 0 {
-        return None;
+        return None
     }
     paths.reverse();
-    let contains_target = unique_paths.iter().any(|v| *v == paths.to_vec());
-    if !contains_target {
-        unique_paths.push(paths.to_vec());
-        let s = SimplePath {
-            switch: s.switch,
-            unique_paths: unique_paths,
-            Score: score_target,
-            Path: paths.to_vec(),
-            index: s.index + 1,
-            source: s.source,
-            target: s.target,
-            graph: graph.clone(),
-        };
-        return Some(s);
+            let contains_target = unique_paths.iter().any(|v| *v == paths.to_vec());
+            if !contains_target {
+                unique_paths.push(paths.to_vec());
+                let s = SimplePath {
+                    switch: s.switch,
+                    unique_paths: unique_paths,
+                    Score: score_target,
+                    Path: paths.to_vec(),
+                    index: s.index + 1,
+                    source: s.source,
+                    target: s.target,
+                    graph: s.graph.clone(),
+                };
+                return Some(s);
+            }
+            None
     }
-    None
-}
+
 
 // This function call get_simple_path for each graph after removing one of the edges in between.
 
