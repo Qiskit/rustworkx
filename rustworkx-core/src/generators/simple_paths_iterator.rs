@@ -53,39 +53,41 @@ impl SimplePath {
         source: NodeIndex,
         target: NodeIndex,
     ) -> Option<SimplePath> {
-        let mut unique_paths: Vec<Vec<NodeIndex>> = vec![];
-        let (score, mut path) = dijkstra(&*graph, source, Some(target), |e| *e.weight());
-        let mut score_target: f32 = 0.0;
-        if score.contains_key(&target) {
-            score_target = *score.get(&target).expect("Error");
-        }
-        for (node, paths) in &mut path {
-            if *node == target {
-                paths.push(*node);
-                unique_paths.push(paths.to_vec());
-                let s = SimplePath {
+	let s = SimplePath {
                     switch: 0,
-                    unique_paths: unique_paths,
-                    Score: score_target,
-                    Path: paths.to_vec(),
+                    unique_paths: vec![],
+                    Score: 0.0,
+                    Path: vec!(),
                     index: 0,
                     source: source,
                     target: target,
-                    graph: graph.clone(),
-                };
-                return Some(s);
-            }
-        }
-        None
+		    graph: graph.clone(),
+        };
+        return Some(s);
+
     }
 }
 
 impl Iterator for SimplePath {
     type Item = SimplePath;
     fn next(&mut self) -> Option<Self::Item> {
+        let mut graph = self.graph.clone();
+        if self.unique_paths.len() == 0 {
+            let sim_path = get_simple_path(& graph, self);
+            match sim_path {
+                None => {
+                    self.index = self.index + 1;
+                    return self.next();
+                }
+                _ => {
+                    return sim_path;
+                }
+            }
+            
+        }
+
         let mut simple_graph = &self.unique_paths[self.switch];
         let mut index: usize = self.index;
-        let mut graph = self.graph.clone();
 
         if index + 1 == simple_graph.len() {
             if self.switch < self.unique_paths.len() + 1 {
@@ -107,9 +109,8 @@ impl Iterator for SimplePath {
                 };
                 let weight = *weight;
                 graph.remove_edge(edge);
-                index = index + 1;
 
-                let sim_path = get_simple_path(&mut graph, self);
+                let sim_path = get_simple_path(& graph, self);
                 graph.add_edge(s, t, weight);
 
                 match sim_path {
@@ -250,7 +251,7 @@ where
 
 // This function is private to this module, will call Dijkstra algo to get the possible path & Scores & returns a SimplePath as return value
 
-fn get_simple_path(graph: &mut DiGraph<(), f32>, s: &mut SimplePath) -> Option<SimplePath> {
+fn get_simple_path(graph: & DiGraph<(), f32>, s: &mut SimplePath) -> Option<SimplePath> {
     let (score, mut path) = dijkstra(&*graph, s.source, Some(s.target), |e| *e.weight());
     let mut score_target: f32 = 0.0;
     let mut unique_paths = s.unique_paths.clone();
@@ -310,7 +311,6 @@ fn get_simple_path(graph: &mut DiGraph<(), f32>, s: &mut SimplePath) -> Option<S
 //      let source = nodes[10];
 //      let target = nodes[800];
 //      let mut result =  SimplePath::new(&mut graph,source,target);
-//      println!("New Path & Score {:#?}, {:#?}",result.clone().unwrap().Score, result.clone().unwrap().Path);
 //
 //      while result.is_some()  {
 //        let mut result_new  = result.expect("REASON").next();
