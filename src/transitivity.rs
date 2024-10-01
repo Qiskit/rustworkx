@@ -13,10 +13,19 @@
 use super::{digraph, graph};
 use hashbrown::HashSet;
 
+use crate::digraph::PyDiGraph;
+use petgraph::algo::kosaraju_scc;
+use petgraph::algo::DfsSpace;
+use petgraph::graph::DiGraph;
 use pyo3::prelude::*;
 
+use petgraph::visit::EdgeRef;
+use petgraph::visit::IntoEdgeReferences;
+use petgraph::visit::NodeCount;
 use petgraph::graph::NodeIndex;
 use rayon::prelude::*;
+
+use rustworkx_core::traversal::build_transitive_closure_dag;
 
 fn _graph_triangles(graph: &graph::PyGraph, node: usize) -> (usize, usize) {
     let mut triangles: usize = 0;
@@ -185,4 +194,60 @@ pub fn digraph_transitivity(graph: &digraph::PyDiGraph) -> f64 {
         0 => 0.0,
         _ => triangles as f64 / triples as f64,
     }
+}
+
+/// Returns the transitive closure of a graph
+#[pyfunction]
+#[pyo3(text_signature = "(graph, /")]
+pub fn transitive_closure(py: Python, graph: &PyDiGraph) -> PyResult<PyDiGraph> {
+    let sccs = kosaraju_scc(&graph.graph);
+
+    let mut condensed_graph = DiGraph::new();
+    let mut scc_nodes = Vec::new();
+    let mut scc_map: Vec<NodeIndex> = vec![NodeIndex::end(); graph.node_count()];
+
+    for scc in &sccs {
+        let scc_node = condensed_graph.add_node(());
+        scc_nodes.push(scc_node);
+        for node in scc {
+            scc_map[node.index()] = scc_node;
+        }
+    }
+    for edge in graph.graph.edge_references() {
+        let (source, target) = (edge.source(), edge.target());
+
+        if scc_map[source.index()] != scc_map[target.index()] {
+            condensed_graph.add_edge(scc_map[source.index()], scc_map[target.index()], ());
+        }
+    }
+
+    let closure_graph_result = build_transitive_closure_dag(condensed_graph, None, || {});
+    let out_graph = closure_graph_result.unwrap();
+
+    let mut new_graph = graph.graph.clone();
+    new_graph.clear();
+
+    let mut result_map: Vec<NodeIndex> = vec![NodeIndex::end(); out_graph.node_count()];
+    for (_index, node) in out_graph.node_indices().enumerate() {
+        let result_node = new_graph.add_node(py.None());
+        result_map[node.index()] = result_node;
+    }
+    for edge in out_graph.edge_references() {
+        let (source, target) = (edge.source(), edge.target());
+        new_graph.add_edge(
+            result_map[source.index()],
+            result_map[target.index()],
+            py.None(),
+        );
+    }
+    let out = PyDiGraph {
+        graph: new_graph,
+        cycle_state: DfsSpace::default(),
+        check_cycle: false,
+        node_removed: false,
+        multigraph: true,
+        attrs: py.None(),
+    };
+
+    Ok(out)
 }
