@@ -12,7 +12,7 @@ deps = [
 ]
 
 lint_deps = [
-    "black~=22.0",
+    "black~=24.8",
     "ruff~=0.1",
     "setuptools-rust",
 ]
