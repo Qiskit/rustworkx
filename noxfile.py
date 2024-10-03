@@ -18,13 +18,13 @@ lint_deps = [
 ]
 
 stubs_deps = [
-    "mypy==1.8.0",
+    "mypy==1.11.2",
     "typing-extensions",
 ]
 
 def install_rustworkx(session):
     session.install(*deps)
-    session.install(".[all]", "-c", "constraints.txt")
+    session.install(".", "-c", "constraints.txt")
 
 # We define a common base such that -e test triggers a test with the current
 # Python version of the interpreter and -e test_with_version launches
