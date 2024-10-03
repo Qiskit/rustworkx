@@ -57,11 +57,11 @@ class TestMaxWeightMatching(unittest.TestCase):
         if not_match:
             self.assertTrue(
                 rustworkx.is_matching(rx_graph, rx_matches),
-                "%s is not a valid matching" % rx_matches,
+                f"{rx_matches} is not a valid matching",
             )
             self.assertTrue(
                 rustworkx.is_maximal_matching(rx_graph, rx_matches),
-                "%s is not a maximal matching" % rx_matches,
+                f"{rx_matches} is not a maximal matching",
             )
             self.assertEqual(
                 sum(map(get_rx_weight, rx_matches)),
