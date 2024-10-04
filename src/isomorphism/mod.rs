@@ -14,12 +14,21 @@
 
 mod vf2;
 
-use crate::{digraph, graph};
+use crate::{digraph, export_rustworkx_functions, graph};
 
 use std::cmp::Ordering;
 
 use pyo3::prelude::*;
 use pyo3::Python;
+
+export_rustworkx_functions!(
+    graph_is_isomorphic,
+    digraph_is_isomorphic,
+    graph_is_subgraph_isomorphic,
+    digraph_is_subgraph_isomorphic,
+    digraph_vf2_mapping,
+    graph_vf2_mapping
+);
 
 /// Determine if 2 directed graphs are isomorphic
 ///
