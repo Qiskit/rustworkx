@@ -13,17 +13,19 @@ from .visit import BFSVisitor, DFSVisitor, DijkstraVisitor
 from typing import (
     TypeVar,
     Callable,
-    Iterable,
-    Iterator,
     final,
-    Sequence,
     Any,
     Generic,
+    overload,
+)
+from collections.abc import (
+    Iterable,
+    Iterator,
+    Sequence,
     ItemsView,
     KeysView,
     ValuesView,
     Mapping,
-    overload,
     Hashable,
 )
 from abc import ABC
