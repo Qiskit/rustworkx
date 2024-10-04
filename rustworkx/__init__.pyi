@@ -11,7 +11,8 @@
 
 import numpy as np
 
-from typing import Generic, TypeVar, Any, Callable, Iterator, overload, Sequence
+from typing import Generic, TypeVar, Any, Callable, overload
+from collections.abc import Iterator, Sequence
 
 # Re-Exports of rust native functions in rustworkx.rustworkx
 # To workaround limitations in mypy around re-exporting objects from the inner

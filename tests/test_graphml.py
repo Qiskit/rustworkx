@@ -44,7 +44,7 @@ class TestGraphML(unittest.TestCase):
         for node_a, node_b in zip(graph.nodes(), nodes):
             self.assertDictPayloadEqual(node_a, node_b)
 
-        for ((s, t, data), edge) in zip(graph.weighted_edge_list(), edges):
+        for (s, t, data), edge in zip(graph.weighted_edge_list(), edges):
             self.assertEqual((graph[s]["id"], graph[t]["id"]), (edge[0], edge[1]))
             self.assertDictPayloadEqual(data, edge[2])
 

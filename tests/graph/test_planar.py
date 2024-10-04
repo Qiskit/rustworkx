@@ -266,7 +266,7 @@ class TestPlanarGraph(unittest.TestCase):
             iter((n, 1) for n in range(3, 17)),
             iter((n, 2) for n in range(6, 17, 2)),
         )
-        for (n, k) in planars:
+        for n, k in planars:
             with self.subTest(n=n, k=k):
                 graph = rx.generators.generalized_petersen_graph(n=n, k=k)
                 self.assertTrue(rx.is_planar(graph))
@@ -277,7 +277,7 @@ class TestPlanarGraph(unittest.TestCase):
             iter((n, 2) for n in range(5, 17, 2)),
             iter((n, k) for k in range(3, 9) for n in range(2 * k + 1, 17)),
         )
-        for (n, k) in no_planars:
+        for n, k in no_planars:
             with self.subTest(n=n, k=k):
                 graph = rx.generators.generalized_petersen_graph(n=n, k=k)
                 self.assertFalse(rx.is_planar(graph))
