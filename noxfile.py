@@ -12,19 +12,19 @@ deps = [
 ]
 
 lint_deps = [
-    "black~=22.0",
-    "ruff~=0.1",
+    "black~=24.8",
+    "ruff~=0.6",
     "setuptools-rust",
 ]
 
 stubs_deps = [
-    "mypy==1.8.0",
+    "mypy==1.11.2",
     "typing-extensions",
 ]
 
 def install_rustworkx(session):
     session.install(*deps)
-    session.install(".[all]", "-c", "constraints.txt")
+    session.install(".", "-c", "constraints.txt")
 
 # We define a common base such that -e test triggers a test with the current
 # Python version of the interpreter and -e test_with_version launches
@@ -38,7 +38,7 @@ def base_test(session):
 def test(session):
     base_test(session)
 
-@nox.session(python=["3.8", "3.9", "3.10", "3.11", "3.12"])
+@nox.session(python=["3.9", "3.10", "3.11", "3.12"])
 def test_with_version(session):
     base_test(session)
 

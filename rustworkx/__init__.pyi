@@ -11,7 +11,8 @@
 
 import numpy as np
 
-from typing import Generic, TypeVar, Any, Callable, Iterator, overload, Sequence
+from typing import Generic, TypeVar, Any, Callable, overload
+from collections.abc import Iterator, Sequence
 
 # Re-Exports of rust native functions in rustworkx.rustworkx
 # To workaround limitations in mypy around re-exporting objects from the inner
@@ -602,8 +603,8 @@ def node_link_json(
     graph: PyGraph[_S, _T] | PyDiGraph[_S, _T],
     path: str | None = ...,
     graph_attrs: Callable[[Any], dict[str, str]] | None = ...,
-    node_attrs: Callable[[_S], str] | None = ...,
-    edge_attrs: Callable[[_T], str] | None = ...,
+    node_attrs: Callable[[_S], dict[str, str]] | None = ...,
+    edge_attrs: Callable[[_T], dict[str, str]] | None = ...,
 ) -> str | None: ...
 def longest_simple_path(graph: PyGraph[_S, _T] | PyDiGraph[_S, _T]) -> NodeIndices | None: ...
 def isolates(graph: PyGraph[_S, _T] | PyDiGraph[_S, _T]) -> NodeIndices: ...
