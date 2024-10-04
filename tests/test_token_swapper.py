@@ -21,7 +21,7 @@ def swap_permutation(
     mapping,
     swaps,
 ) -> None:
-    for (sw1, sw2) in list(swaps):
+    for sw1, sw2 in list(swaps):
         val1 = mapping.pop(sw1, None)
         val2 = mapping.pop(sw2, None)
 

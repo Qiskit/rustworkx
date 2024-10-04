@@ -13,17 +13,19 @@ from .visit import BFSVisitor, DFSVisitor, DijkstraVisitor
 from typing import (
     TypeVar,
     Callable,
-    Iterable,
-    Iterator,
     final,
-    Sequence,
     Any,
     Generic,
+    overload,
+)
+from collections.abc import (
+    Iterable,
+    Iterator,
+    Sequence,
     ItemsView,
     KeysView,
     ValuesView,
     Mapping,
-    overload,
     Hashable,
 )
 from abc import ABC
@@ -634,16 +636,16 @@ def digraph_node_link_json(
     /,
     path: str | None = ...,
     graph_attrs: Callable[[Any], dict[str, str]] | None = ...,
-    node_attrs: Callable[[_S], str] | None = ...,
-    edge_attrs: Callable[[_T], str] | None = ...,
+    node_attrs: Callable[[_S], dict[str, str]] | None = ...,
+    edge_attrs: Callable[[_T], dict[str, str]] | None = ...,
 ) -> str | None: ...
 def graph_node_link_json(
     graph: PyGraph[_S, _T],
     /,
     path: str | None = ...,
     graph_attrs: Callable[[Any], dict[str, str]] | None = ...,
-    node_attrs: Callable[[_S], str] | None = ...,
-    edge_attrs: Callable[[_T], str] | None = ...,
+    node_attrs: Callable[[_S], dict[str, str]] | None = ...,
+    edge_attrs: Callable[[_T], dict[str, str]] | None = ...,
 ) -> str | None: ...
 def parse_node_link_json(
     data: str,
