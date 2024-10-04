@@ -11,193 +11,97 @@
 // under the License.
 
 use crate::petgraph::algo::{Measure};
-use crate::petgraph::graph::{DiGraph, NodeIndex};
-use crate::petgraph::visit::{EdgeRef, IntoEdges, VisitMap, Visitable};
+use crate::petgraph::graph::{Graph, NodeIndex};
+use crate::petgraph::visit::{EdgeRef, IntoEdges, VisitMap, Visitable, IntoEdgeReferences};
+use crate::petgraph::EdgeType;
 
 use std::cmp::Ordering;
+use std::vec::IntoIter;
 use std::collections::hash_map::Entry::{Occupied, Vacant};
 use std::collections::{BinaryHeap, HashMap};
+
 use std::fmt::Debug;
 use std::hash::Hash;
-use std::{f32, thread};
-// use rand::Rng;
-///////////
-//             SimplePath
-// This is Structure which saves all the context about graph & iterating attributes
-// Score : the total weightage of the current shortest path
-// Path: Shorted path caulculated in this iteration
-// index: used for iterating over edged to delete one and calculate path once again
-// Source: to store the start point
-// Target: to store goal of path
-// graph: store the path to be used
-// unique_path: stores all unique_paths to verify that we are not returning same path again after random edge removal
-// switch : used for switching to next shortest path in case for one all possible paths are generated.
-/////////////
+use std::f32;
+use crate::min_scored::MinScored;
 
-#[derive(Debug, Clone)]
-pub struct SimplePath {
-    pub Score: f32,
-    pub Path: Vec<NodeIndex>,
-    index: usize,
-    source: NodeIndex,
-    target: NodeIndex,
-    graph: DiGraph<(), f32>,
-    unique_paths: Vec<Vec<NodeIndex>>,
-    switch: usize,
-}
 
-impl SimplePath {
-    fn new(
-        graph: &mut DiGraph<(), f32>,
-        source: NodeIndex,
-        target: NodeIndex,
-    ) -> Option<SimplePath> {
-	let s = SimplePath {
-                    switch: 0,
-                    unique_paths: vec![],
-                    Score: 0.0,
-                    Path: vec!(),
-                    index: 0,
-                    source: source,
-                    target: target,
-		            graph: graph.clone(),
-        };
-        return Some(s);
+// Call dijkastra to get shortest path for a graph, by ignore some edges from the all unique_shortest_paths.
+// Returns the score of new path, & the full Path
 
-    }
-}
+fn get_simple_paths<T,P,N>(graph: &mut Graph<T, P, N>,source:NodeIndex,target: NodeIndex,unique_paths: &mut Vec<Vec<NodeIndex>>,ignore_edges: &mut Vec<(NodeIndex, NodeIndex)>, index: &mut usize, switch: &mut usize) -> Option<(P,Vec<NodeIndex>)>  
+where N: EdgeType,
+P: Copy + std::cmp::PartialOrd + std::default::Default  + std::ops::Add<Output = P>  + std::fmt::Debug {
+    if *index != 0 || *switch != 0 {
 
-impl Iterator for SimplePath {
-    type Item = SimplePath;
-    fn next(&mut self) -> Option<Self::Item> {
-        
-        if self.unique_paths.len() == 0 {
-            let mut sim_path = get_simple_path(self);
-            match sim_path {
-                None => {
-                    return None;
-                }
-                Some(mut s_path) => {
-                    s_path.index = 0;
-                    return Some(s_path)
-                }
-            }
-            
-        }
-
-        let mut simple_graph = &self.unique_paths[self.switch];
-        let mut index: usize = self.index;
-
-        if index + 1 == simple_graph.len() {
-            if self.switch < self.unique_paths.len() - 1 {
-                self.switch = self.switch + 1;
-                simple_graph = &self.unique_paths[self.switch];
-                self.index = 0;
-                index = 0;
+        let mut path = &unique_paths[*switch];
+        if *index  >= path.len() -1{
+            if *switch < unique_paths.len() - 1 {
+                *switch = *switch + 1;
+                path = &unique_paths[*switch];
+                *index = 1;
             } else {
                 return None;
             }
         }
+        ignore_edges.push((path[*index-1], path[*index]));
+      }
+    
+  
+    let (score, path) = dijkstra(&*graph,source, Some(target), |e| *e.weight(), ignore_edges.clone());
+    let mut score_target= P::default();
+    let mut paths :Vec<NodeIndex> = vec!();
 
-        let edge = self.graph.find_edge(simple_graph[index], simple_graph[index + 1]);
-        match edge {
-            Some(edge) => {
-                let (s, t) = (simple_graph[index], simple_graph[index + 1]);
-                let Some(weight) = self.graph.edge_weight(edge) else {
-                    return None;
-                };
-                let weight = *weight;
-                
-                println!("Removing edge {:?} {:?}",s,t);
-                {
-                let graph = &mut self.graph;
-                graph.remove_edge(edge);
-                }
-
-                let sim_path = get_simple_path(self);
-
-
-                
-
-                match sim_path {
-                    None => {
-                        self.index = self.index + 1;
-                        let graph = &mut self.graph;
-                        graph.add_edge(s, t, weight);
-                        return self.next();
-                    }
-                    Some(mut s_path) => {
-                        {   
-                            let graph = &mut s_path.graph;
-                            graph.add_edge(s, t, weight);
-                        }
-                        return Some(s_path);
-                    }
-                }
+    if score.contains_key(&target) {
+        score_target = *score.get(&target).expect("Error");
+    }
+    
+    if path.contains_key(&target)  {
+        paths.push(target);
+        let mut node = &target;
+        loop { 
+            let pre_node = path.get(node).expect("Error");
+            paths.push(*pre_node);
+            // if you have reached to source from target , then exit, no need to backtrack
+            if *pre_node == source { 
+                break;
             }
-            None => {
-                self.index = self.index + 1;
-                return self.next();
+            node = pre_node;
             }
-        }
     }
-}
-// The code provides the shortest distance cost of all Nodes from the start Node
-#[derive(Copy, Clone, Debug)]
-struct MinScored<K, T>(pub K, pub T);
 
-impl<K: PartialOrd, T> PartialEq for MinScored<K, T> {
-    #[inline]
-    fn eq(&self, other: &MinScored<K, T>) -> bool {
-        self.cmp(other) == Ordering::Equal
+    if paths.len() == 0 {
+        *index = *index + 1;
+        return get_simple_paths(graph,source,target,unique_paths,ignore_edges,index,switch);
     }
-}
+    paths.reverse();
 
-impl<K: PartialOrd, T> Eq for MinScored<K, T> {}
-
-impl<K: PartialOrd, T> PartialOrd for MinScored<K, T> {
-    #[inline]
-    fn partial_cmp(&self, other: &MinScored<K, T>) -> Option<Ordering> {
-        Some(self.cmp(other))
+    let contains_target = unique_paths.iter().any(|v| *v == paths.to_vec());
+    if !contains_target {
+        unique_paths.push(paths.clone());
+        *index = *index +1;
+        return Some((score_target,paths.clone()));
+    } else {
+        *index = *index + 1;
+        return get_simple_paths(graph,source,target,unique_paths,ignore_edges,index,switch);
     }
+
 }
 
-impl<K: PartialOrd, T> Ord for MinScored<K, T> {
-    #[inline]
-    fn cmp(&self, other: &MinScored<K, T>) -> Ordering {
-        let a = &self.0;
-        let b = &other.0;
-        if a == b {
-            Ordering::Equal
-        } else if a < b {
-            Ordering::Greater
-        } else if a > b {
-            Ordering::Less
-        } else if a.ne(a) && b.ne(b) {
-            // these are the NaN cases
-            Ordering::Equal
-        } else if a.ne(a) {
-            // Order NaN less, so that it is last in the MinScore order
-            Ordering::Less
-        } else {
-            Ordering::Greater
-        }
-    }
-}
+// This is mutation of petgraph dijkastra to get full path between source to target and to ignore some edges while computing shorest path.
 
-// This is mutation of petgraph dijkastra to get full path between source to target
 fn dijkstra<G, F, K>(
     graph: G,
     start: G::NodeId,
     goal: Option<G::NodeId>,
-    mut edge_cost: F,
+    mut edge_cost: F, ignore_edges : Vec<(G::NodeId,G::NodeId)>
 ) -> (HashMap<G::NodeId, K>, HashMap<G::NodeId,G::NodeId>)
 where
     G: IntoEdges + Visitable,
     G::NodeId: Eq + Hash,
     F: FnMut(G::EdgeRef) -> K,
     K: Measure + Copy,
-    <G>::NodeId: Debug,
+    <G>::NodeId: Debug, <G as IntoEdgeReferences>::EdgeRef: PartialEq
 {
     let mut visited = graph.visit_map();
     let mut scores = HashMap::new();
@@ -215,6 +119,10 @@ where
         }
         for edge in graph.edges(node) {
             let next = edge.target();
+            let edge_to_check = (node,next);
+            if ignore_edges.iter().any(|&edge| edge == edge_to_check ){
+                continue;
+            }
             if visited.is_visited(&next) {
                 continue;
             }
@@ -245,124 +153,96 @@ where
     (scores, tracing)
 }
 
-// This function is private to this module, will call Dijkstra algo to get the possible path & Scores & returns a SimplePath as return value
+// This is the public function to call all possible paths, then N shortest out of them.
 
-fn get_simple_path(s: &mut SimplePath) -> Option<SimplePath> {
-    let (score, path) = dijkstra(&s.graph, s.source, Some(s.target), |e| *e.weight());
-    let mut score_target: f32 = 0.0;
-    let mut unique_paths = s.unique_paths.clone();
-    let mut paths :Vec<NodeIndex> = vec!();
 
-    if score.contains_key(&s.target) {
-        score_target = *score.get(&s.target).expect("Error");
-    }
+pub fn get_shortest_paths<P,N,T>(graph: &mut Graph<T, P, N>,source: NodeIndex,target: NodeIndex,shortest_path_get : usize) -> IntoIter<Option<Vec< NodeIndex>>>
+where N: EdgeType,
+P: Copy + std::cmp::PartialOrd  + std::default::Default  + std::ops::Add<Output = P>  + std::fmt::Debug{
+    let mut scores :Vec<P> = vec!();
+    let mut paths :Vec<Option<Vec<NodeIndex>>> = vec!();
+    let mut shortest_paths :Vec<Option<Vec<NodeIndex>>> = vec!();
+    let mut ignore_edges : Vec<(NodeIndex, NodeIndex)> =vec!();
     
-    if path.contains_key(&s.target)  {
-        paths.push(s.target);
-        let mut node = &s.target;
-        loop { 
-            let pre_node = path.get(node).expect("Error");
-            paths.push(*pre_node);
-            if *pre_node == s.source { 
-                break;
-            }
-            node = pre_node;
-            }
+    let mut index : usize = 0;
+    let mut switch : usize =0 ;
+    let mut unique_paths: Vec<Vec<NodeIndex>> = vec!();
+    while let Some((score,path)) =  get_simple_paths(graph,source,target,&mut unique_paths,&mut ignore_edges,&mut index,&mut switch) {
+        scores.push(score);
+        paths.push(Some(path));
     }
-
-    if paths.len() == 0 {
-        return None
-    }
-    paths.reverse();
-            let contains_target = unique_paths.iter().any(|v| *v == paths.to_vec());
-            if !contains_target {
-                unique_paths.push(paths.to_vec());
-                let s = SimplePath {
-                    switch: s.switch,
-                    unique_paths: unique_paths,
-                    Score: score_target,
-                    Path: paths.to_vec(),
-                    index: s.index + 1,
-                    source: s.source,
-                    target: s.target,
-                    graph: s.graph.clone(),
-                };
-                return Some(s);
+    for i in 0..scores.len(){
+        let mut min_score_index :usize = i;
+        for j in i+1..scores.len(){
+            if scores[j] < scores[min_score_index] {
+                min_score_index =j;
             }
-            None
+        }
+        shortest_paths.push(paths[min_score_index].clone());
+        if i == shortest_path_get -1  {
+            break;
+        }
     }
+   // println!("Scores & Paths {:#?} {:#?}", scores, paths);
+    return shortest_paths.into_iter()
+}
 
 
-// This function call get_simple_path for each graph after removing one of the edges in between.
 
 // -------------------------------------------
-// INPUTS
+// TEST CASES
 // -------------------------------------------
-// you can call the function with Input Graph, Source Node, Target Node
-// Create a SimplePath instance as -
-//       let path = SimplePath::new(&mut graph,source,target);
-//       Then iterate over it, as path.next() .
-// The Return type is a Option, so you have to handle the None Part as the End of Iterator
-////////////////////////////////////////////////
 
 //////////////////////////////////////////////
-//  Testing Main function
+//  Testing  function
 
-//fn main() {
-//  let mut graph = DiGraph::new();
-//    	let nodes: Vec<NodeIndex> = (0..50000).map(|_| graph.add_node(())).collect();
-//    	let mut rng = rand::thread_rng();
-//      for _ in 0..100000 { // Adjust the number of edges as desired
-//        let a = rng.gen_range(0..nodes.len());
-//        let b = rng.gen_range(0..nodes.len());
-//        let weight = rng.gen_range(1..100); // Random weight between 1 and 100
-//        if a != b { // Prevent self-loops
-//            graph.add_edge(nodes[a], nodes[b], weight as f32);
-//        }
-//      }
-//      let source = nodes[10];
-//      let target = nodes[800];
-//      let mut result =  SimplePath::new(&mut graph,source,target);
-//
-//      while result.is_some()  {
-//        let mut result_new  = result.expect("REASON").next();
-//        if result_new.is_none() {
-//            break;
-//        }
-//        println!("New Path & Score {:#?}, {:#?}",result_new.clone().unwrap().Score, result_new.clone().unwrap().Path);
-//        result = result_new;
-//      }
-//    }
+#[cfg(test)]
+mod tests {
+    use crate::get_shortest_paths;
+    use petgraph::Graph;
+    use petgraph::graph::DiGraph;
 
-// ----------------------------------------------
-// OUTPUT
-// ----------------------------------------------
-//  The function simple_paths_generator will return the Vector of Type SimplePath, which is a structure which contains { Score, Path }
-//
-//  Example :
-//New Path & Score 614.0, [
-//    NodeIndex(10),
-//    NodeIndex(2636),
-//    NodeIndex(8612),
-//    NodeIndex(7513),
-//    NodeIndex(800),
-//]
-//New Path & Score 675.0, [
-//    NodeIndex(10),
-//    NodeIndex(2636),
-//    NodeIndex(8612),
-//    NodeIndex(7513),
-//    NodeIndex(5367),
-//    NodeIndex(6520),
-//    NodeIndex(5590),
-//    NodeIndex(5745),
-//    NodeIndex(2596),
-//    NodeIndex(4981),
-//    NodeIndex(2837),
-//    NodeIndex(6319),
-//    NodeIndex(4025),
-//    NodeIndex(5631),
-//    NodeIndex(6935),
-//    NodeIndex(2784),
-//    NodeIndex(800),
-//]
+    #[test]
+    fn test_shortest_paths() {
+        
+        let mut g = Graph::new_undirected();
+        let a = g.add_node("A");
+        let b = g.add_node("B");
+        let c = g.add_node("C");
+        let d = g.add_node("D");
+        let e = g.add_node("E");
+        let f = g.add_node("F");
+        g.add_edge(a, b, 7);
+        g.add_edge(c, a, 9);
+        g.add_edge(a, d, 14);
+        g.add_edge(b, c, 10);
+        g.add_edge(d, c, 2);
+        g.add_edge(d, e, 9);
+        g.add_edge(b, f, 15);
+        g.add_edge(c, f, 11);
+        g.add_edge(e, f, 6);
+      let source = a;
+      let target = f;
+      let mut path1 = [
+        a,
+        c,
+        f,
+      ];
+
+      let path2 = [
+        a,
+        b,
+        f,
+       ];
+    
+      for path in get_shortest_paths( &mut g,source,target,2){
+        match path {
+        Some(p) => assert_eq!(p, path1),
+        None => panic!("Not matched"),
+        }
+        path1 = path2;
+      }
+
+}
+}
+
