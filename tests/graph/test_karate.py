@@ -23,7 +23,10 @@ class TestKarate(unittest.TestCase):
 
         def node_matcher(a, b):
             if isinstance(a, dict):
-                a, b, = (
+                (
+                    a,
+                    b,
+                ) = (
                     b,
                     a,
                 )
@@ -31,7 +34,10 @@ class TestKarate(unittest.TestCase):
 
         def edge_matcher(a, b):
             if isinstance(a, dict):
-                a, b, = (
+                (
+                    a,
+                    b,
+                ) = (
                     b,
                     a,
                 )
