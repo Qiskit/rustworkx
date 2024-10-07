@@ -1281,7 +1281,7 @@ impl PyDiGraph {
     /// :returns: A list of int indices of the newly created edges
     /// :rtype: list
     #[pyo3(text_signature = "(self, obj_list, /)")]
-    pub fn add_edges_from<'py>(&mut self, obj_list: Bound<'py, PyAny>) -> PyResult<Vec<usize>> {
+    pub fn add_edges_from(&mut self, obj_list: Bound<'_, PyAny>) -> PyResult<Vec<usize>> {
         let mut out_list = Vec::new();
         for py_obj in obj_list.iter()? {
             let obj = py_obj?.extract::<(usize, usize, PyObject)>()?;
@@ -1302,10 +1302,10 @@ impl PyDiGraph {
     /// :returns: A list of int indices of the newly created edges
     /// :rtype: list
     #[pyo3(text_signature = "(self, obj_list, /)")]
-    pub fn add_edges_from_no_data<'py>(
+    pub fn add_edges_from_no_data(
         &mut self,
         py: Python,
-        obj_list: Bound<'py, PyAny>,
+        obj_list: Bound<'_, PyAny>,
     ) -> PyResult<Vec<usize>> {
         let mut out_list = Vec::new();
         for py_obj in obj_list.iter()? {
@@ -1326,10 +1326,10 @@ impl PyDiGraph {
     ///     is not present in the graph, nodes will be added (with a node
     ///     weight of ``None``) to that index.
     #[pyo3(text_signature = "(self, edge_list, /)")]
-    pub fn extend_from_edge_list<'py>(
+    pub fn extend_from_edge_list(
         &mut self,
         py: Python,
-        edge_list: Bound<'py, PyAny>,
+        edge_list: Bound<'_, PyAny>,
     ) -> PyResult<()> {
         for py_obj in edge_list.iter()? {
             let (source, target) = py_obj?.extract::<(usize, usize)>()?;
@@ -1352,10 +1352,10 @@ impl PyDiGraph {
     ///     node indices. If the node index is not present in the graph
     ///     nodes will be added (with a node weight of ``None``) to that index.
     #[pyo3(text_signature = "(self, edge_list, /)")]
-    pub fn extend_from_weighted_edge_list<'py>(
+    pub fn extend_from_weighted_edge_list(
         &mut self,
         py: Python,
-        edge_list: Bound<'py, PyAny>,
+        edge_list: Bound<'_, PyAny>,
     ) -> PyResult<()> {
         for py_obj in edge_list.iter()? {
             let (source, target, weight) = py_obj?.extract::<(usize, usize, PyObject)>()?;
@@ -1956,7 +1956,7 @@ impl PyDiGraph {
     /// :returns: A list of int indices of the newly created nodes
     /// :rtype: NodeIndices
     #[pyo3(text_signature = "(self, obj_list, /)")]
-    pub fn add_nodes_from<'py>(&mut self, obj_list: Bound<'py, PyAny>) -> PyResult<NodeIndices> {
+    pub fn add_nodes_from(&mut self, obj_list: Bound<'_, PyAny>) -> PyResult<NodeIndices> {
         let mut out_list = Vec::new();
         for py_obj in obj_list.iter()? {
             let obj = py_obj?.extract::<PyObject>()?;
