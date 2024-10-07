@@ -52,6 +52,7 @@ class TestKarate(unittest.TestCase):
         )
 
 
+# ruff: noqa: E501
 # Output of
 # import networkx as nx
 # nx.write_graphml_lxml(nx.karate_club_graph(), open("karate.xml", "w"))
