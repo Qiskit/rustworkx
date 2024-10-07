@@ -71,9 +71,9 @@ where
     H: FnMut(usize) -> M,
     G::NodeId: Eq + Hash,
 {
-    let mut graph = G::with_capacity(0, 0);
+    let mut graph = G::with_capacity(34, 78);
     let membership: std::collections::HashSet<usize> = MR_HI_MEMBERS.into_iter().collect();
-    let mut node_indices = Vec::new();
+    let mut node_indices = Vec::with_capacity(34);
     for (row, line) in ZACHARY.split('\n').enumerate() {
         let node_id = graph.add_node(default_node_weight(membership.contains(&row)));
         node_indices.push(node_id);
