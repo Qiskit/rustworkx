@@ -51,7 +51,8 @@ class TestKarate(unittest.TestCase):
             rx.is_isomorphic(graph, nx_graph, node_matcher=node_matcher, edge_matcher=edge_matcher)
         )
 
-# Output of 
+
+# Output of
 # import networkx as nx
 # nx.write_graphml_lxml(nx.karate_club_graph(), open("karate.xml", "w"))
 karate_xml = """

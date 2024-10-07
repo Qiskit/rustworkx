@@ -55,7 +55,7 @@ const ZACHARY: &str = "\
 0 0 2 0 0 0 0 0 3 0 0 0 0 0 3 3 0 0 1 0 3 0 2 5 0 0 0 0 0 4 3 4 0 5\n\
 0 0 0 0 0 0 0 0 4 2 0 0 0 3 2 4 0 0 2 1 1 0 3 4 0 0 2 4 2 2 3 4 5 0";
 
-const MR_HI_MEMBERS: [usize; 17] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 10, 11, 12, 13, 16, 17, 19, 21];
+const MR_HI_MEMBERS: [u8; 17] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 10, 11, 12, 13, 16, 17, 19, 21];
 
 /// Generates Zachary's Karate Club graph.
 ///
@@ -72,10 +72,10 @@ where
     G::NodeId: Eq + Hash,
 {
     let mut graph = G::with_capacity(34, 78);
-    let membership: std::collections::HashSet<usize> = MR_HI_MEMBERS.into_iter().collect();
+    let membership: std::collections::HashSet<u8> = MR_HI_MEMBERS.into_iter().collect();
     let mut node_indices = Vec::with_capacity(34);
     for (row, line) in ZACHARY.split('\n').enumerate() {
-        let node_id = graph.add_node(default_node_weight(membership.contains(&row)));
+        let node_id = graph.add_node(default_node_weight(membership.contains(&(row as u8))));
         node_indices.push(node_id);
         let this_row: Vec<usize> = line
             .split_whitespace()
