@@ -930,7 +930,7 @@ impl PyGraph {
     pub fn extend_from_edge_list<'py>(
         &mut self,
         py: Python,
-        edge_list: Bound<'py, PyAny>
+        edge_list: Bound<'py, PyAny>,
     ) -> PyResult<()> {
         for py_obj in edge_list.iter()? {
             let (source, target) = py_obj?.extract::<(usize, usize)>()?;
