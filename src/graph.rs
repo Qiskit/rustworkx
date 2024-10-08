@@ -873,7 +873,7 @@ impl PyGraph {
     /// from ``obj_list`` so if there are multiple parallel edges in ``obj_list``
     /// the last entry will be used.
     ///
-    /// :returns: A list of int indices of the newly created edges
+    /// :returns: An iterable of int indices of the newly created edges
     /// :rtype: list
     #[pyo3(text_signature = "(self, obj_list, /)")]
     pub fn add_edges_from(&mut self, obj_list: Bound<'_, PyAny>) -> PyResult<EdgeIndices> {
@@ -897,7 +897,7 @@ impl PyGraph {
     /// exists between ``node_a`` and ``node_b`` the weight/payload of that
     /// existing edge will be updated to be ``None``.
     ///
-    /// :returns: A list of int indices of the newly created edges
+    /// :returns: An iterable of int indices of the newly created edges
     /// :rtype: list
     #[pyo3(text_signature = "(self, obj_list, /)")]
     pub fn add_edges_from_no_data(
@@ -922,7 +922,7 @@ impl PyGraph {
     /// exists between ``node_a`` and ``node_b`` the weight/payload of that
     /// existing edge will be updated to be ``None``.
     ///
-    /// :param list edge_list: A list of tuples of the form ``(source, target)``
+    /// :param list edge_list: An iterable of tuples of the form ``(source, target)``
     ///     where source and target are integer node indices. If the node index
     ///     is not present in the graph, nodes will be added (with a node
     ///     weight of ``None``) to that index.
@@ -1016,17 +1016,16 @@ impl PyGraph {
     /// Note if there are multiple edges between the specified nodes only one
     /// will be removed.
     ///
-    /// :param list index_list: A list of node index pairs to remove from
+    /// :param list index_list: An iterable of node index pairs to remove from
     ///     the graph
     ///
     /// :raises NoEdgeBetweenNodes: If there are no edges between a specified
     ///     pair of nodes.
     #[pyo3(text_signature = "(self, index_list, /)")]
-    pub fn remove_edges_from(&mut self, index_list: Vec<(usize, usize)>) -> PyResult<()> {
-        for (p_index, c_index) in index_list
-            .iter()
-            .map(|(x, y)| (NodeIndex::new(*x), NodeIndex::new(*y)))
-        {
+    pub fn remove_edges_from(&mut self, index_list: Bound<'_, PyAny>) -> PyResult<()> {
+        for py_obj in index_list.iter()? {
+            let (x, y) = py_obj?.extract::<(usize, usize)>()?;
+            let (p_index, c_index) = (NodeIndex::new(x), NodeIndex::new(y));
             let edge_index = match self.graph.find_edge(p_index, c_index) {
                 Some(edge_index) => edge_index,
                 None => return Err(NoEdgeBetweenNodes::new_err("No edge found between nodes")),
@@ -1050,7 +1049,7 @@ impl PyGraph {
 
     /// Add new nodes to the graph.
     ///
-    /// :param list obj_list: A list of python object to attach to the graph.
+    /// :param list obj_list: An iterable of python object to attach to the graph.
     ///
     /// :returns indices: A list of int indices of the newly created nodes
     /// :rtype: NodeIndices
@@ -1069,11 +1068,12 @@ impl PyGraph {
     /// If a node index in the list is not present in the graph it will be
     /// ignored.
     ///
-    /// :param list index_list: A list of node indicies to remove from the
+    /// :param list index_list: An iterable of node indices to remove from the
     ///     the graph
     #[pyo3(text_signature = "(self, index_list, /)")]
-    pub fn remove_nodes_from(&mut self, index_list: Vec<usize>) -> PyResult<()> {
-        for node in index_list {
+    pub fn remove_nodes_from(&mut self, index_list: Bound<'_, PyAny>) -> PyResult<()> {
+        for py_obj in index_list.iter()? {
+            let node = py_obj?.extract::<usize>()?;
             self.remove_node(node)?;
         }
         Ok(())
