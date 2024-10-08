@@ -1759,10 +1759,7 @@ pub fn karate_club_graph(py: Python, multigraph: bool) -> PyResult<graph::PyGrap
     };
     let default_edge_fn = |w: usize| (w as f64).to_object(py);
     let graph: StablePyGraph<Undirected> =
-        match core_generators::karate_club_graph(default_node_fn, default_edge_fn) {
-            Ok(graph) => graph,
-            Err(_) => return Err(PyValueError::new_err("error generating Karate club graph")),
-        };
+        core_generators::karate_club_graph(default_node_fn, default_edge_fn);
     Ok(graph::PyGraph {
         graph,
         node_removed: false,

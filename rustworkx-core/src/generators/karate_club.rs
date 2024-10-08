@@ -15,82 +15,103 @@ use std::hash::Hash;
 use petgraph::data::{Build, Create};
 use petgraph::visit::{Data, NodeIndexable};
 
-use super::InvalidInputError;
-
-// Adapted from NetworkX, licensed under the MIT license
-// https://github.com/networkx/networkx/blob/409979eff35f02eff54f4eea3731736bd431dc2e/networkx/generators/social.py#L49
-const ZACHARY: &str = "\
-0 4 5 3 3 3 3 2 2 0 2 3 2 3 0 0 0 2 0 2 0 2 0 0 0 0 0 0 0 0 0 2 0 0\n\
-4 0 6 3 0 0 0 4 0 0 0 0 0 5 0 0 0 1 0 2 0 2 0 0 0 0 0 0 0 0 2 0 0 0\n\
-5 6 0 3 0 0 0 4 5 1 0 0 0 3 0 0 0 0 0 0 0 0 0 0 0 0 0 2 2 0 0 0 3 0\n\
-3 3 3 0 0 0 0 3 0 0 0 0 3 3 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0\n\
-3 0 0 0 0 0 2 0 0 0 3 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0\n\
-3 0 0 0 0 0 5 0 0 0 3 0 0 0 0 0 3 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0\n\
-3 0 0 0 2 5 0 0 0 0 0 0 0 0 0 0 3 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0\n\
-2 4 4 3 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0\n\
-2 0 5 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 3 0 4 3\n\
-0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 2\n\
-2 0 0 0 3 3 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0\n\
-3 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0\n\
-1 0 0 3 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0\n\
-3 5 3 3 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 3\n\
-0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 3 2\n\
-0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 3 4\n\
-0 0 0 0 0 3 3 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0\n\
-2 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0\n\
-0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 2\n\
-2 2 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1\n\
-0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 3 1\n\
-2 2 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0\n\
-0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 2 0\n\
-0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 5 0 4 0 2 0 0 5 4\n\
-0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 2 0 3 0 0 0 2 0 0\n\
-0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 5 2 0 0 0 0 0 0 7 0 0\n\
-0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 4 0 0 0 2\n\
-0 0 2 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 4 3 0 0 0 0 0 0 0 0 4\n\
-0 0 2 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 2 0 2\n\
-0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 3 0 0 4 0 0 0 0 0 3 2\n\
-0 2 0 0 0 0 0 0 3 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 3 3\n\
-2 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 2 7 0 0 2 0 0 0 4 4\n\
-0 0 2 0 0 0 0 0 3 0 0 0 0 0 3 3 0 0 1 0 3 0 2 5 0 0 0 0 0 4 3 4 0 5\n\
-0 0 0 0 0 0 0 0 4 2 0 0 0 3 2 4 0 0 2 1 1 0 3 4 0 0 2 4 2 2 3 4 5 0";
-
-const MR_HI_MEMBERS: [u8; 17] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 10, 11, 12, 13, 16, 17, 19, 21];
-
 /// Generates Zachary's Karate Club graph.
 ///
 /// Zachary's Karate Club graph is a well-known social network that represents
 /// the relations between 34 members of a karate club.
-pub fn karate_club_graph<G, T, F, H, M>(
-    mut default_node_weight: F,
-    mut default_edge_weight: H,
-) -> Result<G, InvalidInputError>
+pub fn karate_club_graph<G, T, F, H, M>(mut default_node_weight: F, mut default_edge_weight: H) -> G
 where
     G: Build + Create + Data<NodeWeight = T, EdgeWeight = M> + NodeIndexable,
     F: FnMut(bool) -> T,
     H: FnMut(usize) -> M,
     G::NodeId: Eq + Hash,
 {
-    let mut graph = G::with_capacity(34, 78);
-    let membership: std::collections::HashSet<u8> = MR_HI_MEMBERS.into_iter().collect();
-    let mut node_indices = Vec::with_capacity(34);
-    for (row, line) in ZACHARY.split('\n').enumerate() {
+    const N: usize = 34;
+    const M: usize = 78;
+    let mr_hi_members: [u8; 17] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 10, 11, 12, 13, 16, 17, 19, 21];
+    let membership: std::collections::HashSet<u8> = mr_hi_members.into_iter().collect();
+
+    let adjacency_list: Vec<Vec<(usize, usize)>> = vec![
+        vec![],
+        vec![(0, 4)],
+        vec![(0, 5), (1, 6)],
+        vec![(0, 3), (1, 3), (2, 3)],
+        vec![(0, 3)],
+        vec![(0, 3)],
+        vec![(0, 3), (4, 2), (5, 5)],
+        vec![(0, 2), (1, 4), (2, 4), (3, 3)],
+        vec![(0, 2), (2, 5)],
+        vec![(2, 1)],
+        vec![(0, 2), (4, 3), (5, 3)],
+        vec![(0, 3)],
+        vec![(0, 1), (3, 3)],
+        vec![(0, 3), (1, 5), (2, 3), (3, 3)],
+        vec![],
+        vec![],
+        vec![(5, 3), (6, 3)],
+        vec![(0, 2), (1, 1)],
+        vec![],
+        vec![(0, 2), (1, 2)],
+        vec![],
+        vec![(0, 2), (1, 2)],
+        vec![],
+        vec![],
+        vec![],
+        vec![(23, 5), (24, 2)],
+        vec![],
+        vec![(2, 2), (23, 4), (24, 3)],
+        vec![(2, 2)],
+        vec![(23, 3), (26, 4)],
+        vec![(1, 2), (8, 3)],
+        vec![(0, 2), (24, 2), (25, 7), (28, 2)],
+        vec![
+            (2, 2),
+            (8, 3),
+            (14, 3),
+            (15, 3),
+            (18, 1),
+            (20, 3),
+            (22, 2),
+            (23, 5),
+            (29, 4),
+            (30, 3),
+            (31, 4),
+        ],
+        vec![
+            (8, 4),
+            (9, 2),
+            (13, 3),
+            (14, 2),
+            (15, 4),
+            (18, 2),
+            (19, 1),
+            (20, 1),
+            (23, 4),
+            (26, 2),
+            (27, 4),
+            (28, 2),
+            (29, 2),
+            (30, 3),
+            (31, 4),
+            (32, 5),
+            (22, 3),
+        ],
+    ];
+
+    let mut graph = G::with_capacity(N, M);
+
+    let mut node_indices = Vec::with_capacity(N);
+    for (row, neighbors) in adjacency_list.into_iter().enumerate() {
         let node_id = graph.add_node(default_node_weight(membership.contains(&(row as u8))));
         node_indices.push(node_id);
-        let this_row: Vec<usize> = line
-            .split_whitespace()
-            .map(|b| b.parse::<usize>().unwrap())
-            .collect();
 
-        for (col, entry) in this_row.iter().enumerate() {
-            if *entry >= 1 && row > col {
-                graph.add_edge(
-                    node_indices[col],
-                    node_indices[row],
-                    default_edge_weight(*entry),
-                );
-            }
+        for (neighbor, weight) in neighbors.into_iter() {
+            graph.add_edge(
+                node_indices[neighbor],
+                node_indices[row],
+                default_edge_weight(weight),
+            );
         }
     }
-    Ok(graph)
+    graph
 }
