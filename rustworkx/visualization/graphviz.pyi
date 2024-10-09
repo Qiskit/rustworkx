@@ -10,7 +10,7 @@ import typing
 from rustworkx.rustworkx import PyGraph, PyDiGraph
 
 if typing.TYPE_CHECKING:
-    from PIL import Image  # type: ignore
+    from PIL.Image import Image  # type: ignore
 
 _S = typing.TypeVar("_S")
 _T = typing.TypeVar("_T")
