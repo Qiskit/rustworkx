@@ -1273,7 +1273,7 @@ impl PyDiGraph {
 
     /// Add new edges to the dag.
     ///
-    /// :param list obj_list: An iterable of tuples of the form
+    /// :param iterable obj_list: An iterable of tuples of the form
     ///     ``(parent, child, obj)`` to attach to the graph. ``parent`` and
     ///     ``child`` are integer indices describing where an edge should be
     ///     added, and obj is the python object for the edge data.
@@ -1293,7 +1293,7 @@ impl PyDiGraph {
 
     /// Add new edges to the dag without python data.
     ///
-    /// :param list obj_list: An iterable of tuples of the form
+    /// :param iterable obj_list: An iterable of tuples of the form
     ///     ``(parent, child)`` to attach to the graph. ``parent`` and
     ///     ``child`` are integer indices describing where an edge should be
     ///     added. Unlike :meth:`add_edges_from` there is no data payload and
@@ -1321,7 +1321,7 @@ impl PyDiGraph {
     /// This method differs from :meth:`add_edges_from_no_data` in that it will
     /// add nodes if a node index is not present in the edge list.
     ///
-    /// :param list edge_list: An iterable of tuples of the form ``(source, target)``
+    /// :param iterable edge_list: An iterable of tuples of the form ``(source, target)``
     ///     where source and target are integer node indices. If the node index
     ///     is not present in the graph, nodes will be added (with a node
     ///     weight of ``None``) to that index.
@@ -1347,7 +1347,7 @@ impl PyDiGraph {
     /// This method differs from :meth:`add_edges_from` in that it will
     /// add nodes if a node index is not present in the edge list.
     ///
-    /// :param list edge_list: An iterable of tuples of the form
+    /// :param iterable edge_list: An iterable of tuples of the form
     ///     ``(source, target, weight)`` where source and target are integer
     ///     node indices. If the node index is not present in the graph
     ///     nodes will be added (with a node weight of ``None``) to that index.
@@ -1501,7 +1501,7 @@ impl PyDiGraph {
     /// Note if there are multiple edges between the specified nodes only one
     /// will be removed.
     ///
-    /// :param list index_list: An iterable of node index pairs to remove from
+    /// :param iterable index_list: An iterable of node index pairs to remove from
     ///     the graph
     ///
     /// :raises NoEdgeBetweenNodes: If there are no edges between a specified
@@ -1949,7 +1949,7 @@ impl PyDiGraph {
 
     /// Add new nodes to the graph.
     ///
-    /// :param list obj_list: An iterable of python objects to attach to the graph
+    /// :param iterable obj_list: An iterable of python objects to attach to the graph
     ///     as new nodes
     ///
     /// :returns: A list of int indices of the newly created nodes
@@ -1969,8 +1969,8 @@ impl PyDiGraph {
     /// If a node index in the list is not present in the graph it will be
     /// ignored.
     ///
-    /// :param list index_list: An iterable of node indices to remove from the
-    ///     the graph.
+    /// :param iterable index_list: An iterable of node indices to remove from the
+    ///     graph.
     #[pyo3(text_signature = "(self, index_list, /)")]
     pub fn remove_nodes_from(&mut self, index_list: Bound<'_, PyAny>) -> PyResult<()> {
         for py_obj in index_list.iter()? {

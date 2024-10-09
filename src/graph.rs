@@ -862,7 +862,7 @@ impl PyGraph {
 
     /// Add new edges to the graph.
     ///
-    /// :param list obj_list: An iterable of tuples of the form
+    /// :param iterable obj_list: An iterable of tuples of the form
     ///     ``(node_a, node_b, obj)`` to attach to the graph. ``node_a`` and
     ///     ``node_b`` are integer indices describing where an edge should be
     ///     added, and ``obj`` is the python object for the edge data.
@@ -873,7 +873,7 @@ impl PyGraph {
     /// from ``obj_list`` so if there are multiple parallel edges in ``obj_list``
     /// the last entry will be used.
     ///
-    /// :returns: An iterable of int indices of the newly created edges
+    /// :returns: A list of int indices of the newly created edges
     /// :rtype: list
     #[pyo3(text_signature = "(self, obj_list, /)")]
     pub fn add_edges_from(&mut self, obj_list: Bound<'_, PyAny>) -> PyResult<EdgeIndices> {
@@ -887,7 +887,7 @@ impl PyGraph {
 
     /// Add new edges to the graph without python data.
     ///
-    /// :param list obj_list: An iterable of tuples of the form
+    /// :param iterable obj_list: An iterable of tuples of the form
     ///     ``(parent, child)`` to attach to the graph. ``parent`` and
     ///     ``child`` are integer indices describing where an edge should be
     ///     added. Unlike :meth:`add_edges_from` there is no data payload and
@@ -897,7 +897,7 @@ impl PyGraph {
     /// exists between ``node_a`` and ``node_b`` the weight/payload of that
     /// existing edge will be updated to be ``None``.
     ///
-    /// :returns: An iterable of int indices of the newly created edges
+    /// :returns: A list of int indices of the newly created edges
     /// :rtype: list
     #[pyo3(text_signature = "(self, obj_list, /)")]
     pub fn add_edges_from_no_data(
@@ -922,7 +922,7 @@ impl PyGraph {
     /// exists between ``node_a`` and ``node_b`` the weight/payload of that
     /// existing edge will be updated to be ``None``.
     ///
-    /// :param list edge_list: An iterable of tuples of the form ``(source, target)``
+    /// :param iterable edge_list: An iterable of tuples of the form ``(source, target)``
     ///     where source and target are integer node indices. If the node index
     ///     is not present in the graph, nodes will be added (with a node
     ///     weight of ``None``) to that index.
@@ -956,7 +956,7 @@ impl PyGraph {
     /// from ``obj_list`` so if there are multiple parallel edges in ``obj_list``
     /// the last entry will be used.
     ///
-    /// :param list edge_list: An iterable of tuples of the form
+    /// :param iterable edge_list: An iterable of tuples of the form
     ///     ``(source, target, weight)`` where source and target are integer
     ///     node indices. If the node index is not present in the graph,
     ///     nodes will be added (with a node weight of ``None``) to that index.
@@ -1016,7 +1016,7 @@ impl PyGraph {
     /// Note if there are multiple edges between the specified nodes only one
     /// will be removed.
     ///
-    /// :param list index_list: An iterable of node index pairs to remove from
+    /// :param iterable index_list: An iterable of node index pairs to remove from
     ///     the graph
     ///
     /// :raises NoEdgeBetweenNodes: If there are no edges between a specified
@@ -1049,7 +1049,7 @@ impl PyGraph {
 
     /// Add new nodes to the graph.
     ///
-    /// :param list obj_list: An iterable of python object to attach to the graph.
+    /// :param iterable obj_list: An iterable of python object to attach to the graph.
     ///
     /// :returns indices: A list of int indices of the newly created nodes
     /// :rtype: NodeIndices
@@ -1068,8 +1068,8 @@ impl PyGraph {
     /// If a node index in the list is not present in the graph it will be
     /// ignored.
     ///
-    /// :param list index_list: An iterable of node indices to remove from the
-    ///     the graph
+    /// :param iterable index_list: An iterable of node indices to remove from the
+    ///     graph
     #[pyo3(text_signature = "(self, index_list, /)")]
     pub fn remove_nodes_from(&mut self, index_list: Bound<'_, PyAny>) -> PyResult<()> {
         for py_obj in index_list.iter()? {
