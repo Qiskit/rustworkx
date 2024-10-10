@@ -413,8 +413,6 @@ trait PyGCProtocol {
 /// A Python-space indexer for the standard `PySequence` type; a single integer or a slice.
 ///
 /// These come in as `isize`s from Python space, since Python typically allows negative indices.
-/// Use `with_len` to specialize the index to a valid Rust-space indexer into a collection of the
-/// given length.
 /// Copied from https://github.com/Qiskit/qiskit/pull/12669
 pub enum PySequenceIndex<'py> {
     Int(isize),
@@ -562,8 +560,32 @@ macro_rules! custom_vec_iter_impl {
 
             fn __getitem__(&self, py: Python, idx: PySequenceIndex) -> PyResult<PyObject> {
                 match idx {
-                    PySequenceIndex::Slice(_slc) => {
-                        Err(PyNotImplementedError::new_err("Slicing not implemented"))
+                    PySequenceIndex::Slice(slc) => {
+                        let len = self.$data.len().try_into().unwrap();
+                        let indices = slc.indices(len)?;
+                        let mut out_vec: Vec<$T> = Vec::new();
+                        // Start and stop will always be positive the slice api converts
+                        // negatives to the index for example:
+                        // list(range(5))[-1:-3:-1]
+                        // will return start=4, stop=2, and step=-1
+                        let mut pos: isize = indices.start;
+                        let mut cond = if indices.step < 0 {
+                            pos > indices.stop
+                        } else {
+                            pos < indices.stop
+                        };
+                        while cond {
+                            if pos < len as isize {
+                                out_vec.push(self.$data[pos as usize].clone());
+                            }
+                            pos += indices.step;
+                            if indices.step < 0 {
+                                cond = pos > indices.stop;
+                            } else {
+                                cond = pos < indices.stop;
+                            }
+                        }
+                        Ok(out_vec.into_py(py))
                     }
                     PySequenceIndex::Int(idx) => {
                         let len = self.$data.len() as isize;
