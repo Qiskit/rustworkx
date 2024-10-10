@@ -410,8 +410,6 @@ trait PyGCProtocol {
     fn __clear__(&mut self) {}
 }
 
-
-
 /// A Python-space indexer for the standard `PySequence` type; a single integer or a slice.
 ///
 /// These come in as `isize`s from Python space, since Python typically allows negative indices.
