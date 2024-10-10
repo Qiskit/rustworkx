@@ -39,7 +39,7 @@
 #![allow(clippy::float_cmp, clippy::upper_case_acronyms)]
 
 use std::collections::hash_map::DefaultHasher;
-use std::convert::TryInto;
+// use std::convert::TryInto;
 use std::hash::Hasher;
 
 use num_bigint::BigUint;
@@ -593,6 +593,7 @@ macro_rules! custom_vec_iter_impl {
                 }
             }
 
+            #[pyo3(signature = (dtype=None, copy=None))]
             fn __array__(
                 &self,
                 py: Python,

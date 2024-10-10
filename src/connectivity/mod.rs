@@ -71,7 +71,7 @@ use rustworkx_core::dag_algo::longest_path;
 /// .. [1] Paton, K. An algorithm for finding a fundamental set of
 ///    cycles of a graph. Comm. ACM 12, 9 (Sept 1969), 514-518.
 #[pyfunction]
-#[pyo3(text_signature = "(graph, /, root=None)")]
+#[pyo3(text_signature = "(graph, /, root=None)", signature = (graph, root=None))]
 pub fn cycle_basis(graph: &graph::PyGraph, root: Option<usize>) -> Vec<Vec<usize>> {
     connectivity::cycle_basis(&graph.graph, root.map(NodeIndex::new))
         .into_iter()
@@ -125,7 +125,7 @@ pub fn strongly_connected_components(graph: &digraph::PyDiGraph) -> Vec<Vec<usiz
 ///     forms a cycle (loop) in the input graph
 /// :rtype: EdgeList
 #[pyfunction]
-#[pyo3(text_signature = "(graph, /, source=None)")]
+#[pyo3(text_signature = "(graph, /, source=None)", signature=(graph, source=None))]
 pub fn digraph_find_cycle(graph: &digraph::PyDiGraph, source: Option<usize>) -> EdgeList {
     EdgeList {
         edges: connectivity::find_cycle(&graph.graph, source.map(NodeIndex::new))
@@ -575,7 +575,7 @@ pub fn digraph_complement(py: Python, graph: &digraph::PyDiGraph) -> PyResult<di
 /// :returns: A list of lists where each inner list is a path of node indices
 /// :rtype: list
 #[pyfunction]
-#[pyo3(text_signature = "(graph, origin, to, /, min_depth=None, cutoff=None)")]
+#[pyo3(text_signature = "(graph, origin, to, /, min_depth=None, cutoff=None)", signature = (graph, origin, to, min_depth=None, cutoff=None))]
 pub fn graph_all_simple_paths(
     graph: &graph::PyGraph,
     origin: usize,
@@ -629,7 +629,7 @@ pub fn graph_all_simple_paths(
 /// :returns: A list of lists where each inner list is a path
 /// :rtype: list
 #[pyfunction]
-#[pyo3(text_signature = "(graph, origin, to, /, min_depth=None, cutoff=None)")]
+#[pyo3(text_signature = "(graph, origin, to, /, min_depth=None, cutoff=None)", signature = (graph, origin, to, min_depth=None, cutoff=None))]
 pub fn digraph_all_simple_paths(
     graph: &digraph::PyDiGraph,
     origin: usize,
