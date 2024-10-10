@@ -48,7 +48,10 @@ use rustworkx_core::token_swapper;
 ///      the tokens.
 /// :rtype: EdgeList
 #[pyfunction]
-#[pyo3(text_signature = "(graph, mapping, /, trials=None, seed=None, parallel_threshold=50)")]
+#[pyo3(
+    text_signature = "(graph, mapping, /, trials=None, seed=None, parallel_threshold=50)", 
+    signature = (graph, mapping, trials=None, seed=None, parallel_threshold=None)
+)]
 pub fn graph_token_swapper(
     graph: &graph::PyGraph,
     mapping: HashMap<usize, usize>,
