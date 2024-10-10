@@ -410,10 +410,30 @@ trait PyGCProtocol {
     fn __clear__(&mut self) {}
 }
 
-#[derive(FromPyObject)]
-enum SliceOrInt<'a> {
+
+
+/// A Python-space indexer for the standard `PySequence` type; a single integer or a slice.
+///
+/// These come in as `isize`s from Python space, since Python typically allows negative indices.
+/// Use `with_len` to specialize the index to a valid Rust-space indexer into a collection of the
+/// given length.
+/// Copied from https://github.com/Qiskit/qiskit/pull/12669
+pub enum PySequenceIndex<'py> {
     Int(isize),
-    Slice(&'a PySlice),
+    Slice(Bound<'py, PySlice>),
+}
+
+impl<'py> FromPyObject<'py> for PySequenceIndex<'py> {
+    fn extract_bound(ob: &Bound<'py, PyAny>) -> PyResult<Self> {
+        // `slice` can't be subclassed in Python, so it's safe (and faster) to check for it exactly.
+        // The `downcast_exact` check is just a pointer comparison, so while `slice` is the less
+        // common input, doing that first has little-to-no impact on the speed of the `isize` path,
+        // while the reverse makes `slice` inputs significantly slower.
+        if let Ok(slice) = ob.downcast_exact::<PySlice>() {
+            return Ok(Self::Slice(slice.clone()));
+        }
+        Ok(Self::Int(ob.extract()?))
+    }
 }
 
 trait PyConvertToPyArray {
@@ -542,36 +562,12 @@ macro_rules! custom_vec_iter_impl {
                 Ok(self.$data.len())
             }
 
-            fn __getitem__(&self, py: Python, idx: SliceOrInt) -> PyResult<PyObject> {
+            fn __getitem__(&self, py: Python, idx: PySequenceIndex) -> PyResult<PyObject> {
                 match idx {
-                    SliceOrInt::Slice(slc) => {
-                        let len = self.$data.len().try_into().unwrap();
-                        let indices = slc.indices(len)?;
-                        let mut out_vec: Vec<$T> = Vec::new();
-                        // Start and stop will always be positive the slice api converts
-                        // negatives to the index for example:
-                        // list(range(5))[-1:-3:-1]
-                        // will return start=4, stop=2, and step=-1
-                        let mut pos: isize = indices.start;
-                        let mut cond = if indices.step < 0 {
-                            pos > indices.stop
-                        } else {
-                            pos < indices.stop
-                        };
-                        while cond {
-                            if pos < len as isize {
-                                out_vec.push(self.$data[pos as usize].clone());
-                            }
-                            pos += indices.step;
-                            if indices.step < 0 {
-                                cond = pos > indices.stop;
-                            } else {
-                                cond = pos < indices.stop;
-                            }
-                        }
-                        Ok(out_vec.into_py(py))
+                    PySequenceIndex::Slice(_slc) => {
+                        Err(PyNotImplementedError::new_err("Slicing not implemented"))
                     }
-                    SliceOrInt::Int(idx) => {
+                    PySequenceIndex::Int(idx) => {
                         let len = self.$data.len() as isize;
                         if idx >= len || idx < -len {
                             Err(PyIndexError::new_err(format!("Invalid index, {}", idx)))
