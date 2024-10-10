@@ -687,7 +687,7 @@ pub fn digraph_all_simple_paths(
 ///
 /// :raises ValueError: If ``min_depth`` or ``cutoff`` are < 2
 #[pyfunction]
-#[pyo3(text_signature = "(graph, /, min_depth=None, cutoff=None)")]
+#[pyo3(text_signature = "(graph, /, min_depth=None, cutoff=None)", signature = (graph, min_depth=None, cutoff=None))]
 pub fn digraph_all_pairs_all_simple_paths(
     graph: &digraph::PyDiGraph,
     min_depth: Option<usize>,
@@ -749,7 +749,7 @@ pub fn connected_subgraphs(graph: &PyGraph, k: usize) -> PyResult<Vec<Vec<usize>
 ///
 /// :raises ValueError: If ``min_depth`` or ``cutoff`` are < 2.
 #[pyfunction]
-#[pyo3(text_signature = "(graph, /, min_depth=None, cutoff=None)")]
+#[pyo3(text_signature = "(graph, /, min_depth=None, cutoff=None)", signature = (graph, min_depth=None, cutoff=None))]
 pub fn graph_all_pairs_all_simple_paths(
     graph: &graph::PyGraph,
     min_depth: Option<usize>,
@@ -939,7 +939,7 @@ pub fn digraph_core_number(py: Python, graph: &digraph::PyDiGraph) -> PyResult<P
 /// .. [stoer_simple_1997] Stoer, Mechthild and Frank Wagner, "A simple min-cut
 ///     algorithm". Journal of the ACM 44 (4), 585-591, 1997.
 #[pyfunction]
-#[pyo3(text_signature = "(graph, /, weight_fn=None)")]
+#[pyo3(text_signature = "(graph, /, weight_fn=None)", signature = (graph, weight_fn=None))]
 pub fn stoer_wagner_min_cut(
     py: Python,
     graph: &graph::PyGraph,
@@ -1081,7 +1081,7 @@ pub fn biconnected_components(graph: &graph::PyGraph) -> BiconnectedComponents {
 ///       and 2-edge-connectivity." *Information Processing Letters*,
 ///       113, 241–244. Elsevier. <https://doi.org/10.1016/j.ipl.2013.01.016>
 #[pyfunction]
-#[pyo3(text_signature = "(graph, /, source=None)")]
+#[pyo3(text_signature = "(graph, /, source=None)", signature = (graph, source=None))]
 pub fn chain_decomposition(graph: graph::PyGraph, source: Option<usize>) -> Chains {
     let chains = connectivity::chain_decomposition(&graph.graph, source.map(NodeIndex::new));
     Chains {
