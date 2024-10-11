@@ -28,7 +28,7 @@ ahash = "0.8.6"
 fixedbitset = "0.4.2"
 hashbrown = { version = ">=0.13, <0.15", features = ["rayon"] }
 indexmap = { version = ">=1.9, <3", features = ["rayon"] }
-ndarray = { version = "0.15.6", features = ["rayon"] }
+ndarray = { version = "0.16.1", features = ["rayon"] }
 num-traits = "0.2"
 numpy = { git = "https://github.com/PyO3/rust-numpy.git", rev="ca3299fe260ff247fe45bd667eb4b0fe5cb1acc8" }
 petgraph = "0.6.5"
@@ -46,7 +46,7 @@ fixedbitset.workspace = true
 hashbrown.workspace = true
 indexmap.workspace = true
 ndarray.workspace = true
-ndarray-stats = "0.5.1"
+ndarray-stats = "0.6.0"
 num-bigint = "0.4"
 num-complex = "0.4"
 num-traits.workspace = true
