@@ -30,7 +30,7 @@ hashbrown = { version = ">=0.13, <0.15", features = ["rayon"] }
 indexmap = { version = ">=1.9, <3", features = ["rayon"] }
 ndarray = { version = "0.16.1", features = ["rayon"] }
 num-traits = "0.2"
-numpy = { git = "https://github.com/PyO3/rust-numpy.git", rev="ca3299fe260ff247fe45bd667eb4b0fe5cb1acc8" }
+numpy = "0.22"
 petgraph = "0.6.5"
 rand = "0.8"
 rand_pcg = "0.3"
