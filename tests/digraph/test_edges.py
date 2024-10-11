@@ -164,6 +164,16 @@ class TestEdges(unittest.TestCase):
         graph.remove_edges_from([(node_a, node_b), (node_a, node_c)])
         self.assertEqual([], graph.edges())
 
+    def test_remove_edges_from_gen(self):
+        graph = rustworkx.PyDiGraph()
+        node_a = graph.add_node("a")
+        node_b = graph.add_node("b")
+        node_c = graph.add_node("c")
+        graph.add_edge(node_a, node_b, "edgy")
+        graph.add_edge(node_a, node_c, "super_edgy")
+        graph.remove_edges_from((node_a, n) for n in (node_b, node_c))
+        self.assertEqual([], graph.edges())
+
     def test_remove_edges_from_invalid(self):
         graph = rustworkx.PyDiGraph()
         node_a = graph.add_node("a")
@@ -287,6 +297,21 @@ class TestEdges(unittest.TestCase):
         self.assertEqual(1, dag.out_degree(2))
         self.assertEqual(2, dag.in_degree(3))
 
+    def test_add_edge_from_gen(self):
+        graph = rustworkx.PyDiGraph()
+        nodes = range(4)
+        graph.add_nodes_from(nodes)
+        edge_list = [(0, 1), (1, 2), (0, 2), (2, 3), (0, 3)]
+        edge_gen = ((i, j, c) for (i, j), c in zip(edge_list, ["a", "b", "c", "d", "e"]))
+        res = graph.add_edges_from(edge_gen)
+        self.assertEqual(len(res), 5)
+        self.assertEqual(["a", "b", "c", "d", "e"], graph.edges())
+        self.assertEqual(3, graph.out_degree(0))
+        self.assertEqual(0, graph.in_degree(0))
+        self.assertEqual(1, graph.out_degree(1))
+        self.assertEqual(1, graph.out_degree(2))
+        self.assertEqual(2, graph.in_degree(3))
+
     def test_add_edge_from_empty(self):
         dag = rustworkx.PyDAG()
         res = dag.add_edges_from([])
@@ -322,6 +347,21 @@ class TestEdges(unittest.TestCase):
         self.assertEqual(1, dag.out_degree(1))
         self.assertEqual(1, dag.out_degree(2))
         self.assertEqual(2, dag.in_degree(3))
+
+    def test_add_edge_from_gen_no_data(self):
+        graph = rustworkx.PyDiGraph()
+        nodes = range(4)
+        graph.add_nodes_from(nodes)
+        edge_list = [(0, 1), (1, 2), (0, 2), (2, 3), (0, 3)]
+        edge_gen = ((i, j) for i, j in edge_list)
+        res = graph.add_edges_from_no_data(edge_gen)
+        self.assertEqual(len(res), 5)
+        self.assertEqual([None, None, None, None, None], graph.edges())
+        self.assertEqual(3, graph.out_degree(0))
+        self.assertEqual(0, graph.in_degree(0))
+        self.assertEqual(1, graph.out_degree(1))
+        self.assertEqual(1, graph.out_degree(2))
+        self.assertEqual(2, graph.in_degree(3))
 
     def test_add_edge_from_empty_no_data(self):
         dag = rustworkx.PyDAG()
@@ -401,6 +441,19 @@ class TestEdges(unittest.TestCase):
         self.assertEqual(1, dag.out_degree(2))
         self.assertEqual(2, dag.in_degree(3))
 
+    def test_extend_from_edge_gen(self):
+        graph = rustworkx.PyDiGraph()
+        edge_list = [(0, 1), (1, 2), (0, 2), (2, 3), (0, 3)]
+        edge_gen = ((i, j) for i, j in edge_list)
+        graph.extend_from_edge_list(edge_gen)
+        self.assertEqual(len(graph), 4)
+        self.assertEqual([None] * 5, graph.edges())
+        self.assertEqual(3, graph.out_degree(0))
+        self.assertEqual(0, graph.in_degree(0))
+        self.assertEqual(1, graph.out_degree(1))
+        self.assertEqual(1, graph.out_degree(2))
+        self.assertEqual(2, graph.in_degree(3))
+
     def test_extend_from_edge_list_empty(self):
         dag = rustworkx.PyDAG()
         dag.extend_from_edge_list([])
@@ -444,6 +497,19 @@ class TestEdges(unittest.TestCase):
         self.assertEqual(1, dag.out_degree(1))
         self.assertEqual(1, dag.out_degree(2))
         self.assertEqual(2, dag.in_degree(3))
+
+    def test_extend_from_weighted_edge_gen(self):
+        graph = rustworkx.PyDiGraph()
+        edge_list = [(0, 1), (1, 2), (0, 2), (2, 3), (0, 3)]
+        edge_gen = ((i, j, c) for (i, j), c in zip(edge_list, ["a", "b", "c", "d", "e"]))
+        graph.extend_from_weighted_edge_list(edge_gen)
+        self.assertEqual(len(graph), 4)
+        self.assertEqual(["a", "b", "c", "d", "e"], graph.edges())
+        self.assertEqual(3, graph.out_degree(0))
+        self.assertEqual(0, graph.in_degree(0))
+        self.assertEqual(1, graph.out_degree(1))
+        self.assertEqual(1, graph.out_degree(2))
+        self.assertEqual(2, graph.in_degree(3))
 
     def test_extend_from_weighted_edge_list_empty(self):
         dag = rustworkx.PyDAG()
