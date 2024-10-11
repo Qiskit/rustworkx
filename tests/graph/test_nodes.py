@@ -68,6 +68,18 @@ class TestNodes(unittest.TestCase):
         self.assertEqual(["a"], res)
         self.assertEqual([0], graph.node_indexes())
 
+    def test_remove_nodes_from_gen(self):
+        graph = rustworkx.PyGraph()
+        node_a = graph.add_node("a")
+        node_b = graph.add_node("b")
+        graph.add_edge(node_a, node_b, "Edgy")
+        node_c = graph.add_node("c")
+        graph.add_edge(node_b, node_c, "Edgy_mk2")
+        graph.remove_nodes_from(n for n in [node_b, node_c])
+        res = graph.nodes()
+        self.assertEqual(["a"], res)
+        self.assertEqual([0], graph.node_indexes())
+
     def test_remove_nodes_from_with_invalid_index(self):
         graph = rustworkx.PyGraph()
         node_a = graph.add_node("a")
@@ -118,6 +130,14 @@ class TestNodes(unittest.TestCase):
         graph = rustworkx.PyGraph()
         nodes = list(range(100))
         res = graph.add_nodes_from(nodes)
+        self.assertEqual(len(res), 100)
+        self.assertEqual(res, nodes)
+
+    def test_add_nodes_from_gen(self):
+        graph = rustworkx.PyGraph()
+        nodes = list(range(100))
+        node_gen = (i**2 for i in nodes)
+        res = graph.add_nodes_from(node_gen)
         self.assertEqual(len(res), 100)
         self.assertEqual(res, nodes)
 
