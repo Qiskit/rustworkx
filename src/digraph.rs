@@ -1273,7 +1273,7 @@ impl PyDiGraph {
 
     /// Add new edges to the dag.
     ///
-    /// :param list obj_list: A list of tuples of the form
+    /// :param iterable obj_list: An iterable of tuples of the form
     ///     ``(parent, child, obj)`` to attach to the graph. ``parent`` and
     ///     ``child`` are integer indices describing where an edge should be
     ///     added, and obj is the python object for the edge data.
@@ -1281,12 +1281,10 @@ impl PyDiGraph {
     /// :returns: A list of int indices of the newly created edges
     /// :rtype: list
     #[pyo3(text_signature = "(self, obj_list, /)")]
-    pub fn add_edges_from(
-        &mut self,
-        obj_list: Vec<(usize, usize, PyObject)>,
-    ) -> PyResult<Vec<usize>> {
-        let mut out_list: Vec<usize> = Vec::with_capacity(obj_list.len());
-        for obj in obj_list {
+    pub fn add_edges_from(&mut self, obj_list: Bound<'_, PyAny>) -> PyResult<Vec<usize>> {
+        let mut out_list = Vec::new();
+        for py_obj in obj_list.iter()? {
+            let obj = py_obj?.extract::<(usize, usize, PyObject)>()?;
             let edge = self.add_edge(obj.0, obj.1, obj.2)?;
             out_list.push(edge);
         }
@@ -1295,7 +1293,7 @@ impl PyDiGraph {
 
     /// Add new edges to the dag without python data.
     ///
-    /// :param list obj_list: A list of tuples of the form
+    /// :param iterable obj_list: An iterable of tuples of the form
     ///     ``(parent, child)`` to attach to the graph. ``parent`` and
     ///     ``child`` are integer indices describing where an edge should be
     ///     added. Unlike :meth:`add_edges_from` there is no data payload and
@@ -1307,10 +1305,11 @@ impl PyDiGraph {
     pub fn add_edges_from_no_data(
         &mut self,
         py: Python,
-        obj_list: Vec<(usize, usize)>,
+        obj_list: Bound<'_, PyAny>,
     ) -> PyResult<Vec<usize>> {
-        let mut out_list: Vec<usize> = Vec::with_capacity(obj_list.len());
-        for obj in obj_list {
+        let mut out_list = Vec::new();
+        for py_obj in obj_list.iter()? {
+            let obj = py_obj?.extract::<(usize, usize)>()?;
             let edge = self.add_edge(obj.0, obj.1, py.None())?;
             out_list.push(edge);
         }
@@ -1322,7 +1321,7 @@ impl PyDiGraph {
     /// This method differs from :meth:`add_edges_from_no_data` in that it will
     /// add nodes if a node index is not present in the edge list.
     ///
-    /// :param list edge_list: A list of tuples of the form ``(source, target)``
+    /// :param iterable edge_list: An iterable of tuples of the form ``(source, target)``
     ///     where source and target are integer node indices. If the node index
     ///     is not present in the graph, nodes will be added (with a node
     ///     weight of ``None``) to that index.
@@ -1330,9 +1329,10 @@ impl PyDiGraph {
     pub fn extend_from_edge_list(
         &mut self,
         py: Python,
-        edge_list: Vec<(usize, usize)>,
+        edge_list: Bound<'_, PyAny>,
     ) -> PyResult<()> {
-        for (source, target) in edge_list {
+        for py_obj in edge_list.iter()? {
+            let (source, target) = py_obj?.extract::<(usize, usize)>()?;
             let max_index = cmp::max(source, target);
             while max_index >= self.node_count() {
                 self.graph.add_node(py.None());
@@ -1347,7 +1347,7 @@ impl PyDiGraph {
     /// This method differs from :meth:`add_edges_from` in that it will
     /// add nodes if a node index is not present in the edge list.
     ///
-    /// :param list edge_list: A list of tuples of the form
+    /// :param iterable edge_list: An iterable of tuples of the form
     ///     ``(source, target, weight)`` where source and target are integer
     ///     node indices. If the node index is not present in the graph
     ///     nodes will be added (with a node weight of ``None``) to that index.
@@ -1355,9 +1355,10 @@ impl PyDiGraph {
     pub fn extend_from_weighted_edge_list(
         &mut self,
         py: Python,
-        edge_list: Vec<(usize, usize, PyObject)>,
+        edge_list: Bound<'_, PyAny>,
     ) -> PyResult<()> {
-        for (source, target, weight) in edge_list {
+        for py_obj in edge_list.iter()? {
+            let (source, target, weight) = py_obj?.extract::<(usize, usize, PyObject)>()?;
             let max_index = cmp::max(source, target);
             while max_index >= self.node_count() {
                 self.graph.add_node(py.None());
@@ -1500,17 +1501,16 @@ impl PyDiGraph {
     /// Note if there are multiple edges between the specified nodes only one
     /// will be removed.
     ///
-    /// :param list index_list: A list of node index pairs to remove from
+    /// :param iterable index_list: An iterable of node index pairs to remove from
     ///     the graph
     ///
     /// :raises NoEdgeBetweenNodes: If there are no edges between a specified
     ///     pair of nodes.
     #[pyo3(text_signature = "(self, index_list, /)")]
-    pub fn remove_edges_from(&mut self, index_list: Vec<(usize, usize)>) -> PyResult<()> {
-        for (p_index, c_index) in index_list
-            .iter()
-            .map(|(x, y)| (NodeIndex::new(*x), NodeIndex::new(*y)))
-        {
+    pub fn remove_edges_from(&mut self, index_list: Bound<'_, PyAny>) -> PyResult<()> {
+        for py_obj in index_list.iter()? {
+            let (x, y) = py_obj?.extract::<(usize, usize)>()?;
+            let (p_index, c_index) = (NodeIndex::new(x), NodeIndex::new(y));
             let edge_index = match self.graph.find_edge(p_index, c_index) {
                 Some(edge_index) => edge_index,
                 None => return Err(NoEdgeBetweenNodes::new_err("No edge found between nodes")),
@@ -1949,18 +1949,19 @@ impl PyDiGraph {
 
     /// Add new nodes to the graph.
     ///
-    /// :param list obj_list: A list of python objects to attach to the graph
+    /// :param iterable obj_list: An iterable of python objects to attach to the graph
     ///     as new nodes
     ///
     /// :returns: A list of int indices of the newly created nodes
     /// :rtype: NodeIndices
     #[pyo3(text_signature = "(self, obj_list, /)")]
-    pub fn add_nodes_from(&mut self, obj_list: Vec<PyObject>) -> NodeIndices {
-        let out_list: Vec<usize> = obj_list
-            .into_iter()
-            .map(|obj| self.graph.add_node(obj).index())
-            .collect();
-        NodeIndices { nodes: out_list }
+    pub fn add_nodes_from(&mut self, obj_list: Bound<'_, PyAny>) -> PyResult<NodeIndices> {
+        let mut out_list = Vec::new();
+        for py_obj in obj_list.iter()? {
+            let obj = py_obj?.extract::<PyObject>()?;
+            out_list.push(self.graph.add_node(obj).index());
+        }
+        Ok(NodeIndices { nodes: out_list })
     }
 
     /// Remove nodes from the graph.
@@ -1968,11 +1969,12 @@ impl PyDiGraph {
     /// If a node index in the list is not present in the graph it will be
     /// ignored.
     ///
-    /// :param list index_list: A list of node indicies to remove from the
-    ///     the graph.
+    /// :param iterable index_list: An iterable of node indices to remove from the
+    ///     graph.
     #[pyo3(text_signature = "(self, index_list, /)")]
-    pub fn remove_nodes_from(&mut self, index_list: Vec<usize>) -> PyResult<()> {
-        for node in index_list {
+    pub fn remove_nodes_from(&mut self, index_list: Bound<'_, PyAny>) -> PyResult<()> {
+        for py_obj in index_list.iter()? {
+            let node = py_obj?.extract::<usize>()?;
             self.remove_node(node)?;
         }
         Ok(())
