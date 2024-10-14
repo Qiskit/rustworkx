@@ -39,7 +39,6 @@
 #![allow(clippy::float_cmp, clippy::upper_case_acronyms)]
 
 use std::collections::hash_map::DefaultHasher;
-// use std::convert::TryInto;
 use std::hash::Hasher;
 
 use num_bigint::BigUint;
