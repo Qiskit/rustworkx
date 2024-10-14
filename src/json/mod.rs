@@ -50,6 +50,7 @@ export_rustworkx_functions!(
 /// :returns: The graph represented by the node link JSON
 /// :rtype: PyGraph | PyDiGraph
 #[pyfunction]
+#[pyo3(signature = (path, graph_attrs=None, node_attrs=None, edge_attrs=None))]
 pub fn from_node_link_json_file(
     py: Python,
     path: &str,
@@ -127,6 +128,7 @@ pub fn from_node_link_json_file(
 /// :returns: The graph represented by the node link JSON
 /// :rtype: PyGraph | PyDiGraph
 #[pyfunction]
+#[pyo3(signature = (data, graph_attrs=None, node_attrs=None, edge_attrs=None))]
 pub fn parse_node_link_json(
     py: Python,
     data: &str,
@@ -203,7 +205,8 @@ pub fn parse_node_link_json(
 /// :rtype: str
 #[pyfunction]
 #[pyo3(
-    text_signature = "(graph, /, path=None, graph_attrs=None, node_attrs=None, edge_attrs=None)"
+    text_signature = "(graph, /, path=None, graph_attrs=None, node_attrs=None, edge_attrs=None)",
+    signature = (graph, path=None, graph_attrs=None, node_attrs=None, edge_attrs=None)
 )]
 pub fn digraph_node_link_json(
     py: Python,
@@ -250,7 +253,8 @@ pub fn digraph_node_link_json(
 /// :rtype: str
 #[pyfunction]
 #[pyo3(
-    text_signature = "(graph, /, path=None, graph_attrs=None, node_attrs=None, edge_attrs=None)"
+    text_signature = "(graph, /, path=None, graph_attrs=None, node_attrs=None, edge_attrs=None)",
+    signature = (graph, path=None, graph_attrs=None, node_attrs=None, edge_attrs=None)
 )]
 pub fn graph_node_link_json(
     py: Python,
