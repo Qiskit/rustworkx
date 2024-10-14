@@ -76,7 +76,7 @@ export_rustworkx_functions!(
 ///    Phys. Rev. E, 71, 036113, 2005.
 /// .. [2] https://github.com/networkx/networkx/blob/networkx-2.4/networkx/generators/random_graphs.py#L49-L120
 #[pyfunction]
-#[pyo3(text_signature = "(num_nodes, probability, /, seed=None)")]
+#[pyo3(text_signature = "(num_nodes, probability, /, seed=None)", signature = (num_nodes, probability, seed=None))]
 pub fn directed_gnp_random_graph(
     py: Python,
     num_nodes: usize,
@@ -144,7 +144,7 @@ pub fn directed_gnp_random_graph(
 ///    Phys. Rev. E, 71, 036113, 2005.
 /// .. [2] https://github.com/networkx/networkx/blob/networkx-2.4/networkx/generators/random_graphs.py#L49-L120
 #[pyfunction]
-#[pyo3(text_signature = "(num_nodes, probability, /, seed=None)")]
+#[pyo3(text_signature = "(num_nodes, probability, /, seed=None)", signature = (num_nodes, probability, seed=None))]
 pub fn undirected_gnp_random_graph(
     py: Python,
     num_nodes: usize,
@@ -202,7 +202,7 @@ pub fn undirected_gnp_random_graph(
 /// :rtype: PyDiGraph
 ///
 #[pyfunction]
-#[pyo3(text_signature = "(num_nodes, num_edges, /, seed=None)")]
+#[pyo3(text_signature = "(num_nodes, num_edges, /, seed=None)", signature = (num_nodes, num_edges, seed=None))]
 pub fn directed_gnm_random_graph(
     py: Python,
     num_nodes: usize,
@@ -258,7 +258,7 @@ pub fn directed_gnm_random_graph(
 /// :rtype: PyGraph
 
 #[pyfunction]
-#[pyo3(text_signature = "(num_nodes, num_edges, /, seed=None)")]
+#[pyo3(text_signature = "(num_nodes, num_edges, /, seed=None)", signature = (num_nodes, num_edges, seed=None))]
 pub fn undirected_gnm_random_graph(
     py: Python,
     num_nodes: usize,
@@ -312,7 +312,7 @@ pub fn undirected_gnm_random_graph(
 /// :return: A PyDiGraph object
 /// :rtype: PyDiGraph
 #[pyfunction]
-#[pyo3(text_signature = "(sizes, probabilities, loops, /, seed=None)")]
+#[pyo3(text_signature = "(sizes, probabilities, loops, /, seed=None)", signature = (sizes, probabilities, loops, seed=None))]
 pub fn directed_sbm_random_graph<'p>(
     py: Python<'p>,
     sizes: Vec<usize>,
@@ -368,7 +368,7 @@ pub fn directed_sbm_random_graph<'p>(
 /// :return: A PyGraph object
 /// :rtype: PyGraph
 #[pyfunction]
-#[pyo3(text_signature = "(sizes, probabilities, loops, /, seed=None)")]
+#[pyo3(text_signature = "(sizes, probabilities, loops, /, seed=None)", signature = (sizes, probabilities, loops, seed=None))]
 pub fn undirected_sbm_random_graph<'p>(
     py: Python<'p>,
     sizes: Vec<usize>,
@@ -542,7 +542,7 @@ pub fn random_geometric_graph(
 /// :return: A PyGraph object
 /// :rtype: PyGraph
 #[pyfunction]
-#[pyo3(text_signature = "(pos, beta, r, /, seed=None)")]
+#[pyo3(text_signature = "(pos, beta, r, /, seed=None)", signature = (pos, r, beta=None, seed=None))]
 pub fn hyperbolic_random_graph(
     py: Python,
     pos: Vec<Vec<f64>>,
@@ -587,6 +587,7 @@ pub fn hyperbolic_random_graph(
 /// :return: A PyGraph object
 /// :rtype: PyGraph
 #[pyfunction]
+#[pyo3(signature = (n, m, seed=None, initial_graph=None))]
 pub fn barabasi_albert_graph(
     py: Python,
     n: usize,
@@ -648,6 +649,7 @@ pub fn barabasi_albert_graph(
 /// :return: A PyDiGraph object
 /// :rtype: PyDiGraph
 #[pyfunction]
+#[pyo3(signature = (n, m, seed=None, initial_graph=None))]
 pub fn directed_barabasi_albert_graph(
     py: Python,
     n: usize,
@@ -706,7 +708,7 @@ pub fn directed_barabasi_albert_graph(
 /// :return: A PyDiGraph object
 /// :rtype: PyDiGraph
 #[pyfunction]
-#[pyo3(text_signature = "(num_l_nodes, num_r_nodes, probability, /, seed=None)")]
+#[pyo3(text_signature = "(num_l_nodes, num_r_nodes, probability, /, seed=None)", signature = (num_l_nodes, num_r_nodes, probability, seed=None))]
 pub fn directed_random_bipartite_graph(
     py: Python,
     num_l_nodes: usize,
@@ -759,7 +761,7 @@ pub fn directed_random_bipartite_graph(
 /// :return: A PyGraph object
 /// :rtype: PyGraph
 #[pyfunction]
-#[pyo3(text_signature = "(num_l_nodes, num_r_nodes, probability, /, seed=None)")]
+#[pyo3(text_signature = "(num_l_nodes, num_r_nodes, probability, /, seed=None)", signature = (num_l_nodes, num_r_nodes, probability, seed=None))]
 pub fn undirected_random_bipartite_graph(
     py: Python,
     num_l_nodes: usize,

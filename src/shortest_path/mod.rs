@@ -419,7 +419,7 @@ pub fn digraph_has_path(
 /// :raises ValueError: when an edge weight with NaN or negative value
 ///     is provided.
 #[pyfunction]
-#[pyo3(text_signature = "(graph, node, edge_cost_fn, /, goal=None)")]
+#[pyo3(text_signature = "(graph, node, edge_cost_fn, /, goal=None)", signature = (graph, node, edge_cost_fn, goal=None))]
 pub fn graph_dijkstra_shortest_path_lengths(
     py: Python,
     graph: &graph::PyGraph,
@@ -494,7 +494,7 @@ pub fn graph_dijkstra_shortest_path_lengths(
 /// :raises ValueError: when an edge weight with NaN or negative value
 ///     is provided.
 #[pyfunction]
-#[pyo3(text_signature = "(graph, node, edge_cost_fn, /, goal=None)")]
+#[pyo3(text_signature = "(graph, node, edge_cost_fn, /, goal=None)", signature = (graph, node, edge_cost_fn, goal=None))]
 pub fn digraph_dijkstra_shortest_path_lengths(
     py: Python,
     graph: &digraph::PyDiGraph,
@@ -846,7 +846,7 @@ pub fn graph_astar_shortest_path(
 /// :raises ValueError: when an edge weight with NaN or negative value
 ///     is provided.
 #[pyfunction]
-#[pyo3(text_signature = "(graph, start, k, edge_cost, /, goal=None)")]
+#[pyo3(text_signature = "(graph, start, k, edge_cost, /, goal=None)", signature = (graph, start, k, edge_cost, goal=None))]
 pub fn digraph_k_shortest_path_lengths(
     py: Python,
     graph: &digraph::PyDiGraph,
@@ -906,7 +906,7 @@ pub fn digraph_k_shortest_path_lengths(
 /// :raises ValueError: when an edge weight with NaN or negative value
 ///     is provided.
 #[pyfunction]
-#[pyo3(text_signature = "(graph, start, k, edge_cost, /, goal=None)")]
+#[pyo3(text_signature = "(graph, start, k, edge_cost, /, goal=None)", signature = (graph, start, k, edge_cost, goal=None))]
 pub fn graph_k_shortest_path_lengths(
     py: Python,
     graph: &graph::PyGraph,
@@ -1622,7 +1622,7 @@ pub fn graph_unweighted_average_shortest_path_length(
 /// :raises: :class:`~rustworkx.NegativeCycle`: when there is a negative cycle and the shortest
 ///     path is not defined.
 #[pyfunction]
-#[pyo3(text_signature = "(graph, node, edge_cost_fn, /, goal=None)")]
+#[pyo3(text_signature = "(graph, node, edge_cost_fn, /, goal=None)", signature = (graph, node, edge_cost_fn, goal=None))]
 pub fn digraph_bellman_ford_shortest_path_lengths(
     py: Python,
     graph: &digraph::PyDiGraph,
@@ -1707,7 +1707,7 @@ pub fn digraph_bellman_ford_shortest_path_lengths(
 /// :raises: :class:`~rustworkx.NegativeCycle`: when there is a negative cycle and the shortest
 ///     path is not defined.
 #[pyfunction]
-#[pyo3(text_signature = "(graph, node, edge_cost_fn, /, goal=None)")]
+#[pyo3(text_signature = "(graph, node, edge_cost_fn, /, goal=None)", signature = (graph, node, edge_cost_fn, goal=None))]
 pub fn graph_bellman_ford_shortest_path_lengths(
     py: Python,
     graph: &graph::PyGraph,

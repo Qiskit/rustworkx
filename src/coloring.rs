@@ -51,7 +51,7 @@ export_rustworkx_functions!(
 ///       - `GIS` strategy in [1] (section 1.2.2.9)
 ///
 /// [1] Adrian Kosowski, and Krzysztof Manuszewski, Classical Coloring of Graphs, Graph Colorings, 2-19, 2004. ISBN 0-8218-3458-4.
-#[pyclass(module = "rustworkx")]
+#[pyclass(module = "rustworkx", eq, eq_int)]
 #[derive(Clone, PartialEq)]
 pub enum ColoringStrategy {
     Degree,
