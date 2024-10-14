@@ -71,7 +71,7 @@ use crate::iterators::EdgeList;
 ///     depth-first order
 /// :rtype: EdgeList
 #[pyfunction]
-#[pyo3(text_signature = "(graph, /, source=None)")]
+#[pyo3(text_signature = "(graph, /, source=None)", signature = (graph, source=None))]
 pub fn digraph_dfs_edges(graph: &digraph::PyDiGraph, source: Option<usize>) -> EdgeList {
     EdgeList {
         edges: dfs_edges(&graph.graph, source.map(NodeIndex::new)),
@@ -116,7 +116,7 @@ pub fn digraph_dfs_edges(graph: &digraph::PyDiGraph, source: Option<usize>) -> E
 ///     depth-first order
 /// :rtype: EdgeList
 #[pyfunction]
-#[pyo3(text_signature = "(graph, /, source=None)")]
+#[pyo3(text_signature = "(graph, /, source=None)", signature = (graph, source=None))]
 pub fn graph_dfs_edges(graph: &graph::PyGraph, source: Option<usize>) -> EdgeList {
     EdgeList {
         edges: dfs_edges(&graph.graph, source.map(NodeIndex::new)),
@@ -318,6 +318,7 @@ pub fn descendants(graph: &digraph::PyDiGraph, node: usize) -> HashSet<usize> {
 ///     preserve argument ordering from an earlier version) but it is a required argument
 ///     and will raise a ``TypeError`` if not specified.
 #[pyfunction]
+#[pyo3(signature = (graph, source=None, visitor=None))]
 pub fn digraph_bfs_search(
     py: Python,
     graph: &digraph::PyDiGraph,
@@ -410,6 +411,7 @@ pub fn digraph_bfs_search(
 ///     preserve argument ordering from an earlier version) but it is a required argument
 ///     and will raise a ``TypeError`` if not specified.
 #[pyfunction]
+#[pyo3(signature = (graph, source=None, visitor=None))]
 pub fn graph_bfs_search(
     py: Python,
     graph: &graph::PyGraph,
@@ -500,6 +502,7 @@ pub fn graph_bfs_search(
 ///     preserve argument ordering from an earlier version) but it is a required argument
 ///     and will raise a ``TypeError`` if not specified.
 #[pyfunction]
+#[pyo3(signature = (graph, source=None, visitor=None))]
 pub fn digraph_dfs_search(
     py: Python,
     graph: &digraph::PyDiGraph,
@@ -590,6 +593,7 @@ pub fn digraph_dfs_search(
 ///     preserve argument ordering from an earlier version) but it is a required argument
 ///     and will raise a ``TypeError`` if not specified.
 #[pyfunction]
+#[pyo3(signature = (graph, source=None, visitor=None))]
 pub fn graph_dfs_search(
     py: Python,
     graph: &graph::PyGraph,
@@ -666,6 +670,7 @@ pub fn graph_dfs_search(
 ///     preserve argument ordering from an earlier version) but it is a required argument
 ///     and will raise a ``TypeError`` if not specified.
 #[pyfunction]
+#[pyo3(signature = (graph, source=None, weight_fn=None, visitor=None))]
 pub fn digraph_dijkstra_search(
     py: Python,
     graph: &digraph::PyDiGraph,
@@ -747,6 +752,7 @@ pub fn digraph_dijkstra_search(
 ///     preserve argument ordering from an earlier version) but it is a required argument
 ///     and will raise a ``TypeError`` if not specified.
 #[pyfunction]
+#[pyo3(signature = (graph, source=None, weight_fn=None, visitor=None))]
 pub fn graph_dijkstra_search(
     py: Python,
     graph: &graph::PyGraph,
