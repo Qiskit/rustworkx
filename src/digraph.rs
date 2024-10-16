@@ -2132,7 +2132,8 @@ impl PyDiGraph {
     ///   image
     ///
     #[pyo3(
-        text_signature = "(self, /, node_attr=None, edge_attr=None, graph_attr=None, filename=None)"
+        text_signature = "(self, /, node_attr=None, edge_attr=None, graph_attr=None, filename=None)",
+        signature = (node_attr=None, edge_attr=None, graph_attr=None, filename=None)
     )]
     pub fn to_dot(
         &self,
@@ -2309,7 +2310,7 @@ impl PyDiGraph {
     ///     with open(path, 'rt') as edge_file:
     ///         print(edge_file.read())
     ///
-    #[pyo3(text_signature = "(self, path, /, deliminator=None, weight_fn=None)")]
+    #[pyo3(text_signature = "(self, path, /, deliminator=None, weight_fn=None)", signature = (path, deliminator=None, weight_fn=None))]
     pub fn write_edge_list(
         &self,
         py: Python,
@@ -2476,7 +2477,7 @@ impl PyDiGraph {
     ///   graph.compose(other_graph, node_map)
     ///   mpl_draw(graph, with_labels=True, labels=str, edge_labels=str)
     ///
-    #[pyo3(text_signature = "(self, other, node_map, /, node_map_func=None, edge_map_func=None)")]
+    #[pyo3(text_signature = "(self, other, node_map, /, node_map_func=None, edge_map_func=None)", signature = (other, node_map, node_map_func=None, edge_map_func=None))]
     pub fn compose(
         &mut self,
         py: Python,
@@ -2553,7 +2554,8 @@ impl PyDiGraph {
     ///    order when iterated over multiple times).
     ///
     #[pyo3(
-        text_signature = "(self, node, other, edge_map_fn, /, node_filter=None, edge_weight_map=None)"
+        text_signature = "(self, node, other, edge_map_fn, /, node_filter=None, edge_weight_map=None)",
+        signature = (node, other, edge_map_fn, node_filter=None, edge_weight_map=None)
     )]
     fn substitute_node_with_subgraph(
         &mut self,
@@ -2695,7 +2697,7 @@ impl PyDiGraph {
     /// :returns: The index of the newly created node.
     /// :raises DAGWouldCycle: The cycle check is enabled and the
     ///     contraction would introduce cycle(s).
-    #[pyo3(text_signature = "(self, nodes, obj, /, check_cycle=None, weight_combo_fn=None)")]
+    #[pyo3(text_signature = "(self, nodes, obj, /, check_cycle=None, weight_combo_fn=None)", signature = (nodes, obj, check_cycle=None, weight_combo_fn=None))]
     pub fn contract_nodes(
         &mut self,
         py: Python,
@@ -2867,6 +2869,7 @@ impl PyDiGraph {
     ///     then by default the data payload will be copied when the reverse edge is added.
     ///     If there are parallel edges, then one of the edges (typically the one with the lower
     ///     index, but this is not a guarantee) will be copied.
+    #[pyo3(signature = (edge_payload_fn=None))]
     pub fn make_symmetric(
         &mut self,
         py: Python,

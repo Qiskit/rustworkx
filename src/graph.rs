@@ -1254,7 +1254,8 @@ impl PyGraph {
     ///   image
     ///
     #[pyo3(
-        text_signature = "(self, /, node_attr=None, edge_attr=None, graph_attr=None, filename=None)"
+        text_signature = "(self, /, node_attr=None, edge_attr=None, graph_attr=None, filename=None)",
+        signature = (node_attr=None, edge_attr=None, graph_attr=None, filename=None)
     )]
     pub fn to_dot(
         &self,
@@ -1428,7 +1429,7 @@ impl PyGraph {
     ///     with open(path, 'rt') as edge_file:
     ///         print(edge_file.read())
     ///
-    #[pyo3(text_signature = "(self, path, /, deliminator=None, weight_fn=None)")]
+    #[pyo3(text_signature = "(self, path, /, deliminator=None, weight_fn=None)", signature = (path, deliminator=None, weight_fn=None))]
     pub fn write_edge_list(
         &self,
         py: Python,
@@ -1602,7 +1603,7 @@ impl PyGraph {
     ///   graph.compose(other_graph, node_map)
     ///   mpl_draw(graph, with_labels=True, labels=str, edge_labels=str)
     ///
-    #[pyo3(text_signature = "(self, other, node_map, /, node_map_func=None, edge_map_func=None)")]
+    #[pyo3(text_signature = "(self, other, node_map, /, node_map_func=None, edge_map_func=None)", signature = (other, node_map, node_map_func=None, edge_map_func=None))]
     pub fn compose(
         &mut self,
         py: Python,
@@ -1679,7 +1680,8 @@ impl PyGraph {
     ///    order when iterated over multiple times).
     ///
     #[pyo3(
-        text_signature = "(self, node, other, edge_map_fn, /, node_filter=None, edge_weight_map=None"
+        text_signature = "(self, node, other, edge_map_fn, /, node_filter=None, edge_weight_map=None",
+        signature = (node, other, edge_map_fn, node_filter=None, edge_weight_map=None)
     )]
     fn substitute_node_with_subgraph(
         &mut self,
@@ -1825,7 +1827,7 @@ impl PyGraph {
     ///     combined by choosing one of the edge's weights arbitrarily based
     ///     on an internal iteration order, subject to change.
     /// :returns: The index of the newly created node.
-    #[pyo3(text_signature = "(self, nodes, obj, /, weight_combo_fn=None)")]
+    #[pyo3(text_signature = "(self, nodes, obj, /, weight_combo_fn=None)", signature = (nodes, obj, weight_combo_fn=None))]
     pub fn contract_nodes(
         &mut self,
         py: Python,

@@ -111,7 +111,7 @@ pub fn traversal_directions(reverse: bool) -> (petgraph::Direction, petgraph::Di
 /// :raises Exception: If an unexpected error occurs or a path can't be found
 /// :raises DAGHasCycle: If the input PyDiGraph has a cycle
 #[pyfunction]
-#[pyo3(text_signature = "(graph, /, weight_fn=None)")]
+#[pyo3(text_signature = "(graph, /, weight_fn=None)", signature = (graph, weight_fn=None))]
 pub fn dag_longest_path(
     py: Python,
     graph: &digraph::PyDiGraph,
@@ -151,7 +151,7 @@ pub fn dag_longest_path(
 /// :raises Exception: If an unexpected error occurs or a path can't be found
 /// :raises DAGHasCycle: If the input PyDiGraph has a cycle
 #[pyfunction]
-#[pyo3(text_signature = "(graph, /, weight_fn=None)")]
+#[pyo3(text_signature = "(graph, /, weight_fn=None)", signature = (graph, weight_fn=None))]
 pub fn dag_longest_path_length(
     py: Python,
     graph: &digraph::PyDiGraph,
