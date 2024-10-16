@@ -17,7 +17,8 @@ mod johnson_simple_cycles;
 mod subgraphs;
 
 use super::{
-    digraph, get_edge_iter_with_weights, graph, score, weight_callable, InvalidNode, NullGraph,
+    digraph, export_rustworkx_functions, get_edge_iter_with_weights, graph, score, weight_callable,
+    InvalidNode, NullGraph,
 };
 
 use hashbrown::{HashMap, HashSet};
@@ -45,6 +46,43 @@ use crate::graph::PyGraph;
 use rustworkx_core::coloring::two_color;
 use rustworkx_core::connectivity;
 use rustworkx_core::dag_algo::longest_path;
+
+export_rustworkx_functions!(
+    cycle_basis,
+    simple_cycles,
+    strongly_connected_components,
+    digraph_find_cycle,
+    number_connected_components,
+    connected_components,
+    node_connected_component,
+    is_connected,
+    number_weakly_connected_components,
+    weakly_connected_components,
+    is_weakly_connected,
+    is_semi_connected,
+    digraph_adjacency_matrix,
+    graph_adjacency_matrix,
+    graph_complement,
+    digraph_complement,
+    digraph_is_bipartite,
+    graph_is_bipartite,
+    graph_isolates,
+    digraph_isolates,
+    chain_decomposition,
+    biconnected_components,
+    bridges,
+    articulation_points,
+    stoer_wagner_min_cut,
+    graph_all_simple_paths,
+    digraph_all_simple_paths,
+    graph_all_pairs_all_simple_paths,
+    digraph_all_pairs_all_simple_paths,
+    graph_longest_simple_path,
+    digraph_longest_simple_path,
+    graph_core_number,
+    digraph_core_number,
+    connected_subgraphs
+);
 
 /// Return a list of cycles which form a basis for cycles of a given PyGraph
 ///
