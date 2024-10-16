@@ -33,7 +33,9 @@ use pyo3::exceptions::PyException;
 use pyo3::prelude::*;
 use pyo3::PyErr;
 
-use crate::{digraph::PyDiGraph, graph::PyGraph, StablePyGraph};
+use crate::{digraph::PyDiGraph, export_rustworkx_functions, graph::PyGraph, StablePyGraph};
+
+export_rustworkx_functions!(read_graphml);
 
 pub enum Error {
     Xml(String),

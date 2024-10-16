@@ -11,7 +11,7 @@
 // under the License.
 
 use crate::iterators::ProductNodeMap;
-use crate::{digraph, graph, StablePyGraph};
+use crate::{digraph, export_rustworkx_functions, graph, StablePyGraph};
 
 use hashbrown::HashMap;
 
@@ -20,6 +20,8 @@ use petgraph::{algo, EdgeType};
 
 use pyo3::prelude::*;
 use pyo3::Python;
+
+export_rustworkx_functions!(graph_cartesian_product, digraph_cartesian_product);
 
 fn cartesian_product<Ty: EdgeType>(
     py: Python,
