@@ -1,0 +1,6 @@
+rustworkx.AllPairsPathLengthMapping.keys
+========================================
+
+.. currentmodule:: rustworkx
+
+.. automethod:: AllPairsPathLengthMapping.keys

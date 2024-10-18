@@ -1,0 +1,973 @@
+<!doctype html>
+<html class="no-js" lang="en">
+  <head><meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="rustworkx.networkx_converter" href="../apiref/rustworkx.networkx_converter.html" /><link rel="prev" title="rustworkx.parse_node_link_json" href="../apiref/rustworkx.parse_node_link_json.html" />
+
+    <!-- Generated with Sphinx 7.1.2 and Furo 2023.05.20 -->
+        <title>Converters - rustworkx 0.16.0</title>
+      <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?digest=e6660623a769aa55fea372102b9bf3151b292993" />
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=82a976d7" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/qiskit-sphinx-theme.css?v=4f054d5c" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/qiskit-ecosystem.css?v=745c5aa7" />
+    <link rel="stylesheet" type="text/css" href="../_static/jupyter-sphinx.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #ffffff;
+  --color-code-foreground: black;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style><link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:ital,wght@0,400;0,600;1,400;1,600&display=swap" rel="stylesheet">
+<script src="../_static/js/web-components/top-nav-bar.js"></script></head>
+  <body>
+    
+    <script>document.body.dataset.theme = "light";</script>
+    
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg id="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+      <defs><style>.cls-1{fill:none;}</style></defs>
+      <path d="M28,4H4A2,2,0,0,0,2,6V26a2,2,0,0,0,2,2H28a2,2,0,0,0,2-2V6A2,2,0,0,0,28,4ZM4,6H20V26H4ZM28,26H22V6h6Z"/>
+      <rect id="_Transparent_Rectangle_" data-name="&lt;Transparent Rectangle&gt;" class="cls-1" width="32" height="32"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg id="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+      <defs><style>.cls-1{fill:none;}</style></defs>
+      <rect x="4" y="6" width="24" height="2"/>
+      <rect x="4" y="24" width="24" height="2"/>
+      <rect x="4" y="12" width="24" height="2"/>
+      <rect x="4" y="18" width="24" height="2"/>
+      <rect id="_Transparent_Rectangle_" data-name="&lt;Transparent Rectangle&gt;" class="cls-1" width="32" height="32"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg version="1.1" id="icon" xmlns="http://www.w3.org/2000/svg" x="0px" y="0px"
+         viewBox="0 0 32 32" style="enable-background:new 0 0 32 32;" xml:space="preserve"><polygon points="22,16 12,26 10.6,24.6 19.2,16 10.6,7.4 12,6 " stroke="currentColor"/>
+      <rect id="_x3C_Transparent_Rectangle_x3E_" fill="none" width="32" height="32"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-half" viewBox="0 0 24 24">
+    <title>Auto light/dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-shadow">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M13 12h5" />
+      <path d="M13 15h4" />
+      <path d="M13 18h1" />
+      <path d="M13 9h4" />
+      <path d="M13 6h1" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc">
+<label class="overlay sidebar-overlay" for="__navigation">
+  <div class="visually-hidden">Hide navigation sidebar</div>
+</label>
+<label class="overlay toc-overlay" for="__toc">
+  <div class="visually-hidden">Hide table of contents sidebar</div>
+</label>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <div class="visually-hidden">Toggle site navigation sidebar</div>
+        <i class="icon"><svg><use href="#svg-menu"></use></svg></i>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../index.html"><div class="brand">rustworkx 0.16.0</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle">
+          <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+          <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon no-toc" for="__toc">
+        <div class="visually-hidden">Toggle table of contents sidebar</div>
+        <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky">
+<a class="sidebar-brand" href="../index.html">
+  
+  
+  <span class="sidebar-brand-text">rustworkx 0.16.0</span>
+  
+</a><form class="sidebar-search-container" method="get" action="../search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../index.html">About Rustworkx</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installation and Getting Started</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../tutorial/index.html">Rustworkx Tutorials and Guides</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of Rustworkx Tutorials and Guides</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../tutorial/introduction.html">Introduction to rustworkx</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorial/dags.html">Directed Acyclic Graphs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorial/betweenness_centrality.html">Working with Betweenness Centrality</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current has-children"><a class="reference internal" href="index.html">Rustworkx API</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of Rustworkx API</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l2 has-children"><a class="reference internal" href="graph_classes.html">Graph Classes</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of Graph Classes</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../apiref/rustworkx.PyGraph.html">PyGraph</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of PyGraph</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyGraph.add_edge.html">rustworkx.PyGraph.add_edge</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyGraph.add_edges_from.html">rustworkx.PyGraph.add_edges_from</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyGraph.add_edges_from_no_data.html">rustworkx.PyGraph.add_edges_from_no_data</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyGraph.add_node.html">rustworkx.PyGraph.add_node</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyGraph.add_nodes_from.html">rustworkx.PyGraph.add_nodes_from</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyGraph.adj.html">rustworkx.PyGraph.adj</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyGraph.clear.html">rustworkx.PyGraph.clear</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyGraph.clear_edges.html">rustworkx.PyGraph.clear_edges</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyGraph.compose.html">rustworkx.PyGraph.compose</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyGraph.contract_nodes.html">rustworkx.PyGraph.contract_nodes</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyGraph.copy.html">rustworkx.PyGraph.copy</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyGraph.degree.html">rustworkx.PyGraph.degree</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyGraph.edge_index_map.html">rustworkx.PyGraph.edge_index_map</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyGraph.edge_indices.html">rustworkx.PyGraph.edge_indices</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyGraph.edge_indices_from_endpoints.html">rustworkx.PyGraph.edge_indices_from_endpoints</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyGraph.edge_list.html">rustworkx.PyGraph.edge_list</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyGraph.edge_subgraph.html">rustworkx.PyGraph.edge_subgraph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyGraph.edges.html">rustworkx.PyGraph.edges</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyGraph.extend_from_edge_list.html">rustworkx.PyGraph.extend_from_edge_list</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyGraph.extend_from_weighted_edge_list.html">rustworkx.PyGraph.extend_from_weighted_edge_list</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyGraph.filter_edges.html">rustworkx.PyGraph.filter_edges</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyGraph.filter_nodes.html">rustworkx.PyGraph.filter_nodes</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyGraph.find_node_by_weight.html">rustworkx.PyGraph.find_node_by_weight</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyGraph.from_adjacency_matrix.html">rustworkx.PyGraph.from_adjacency_matrix</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyGraph.from_complex_adjacency_matrix.html">rustworkx.PyGraph.from_complex_adjacency_matrix</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyGraph.get_all_edge_data.html">rustworkx.PyGraph.get_all_edge_data</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyGraph.get_edge_data.html">rustworkx.PyGraph.get_edge_data</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyGraph.get_edge_data_by_index.html">rustworkx.PyGraph.get_edge_data_by_index</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyGraph.get_edge_endpoints_by_index.html">rustworkx.PyGraph.get_edge_endpoints_by_index</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyGraph.get_node_data.html">rustworkx.PyGraph.get_node_data</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyGraph.has_edge.html">rustworkx.PyGraph.has_edge</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyGraph.has_node.html">rustworkx.PyGraph.has_node</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyGraph.has_parallel_edges.html">rustworkx.PyGraph.has_parallel_edges</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyGraph.in_edges.html">rustworkx.PyGraph.in_edges</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyGraph.incident_edge_index_map.html">rustworkx.PyGraph.incident_edge_index_map</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyGraph.incident_edges.html">rustworkx.PyGraph.incident_edges</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyGraph.neighbors.html">rustworkx.PyGraph.neighbors</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyGraph.node_indexes.html">rustworkx.PyGraph.node_indexes</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyGraph.node_indices.html">rustworkx.PyGraph.node_indices</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyGraph.nodes.html">rustworkx.PyGraph.nodes</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyGraph.num_edges.html">rustworkx.PyGraph.num_edges</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyGraph.num_nodes.html">rustworkx.PyGraph.num_nodes</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyGraph.out_edges.html">rustworkx.PyGraph.out_edges</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyGraph.read_edge_list.html">rustworkx.PyGraph.read_edge_list</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyGraph.remove_edge.html">rustworkx.PyGraph.remove_edge</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyGraph.remove_edge_from_index.html">rustworkx.PyGraph.remove_edge_from_index</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyGraph.remove_edges_from.html">rustworkx.PyGraph.remove_edges_from</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyGraph.remove_node.html">rustworkx.PyGraph.remove_node</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyGraph.remove_nodes_from.html">rustworkx.PyGraph.remove_nodes_from</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyGraph.subgraph.html">rustworkx.PyGraph.subgraph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyGraph.substitute_node_with_subgraph.html">rustworkx.PyGraph.substitute_node_with_subgraph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyGraph.to_directed.html">rustworkx.PyGraph.to_directed</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyGraph.to_dot.html">rustworkx.PyGraph.to_dot</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyGraph.update_edge.html">rustworkx.PyGraph.update_edge</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyGraph.update_edge_by_index.html">rustworkx.PyGraph.update_edge_by_index</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyGraph.weighted_edge_list.html">rustworkx.PyGraph.weighted_edge_list</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyGraph.write_edge_list.html">rustworkx.PyGraph.write_edge_list</a></li>
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../apiref/rustworkx.PyDiGraph.html">PyDiGraph</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle navigation of PyDiGraph</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDiGraph.add_child.html">rustworkx.PyDiGraph.add_child</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDiGraph.add_edge.html">rustworkx.PyDiGraph.add_edge</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDiGraph.add_edges_from.html">rustworkx.PyDiGraph.add_edges_from</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDiGraph.add_edges_from_no_data.html">rustworkx.PyDiGraph.add_edges_from_no_data</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDiGraph.add_node.html">rustworkx.PyDiGraph.add_node</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDiGraph.add_nodes_from.html">rustworkx.PyDiGraph.add_nodes_from</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDiGraph.add_parent.html">rustworkx.PyDiGraph.add_parent</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDiGraph.adj.html">rustworkx.PyDiGraph.adj</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDiGraph.adj_direction.html">rustworkx.PyDiGraph.adj_direction</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDiGraph.clear.html">rustworkx.PyDiGraph.clear</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDiGraph.clear_edges.html">rustworkx.PyDiGraph.clear_edges</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDiGraph.compose.html">rustworkx.PyDiGraph.compose</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDiGraph.contract_nodes.html">rustworkx.PyDiGraph.contract_nodes</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDiGraph.copy.html">rustworkx.PyDiGraph.copy</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDiGraph.edge_index_map.html">rustworkx.PyDiGraph.edge_index_map</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDiGraph.edge_indices.html">rustworkx.PyDiGraph.edge_indices</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDiGraph.edge_indices_from_endpoints.html">rustworkx.PyDiGraph.edge_indices_from_endpoints</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDiGraph.edge_list.html">rustworkx.PyDiGraph.edge_list</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDiGraph.edge_subgraph.html">rustworkx.PyDiGraph.edge_subgraph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDiGraph.edges.html">rustworkx.PyDiGraph.edges</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDiGraph.extend_from_edge_list.html">rustworkx.PyDiGraph.extend_from_edge_list</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDiGraph.extend_from_weighted_edge_list.html">rustworkx.PyDiGraph.extend_from_weighted_edge_list</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDiGraph.filter_edges.html">rustworkx.PyDiGraph.filter_edges</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDiGraph.filter_nodes.html">rustworkx.PyDiGraph.filter_nodes</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDiGraph.find_adjacent_node_by_edge.html">rustworkx.PyDiGraph.find_adjacent_node_by_edge</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDiGraph.find_node_by_weight.html">rustworkx.PyDiGraph.find_node_by_weight</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDiGraph.find_predecessor_node_by_edge.html">rustworkx.PyDiGraph.find_predecessor_node_by_edge</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDiGraph.find_predecessors_by_edge.html">rustworkx.PyDiGraph.find_predecessors_by_edge</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDiGraph.find_successors_by_edge.html">rustworkx.PyDiGraph.find_successors_by_edge</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDiGraph.from_adjacency_matrix.html">rustworkx.PyDiGraph.from_adjacency_matrix</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDiGraph.from_complex_adjacency_matrix.html">rustworkx.PyDiGraph.from_complex_adjacency_matrix</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDiGraph.get_all_edge_data.html">rustworkx.PyDiGraph.get_all_edge_data</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDiGraph.get_edge_data.html">rustworkx.PyDiGraph.get_edge_data</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDiGraph.get_edge_data_by_index.html">rustworkx.PyDiGraph.get_edge_data_by_index</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDiGraph.get_edge_endpoints_by_index.html">rustworkx.PyDiGraph.get_edge_endpoints_by_index</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDiGraph.get_node_data.html">rustworkx.PyDiGraph.get_node_data</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDiGraph.has_edge.html">rustworkx.PyDiGraph.has_edge</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDiGraph.has_node.html">rustworkx.PyDiGraph.has_node</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDiGraph.has_parallel_edges.html">rustworkx.PyDiGraph.has_parallel_edges</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDiGraph.in_degree.html">rustworkx.PyDiGraph.in_degree</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDiGraph.in_edges.html">rustworkx.PyDiGraph.in_edges</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDiGraph.incident_edge_index_map.html">rustworkx.PyDiGraph.incident_edge_index_map</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDiGraph.incident_edges.html">rustworkx.PyDiGraph.incident_edges</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDiGraph.insert_node_on_in_edges.html">rustworkx.PyDiGraph.insert_node_on_in_edges</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDiGraph.insert_node_on_in_edges_multiple.html">rustworkx.PyDiGraph.insert_node_on_in_edges_multiple</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDiGraph.insert_node_on_out_edges.html">rustworkx.PyDiGraph.insert_node_on_out_edges</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDiGraph.insert_node_on_out_edges_multiple.html">rustworkx.PyDiGraph.insert_node_on_out_edges_multiple</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDiGraph.is_symmetric.html">rustworkx.PyDiGraph.is_symmetric</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDiGraph.make_symmetric.html">rustworkx.PyDiGraph.make_symmetric</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDiGraph.merge_nodes.html">rustworkx.PyDiGraph.merge_nodes</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDiGraph.neighbors.html">rustworkx.PyDiGraph.neighbors</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDiGraph.neighbors_undirected.html">rustworkx.PyDiGraph.neighbors_undirected</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDiGraph.node_indexes.html">rustworkx.PyDiGraph.node_indexes</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDiGraph.node_indices.html">rustworkx.PyDiGraph.node_indices</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDiGraph.nodes.html">rustworkx.PyDiGraph.nodes</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDiGraph.num_edges.html">rustworkx.PyDiGraph.num_edges</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDiGraph.num_nodes.html">rustworkx.PyDiGraph.num_nodes</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDiGraph.out_degree.html">rustworkx.PyDiGraph.out_degree</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDiGraph.out_edges.html">rustworkx.PyDiGraph.out_edges</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDiGraph.predecessor_indices.html">rustworkx.PyDiGraph.predecessor_indices</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDiGraph.predecessors.html">rustworkx.PyDiGraph.predecessors</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDiGraph.read_edge_list.html">rustworkx.PyDiGraph.read_edge_list</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDiGraph.remove_edge.html">rustworkx.PyDiGraph.remove_edge</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDiGraph.remove_edge_from_index.html">rustworkx.PyDiGraph.remove_edge_from_index</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDiGraph.remove_edges_from.html">rustworkx.PyDiGraph.remove_edges_from</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDiGraph.remove_node.html">rustworkx.PyDiGraph.remove_node</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDiGraph.remove_node_retain_edges.html">rustworkx.PyDiGraph.remove_node_retain_edges</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDiGraph.remove_node_retain_edges_by_id.html">rustworkx.PyDiGraph.remove_node_retain_edges_by_id</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDiGraph.remove_node_retain_edges_by_key.html">rustworkx.PyDiGraph.remove_node_retain_edges_by_key</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDiGraph.remove_nodes_from.html">rustworkx.PyDiGraph.remove_nodes_from</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDiGraph.reverse.html">rustworkx.PyDiGraph.reverse</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDiGraph.subgraph.html">rustworkx.PyDiGraph.subgraph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDiGraph.substitute_node_with_subgraph.html">rustworkx.PyDiGraph.substitute_node_with_subgraph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDiGraph.successor_indices.html">rustworkx.PyDiGraph.successor_indices</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDiGraph.successors.html">rustworkx.PyDiGraph.successors</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDiGraph.to_dot.html">rustworkx.PyDiGraph.to_dot</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDiGraph.to_undirected.html">rustworkx.PyDiGraph.to_undirected</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDiGraph.update_edge.html">rustworkx.PyDiGraph.update_edge</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDiGraph.update_edge_by_index.html">rustworkx.PyDiGraph.update_edge_by_index</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDiGraph.weighted_edge_list.html">rustworkx.PyDiGraph.weighted_edge_list</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDiGraph.write_edge_list.html">rustworkx.PyDiGraph.write_edge_list</a></li>
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../apiref/rustworkx.PyDAG.html">PyDAG</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><div class="visually-hidden">Toggle navigation of PyDAG</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDAG.add_child.html">rustworkx.PyDAG.add_child</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDAG.add_edge.html">rustworkx.PyDAG.add_edge</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDAG.add_edges_from.html">rustworkx.PyDAG.add_edges_from</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDAG.add_edges_from_no_data.html">rustworkx.PyDAG.add_edges_from_no_data</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDAG.add_node.html">rustworkx.PyDAG.add_node</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDAG.add_nodes_from.html">rustworkx.PyDAG.add_nodes_from</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDAG.add_parent.html">rustworkx.PyDAG.add_parent</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDAG.adj.html">rustworkx.PyDAG.adj</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDAG.adj_direction.html">rustworkx.PyDAG.adj_direction</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDAG.clear.html">rustworkx.PyDAG.clear</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDAG.clear_edges.html">rustworkx.PyDAG.clear_edges</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDAG.compose.html">rustworkx.PyDAG.compose</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDAG.contract_nodes.html">rustworkx.PyDAG.contract_nodes</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDAG.copy.html">rustworkx.PyDAG.copy</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDAG.edge_index_map.html">rustworkx.PyDAG.edge_index_map</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDAG.edge_indices.html">rustworkx.PyDAG.edge_indices</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDAG.edge_indices_from_endpoints.html">rustworkx.PyDAG.edge_indices_from_endpoints</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDAG.edge_list.html">rustworkx.PyDAG.edge_list</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDAG.edge_subgraph.html">rustworkx.PyDAG.edge_subgraph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDAG.edges.html">rustworkx.PyDAG.edges</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDAG.extend_from_edge_list.html">rustworkx.PyDAG.extend_from_edge_list</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDAG.extend_from_weighted_edge_list.html">rustworkx.PyDAG.extend_from_weighted_edge_list</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDAG.filter_edges.html">rustworkx.PyDAG.filter_edges</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDAG.filter_nodes.html">rustworkx.PyDAG.filter_nodes</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDAG.find_adjacent_node_by_edge.html">rustworkx.PyDAG.find_adjacent_node_by_edge</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDAG.find_node_by_weight.html">rustworkx.PyDAG.find_node_by_weight</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDAG.find_predecessor_node_by_edge.html">rustworkx.PyDAG.find_predecessor_node_by_edge</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDAG.find_predecessors_by_edge.html">rustworkx.PyDAG.find_predecessors_by_edge</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDAG.find_successors_by_edge.html">rustworkx.PyDAG.find_successors_by_edge</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDAG.from_adjacency_matrix.html">rustworkx.PyDAG.from_adjacency_matrix</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDAG.from_complex_adjacency_matrix.html">rustworkx.PyDAG.from_complex_adjacency_matrix</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDAG.get_all_edge_data.html">rustworkx.PyDAG.get_all_edge_data</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDAG.get_edge_data.html">rustworkx.PyDAG.get_edge_data</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDAG.get_edge_data_by_index.html">rustworkx.PyDAG.get_edge_data_by_index</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDAG.get_edge_endpoints_by_index.html">rustworkx.PyDAG.get_edge_endpoints_by_index</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDAG.get_node_data.html">rustworkx.PyDAG.get_node_data</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDAG.has_edge.html">rustworkx.PyDAG.has_edge</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDAG.has_node.html">rustworkx.PyDAG.has_node</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDAG.has_parallel_edges.html">rustworkx.PyDAG.has_parallel_edges</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDAG.in_degree.html">rustworkx.PyDAG.in_degree</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDAG.in_edges.html">rustworkx.PyDAG.in_edges</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDAG.incident_edge_index_map.html">rustworkx.PyDAG.incident_edge_index_map</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDAG.incident_edges.html">rustworkx.PyDAG.incident_edges</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDAG.insert_node_on_in_edges.html">rustworkx.PyDAG.insert_node_on_in_edges</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDAG.insert_node_on_in_edges_multiple.html">rustworkx.PyDAG.insert_node_on_in_edges_multiple</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDAG.insert_node_on_out_edges.html">rustworkx.PyDAG.insert_node_on_out_edges</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDAG.insert_node_on_out_edges_multiple.html">rustworkx.PyDAG.insert_node_on_out_edges_multiple</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDAG.is_symmetric.html">rustworkx.PyDAG.is_symmetric</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDAG.make_symmetric.html">rustworkx.PyDAG.make_symmetric</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDAG.merge_nodes.html">rustworkx.PyDAG.merge_nodes</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDAG.neighbors.html">rustworkx.PyDAG.neighbors</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDAG.neighbors_undirected.html">rustworkx.PyDAG.neighbors_undirected</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDAG.node_indexes.html">rustworkx.PyDAG.node_indexes</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDAG.node_indices.html">rustworkx.PyDAG.node_indices</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDAG.nodes.html">rustworkx.PyDAG.nodes</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDAG.num_edges.html">rustworkx.PyDAG.num_edges</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDAG.num_nodes.html">rustworkx.PyDAG.num_nodes</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDAG.out_degree.html">rustworkx.PyDAG.out_degree</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDAG.out_edges.html">rustworkx.PyDAG.out_edges</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDAG.predecessor_indices.html">rustworkx.PyDAG.predecessor_indices</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDAG.predecessors.html">rustworkx.PyDAG.predecessors</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDAG.read_edge_list.html">rustworkx.PyDAG.read_edge_list</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDAG.remove_edge.html">rustworkx.PyDAG.remove_edge</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDAG.remove_edge_from_index.html">rustworkx.PyDAG.remove_edge_from_index</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDAG.remove_edges_from.html">rustworkx.PyDAG.remove_edges_from</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDAG.remove_node.html">rustworkx.PyDAG.remove_node</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDAG.remove_node_retain_edges.html">rustworkx.PyDAG.remove_node_retain_edges</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDAG.remove_node_retain_edges_by_id.html">rustworkx.PyDAG.remove_node_retain_edges_by_id</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDAG.remove_node_retain_edges_by_key.html">rustworkx.PyDAG.remove_node_retain_edges_by_key</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDAG.remove_nodes_from.html">rustworkx.PyDAG.remove_nodes_from</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDAG.reverse.html">rustworkx.PyDAG.reverse</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDAG.subgraph.html">rustworkx.PyDAG.subgraph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDAG.substitute_node_with_subgraph.html">rustworkx.PyDAG.substitute_node_with_subgraph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDAG.successor_indices.html">rustworkx.PyDAG.successor_indices</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDAG.successors.html">rustworkx.PyDAG.successors</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDAG.to_dot.html">rustworkx.PyDAG.to_dot</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDAG.to_undirected.html">rustworkx.PyDAG.to_undirected</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDAG.update_edge.html">rustworkx.PyDAG.update_edge</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDAG.update_edge_by_index.html">rustworkx.PyDAG.update_edge_by_index</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDAG.weighted_edge_list.html">rustworkx.PyDAG.weighted_edge_list</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PyDAG.write_edge_list.html">rustworkx.PyDAG.write_edge_list</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="algorithm_functions/index.html">Algorithm Functions</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><div class="visually-hidden">Toggle navigation of Algorithm Functions</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="algorithm_functions/centrality.html">Centrality</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><div class="visually-hidden">Toggle navigation of Centrality</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.betweenness_centrality.html">rustworkx.betweenness_centrality</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.edge_betweenness_centrality.html">rustworkx.edge_betweenness_centrality</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.eigenvector_centrality.html">rustworkx.eigenvector_centrality</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.katz_centrality.html">rustworkx.katz_centrality</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.closeness_centrality.html">rustworkx.closeness_centrality</a></li>
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="algorithm_functions/coloring.html">Coloring</a><input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><div class="visually-hidden">Toggle navigation of Coloring</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.ColoringStrategy.html">ColoringStrategy</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.graph_greedy_color.html">rustworkx.graph_greedy_color</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.graph_bipartite_edge_color.html">rustworkx.graph_bipartite_edge_color</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.graph_greedy_edge_color.html">rustworkx.graph_greedy_edge_color</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.graph_misra_gries_edge_color.html">rustworkx.graph_misra_gries_edge_color</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.two_color.html">rustworkx.two_color</a></li>
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="algorithm_functions/connectivity_and_cycles.html">Connectivity and Cycles</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><div class="visually-hidden">Toggle navigation of Connectivity and Cycles</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.number_connected_components.html">rustworkx.number_connected_components</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.connected_components.html">rustworkx.connected_components</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.node_connected_component.html">rustworkx.node_connected_component</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.is_connected.html">rustworkx.is_connected</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.strongly_connected_components.html">rustworkx.strongly_connected_components</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.number_weakly_connected_components.html">rustworkx.number_weakly_connected_components</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.weakly_connected_components.html">rustworkx.weakly_connected_components</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.is_weakly_connected.html">rustworkx.is_weakly_connected</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.cycle_basis.html">rustworkx.cycle_basis</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.simple_cycles.html">rustworkx.simple_cycles</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.digraph_find_cycle.html">rustworkx.digraph_find_cycle</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.articulation_points.html">rustworkx.articulation_points</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.bridges.html">rustworkx.bridges</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.biconnected_components.html">rustworkx.biconnected_components</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.chain_decomposition.html">rustworkx.chain_decomposition</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.all_simple_paths.html">rustworkx.all_simple_paths</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.all_pairs_all_simple_paths.html">rustworkx.all_pairs_all_simple_paths</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.stoer_wagner_min_cut.html">rustworkx.stoer_wagner_min_cut</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.longest_simple_path.html">rustworkx.longest_simple_path</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.is_bipartite.html">rustworkx.is_bipartite</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.isolates.html">rustworkx.isolates</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.has_path.html">rustworkx.has_path</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.connected_subgraphs.html">rustworkx.connected_subgraphs</a></li>
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="algorithm_functions/dag_algorithms.html">DAG Algorithms</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><div class="visually-hidden">Toggle navigation of DAG Algorithms</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.dag_longest_path.html">rustworkx.dag_longest_path</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.dag_longest_path_length.html">rustworkx.dag_longest_path_length</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.dag_weighted_longest_path.html">rustworkx.dag_weighted_longest_path</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.dag_weighted_longest_path_length.html">rustworkx.dag_weighted_longest_path_length</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.is_directed_acyclic_graph.html">rustworkx.is_directed_acyclic_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.layers.html">rustworkx.layers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.transitive_reduction.html">rustworkx.transitive_reduction</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.topological_generations.html">rustworkx.topological_generations</a></li>
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="algorithm_functions/graph_operations.html">Graph Operations</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><div class="visually-hidden">Toggle navigation of Graph Operations</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.complement.html">rustworkx.complement</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.union.html">rustworkx.union</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.cartesian_product.html">rustworkx.cartesian_product</a></li>
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="algorithm_functions/isomorphism.html">Isomorphism</a><input class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" role="switch" type="checkbox"/><label for="toctree-checkbox-13"><div class="visually-hidden">Toggle navigation of Isomorphism</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.is_isomorphic.html">rustworkx.is_isomorphic</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.is_subgraph_isomorphic.html">rustworkx.is_subgraph_isomorphic</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.is_isomorphic_node_match.html">rustworkx.is_isomorphic_node_match</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.vf2_mapping.html">rustworkx.vf2_mapping</a></li>
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="algorithm_functions/link_analysis.html">Link Analysis</a><input class="toctree-checkbox" id="toctree-checkbox-14" name="toctree-checkbox-14" role="switch" type="checkbox"/><label for="toctree-checkbox-14"><div class="visually-hidden">Toggle navigation of Link Analysis</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.pagerank.html">rustworkx.pagerank</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.hits.html">rustworkx.hits</a></li>
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="algorithm_functions/matching.html">Matching</a><input class="toctree-checkbox" id="toctree-checkbox-15" name="toctree-checkbox-15" role="switch" type="checkbox"/><label for="toctree-checkbox-15"><div class="visually-hidden">Toggle navigation of Matching</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.max_weight_matching.html">rustworkx.max_weight_matching</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.is_matching.html">rustworkx.is_matching</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.is_maximal_matching.html">rustworkx.is_maximal_matching</a></li>
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="algorithm_functions/other.html">Other Algorithm Functions</a><input class="toctree-checkbox" id="toctree-checkbox-16" name="toctree-checkbox-16" role="switch" type="checkbox"/><label for="toctree-checkbox-16"><div class="visually-hidden">Toggle navigation of Other Algorithm Functions</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.adjacency_matrix.html">rustworkx.adjacency_matrix</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.transitivity.html">rustworkx.transitivity</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.core_number.html">rustworkx.core_number</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.graph_line_graph.html">rustworkx.graph_line_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.metric_closure.html">rustworkx.metric_closure</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.is_planar.html">rustworkx.is_planar</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.digraph_maximum_bisimulation.html">rustworkx.digraph_maximum_bisimulation</a></li>
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="algorithm_functions/shortest_paths.html">Shortest Paths</a><input class="toctree-checkbox" id="toctree-checkbox-17" name="toctree-checkbox-17" role="switch" type="checkbox"/><label for="toctree-checkbox-17"><div class="visually-hidden">Toggle navigation of Shortest Paths</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.dijkstra_shortest_paths.html">rustworkx.dijkstra_shortest_paths</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.dijkstra_shortest_path_lengths.html">rustworkx.dijkstra_shortest_path_lengths</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.all_pairs_dijkstra_shortest_paths.html">rustworkx.all_pairs_dijkstra_shortest_paths</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.all_pairs_dijkstra_path_lengths.html">rustworkx.all_pairs_dijkstra_path_lengths</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.bellman_ford_shortest_paths.html">rustworkx.bellman_ford_shortest_paths</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.bellman_ford_shortest_path_lengths.html">rustworkx.bellman_ford_shortest_path_lengths</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.all_pairs_bellman_ford_shortest_paths.html">rustworkx.all_pairs_bellman_ford_shortest_paths</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.all_pairs_bellman_ford_path_lengths.html">rustworkx.all_pairs_bellman_ford_path_lengths</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.negative_edge_cycle.html">rustworkx.negative_edge_cycle</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.find_negative_cycle.html">rustworkx.find_negative_cycle</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.distance_matrix.html">rustworkx.distance_matrix</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.floyd_warshall.html">rustworkx.floyd_warshall</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.floyd_warshall_numpy.html">rustworkx.floyd_warshall_numpy</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.floyd_warshall_successor_and_distance.html">rustworkx.floyd_warshall_successor_and_distance</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.astar_shortest_path.html">rustworkx.astar_shortest_path</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.k_shortest_path_lengths.html">rustworkx.k_shortest_path_lengths</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.num_shortest_paths_unweighted.html">rustworkx.num_shortest_paths_unweighted</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.unweighted_average_shortest_path_length.html">rustworkx.unweighted_average_shortest_path_length</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.all_shortest_paths.html">rustworkx.all_shortest_paths</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.digraph_all_shortest_paths.html">rustworkx.digraph_all_shortest_paths</a></li>
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="algorithm_functions/traversal.html">Traversal</a><input class="toctree-checkbox" id="toctree-checkbox-18" name="toctree-checkbox-18" role="switch" type="checkbox"/><label for="toctree-checkbox-18"><div class="visually-hidden">Toggle navigation of Traversal</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.dfs_edges.html">rustworkx.dfs_edges</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.dfs_search.html">rustworkx.dfs_search</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.bfs_successors.html">rustworkx.bfs_successors</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.bfs_predecessors.html">rustworkx.bfs_predecessors</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.bfs_search.html">rustworkx.bfs_search</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.dijkstra_search.html">rustworkx.dijkstra_search</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.topological_sort.html">rustworkx.topological_sort</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.lexicographical_topological_sort.html">rustworkx.lexicographical_topological_sort</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.descendants.html">rustworkx.descendants</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.ancestors.html">rustworkx.ancestors</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.collect_runs.html">rustworkx.collect_runs</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.collect_bicolor_runs.html">rustworkx.collect_bicolor_runs</a></li>
+<li class="toctree-l4 has-children"><a class="reference internal" href="../apiref/rustworkx.visit.DFSVisitor.html">DFSVisitor</a><input class="toctree-checkbox" id="toctree-checkbox-19" name="toctree-checkbox-19" role="switch" type="checkbox"/><label for="toctree-checkbox-19"><div class="visually-hidden">Toggle navigation of DFSVisitor</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l5"><a class="reference internal" href="../apiref/rustworkx.visit.DFSVisitor.back_edge.html">rustworkx.visit.DFSVisitor.back_edge</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../apiref/rustworkx.visit.DFSVisitor.discover_vertex.html">rustworkx.visit.DFSVisitor.discover_vertex</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../apiref/rustworkx.visit.DFSVisitor.finish_vertex.html">rustworkx.visit.DFSVisitor.finish_vertex</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../apiref/rustworkx.visit.DFSVisitor.forward_or_cross_edge.html">rustworkx.visit.DFSVisitor.forward_or_cross_edge</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../apiref/rustworkx.visit.DFSVisitor.tree_edge.html">rustworkx.visit.DFSVisitor.tree_edge</a></li>
+</ul>
+</li>
+<li class="toctree-l4 has-children"><a class="reference internal" href="../apiref/rustworkx.visit.BFSVisitor.html">BFSVisitor</a><input class="toctree-checkbox" id="toctree-checkbox-20" name="toctree-checkbox-20" role="switch" type="checkbox"/><label for="toctree-checkbox-20"><div class="visually-hidden">Toggle navigation of BFSVisitor</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l5"><a class="reference internal" href="../apiref/rustworkx.visit.BFSVisitor.black_target_edge.html">rustworkx.visit.BFSVisitor.black_target_edge</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../apiref/rustworkx.visit.BFSVisitor.discover_vertex.html">rustworkx.visit.BFSVisitor.discover_vertex</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../apiref/rustworkx.visit.BFSVisitor.finish_vertex.html">rustworkx.visit.BFSVisitor.finish_vertex</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../apiref/rustworkx.visit.BFSVisitor.gray_target_edge.html">rustworkx.visit.BFSVisitor.gray_target_edge</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../apiref/rustworkx.visit.BFSVisitor.non_tree_edge.html">rustworkx.visit.BFSVisitor.non_tree_edge</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../apiref/rustworkx.visit.BFSVisitor.tree_edge.html">rustworkx.visit.BFSVisitor.tree_edge</a></li>
+</ul>
+</li>
+<li class="toctree-l4 has-children"><a class="reference internal" href="../apiref/rustworkx.visit.DijkstraVisitor.html">DijkstraVisitor</a><input class="toctree-checkbox" id="toctree-checkbox-21" name="toctree-checkbox-21" role="switch" type="checkbox"/><label for="toctree-checkbox-21"><div class="visually-hidden">Toggle navigation of DijkstraVisitor</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l5"><a class="reference internal" href="../apiref/rustworkx.visit.DijkstraVisitor.discover_vertex.html">rustworkx.visit.DijkstraVisitor.discover_vertex</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../apiref/rustworkx.visit.DijkstraVisitor.edge_not_relaxed.html">rustworkx.visit.DijkstraVisitor.edge_not_relaxed</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../apiref/rustworkx.visit.DijkstraVisitor.edge_relaxed.html">rustworkx.visit.DijkstraVisitor.edge_relaxed</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../apiref/rustworkx.visit.DijkstraVisitor.examine_edge.html">rustworkx.visit.DijkstraVisitor.examine_edge</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../apiref/rustworkx.visit.DijkstraVisitor.finish_vertex.html">rustworkx.visit.DijkstraVisitor.finish_vertex</a></li>
+</ul>
+</li>
+<li class="toctree-l4 has-children"><a class="reference internal" href="../apiref/rustworkx.TopologicalSorter.html">TopologicalSorter</a><input class="toctree-checkbox" id="toctree-checkbox-22" name="toctree-checkbox-22" role="switch" type="checkbox"/><label for="toctree-checkbox-22"><div class="visually-hidden">Toggle navigation of TopologicalSorter</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l5"><a class="reference internal" href="../apiref/rustworkx.TopologicalSorter.done.html">rustworkx.TopologicalSorter.done</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../apiref/rustworkx.TopologicalSorter.get_ready.html">rustworkx.TopologicalSorter.get_ready</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../apiref/rustworkx.TopologicalSorter.is_active.html">rustworkx.TopologicalSorter.is_active</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="algorithm_functions/tree.html">Tree</a><input class="toctree-checkbox" id="toctree-checkbox-23" name="toctree-checkbox-23" role="switch" type="checkbox"/><label for="toctree-checkbox-23"><div class="visually-hidden">Toggle navigation of Tree</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.minimum_spanning_edges.html">rustworkx.minimum_spanning_edges</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.minimum_spanning_tree.html">rustworkx.minimum_spanning_tree</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.steiner_tree.html">rustworkx.steiner_tree</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="generators.html">Generators</a><input class="toctree-checkbox" id="toctree-checkbox-24" name="toctree-checkbox-24" role="switch" type="checkbox"/><label for="toctree-checkbox-24"><div class="visually-hidden">Toggle navigation of Generators</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.generators.cycle_graph.html">rustworkx.generators.cycle_graph</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.generators.directed_cycle_graph.html">rustworkx.generators.directed_cycle_graph</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.generators.path_graph.html">rustworkx.generators.path_graph</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.generators.directed_path_graph.html">rustworkx.generators.directed_path_graph</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.generators.star_graph.html">rustworkx.generators.star_graph</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.generators.directed_star_graph.html">rustworkx.generators.directed_star_graph</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.generators.mesh_graph.html">rustworkx.generators.mesh_graph</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.generators.directed_mesh_graph.html">rustworkx.generators.directed_mesh_graph</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.generators.grid_graph.html">rustworkx.generators.grid_graph</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.generators.directed_grid_graph.html">rustworkx.generators.directed_grid_graph</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.generators.binomial_tree_graph.html">rustworkx.generators.binomial_tree_graph</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.generators.directed_binomial_tree_graph.html">rustworkx.generators.directed_binomial_tree_graph</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.generators.hexagonal_lattice_graph.html">rustworkx.generators.hexagonal_lattice_graph</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.generators.directed_hexagonal_lattice_graph.html">rustworkx.generators.directed_hexagonal_lattice_graph</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.generators.heavy_square_graph.html">rustworkx.generators.heavy_square_graph</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.generators.directed_heavy_square_graph.html">rustworkx.generators.directed_heavy_square_graph</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.generators.heavy_hex_graph.html">rustworkx.generators.heavy_hex_graph</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.generators.directed_heavy_hex_graph.html">rustworkx.generators.directed_heavy_hex_graph</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.generators.lollipop_graph.html">rustworkx.generators.lollipop_graph</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.generators.generalized_petersen_graph.html">rustworkx.generators.generalized_petersen_graph</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.generators.barbell_graph.html">rustworkx.generators.barbell_graph</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.generators.full_rary_tree.html">rustworkx.generators.full_rary_tree</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.generators.empty_graph.html">rustworkx.generators.empty_graph</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.generators.directed_empty_graph.html">rustworkx.generators.directed_empty_graph</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.generators.complete_graph.html">rustworkx.generators.complete_graph</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.generators.directed_complete_graph.html">rustworkx.generators.directed_complete_graph</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.generators.dorogovtsev_goltsev_mendes_graph.html">rustworkx.generators.dorogovtsev_goltsev_mendes_graph</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="random_graph_generator_functions.html">Random Graph Generator Functions</a><input class="toctree-checkbox" id="toctree-checkbox-25" name="toctree-checkbox-25" role="switch" type="checkbox"/><label for="toctree-checkbox-25"><div class="visually-hidden">Toggle navigation of Random Graph Generator Functions</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.directed_gnp_random_graph.html">rustworkx.directed_gnp_random_graph</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.undirected_gnp_random_graph.html">rustworkx.undirected_gnp_random_graph</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.directed_gnm_random_graph.html">rustworkx.directed_gnm_random_graph</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.undirected_gnm_random_graph.html">rustworkx.undirected_gnm_random_graph</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.directed_sbm_random_graph.html">rustworkx.directed_sbm_random_graph</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.undirected_sbm_random_graph.html">rustworkx.undirected_sbm_random_graph</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.random_geometric_graph.html">rustworkx.random_geometric_graph</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.hyperbolic_random_graph.html">rustworkx.hyperbolic_random_graph</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.barabasi_albert_graph.html">rustworkx.barabasi_albert_graph</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.directed_barabasi_albert_graph.html">rustworkx.directed_barabasi_albert_graph</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.directed_random_bipartite_graph.html">rustworkx.directed_random_bipartite_graph</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.undirected_random_bipartite_graph.html">rustworkx.undirected_random_bipartite_graph</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="layout_functions.html">Layout Functions</a><input class="toctree-checkbox" id="toctree-checkbox-26" name="toctree-checkbox-26" role="switch" type="checkbox"/><label for="toctree-checkbox-26"><div class="visually-hidden">Toggle navigation of Layout Functions</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.random_layout.html">rustworkx.random_layout</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.spring_layout.html">rustworkx.spring_layout</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.bipartite_layout.html">rustworkx.bipartite_layout</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.circular_layout.html">rustworkx.circular_layout</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.shell_layout.html">rustworkx.shell_layout</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.spiral_layout.html">rustworkx.spiral_layout</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="serialization.html">Serialization</a><input class="toctree-checkbox" id="toctree-checkbox-27" name="toctree-checkbox-27" role="switch" type="checkbox"/><label for="toctree-checkbox-27"><div class="visually-hidden">Toggle navigation of Serialization</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.node_link_json.html">rustworkx.node_link_json</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.read_graphml.html">rustworkx.read_graphml</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.from_node_link_json_file.html">rustworkx.from_node_link_json_file</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.parse_node_link_json.html">rustworkx.parse_node_link_json</a></li>
+</ul>
+</li>
+<li class="toctree-l2 current has-children current-page"><a class="current reference internal" href="#">Converters</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-28" name="toctree-checkbox-28" role="switch" type="checkbox"/><label for="toctree-checkbox-28"><div class="visually-hidden">Toggle navigation of Converters</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.networkx_converter.html">rustworkx.networkx_converter</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="pydigraph_api_functions.html">API functions for PyDigraph</a><input class="toctree-checkbox" id="toctree-checkbox-29" name="toctree-checkbox-29" role="switch" type="checkbox"/><label for="toctree-checkbox-29"><div class="visually-hidden">Toggle navigation of API functions for PyDigraph</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.digraph_is_isomorphic.html">rustworkx.digraph_is_isomorphic</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.digraph_is_subgraph_isomorphic.html">rustworkx.digraph_is_subgraph_isomorphic</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.digraph_vf2_mapping.html">rustworkx.digraph_vf2_mapping</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.digraph_distance_matrix.html">rustworkx.digraph_distance_matrix</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.digraph_floyd_warshall.html">rustworkx.digraph_floyd_warshall</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.digraph_floyd_warshall_numpy.html">rustworkx.digraph_floyd_warshall_numpy</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.digraph_floyd_warshall_successor_and_distance.html">rustworkx.digraph_floyd_warshall_successor_and_distance</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.digraph_adjacency_matrix.html">rustworkx.digraph_adjacency_matrix</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.digraph_all_simple_paths.html">rustworkx.digraph_all_simple_paths</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.digraph_all_pairs_all_simple_paths.html">rustworkx.digraph_all_pairs_all_simple_paths</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.digraph_astar_shortest_path.html">rustworkx.digraph_astar_shortest_path</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.digraph_dijkstra_shortest_paths.html">rustworkx.digraph_dijkstra_shortest_paths</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.digraph_all_pairs_dijkstra_shortest_paths.html">rustworkx.digraph_all_pairs_dijkstra_shortest_paths</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.digraph_dijkstra_shortest_path_lengths.html">rustworkx.digraph_dijkstra_shortest_path_lengths</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.digraph_all_pairs_dijkstra_path_lengths.html">rustworkx.digraph_all_pairs_dijkstra_path_lengths</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.digraph_bellman_ford_shortest_path_lengths.html">rustworkx.digraph_bellman_ford_shortest_path_lengths</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.digraph_bellman_ford_shortest_path_lengths.html">rustworkx.digraph_bellman_ford_shortest_path_lengths</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.digraph_all_pairs_bellman_ford_shortest_paths.html">rustworkx.digraph_all_pairs_bellman_ford_shortest_paths</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.digraph_all_pairs_bellman_ford_path_lengths.html">rustworkx.digraph_all_pairs_bellman_ford_path_lengths</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.digraph_k_shortest_path_lengths.html">rustworkx.digraph_k_shortest_path_lengths</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.digraph_all_shortest_paths.html">rustworkx.digraph_all_shortest_paths</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.digraph_dfs_edges.html">rustworkx.digraph_dfs_edges</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.digraph_dfs_search.html">rustworkx.digraph_dfs_search</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.digraph_find_cycle.html">rustworkx.digraph_find_cycle</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.digraph_transitivity.html">rustworkx.digraph_transitivity</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.digraph_core_number.html">rustworkx.digraph_core_number</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.digraph_complement.html">rustworkx.digraph_complement</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.digraph_union.html">rustworkx.digraph_union</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.digraph_tensor_product.html">rustworkx.digraph_tensor_product</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.digraph_cartesian_product.html">rustworkx.digraph_cartesian_product</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.digraph_random_layout.html">rustworkx.digraph_random_layout</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.digraph_bipartite_layout.html">rustworkx.digraph_bipartite_layout</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.digraph_circular_layout.html">rustworkx.digraph_circular_layout</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.digraph_shell_layout.html">rustworkx.digraph_shell_layout</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.digraph_spiral_layout.html">rustworkx.digraph_spiral_layout</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.digraph_spring_layout.html">rustworkx.digraph_spring_layout</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.digraph_num_shortest_paths_unweighted.html">rustworkx.digraph_num_shortest_paths_unweighted</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.digraph_betweenness_centrality.html">rustworkx.digraph_betweenness_centrality</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.digraph_edge_betweenness_centrality.html">rustworkx.digraph_edge_betweenness_centrality</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.digraph_closeness_centrality.html">rustworkx.digraph_closeness_centrality</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.digraph_eigenvector_centrality.html">rustworkx.digraph_eigenvector_centrality</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.digraph_katz_centrality.html">rustworkx.digraph_katz_centrality</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.digraph_unweighted_average_shortest_path_length.html">rustworkx.digraph_unweighted_average_shortest_path_length</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.digraph_bfs_search.html">rustworkx.digraph_bfs_search</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.digraph_dijkstra_search.html">rustworkx.digraph_dijkstra_search</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.digraph_node_link_json.html">rustworkx.digraph_node_link_json</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.digraph_longest_simple_path.html">rustworkx.digraph_longest_simple_path</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="pygraph_api_functions.html">API functions for PyGraph</a><input class="toctree-checkbox" id="toctree-checkbox-30" name="toctree-checkbox-30" role="switch" type="checkbox"/><label for="toctree-checkbox-30"><div class="visually-hidden">Toggle navigation of API functions for PyGraph</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.graph_is_isomorphic.html">rustworkx.graph_is_isomorphic</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.graph_is_subgraph_isomorphic.html">rustworkx.graph_is_subgraph_isomorphic</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.graph_vf2_mapping.html">rustworkx.graph_vf2_mapping</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.graph_distance_matrix.html">rustworkx.graph_distance_matrix</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.graph_floyd_warshall.html">rustworkx.graph_floyd_warshall</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.graph_floyd_warshall_numpy.html">rustworkx.graph_floyd_warshall_numpy</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.graph_floyd_warshall_successor_and_distance.html">rustworkx.graph_floyd_warshall_successor_and_distance</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.graph_adjacency_matrix.html">rustworkx.graph_adjacency_matrix</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.graph_all_simple_paths.html">rustworkx.graph_all_simple_paths</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.graph_all_pairs_all_simple_paths.html">rustworkx.graph_all_pairs_all_simple_paths</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.graph_astar_shortest_path.html">rustworkx.graph_astar_shortest_path</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.graph_dijkstra_shortest_paths.html">rustworkx.graph_dijkstra_shortest_paths</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.graph_dijkstra_shortest_path_lengths.html">rustworkx.graph_dijkstra_shortest_path_lengths</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.graph_all_pairs_dijkstra_shortest_paths.html">rustworkx.graph_all_pairs_dijkstra_shortest_paths</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.graph_k_shortest_path_lengths.html">rustworkx.graph_k_shortest_path_lengths</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.graph_all_pairs_dijkstra_path_lengths.html">rustworkx.graph_all_pairs_dijkstra_path_lengths</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.graph_bellman_ford_shortest_path_lengths.html">rustworkx.graph_bellman_ford_shortest_path_lengths</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.graph_bellman_ford_shortest_path_lengths.html">rustworkx.graph_bellman_ford_shortest_path_lengths</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.graph_all_pairs_bellman_ford_shortest_paths.html">rustworkx.graph_all_pairs_bellman_ford_shortest_paths</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.graph_all_pairs_bellman_ford_path_lengths.html">rustworkx.graph_all_pairs_bellman_ford_path_lengths</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.graph_all_shortest_paths.html">rustworkx.graph_all_shortest_paths</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.graph_dfs_edges.html">rustworkx.graph_dfs_edges</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.graph_dfs_search.html">rustworkx.graph_dfs_search</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.graph_transitivity.html">rustworkx.graph_transitivity</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.graph_core_number.html">rustworkx.graph_core_number</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.graph_complement.html">rustworkx.graph_complement</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.graph_union.html">rustworkx.graph_union</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.graph_tensor_product.html">rustworkx.graph_tensor_product</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.graph_token_swapper.html">rustworkx.graph_token_swapper</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.graph_cartesian_product.html">rustworkx.graph_cartesian_product</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.graph_random_layout.html">rustworkx.graph_random_layout</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.graph_bipartite_layout.html">rustworkx.graph_bipartite_layout</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.graph_circular_layout.html">rustworkx.graph_circular_layout</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.graph_shell_layout.html">rustworkx.graph_shell_layout</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.graph_spiral_layout.html">rustworkx.graph_spiral_layout</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.graph_spring_layout.html">rustworkx.graph_spring_layout</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.graph_num_shortest_paths_unweighted.html">rustworkx.graph_num_shortest_paths_unweighted</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.graph_betweenness_centrality.html">rustworkx.graph_betweenness_centrality</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.graph_edge_betweenness_centrality.html">rustworkx.graph_edge_betweenness_centrality</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.graph_closeness_centrality.html">rustworkx.graph_closeness_centrality</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.graph_eigenvector_centrality.html">rustworkx.graph_eigenvector_centrality</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.graph_katz_centrality.html">rustworkx.graph_katz_centrality</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.graph_unweighted_average_shortest_path_length.html">rustworkx.graph_unweighted_average_shortest_path_length</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.graph_bfs_search.html">rustworkx.graph_bfs_search</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.graph_dijkstra_search.html">rustworkx.graph_dijkstra_search</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.graph_node_link_json.html">rustworkx.graph_node_link_json</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.graph_longest_simple_path.html">rustworkx.graph_longest_simple_path</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="exceptions.html">Exceptions</a><input class="toctree-checkbox" id="toctree-checkbox-31" name="toctree-checkbox-31" role="switch" type="checkbox"/><label for="toctree-checkbox-31"><div class="visually-hidden">Toggle navigation of Exceptions</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.InvalidNode.html">rustworkx.InvalidNode</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.DAGWouldCycle.html">rustworkx.DAGWouldCycle</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.NoEdgeBetweenNodes.html">rustworkx.NoEdgeBetweenNodes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.DAGHasCycle.html">rustworkx.DAGHasCycle</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.NegativeCycle.html">rustworkx.NegativeCycle</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.NoSuitableNeighbors.html">rustworkx.NoSuitableNeighbors</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.NoPathFound.html">rustworkx.NoPathFound</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.NullGraph.html">rustworkx.NullGraph</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.visit.StopSearch.html">rustworkx.visit.StopSearch</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.visit.PruneSearch.html">rustworkx.visit.PruneSearch</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.JSONSerializationError.html">rustworkx.JSONSerializationError</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.InvalidMapping.html">rustworkx.InvalidMapping</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.GraphNotBipartite.html">rustworkx.GraphNotBipartite</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="custom_return_types.html">Custom Return Types</a><input class="toctree-checkbox" id="toctree-checkbox-32" name="toctree-checkbox-32" role="switch" type="checkbox"/><label for="toctree-checkbox-32"><div class="visually-hidden">Toggle navigation of Custom Return Types</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.BFSSuccessors.html">BFSSuccessors</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.BFSPredecessors.html">BFSPredecessors</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.NodeIndices.html">NodeIndices</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.EdgeIndices.html">EdgeIndices</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.EdgeList.html">EdgeList</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.WeightedEdgeList.html">WeightedEdgeList</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../apiref/rustworkx.EdgeIndexMap.html">EdgeIndexMap</a><input class="toctree-checkbox" id="toctree-checkbox-33" name="toctree-checkbox-33" role="switch" type="checkbox"/><label for="toctree-checkbox-33"><div class="visually-hidden">Toggle navigation of EdgeIndexMap</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.EdgeIndexMap.items.html">rustworkx.EdgeIndexMap.items</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.EdgeIndexMap.keys.html">rustworkx.EdgeIndexMap.keys</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.EdgeIndexMap.values.html">rustworkx.EdgeIndexMap.values</a></li>
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../apiref/rustworkx.PathMapping.html">PathMapping</a><input class="toctree-checkbox" id="toctree-checkbox-34" name="toctree-checkbox-34" role="switch" type="checkbox"/><label for="toctree-checkbox-34"><div class="visually-hidden">Toggle navigation of PathMapping</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PathMapping.items.html">rustworkx.PathMapping.items</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PathMapping.keys.html">rustworkx.PathMapping.keys</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PathMapping.values.html">rustworkx.PathMapping.values</a></li>
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../apiref/rustworkx.PathLengthMapping.html">PathLengthMapping</a><input class="toctree-checkbox" id="toctree-checkbox-35" name="toctree-checkbox-35" role="switch" type="checkbox"/><label for="toctree-checkbox-35"><div class="visually-hidden">Toggle navigation of PathLengthMapping</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PathLengthMapping.items.html">rustworkx.PathLengthMapping.items</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PathLengthMapping.keys.html">rustworkx.PathLengthMapping.keys</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.PathLengthMapping.values.html">rustworkx.PathLengthMapping.values</a></li>
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../apiref/rustworkx.Pos2DMapping.html">Pos2DMapping</a><input class="toctree-checkbox" id="toctree-checkbox-36" name="toctree-checkbox-36" role="switch" type="checkbox"/><label for="toctree-checkbox-36"><div class="visually-hidden">Toggle navigation of Pos2DMapping</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.Pos2DMapping.items.html">rustworkx.Pos2DMapping.items</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.Pos2DMapping.keys.html">rustworkx.Pos2DMapping.keys</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.Pos2DMapping.values.html">rustworkx.Pos2DMapping.values</a></li>
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../apiref/rustworkx.AllPairsPathMapping.html">AllPairsPathMapping</a><input class="toctree-checkbox" id="toctree-checkbox-37" name="toctree-checkbox-37" role="switch" type="checkbox"/><label for="toctree-checkbox-37"><div class="visually-hidden">Toggle navigation of AllPairsPathMapping</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.AllPairsPathMapping.items.html">rustworkx.AllPairsPathMapping.items</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.AllPairsPathMapping.keys.html">rustworkx.AllPairsPathMapping.keys</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.AllPairsPathMapping.values.html">rustworkx.AllPairsPathMapping.values</a></li>
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../apiref/rustworkx.AllPairsPathLengthMapping.html">AllPairsPathLengthMapping</a><input class="toctree-checkbox" id="toctree-checkbox-38" name="toctree-checkbox-38" role="switch" type="checkbox"/><label for="toctree-checkbox-38"><div class="visually-hidden">Toggle navigation of AllPairsPathLengthMapping</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.AllPairsPathLengthMapping.items.html">rustworkx.AllPairsPathLengthMapping.items</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.AllPairsPathLengthMapping.keys.html">rustworkx.AllPairsPathLengthMapping.keys</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.AllPairsPathLengthMapping.values.html">rustworkx.AllPairsPathLengthMapping.values</a></li>
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../apiref/rustworkx.CentralityMapping.html">CentralityMapping</a><input class="toctree-checkbox" id="toctree-checkbox-39" name="toctree-checkbox-39" role="switch" type="checkbox"/><label for="toctree-checkbox-39"><div class="visually-hidden">Toggle navigation of CentralityMapping</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.CentralityMapping.items.html">rustworkx.CentralityMapping.items</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.CentralityMapping.keys.html">rustworkx.CentralityMapping.keys</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.CentralityMapping.values.html">rustworkx.CentralityMapping.values</a></li>
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../apiref/rustworkx.EdgeCentralityMapping.html">EdgeCentralityMapping</a><input class="toctree-checkbox" id="toctree-checkbox-40" name="toctree-checkbox-40" role="switch" type="checkbox"/><label for="toctree-checkbox-40"><div class="visually-hidden">Toggle navigation of EdgeCentralityMapping</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.EdgeCentralityMapping.items.html">rustworkx.EdgeCentralityMapping.items</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.EdgeCentralityMapping.keys.html">rustworkx.EdgeCentralityMapping.keys</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.EdgeCentralityMapping.values.html">rustworkx.EdgeCentralityMapping.values</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.Chains.html">Chains</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../apiref/rustworkx.NodeMap.html">NodeMap</a><input class="toctree-checkbox" id="toctree-checkbox-41" name="toctree-checkbox-41" role="switch" type="checkbox"/><label for="toctree-checkbox-41"><div class="visually-hidden">Toggle navigation of NodeMap</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.NodeMap.items.html">rustworkx.NodeMap.items</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.NodeMap.keys.html">rustworkx.NodeMap.keys</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.NodeMap.values.html">rustworkx.NodeMap.values</a></li>
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../apiref/rustworkx.ProductNodeMap.html">ProductNodeMap</a><input class="toctree-checkbox" id="toctree-checkbox-42" name="toctree-checkbox-42" role="switch" type="checkbox"/><label for="toctree-checkbox-42"><div class="visually-hidden">Toggle navigation of ProductNodeMap</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.ProductNodeMap.items.html">rustworkx.ProductNodeMap.items</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.ProductNodeMap.keys.html">rustworkx.ProductNodeMap.keys</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.ProductNodeMap.values.html">rustworkx.ProductNodeMap.values</a></li>
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../apiref/rustworkx.BiconnectedComponents.html">BiconnectedComponents</a><input class="toctree-checkbox" id="toctree-checkbox-43" name="toctree-checkbox-43" role="switch" type="checkbox"/><label for="toctree-checkbox-43"><div class="visually-hidden">Toggle navigation of BiconnectedComponents</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.BiconnectedComponents.items.html">rustworkx.BiconnectedComponents.items</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.BiconnectedComponents.keys.html">rustworkx.BiconnectedComponents.keys</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../apiref/rustworkx.BiconnectedComponents.values.html">rustworkx.BiconnectedComponents.values</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.RelationalCoarsestPartition.html">RelationalCoarsestPartition</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../apiref/rustworkx.IndexPartitionBlock.html">IndexPartitionBlock</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../visualization.html">Visualization</a><input class="toctree-checkbox" id="toctree-checkbox-44" name="toctree-checkbox-44" role="switch" type="checkbox"/><label for="toctree-checkbox-44"><div class="visually-hidden">Toggle navigation of Visualization</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../apiref/rustworkx.visualization.mpl_draw.html">rustworkx.visualization.mpl_draw</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../apiref/rustworkx.visualization.graphviz_draw.html">rustworkx.visualization.graphviz_draw</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../CONTRIBUTING.html">Contributing Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../networkx.html">rustworkx for NetworkX users</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../benchmarks.html">Benchmarks</a></li>
+</ul>
+
+</div><div class="qiskit-previous-releases-container">
+    <input id="previous-releases-checkbox" name="previous-releases-checkbox" role="switch" type="checkbox">
+    <div class="qiskit-previous-releases-header-container"><label for="previous-releases-checkbox">
+            <p role="note">Previous Releases</p>
+            <div class="qiskit-previous-releases-toggle-container">
+                <div class="visually-hidden">Toggle navigation of Previous Releases</div>
+                <i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i>
+            </div>
+        </label>
+    </div>
+    <div class="qiskit-previous-releases-list-container">
+        <ul>
+        
+            <li><a href="//stable/0.15/index.html" rel="nofollow">0.15</a></li>
+        
+            <li><a href="//stable/0.14/index.html" rel="nofollow">0.14</a></li>
+        
+            <li><a href="//stable/0.13/index.html" rel="nofollow">0.13</a></li>
+        
+            <li><a href="//stable/0.12/index.html" rel="nofollow">0.12</a></li>
+        
+        </ul>
+    </div>
+</div>
+</div>
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          
+<div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle">
+              <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+              <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon no-toc" for="__toc">
+            <div class="visually-hidden">Toggle table of contents sidebar</div>
+            <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+          </label>
+        </div>
+        <article role="main">
+          <br><br><br><div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This is the documentation for the current state of the development branch
+of rustworkx. The documentation or APIs here can change prior to being
+released.</p>
+</div>
+<section id="converters">
+<span id="id1"></span><h1>Converters<a class="headerlink" href="#converters" title="Permalink to this heading">#</a></h1>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="../apiref/rustworkx.networkx_converter.html#rustworkx.networkx_converter" title="rustworkx.networkx_converter"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.networkx_converter</span></code></a>(graph[, ...])</p></td>
+<td><p>Convert a networkx graph object into a rustworkx graph object.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+
+        </article>
+      </div>
+      <footer>
+        <div class="related-pages">
+          <a class="next-page" href="../apiref/rustworkx.networkx_converter.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">rustworkx.networkx_converter</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="../apiref/rustworkx.parse_node_link_json.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">rustworkx.parse_node_link_json</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2021, rustworkx Contributors
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer no-toc">
+      
+      
+      
+    </aside>
+  </div>
+</div><script src="../_static/jquery.js?v=5d32c60e"></script>
+    <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js?v=05cd2da0"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="../_static/scripts/qiskit-sphinx-theme.js?v=4d77b8ca"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
+    </body>
+</html>

@@ -1,0 +1,6 @@
+rustworkx.PyDiGraph.to\_undirected
+==================================
+
+.. currentmodule:: rustworkx
+
+.. automethod:: PyDiGraph.to_undirected

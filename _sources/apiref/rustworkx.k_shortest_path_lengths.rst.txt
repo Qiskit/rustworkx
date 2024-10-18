@@ -1,0 +1,6 @@
+﻿rustworkx.k\_shortest\_path\_lengths
+====================================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: k_shortest_path_lengths
