@@ -10,7 +10,7 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-use ahash::RandomState;
+use foldhash::fast::RandomState;
 use priority_queue::PriorityQueue;
 use std::cmp::Ordering;
 use std::cmp::Reverse;
