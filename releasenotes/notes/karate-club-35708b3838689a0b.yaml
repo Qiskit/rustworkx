@@ -1,0 +1,14 @@
+---
+features:
+  - |
+    Added a new function, :func:`~rustworkx.generators.karate_club_graph` that
+    returns Zachary's Karate Club graph, commonly found in social network examples.
+
+    .. jupyter-execute::
+
+      import rustworkx.generators
+      from rustworkx.visualization import mpl_draw
+
+      graph = rustworkx.generators.karate_club_graph()
+      layout = rustworkx.circular_layout(graph)
+      mpl_draw(graph, pos=layout)
