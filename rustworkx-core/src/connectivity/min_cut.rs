@@ -39,7 +39,7 @@ where
     F: FnMut(G::EdgeRef) -> K,
     K: Copy + Ord + Zero + AddAssign,
 {
-    let mut pq = PriorityQueue::<G::NodeId, K, ahash::RandomState>::from(
+    let mut pq = PriorityQueue::<G::NodeId, K, foldhash::fast::RandomState>::from(
         graph
             .node_identifiers()
             .map(|nx| (nx, K::zero()))
