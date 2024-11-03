@@ -345,17 +345,17 @@ where
     predecessors: HashMap<G::NodeId, Vec<G::NodeId>>,
     sigma: HashMap<G::NodeId, f64>,
 }
-
 fn shortest_path_for_centrality<G>(graph: G, node_s: &G::NodeId) -> ShortestPathData<G>
 where
     G: NodeIndexable + IntoNodeIdentifiers + IntoNeighborsDirected + NodeCount + GraphBase,
     <G as GraphBase>::NodeId: std::cmp::Eq + Hash,
 {
-    let mut verts_sorted_by_distance: Vec<G::NodeId> = Vec::new(); // a stack
     let c = graph.node_count();
-    let mut predecessors: Vec<Vec<G::NodeId>> = vec![Vec::new(); c];
-    let mut sigma: Vec<f64> = vec![0.; c];
-    let mut distance: Vec<i64> = vec![-1; c];
+    let max_index = graph.node_bound();
+    let mut verts_sorted_by_distance: Vec<G::NodeId> = Vec::with_capacity(c); // a stack
+    let mut predecessors: Vec<Vec<G::NodeId>> = vec![Vec::new(); max_index];
+    let mut sigma: Vec<f64> = vec![0.; max_index];
+    let mut distance: Vec<i64> = vec![-1; max_index];
     #[allow(non_snake_case)]
     let mut Q: VecDeque<G::NodeId> = VecDeque::with_capacity(c);
     let node_s_index = graph.to_index(*node_s);
