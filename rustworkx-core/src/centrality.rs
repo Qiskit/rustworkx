@@ -379,7 +379,7 @@ where
                 distance[w_idx] = distance_v + 1;
             }
             if distance[w_idx] == distance_v + 1 {
-                sigma[w_idx] = sigma[w_idx] + sigma[v_idx];
+                sigma[w_idx] += sigma[v_idx];
                 predecessors[w_idx].push(v);
             }
         }
