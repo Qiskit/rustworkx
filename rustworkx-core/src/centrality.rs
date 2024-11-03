@@ -353,35 +353,50 @@ where
 {
     let mut verts_sorted_by_distance: Vec<G::NodeId> = Vec::new(); // a stack
     let c = graph.node_count();
-    let mut predecessors = HashMap::<G::NodeId, Vec<G::NodeId>>::with_capacity(c);
-    let mut sigma = HashMap::<G::NodeId, f64>::with_capacity(c);
-    let mut distance = HashMap::<G::NodeId, i64>::with_capacity(c);
+    let mut predecessors: Vec<Vec<G::NodeId>> = Vec::with_capacity(c);
+    let mut sigma: Vec<f64> = Vec::with_capacity(c);
+    let mut distance: Vec<i64> = Vec::with_capacity(c);
     #[allow(non_snake_case)]
     let mut Q: VecDeque<G::NodeId> = VecDeque::with_capacity(c);
-
     for node in graph.node_identifiers() {
-        predecessors.insert(node, Vec::new());
-        sigma.insert(node, 0.0);
-        distance.insert(node, -1);
+        let node_index = graph.to_index(node);
+        predecessors[node_index] = Vec::new();
+        sigma[node_index] = 0.0;
+        distance[node_index] = -1;
     }
-    sigma.insert(*node_s, 1.0);
-    distance.insert(*node_s, 0);
+    let node_s_index = graph.to_index(*node_s);
+    sigma[node_s_index] = 1.0;
+    distance[node_s_index] = 0;
     Q.push_back(*node_s);
     while let Some(v) = Q.pop_front() {
         verts_sorted_by_distance.push(v);
-        let distance_v = distance[&v];
+        let v_idx = graph.to_index(v);
+        let distance_v = distance[v_idx];
         for w in graph.neighbors(v) {
-            if distance[&w] < 0 {
+            let w_idx = graph.to_index(w);
+            if distance[w_idx] < 0 {
                 Q.push_back(w);
-                distance.insert(w, distance_v + 1);
+                distance[w_idx] = distance_v + 1;
             }
-            if distance[&w] == distance_v + 1 {
-                sigma.insert(w, sigma[&w] + sigma[&v]);
-                let e_p = predecessors.get_mut(&w).unwrap();
-                e_p.push(v);
+            if distance[w_idx] == distance_v + 1 {
+                sigma[w_idx] = sigma[w_idx] + sigma[v_idx];
+                predecessors[w_idx].push(v);
             }
         }
     }
+    let mut sigma_h = HashMap::with_capacity(c);
+    for (idx, s) in sigma.iter().enumerate() {
+        sigma_h.insert(graph.from_index(idx), *s);
+    }
+    let mut pred_h = HashMap::with_capacity(c);
+    let mut idx = predecessors.len() - 1;
+
+    while let Some(p) = predecessors.pop() {
+        pred_h.insert(graph.from_index(idx), p);
+        idx -= 1;
+    }
+    let sigma = sigma_h;
+    let predecessors = pred_h;
     verts_sorted_by_distance.reverse(); // will be effectively popping from the stack
     ShortestPathData {
         verts_sorted_by_distance,
