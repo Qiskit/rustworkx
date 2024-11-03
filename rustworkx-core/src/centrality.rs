@@ -353,17 +353,11 @@ where
 {
     let mut verts_sorted_by_distance: Vec<G::NodeId> = Vec::new(); // a stack
     let c = graph.node_count();
-    let mut predecessors: Vec<Vec<G::NodeId>> = Vec::with_capacity(c);
-    let mut sigma: Vec<f64> = Vec::with_capacity(c);
-    let mut distance: Vec<i64> = Vec::with_capacity(c);
+    let mut predecessors: Vec<Vec<G::NodeId>> = vec![Vec::new();c];
+    let mut sigma: Vec<f64> = vec![0.;c];
+    let mut distance: Vec<i64> = vec![-1;c];
     #[allow(non_snake_case)]
     let mut Q: VecDeque<G::NodeId> = VecDeque::with_capacity(c);
-    for node in graph.node_identifiers() {
-        let node_index = graph.to_index(node);
-        predecessors[node_index] = Vec::new();
-        sigma[node_index] = 0.0;
-        distance[node_index] = -1;
-    }
     let node_s_index = graph.to_index(*node_s);
     sigma[node_s_index] = 1.0;
     distance[node_s_index] = 0;
@@ -389,11 +383,11 @@ where
         sigma_h.insert(graph.from_index(idx), *s);
     }
     let mut pred_h = HashMap::with_capacity(c);
-    let mut idx = predecessors.len() - 1;
+    let mut idx = predecessors.len();
 
     while let Some(p) = predecessors.pop() {
-        pred_h.insert(graph.from_index(idx), p);
         idx -= 1;
+        pred_h.insert(graph.from_index(idx), p);
     }
     let sigma = sigma_h;
     let predecessors = pred_h;
