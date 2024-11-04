@@ -280,11 +280,11 @@ fn _accumulate_vertices<G>(
     let mut delta = vec![0.0; max_index];
     for w in &path_calc.verts_sorted_by_distance {
         let iw = graph.to_index(*w);
-        let coeff = (1.0 + delta[iw]) / path_calc.sigma[w];
-        let p_w = path_calc.predecessors.get(w).unwrap();
-        for v in p_w {
-            let iv = graph.to_index(*v);
-            delta[iv] += path_calc.sigma[v] * coeff;
+        let coeff = (1.0 + delta[iw]) / path_calc.sigma[iw];
+        let p_w = path_calc.predecessors.get(iw).unwrap();
+        for iv in p_w {
+            //let iv = graph.to_index(*v);
+            delta[*iv] += path_calc.sigma[*iv] * coeff;
         }
     }
     let mut betweenness = locked_betweenness.write().unwrap();
@@ -342,8 +342,8 @@ where
     <G as GraphBase>::NodeId: std::cmp::Eq + Hash,
 {
     verts_sorted_by_distance: Vec<G::NodeId>,
-    predecessors: HashMap<G::NodeId, Vec<G::NodeId>>,
-    sigma: HashMap<G::NodeId, f64>,
+    predecessors: Vec<Vec<usize>>,
+    sigma: Vec<f64>,
 }
 fn shortest_path_for_centrality<G>(graph: G, node_s: &G::NodeId) -> ShortestPathData<G>
 where
@@ -353,7 +353,7 @@ where
     let c = graph.node_count();
     let max_index = graph.node_bound();
     let mut verts_sorted_by_distance: Vec<G::NodeId> = Vec::with_capacity(c); // a stack
-    let mut predecessors: Vec<Vec<G::NodeId>> = vec![Vec::new(); max_index];
+    let mut predecessors: Vec<Vec<usize>> = vec![Vec::new(); max_index];
     let mut sigma: Vec<f64> = vec![0.; max_index];
     let mut distance: Vec<i64> = vec![-1; max_index];
     #[allow(non_snake_case)]
@@ -374,23 +374,10 @@ where
             }
             if distance[w_idx] == distance_v + 1 {
                 sigma[w_idx] += sigma[v_idx];
-                predecessors[w_idx].push(v);
+                predecessors[w_idx].push(v_idx);
             }
         }
     }
-    let mut sigma_h = HashMap::with_capacity(c);
-    for (idx, s) in sigma.iter().enumerate() {
-        sigma_h.insert(graph.from_index(idx), *s);
-    }
-    let mut pred_h = HashMap::with_capacity(c);
-    let mut idx = predecessors.len();
-
-    while let Some(p) = predecessors.pop() {
-        idx -= 1;
-        pred_h.insert(graph.from_index(idx), p);
-    }
-    let sigma = sigma_h;
-    let predecessors = pred_h;
     verts_sorted_by_distance.reverse(); // will be effectively popping from the stack
     ShortestPathData {
         verts_sorted_by_distance,
