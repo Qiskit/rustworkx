@@ -283,7 +283,6 @@ fn _accumulate_vertices<G>(
         let coeff = (1.0 + delta[iw]) / path_calc.sigma[iw];
         let p_w = path_calc.predecessors.get(iw).unwrap();
         for iv in p_w {
-            //let iv = graph.to_index(*v);
             delta[*iv] += path_calc.sigma[*iv] * coeff;
         }
     }
