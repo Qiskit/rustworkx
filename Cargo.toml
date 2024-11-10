@@ -62,7 +62,7 @@ smallvec = { version = "1.0", features = ["union"] }
 rustworkx-core = { path = "rustworkx-core", version = "=0.16.0" }
 
 [dependencies.pyo3]
-version = "0.22.5"
+version = "0.22.6"
 features = ["abi3-py39", "extension-module", "hashbrown", "num-bigint", "num-complex", "indexmap", "py-clone"]
 
 [dependencies.sprs]
