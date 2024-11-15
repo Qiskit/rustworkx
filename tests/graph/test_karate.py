@@ -43,12 +43,12 @@ class TestKarate(unittest.TestCase):
         with tempfile.NamedTemporaryFile("wt") as fd:
             fd.write(karate_xml)
             fd.flush()
-            nx_graph = rx.read_graphml(fd.name)[0]
+            expected = rx.read_graphml(fd.name)[0]
 
         graph = rx.generators.karate_club_graph()
 
         self.assertTrue(
-            rx.is_isomorphic(graph, nx_graph, node_matcher=node_matcher, edge_matcher=edge_matcher)
+            rx.is_isomorphic(graph, expected, node_matcher=node_matcher, edge_matcher=edge_matcher)
         )
 
 
