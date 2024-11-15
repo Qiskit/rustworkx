@@ -124,6 +124,29 @@ class TestGraphML(unittest.TestCase):
             ]
             self.assertGraphEqual(graph, nodes, edges, directed=False)
 
+    def test_gzipped_force(self):
+        graph_xml = self.graphml_xml_example()
+
+        ## Test reading a graphmlz
+        with tempfile.NamedTemporaryFile("w+b") as fd:
+            #fd.write(graph_xml)
+            fd.flush()
+            with gzip.open(fd.name, "wt") as wf:
+                wf.write(graph_xml)
+            
+            graphml = rustworkx.read_graphml(fd.name, compression="gzip")
+            graph = graphml[0]
+            nodes = [
+                {"id": "n0", "color": "blue"},
+                {"id": "n1", "color": "yellow"},
+                {"id": "n2", "color": "green"},
+            ]
+            edges = [
+                ("n0", "n1", {"fidelity": 0.98}),
+                ("n0", "n2", {"fidelity": 0.95}),
+            ]
+            self.assertGraphEqual(graph, nodes, edges, directed=False)
+
     def test_multiple_graphs_in_single_file(self):
         graph_xml = self.HEADER.format(
             """

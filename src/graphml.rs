@@ -692,16 +692,17 @@ impl GraphML {
 
     /// Read a graph from a file in the GraphML format
     /// If the the file extension is "graphmlz" or "gz", decompress it on the fly
-    fn from_file<P: AsRef<Path>>(path: P) -> Result<GraphML, Error> {
+    fn from_file<P: AsRef<Path>>(path: P, compression: &str) -> Result<GraphML, Error> {
         let extension = path.as_ref().extension().unwrap_or(OsStr::new(""));
 
-        let graph: Result<GraphML, Error> = if extension.eq("graphmlz") || extension.eq("gz") {
-            let reader = Self::open_file_gzip(path)?;
-            Self::read_graph_from_reader(reader)
-        } else {
-            let reader = Reader::from_file(path)?;
-            Self::read_graph_from_reader(reader)
-        };
+        let graph: Result<GraphML, Error> =
+            if extension.eq("graphmlz") || extension.eq("gz") || compression.eq("gzip") {
+                let reader = Self::open_file_gzip(path)?;
+                Self::read_graph_from_reader(reader)
+            } else {
+                let reader = Reader::from_file(path)?;
+                Self::read_graph_from_reader(reader)
+            };
 
         graph
     }
@@ -731,9 +732,9 @@ impl GraphML {
 /// :rtype: list[Union[PyGraph, PyDiGraph]]
 /// :raises RuntimeError: when an error is encountered while parsing the GraphML file.
 #[pyfunction]
-#[pyo3(text_signature = "(path, /)")]
-pub fn read_graphml(py: Python, path: &str) -> PyResult<Vec<PyObject>> {
-    let graphml = GraphML::from_file(path)?;
+#[pyo3(signature=(path, compression=""),text_signature = "(path, compression=\"\", /)")]
+pub fn read_graphml(py: Python, path: &str, compression: &str) -> PyResult<Vec<PyObject>> {
+    let graphml = GraphML::from_file(path, compression)?;
 
     let mut out = Vec::new();
     for graph in graphml.graphs {
