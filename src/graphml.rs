@@ -530,7 +530,7 @@ impl GraphML {
     }
     /// Open file compressed with gzip, using the GzDecoder
     /// Returns a quick_xml Reader instance
-    fn open_file_gzip<P: AsRef<Path>>( ath: P) -> Result<Reader<BufReader<GzDecoder<BufReader<File>>>>,quick_xml::Error>{
+    fn open_file_gzip<P: AsRef<Path>>(path: P) -> Result<Reader<BufReader<GzDecoder<BufReader<File>>>>,quick_xml::Error>{
         let file = File::open(path)?;
         let reader = BufReader::new(file);
         let gzip_reader = BufReader::new(GzDecoder::new(reader));
@@ -546,7 +546,7 @@ impl GraphML {
     fn read_graph_from_reader<R: BufRead>(mut reader: Reader<R>)-> Result<GraphML, Error>{
         let mut graphml = GraphML::default();
 
-        let mut buf: Vec<_> = Vec::new();
+        let mut buf = Vec::new();
         let mut state = State::Start;
         let mut domain_of_last_key = Domain::Node;
         let mut last_data_key = String::new();
