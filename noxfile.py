@@ -24,7 +24,7 @@ stubs_deps = [
 
 def install_rustworkx(session):
     session.install(*deps)
-    session.install(".", "-c", "constraints.txt")
+    session.install(".[all]", "-c", "constraints.txt")
 
 # We define a common base such that -e test triggers a test with the current
 # Python version of the interpreter and -e test_with_version launches
