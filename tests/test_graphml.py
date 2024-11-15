@@ -56,7 +56,7 @@ class TestGraphML(unittest.TestCase):
             fd.flush()
             with self.assertRaises(Exception):
                 rustworkx.read_graphml(fd.name)
-    
+
     def graphml_xml_example(self):
         return self.HEADER.format(
             """
@@ -108,7 +108,7 @@ class TestGraphML(unittest.TestCase):
             fd.flush()
             with gzip.open(fd.name, "wt") as wf:
                 wf.write(graph_xml)
-            
+
             graphml = rustworkx.read_graphmlz(fd.name)
             graph = graphml[0]
             nodes = [
