@@ -13,7 +13,6 @@
 #![allow(clippy::borrow_as_ptr)]
 
 use std::convert::From;
-use std::ffi::OsStr;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
 use std::iter::FromIterator;
@@ -691,19 +690,16 @@ impl GraphML {
     }
 
     /// Read a graph from a file in the GraphML format
-    /// If the the file extension is "graphmlz" or "gz", decompress it on the fly
     fn from_file<P: AsRef<Path>>(path: P) -> Result<GraphML, Error> {
-        let extension = path.as_ref().extension().unwrap_or(OsStr::new(""));
+        let reader = Reader::from_file(path)?;
+        Self::read_graph_from_reader(reader)
+    }
 
-        let graph: Result<GraphML, Error> = if extension.eq("graphmlz") || extension.eq("gz") {
-            let reader = Self::open_file_gzip(path)?;
-            Self::read_graph_from_reader(reader)
-        } else {
-            let reader = Reader::from_file(path)?;
-            Self::read_graph_from_reader(reader)
-        };
+    /// Read a graph from a file in the GraphML gzipped format
+    fn from_gzip_file<P: AsRef<Path>>(path: P) -> Result<GraphML, Error> {
+        let reader = Self::open_file_gzip(path)?;
 
-        graph
+        Self::read_graph_from_reader(reader)
     }
 }
 
@@ -734,6 +730,42 @@ impl GraphML {
 #[pyo3(text_signature = "(path, /)")]
 pub fn read_graphml(py: Python, path: &str) -> PyResult<Vec<PyObject>> {
     let graphml = GraphML::from_file(path)?;
+
+    let mut out = Vec::new();
+    for graph in graphml.graphs {
+        out.push(graph.into_py(py))
+    }
+
+    Ok(out)
+}
+
+/// Read a list of graphs from a file in compressed GraphML format (with DEFLATE compression).
+///
+/// GraphML is a comprehensive and easy-to-use file format for graphs. It consists
+/// of a language core to describe the structural properties of a graph and a flexible
+/// extension mechanism to add application-specific data.
+///
+/// For more information see:
+/// http://graphml.graphdrawing.org/
+///
+/// .. note::
+///
+///     This implementation does not support mixed graphs (directed and unidirected edges together),
+///     hyperedges, nested graphs, or ports.
+///
+/// .. note::
+///
+///     GraphML attributes with `graph` domain are stored in :attr:`~.PyGraph.attrs` field.
+///
+/// :param str path: The path of the input file to read.
+///
+/// :return: A list of graphs parsed from GraphML file.
+/// :rtype: list[Union[PyGraph, PyDiGraph]]
+/// :raises RuntimeError: when an error is encountered while parsing the GraphML file.
+#[pyfunction]
+#[pyo3(text_signature = "(path, /)")]
+pub fn read_graphmlz(py: Python, path: &str) -> PyResult<Vec<PyObject>> {
+    let graphml = GraphML::from_gzip_file(path)?;
 
     let mut out = Vec::new();
     for graph in graphml.graphs {

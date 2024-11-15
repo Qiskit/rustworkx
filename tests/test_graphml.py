@@ -105,13 +105,11 @@ class TestGraphML(unittest.TestCase):
 
         ## Test reading a graphmlz
         with tempfile.NamedTemporaryFile("w+b") as fd:
-            #fd.write(graph_xml)
             fd.flush()
-            newname = fd.name+".gz"
-            with gzip.open(newname, "wt") as wf:
+            with gzip.open(fd.name, "wt") as wf:
                 wf.write(graph_xml)
             
-            graphml = rustworkx.read_graphml(newname)
+            graphml = rustworkx.read_graphmlz(fd.name)
             graph = graphml[0]
             nodes = [
                 {"id": "n0", "color": "blue"},
