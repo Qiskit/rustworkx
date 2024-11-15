@@ -546,6 +546,10 @@ macro_rules! custom_vec_iter_impl {
                 Python::with_gil(|py| Ok(format!("{}{}", stringify!($name), self.$data.str(py)?)))
             }
 
+            fn __repr__(&self) -> PyResult<String> {
+                self.__str__()
+            }
+
             fn __hash__(&self) -> PyResult<u64> {
                 let mut hasher = DefaultHasher::new();
                 Python::with_gil(|py| PyHash::hash(&self.$data, py, &mut hasher))?;
