@@ -13,8 +13,8 @@
 #![allow(clippy::borrow_as_ptr)]
 
 use std::convert::From;
-use std::fs::File;
 use std::ffi::OsStr;
+use std::fs::File;
 use std::io::{BufRead, BufReader};
 use std::iter::FromIterator;
 use std::num::{ParseFloatError, ParseIntError};
@@ -530,7 +530,9 @@ impl GraphML {
     }
     /// Open file compressed with gzip, using the GzDecoder
     /// Returns a quick_xml Reader instance
-    fn open_file_gzip<P: AsRef<Path>>(path: P) -> Result<Reader<BufReader<GzDecoder<BufReader<File>>>>,quick_xml::Error>{
+    fn open_file_gzip<P: AsRef<Path>>(
+        path: P,
+    ) -> Result<Reader<BufReader<GzDecoder<BufReader<File>>>>, quick_xml::Error> {
         let file = File::open(path)?;
         let reader = BufReader::new(file);
         let gzip_reader = BufReader::new(GzDecoder::new(reader));
@@ -543,7 +545,7 @@ impl GraphML {
     /// accept only valid GraphML syntax (e.g a `<data>` element should
     /// be nested inside a `<node>` element) where the internal state changes
     /// after handling each quick_xml event.
-    fn read_graph_from_reader<R: BufRead>(mut reader: Reader<R>)-> Result<GraphML, Error>{
+    fn read_graph_from_reader<R: BufRead>(mut reader: Reader<R>) -> Result<GraphML, Error> {
         let mut graphml = GraphML::default();
 
         let mut buf = Vec::new();
@@ -694,14 +696,14 @@ impl GraphML {
         let extension = path.as_ref().extension().unwrap_or(OsStr::new(""));
         let graph: Result<GraphML, Error>;
 
-        if extension.eq("graphmlz") || extension.eq("gz"){
+        if extension.eq("graphmlz") || extension.eq("gz") {
             let reader = Self::open_file_gzip(path)?;
             graph = Self::read_graph_from_reader(reader);
-        } else{
+        } else {
             let reader = Reader::from_file(path)?;
             graph = Self::read_graph_from_reader(reader);
         }
-        
+
         graph
     }
 }
