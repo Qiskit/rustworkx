@@ -1,0 +1,4 @@
+---
+features:
+  - |
+    Added the ability to read GraphML files that are compressed using gzip, with function :func:`~rustworkx.read_graphmlz`.
