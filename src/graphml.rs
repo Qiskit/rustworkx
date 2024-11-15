@@ -694,15 +694,14 @@ impl GraphML {
     /// If the the file extension is "graphmlz" or "gz", decompress it on the fly
     fn from_file<P: AsRef<Path>>(path: P) -> Result<GraphML, Error> {
         let extension = path.as_ref().extension().unwrap_or(OsStr::new(""));
-        let graph: Result<GraphML, Error>;
 
-        if extension.eq("graphmlz") || extension.eq("gz") {
+        let graph: Result<GraphML, Error> = if extension.eq("graphmlz") || extension.eq("gz") {
             let reader = Self::open_file_gzip(path)?;
-            graph = Self::read_graph_from_reader(reader);
+            Self::read_graph_from_reader(reader)
         } else {
             let reader = Reader::from_file(path)?;
-            graph = Self::read_graph_from_reader(reader);
-        }
+            Self::read_graph_from_reader(reader)
+        };
 
         graph
     }
