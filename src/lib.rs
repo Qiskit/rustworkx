@@ -612,7 +612,6 @@ fn rustworkx(py: Python<'_>, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(connected_subgraphs))?;
     m.add_wrapped(wrap_pyfunction!(is_planar))?;
     m.add_wrapped(wrap_pyfunction!(read_graphml))?;
-    m.add_wrapped(wrap_pyfunction!(read_graphmlz))?;
     m.add_wrapped(wrap_pyfunction!(digraph_node_link_json))?;
     m.add_wrapped(wrap_pyfunction!(graph_node_link_json))?;
     m.add_wrapped(wrap_pyfunction!(from_node_link_json_file))?;
