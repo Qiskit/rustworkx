@@ -13,11 +13,15 @@
 #![allow(clippy::borrow_as_ptr)]
 
 use std::convert::From;
+use std::fs::File;
+use std::ffi::OsStr;
+use std::io::{BufRead, BufReader};
 use std::iter::FromIterator;
 use std::num::{ParseFloatError, ParseIntError};
 use std::path::Path;
 use std::str::ParseBoolError;
 
+use flate2::bufread::GzDecoder;
 use hashbrown::HashMap;
 use indexmap::IndexMap;
 
@@ -524,19 +528,25 @@ impl GraphML {
 
         Ok(())
     }
+    /// Open file compressed with gzip, using the GzDecoder
+    /// Returns a quick_xml Reader instance
+    fn open_file_gzip<P: AsRef<Path>>( ath: P) -> Result<Reader<BufReader<GzDecoder<BufReader<File>>>>,quick_xml::Error>{
+        let file = File::open(path)?;
+        let reader = BufReader::new(file);
+        let gzip_reader = BufReader::new(GzDecoder::new(reader));
+        Ok(Reader::from_reader(gzip_reader))
+    }
 
-    /// Parse a file written in GraphML format.
+    /// Parse a file written in GraphML format from a BufReader
     ///
     /// The implementation is based on a state machine in order to
     /// accept only valid GraphML syntax (e.g a `<data>` element should
     /// be nested inside a `<node>` element) where the internal state changes
     /// after handling each quick_xml event.
-    fn from_file<P: AsRef<Path>>(path: P) -> Result<GraphML, Error> {
+    fn read_graph_from_reader<R: BufRead>(mut reader: Reader<R>)-> Result<GraphML, Error>{
         let mut graphml = GraphML::default();
 
-        let mut buf = Vec::new();
-        let mut reader = Reader::from_file(path)?;
-
+        let mut buf: Vec<_> = Vec::new();
         let mut state = State::Start;
         let mut domain_of_last_key = Domain::Node;
         let mut last_data_key = String::new();
@@ -676,6 +686,23 @@ impl GraphML {
         }
 
         Ok(graphml)
+    }
+
+    /// Read a graph from a file in the GraphML format
+    /// If the the file extension is "graphmlz" or "gz", decompress it on the fly
+    fn from_file<P: AsRef<Path>>(path: P) -> Result<GraphML, Error> {
+        let extension = path.as_ref().extension().unwrap_or(OsStr::new(""));
+        let graph: Result<GraphML, Error>;
+
+        if extension.eq("graphmlz") || extension.eq("gz"){
+            let reader = Self::open_file_gzip(path)?;
+            graph = Self::read_graph_from_reader(reader);
+        } else{
+            let reader = Reader::from_file(path)?;
+            graph = Self::read_graph_from_reader(reader);
+        }
+        
+        graph
     }
 }
 
