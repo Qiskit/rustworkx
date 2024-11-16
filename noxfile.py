@@ -19,7 +19,7 @@ lint_deps = [
 
 stubs_deps = [
     "mypy==1.11.2",
-    "typing-extensions",
+    "typing-extensions>=4.4",
 ]
 
 def install_rustworkx(session):

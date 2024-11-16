@@ -11,7 +11,6 @@
 
 from .visit import BFSVisitor, DFSVisitor, DijkstraVisitor
 from typing import (
-    TypeVar,
     Callable,
     final,
     Any,
@@ -35,9 +34,15 @@ from rustworkx import generators  # noqa
 from typing_extensions import Self
 
 import numpy as np
+import sys
 
-_S = TypeVar("_S")
-_T = TypeVar("_T")
+if sys.version_info >= (3, 13):
+    from typing import TypeVar
+else:
+    from typing_extensions import TypeVar
+
+_S = TypeVar("_S", default=Any)
+_T = TypeVar("_T", default=Any)
 
 class DAGHasCycle(Exception): ...
 class DAGWouldCycle(Exception): ...
