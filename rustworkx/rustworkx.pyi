@@ -1039,7 +1039,7 @@ def graph_union(
 
 # Iterators
 
-_T_co = TypeVar("_T_co", covariant=True)
+_T_co = TypeVar("_T_co", covariant=True, default=Any)
 
 class _RustworkxCustomVecIter(Generic[_T_co], Sequence[_T_co], ABC):
     def __init__(self) -> None: ...
