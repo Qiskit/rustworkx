@@ -50,12 +50,7 @@ impl PySimpleCycleIter {
                     graph_clone.graph.remove_edge(edge_index);
                 }
             }
-            let self_cycles = if self_cycles_vec.is_empty() {
-                None
-            } else {
-                Some(self_cycles_vec)
-            };
-            let iter = johnson_simple_cycles(&graph_clone.graph, self_cycles);
+            let iter = johnson_simple_cycles(&graph_clone.graph, Some(self_cycles_vec));
             let out_graph = Py::new(py, graph_clone)?;
             Ok(PySimpleCycleIter {
                 graph_clone: out_graph,
