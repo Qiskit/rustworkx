@@ -92,8 +92,11 @@ pub fn cycle_basis(graph: &graph::PyGraph, root: Option<usize>) -> Vec<Vec<usize
 /// [3] https://github.com/networkx/networkx/blob/networkx-2.8.4/networkx/algorithms/cycles.py#L98-L222
 #[pyfunction]
 #[pyo3(text_signature = "(graph, /)")]
-pub fn simple_cycles(graph: &digraph::PyDiGraph) -> johnson_simple_cycles::SimpleCycleIter {
-    johnson_simple_cycles::SimpleCycleIter::new(graph)
+pub fn simple_cycles(
+    graph: Bound<digraph::PyDiGraph>,
+    py: Python,
+) -> PyResult<johnson_simple_cycles::PySimpleCycleIter> {
+    johnson_simple_cycles::PySimpleCycleIter::new(py, graph)
 }
 
 /// Compute the strongly connected components for a directed graph
