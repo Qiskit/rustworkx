@@ -18,7 +18,7 @@ use pyo3::Python;
 
 use crate::digraph::PyDiGraph;
 use crate::iterators::CentralityMapping;
-use crate::{weight_callable, FailedToConverge};
+use crate::{export_rustworkx_functions, weight_callable, FailedToConverge};
 
 use hashbrown::HashMap;
 use ndarray::prelude::*;
@@ -28,6 +28,8 @@ use petgraph::visit::IntoEdgeReferences;
 use petgraph::visit::NodeIndexable;
 use rustworkx_core::dictmap::*;
 use sprs::{CsMat, TriMat};
+
+export_rustworkx_functions!(pagerank, hits);
 
 /// Computes the PageRank of the nodes in a :class:`~PyDiGraph`.
 ///

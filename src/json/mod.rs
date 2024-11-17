@@ -15,11 +15,18 @@ mod node_link_data;
 use std::fs::File;
 use std::io::BufReader;
 
-use crate::{digraph, graph, JSONDeserializationError, StablePyGraph};
+use crate::{digraph, export_rustworkx_functions, graph, JSONDeserializationError, StablePyGraph};
 use petgraph::{algo, Directed, Undirected};
 
 use pyo3::prelude::*;
 use pyo3::Python;
+
+export_rustworkx_functions!(
+    digraph_node_link_json,
+    graph_node_link_json,
+    from_node_link_json_file,
+    parse_node_link_json
+);
 
 /// Parse a node-link format JSON file to generate a graph
 ///
