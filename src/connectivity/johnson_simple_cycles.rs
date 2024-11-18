@@ -10,7 +10,7 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-use ahash::RandomState;
+use foldhash::fast::RandomState;
 use hashbrown::{HashMap, HashSet};
 use indexmap::IndexSet;
 
@@ -141,7 +141,7 @@ fn unblock(
 #[allow(clippy::too_many_arguments)]
 fn process_stack(
     start_node: NodeIndex,
-    stack: &mut Vec<(NodeIndex, IndexSet<NodeIndex, ahash::RandomState>)>,
+    stack: &mut Vec<(NodeIndex, IndexSet<NodeIndex, foldhash::fast::RandomState>)>,
     path: &mut Vec<NodeIndex>,
     closed: &mut HashSet<NodeIndex>,
     blocked: &mut HashSet<NodeIndex>,
@@ -165,7 +165,7 @@ fn process_stack(
                     next_node,
                     subgraph
                         .neighbors(next_node)
-                        .collect::<IndexSet<NodeIndex, ahash::RandomState>>(),
+                        .collect::<IndexSet<NodeIndex, foldhash::fast::RandomState>>(),
                 ));
                 closed.remove(&next_node);
                 blocked.insert(next_node);
@@ -206,7 +206,7 @@ impl SimpleCycleIter {
             }));
         }
         // Restore previous state if it exists
-        let mut stack: Vec<(NodeIndex, IndexSet<NodeIndex, ahash::RandomState>)> =
+        let mut stack: Vec<(NodeIndex, IndexSet<NodeIndex, foldhash::fast::RandomState>)> =
             std::mem::take(&mut slf.stack);
         let mut path: Vec<NodeIndex> = std::mem::take(&mut slf.path);
         let mut closed: HashSet<NodeIndex> = std::mem::take(&mut slf.closed);
@@ -268,7 +268,7 @@ impl SimpleCycleIter {
                 slf.start_node,
                 subgraph
                     .neighbors(slf.start_node)
-                    .collect::<IndexSet<NodeIndex, ahash::RandomState>>(),
+                    .collect::<IndexSet<NodeIndex, foldhash::fast::RandomState>>(),
             )];
             if let Some(res) = process_stack(
                 slf.start_node,
