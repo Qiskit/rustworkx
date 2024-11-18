@@ -50,6 +50,7 @@ from .rustworkx import digraph_closeness_centrality as digraph_closeness_central
 from .rustworkx import graph_closeness_centrality as graph_closeness_centrality
 from .rustworkx import digraph_katz_centrality as digraph_katz_centrality
 from .rustworkx import graph_katz_centrality as graph_katz_centrality
+from .rustworkx import graph_degree_centrality as graph_degree_centrality
 from .rustworkx import graph_greedy_color as graph_greedy_color
 from .rustworkx import graph_greedy_edge_color as graph_greedy_edge_color
 from .rustworkx import graph_is_bipartite as graph_is_bipartite

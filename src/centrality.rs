@@ -165,6 +165,102 @@ pub fn digraph_betweenness_centrality(
     }
 }
 
+/// Compute the degree centrality for nodes in a PyGraph.
+///
+/// Degree centrality assigns an importance score based simply on the number of edges held by each node.
+///
+/// :param PyGraph graph: The input graph
+///
+/// :returns: a read-only dict-like object whose keys are the node indices and values are the
+///      centrality score for each node.
+/// :rtype: CentralityMapping
+#[pyfunction]
+#[pyo3(text_signature = "(graph, /)")]
+pub fn graph_degree_centrality(graph: &graph::PyGraph) -> PyResult<CentralityMapping> {
+    let centrality = centrality::graph_degree_centrality(&graph.graph, None);
+
+    Ok(CentralityMapping {
+        centralities: centrality
+            .into_iter()
+            .enumerate()
+            .map(|(i, v)| (i, v))
+            .collect(),
+    })
+}
+
+/// Compute the degree centrality for nodes in a PyDiGraph.
+///
+/// Degree centrality assigns an importance score based simply on the number of edges held by each node.
+/// This function computes the TOTAL (in + out) degree centrality.
+///
+/// :param PyDiGraph graph: The input graph
+///
+/// :returns: a read-only dict-like object whose keys are the node indices and values are the
+///      centrality score for each node.
+/// :rtype: CentralityMapping
+#[pyfunction]
+#[pyo3(text_signature = "(graph, /)")]
+pub fn digraph_degree_centrality(graph: &digraph::PyDiGraph) -> PyResult<CentralityMapping> {
+    let centrality = centrality::graph_degree_centrality(&graph.graph, None);
+
+    Ok(CentralityMapping {
+        centralities: centrality
+            .into_iter()
+            .enumerate()
+            .map(|(i, v)| (i, v))
+            .collect(),
+    })
+}
+/// Compute the in-degree centrality for nodes in a PyDiGraph.
+///
+/// In-degree centrality assigns an importance score based on the number of incoming edges
+/// to each node.
+///
+/// :param PyDiGraph graph: The input graph
+///
+/// :returns: a read-only dict-like object whose keys are the node indices and values are the
+///      centrality score for each node.
+/// :rtype: CentralityMapping
+#[pyfunction]
+#[pyo3(text_signature = "(graph, /)")]
+pub fn digraph_in_degree_centrality(graph: &digraph::PyDiGraph) -> PyResult<CentralityMapping> {
+    let centrality =
+        centrality::graph_degree_centrality(&graph.graph, Some(petgraph::Direction::Incoming));
+
+    Ok(CentralityMapping {
+        centralities: centrality
+            .into_iter()
+            .enumerate()
+            .map(|(i, v)| (i, v))
+            .collect(),
+    })
+}
+
+/// Compute the out-degree centrality for nodes in a PyDiGraph.
+///
+/// Out-degree centrality assigns an importance score based on the number of outgoing edges
+/// from each node.
+///
+/// :param PyDiGraph graph: The input graph
+///
+/// :returns: a read-only dict-like object whose keys are the node indices and values are the
+///      centrality score for each node.
+/// :rtype: CentralityMapping
+#[pyfunction]
+#[pyo3(text_signature = "(graph, /)")]
+pub fn digraph_out_degree_centrality(graph: &digraph::PyDiGraph) -> PyResult<CentralityMapping> {
+    let centrality =
+        centrality::graph_degree_centrality(&graph.graph, Some(petgraph::Direction::Outgoing));
+
+    Ok(CentralityMapping {
+        centralities: centrality
+            .into_iter()
+            .enumerate()
+            .map(|(i, v)| (i, v))
+            .collect(),
+    })
+}
+
 /// Compute the closeness centrality of each node in a :class:`~.PyGraph` object.
 ///
 /// The closeness centrality of a node :math:`u` is defined as the
