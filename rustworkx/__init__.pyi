@@ -488,6 +488,9 @@ def betweenness_centrality(
 def closeness_centrality(
     graph: PyGraph[_S, _T] | PyDiGraph[_S, _T], wf_improved: bool = ...
 ) -> CentralityMapping: ...
+def degree_centrality(
+    graph: PyGraph[_S, _T] | PyDiGraph[_S, _T],
+) -> CentralityMapping: ...
 def edge_betweenness_centrality(
     graph: PyGraph[_S, _T] | PyDiGraph[_S, _T],
     normalized: bool = ...,

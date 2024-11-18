@@ -174,8 +174,8 @@ pub fn digraph_betweenness_centrality(
 /// :returns: a read-only dict-like object whose keys are the node indices and values are the
 ///      centrality score for each node.
 /// :rtype: CentralityMapping
-#[pyfunction]
-#[pyo3(text_signature = "(graph, /)")]
+#[pyfunction(signature = (graph,))]
+#[pyo3(text_signature = "(graph, /,)")]
 pub fn graph_degree_centrality(graph: &graph::PyGraph) -> PyResult<CentralityMapping> {
     let centrality = centrality::degree_centrality(&graph.graph, None);
 
@@ -198,8 +198,8 @@ pub fn graph_degree_centrality(graph: &graph::PyGraph) -> PyResult<CentralityMap
 /// :returns: a read-only dict-like object whose keys are the node indices and values are the
 ///      centrality score for each node.
 /// :rtype: CentralityMapping
-#[pyfunction]
-#[pyo3(text_signature = "(graph, /)")]
+#[pyfunction(signature = (graph,))]
+#[pyo3(text_signature = "(graph, /,)")]
 pub fn digraph_degree_centrality(graph: &digraph::PyDiGraph) -> PyResult<CentralityMapping> {
     let centrality = centrality::degree_centrality(&graph.graph, None);
 
@@ -221,7 +221,7 @@ pub fn digraph_degree_centrality(graph: &digraph::PyDiGraph) -> PyResult<Central
 /// :returns: a read-only dict-like object whose keys are the node indices and values are the
 ///      centrality score for each node.
 /// :rtype: CentralityMapping
-#[pyfunction]
+#[pyfunction(signature = (graph,))]
 #[pyo3(text_signature = "(graph, /)")]
 pub fn in_degree_centrality(graph: &digraph::PyDiGraph) -> PyResult<CentralityMapping> {
     let centrality =
@@ -246,8 +246,8 @@ pub fn in_degree_centrality(graph: &digraph::PyDiGraph) -> PyResult<CentralityMa
 /// :returns: a read-only dict-like object whose keys are the node indices and values are the
 ///      centrality score for each node.
 /// :rtype: CentralityMapping
-#[pyfunction]
-#[pyo3(text_signature = "(graph, /)")]
+#[pyfunction(signature = (graph,))]
+#[pyo3(text_signature = "(graph, /,)")]
 pub fn out_degree_centrality(graph: &digraph::PyDiGraph) -> PyResult<CentralityMapping> {
     let centrality =
         centrality::degree_centrality(&graph.graph, Some(petgraph::Direction::Outgoing));
