@@ -1185,6 +1185,20 @@ def closeness_centrality(graph, wf_improved=True):
 
 
 @_rustworkx_dispatch
+def degree_centrality(graph):
+    r"""Compute the degree centrality of each node in a graph object.
+
+    :param graph: The input graph. Can either be a
+        :class:`~rustworkx.PyGraph` or :class:`~rustworkx.PyDiGraph`.
+
+    :returns: a read-only dict-like object whose keys are edges and values are the
+        degree centrality score for each node.
+    :rtype: CentralityMapping
+    """
+    raise TypeError("Invalid input type %s for graph" % type(graph))
+
+
+@_rustworkx_dispatch
 def edge_betweenness_centrality(graph, normalized=True, parallel_threshold=50):
     r"""Compute the edge betweenness centrality of all edges in a graph.
 

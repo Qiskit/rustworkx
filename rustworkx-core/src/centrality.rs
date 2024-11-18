@@ -335,6 +335,74 @@ fn accumulate_edges<G>(
         }
     }
 }
+/// Compute the degree centrality of all nodes in a graph.
+///
+/// For undirected graphs, this calculates the normalized degree for each node.
+/// For directed graphs, this calculates the normalized out-degree for each node.
+///
+/// Arguments:
+///
+/// * `graph` - The graph object to calculate degree centrality for
+///
+/// # Example
+/// ```rust
+/// use rustworkx_core::petgraph::graph::{UnGraph, DiGraph};
+/// use rustworkx_core::centrality::degree_centrality;
+///
+/// // Undirected graph example
+/// let graph = UnGraph::<i32, ()>::from_edges(&[
+///     (0, 1), (1, 2), (2, 3), (3, 0)
+/// ]);
+/// let centrality = degree_centrality(&graph, None);
+///
+/// // Directed graph example
+/// let digraph = DiGraph::<i32, ()>::from_edges(&[
+///     (0, 1), (1, 2), (2, 3), (3, 0), (0, 2), (1, 3)
+/// ]);
+/// let centrality = degree_centrality(&digraph, None);
+/// ```
+pub fn degree_centrality<G>(graph: G, direction: Option<petgraph::Direction>) -> Vec<f64>
+where
+    G: NodeIndexable
+        + IntoNodeIdentifiers
+        + IntoNeighbors
+        + IntoNeighborsDirected
+        + NodeCount
+        + GraphProp,
+    G::NodeId: Eq + Hash,
+{
+    let node_count = graph.node_count() as f64;
+    let mut centrality = vec![0.0; graph.node_bound()];
+
+    for node in graph.node_identifiers() {
+        let (degree, normalization) = match (graph.is_directed(), direction) {
+            (true, None) => {
+                let out_degree = graph
+                    .neighbors_directed(node, petgraph::Direction::Outgoing)
+                    .count() as f64;
+                let in_degree = graph
+                    .neighbors_directed(node, petgraph::Direction::Incoming)
+                    .count() as f64;
+                let total = in_degree + out_degree;
+                // Use 2(n-1) normalization only if this is a complete graph
+                let norm = if total == 2.0 * (node_count - 1.0) {
+                    2.0 * (node_count - 1.0)
+                } else {
+                    node_count - 1.0
+                };
+                (total, norm)
+            }
+            (true, Some(dir)) => (
+                graph.neighbors_directed(node, dir).count() as f64,
+                node_count - 1.0,
+            ),
+            (false, _) => (graph.neighbors(node).count() as f64, node_count - 1.0),
+        };
+        centrality[graph.to_index(node)] = degree / normalization;
+    }
+
+    centrality
+}
 
 struct ShortestPathData<G>
 where
