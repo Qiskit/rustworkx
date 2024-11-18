@@ -19,7 +19,7 @@ use pyo3::prelude::*;
 use crate::iterators::NodeIndices;
 use rustworkx_core::connectivity::{johnson_simple_cycles, SimpleCycleIter};
 
-#[pyclass(module = "rustworkx")]
+#[pyclass(module = "rustworkx", name = "SimpleCycleIter")]
 pub struct PySimpleCycleIter {
     graph_clone: Py<PyDiGraph>,
     iter: SimpleCycleIter,
