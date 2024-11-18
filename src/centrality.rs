@@ -177,7 +177,7 @@ pub fn digraph_betweenness_centrality(
 #[pyfunction]
 #[pyo3(text_signature = "(graph, /)")]
 pub fn graph_degree_centrality(graph: &graph::PyGraph) -> PyResult<CentralityMapping> {
-    let centrality = centrality::graph_degree_centrality(&graph.graph, None);
+    let centrality = centrality::degree_centrality(&graph.graph, None);
 
     Ok(CentralityMapping {
         centralities: centrality
@@ -201,7 +201,7 @@ pub fn graph_degree_centrality(graph: &graph::PyGraph) -> PyResult<CentralityMap
 #[pyfunction]
 #[pyo3(text_signature = "(graph, /)")]
 pub fn digraph_degree_centrality(graph: &digraph::PyDiGraph) -> PyResult<CentralityMapping> {
-    let centrality = centrality::graph_degree_centrality(&graph.graph, None);
+    let centrality = centrality::degree_centrality(&graph.graph, None);
 
     Ok(CentralityMapping {
         centralities: centrality
@@ -225,7 +225,7 @@ pub fn digraph_degree_centrality(graph: &digraph::PyDiGraph) -> PyResult<Central
 #[pyo3(text_signature = "(graph, /)")]
 pub fn digraph_in_degree_centrality(graph: &digraph::PyDiGraph) -> PyResult<CentralityMapping> {
     let centrality =
-        centrality::graph_degree_centrality(&graph.graph, Some(petgraph::Direction::Incoming));
+        centrality::degree_centrality(&graph.graph, Some(petgraph::Direction::Incoming));
 
     Ok(CentralityMapping {
         centralities: centrality
@@ -250,7 +250,7 @@ pub fn digraph_in_degree_centrality(graph: &digraph::PyDiGraph) -> PyResult<Cent
 #[pyo3(text_signature = "(graph, /)")]
 pub fn digraph_out_degree_centrality(graph: &digraph::PyDiGraph) -> PyResult<CentralityMapping> {
     let centrality =
-        centrality::graph_degree_centrality(&graph.graph, Some(petgraph::Direction::Outgoing));
+        centrality::degree_centrality(&graph.graph, Some(petgraph::Direction::Outgoing));
 
     Ok(CentralityMapping {
         centralities: centrality

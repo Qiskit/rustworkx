@@ -347,13 +347,13 @@ fn accumulate_edges<G>(
 /// # Example
 /// ```rust
 /// use rustworkx_core::petgraph::graph::{UnGraph, DiGraph};
-/// use rustworkx_core::centrality::graph_degree_centrality;
+/// use rustworkx_core::centrality::degree_centrality;
 ///
 /// // Undirected graph example
 /// let graph = UnGraph::<i32, ()>::from_edges(&[
 ///     (0, 1), (1, 2), (2, 3), (3, 0)
 /// ]);
-/// let centrality = graph_degree_centrality(&graph);
+/// let centrality = degree_centrality(&graph);
 /// for value in centrality {
 ///     assert!((value - 2.0/3.0).abs() < 1e-10);
 /// }
@@ -362,13 +362,13 @@ fn accumulate_edges<G>(
 /// let digraph = DiGraph::<i32, ()>::from_edges(&[
 ///     (0, 1), (1, 2), (2, 3), (3, 0), (0, 2), (1, 3)
 /// ]);
-/// let centrality = graph_degree_centrality(&digraph);
+/// let centrality = degree_centrality(&digraph);
 /// let expected_values = vec![2.0/3.0, 2.0/3.0, 1.0/3.0, 1.0/3.0];
 /// for (i, value) in centrality.iter().enumerate() {
 ///     assert!((value - expected_values[i]).abs() < 1e-10);
 /// }
 /// ```
-pub fn graph_degree_centrality<G>(graph: G, direction: Option<petgraph::Direction>) -> Vec<f64>
+pub fn degree_centrality<G>(graph: G, direction: Option<petgraph::Direction>) -> Vec<f64>
 where
     G: NodeIndexable
         + IntoNodeIdentifiers
