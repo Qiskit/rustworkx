@@ -180,10 +180,10 @@ pub fn graph_degree_centrality(graph: &graph::PyGraph) -> PyResult<CentralityMap
     let centrality = centrality::degree_centrality(&graph.graph, None);
 
     Ok(CentralityMapping {
-        centralities: centrality
-            .into_iter()
-            .enumerate()
-            .map(|(i, v)| (i, v))
+        centralities: graph
+            .graph
+            .node_indices()
+            .map(|i| (i.index(), centrality[i.index()]))
             .collect(),
     })
 }
@@ -204,10 +204,10 @@ pub fn digraph_degree_centrality(graph: &digraph::PyDiGraph) -> PyResult<Central
     let centrality = centrality::degree_centrality(&graph.graph, None);
 
     Ok(CentralityMapping {
-        centralities: centrality
-            .into_iter()
-            .enumerate()
-            .map(|(i, v)| (i, v))
+        centralities: graph
+            .graph
+            .node_indices()
+            .map(|i| (i.index(), centrality[i.index()]))
             .collect(),
     })
 }
@@ -228,10 +228,10 @@ pub fn in_degree_centrality(graph: &digraph::PyDiGraph) -> PyResult<CentralityMa
         centrality::degree_centrality(&graph.graph, Some(petgraph::Direction::Incoming));
 
     Ok(CentralityMapping {
-        centralities: centrality
-            .into_iter()
-            .enumerate()
-            .map(|(i, v)| (i, v))
+        centralities: graph
+            .graph
+            .node_indices()
+            .map(|i| (i.index(), centrality[i.index()]))
             .collect(),
     })
 }
@@ -253,10 +253,10 @@ pub fn out_degree_centrality(graph: &digraph::PyDiGraph) -> PyResult<CentralityM
         centrality::degree_centrality(&graph.graph, Some(petgraph::Direction::Outgoing));
 
     Ok(CentralityMapping {
-        centralities: centrality
-            .into_iter()
-            .enumerate()
-            .map(|(i, v)| (i, v))
+        centralities: graph
+            .graph
+            .node_indices()
+            .map(|i| (i.index(), centrality[i.index()]))
             .collect(),
     })
 }
