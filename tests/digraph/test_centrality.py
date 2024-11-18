@@ -28,7 +28,6 @@ class TestCentralityDiGraph(unittest.TestCase):
             (self.a, self.b, 1),
             (self.b, self.c, 1),
             (self.c, self.d, 1),
-            (self.a, self.c, 1),
         ]
         self.graph.add_edges_from(edge_list)
 
