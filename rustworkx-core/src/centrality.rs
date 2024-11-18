@@ -747,7 +747,7 @@ where
     Ok(None)
 }
 
-/// Compute the Katz centrality of a graƒph
+/// Compute the Katz centrality of a graph
 ///
 /// For details on the Katz centrality refer to:
 ///
