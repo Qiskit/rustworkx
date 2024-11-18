@@ -247,7 +247,7 @@ class TestGraphDegreeCentrality(unittest.TestCase):
         self.graph.add_edges_from(edge_list)
 
     def test_degree_centrality(self):
-        centrality = rustworkx.graph_degree_centrality(self.graph)
+        centrality = rustworkx.degree_centrality(self.graph)
         expected = {
             0: 1 / 3,  # Node A has 1 edge, normalized by (n-1) = 3
             1: 2 / 3,  # Node B has 2 edges
@@ -258,19 +258,19 @@ class TestGraphDegreeCentrality(unittest.TestCase):
 
     def test_degree_centrality_complete_graph(self):
         graph = rustworkx.generators.complete_graph(5)
-        centrality = rustworkx.graph_degree_centrality(graph)
+        centrality = rustworkx.degree_centrality(graph)
         expected = {0: 1.0, 1: 1.0, 2: 1.0, 3: 1.0, 4: 1.0}
         self.assertEqual(expected, centrality)
 
     def test_degree_centrality_star_graph(self):
         graph = rustworkx.generators.star_graph(5)
-        centrality = rustworkx.graph_degree_centrality(graph)
+        centrality = rustworkx.degree_centrality(graph)
         expected = {0: 1.0, 1: 0.25, 2: 0.25, 3: 0.25, 4: 0.25}
         self.assertEqual(expected, centrality)
 
     def test_degree_centrality_empty_graph(self):
         graph = rustworkx.PyGraph()
-        centrality = rustworkx.graph_degree_centrality(graph)
+        centrality = rustworkx.degree_centrality(graph)
         expected = {}
         self.assertEqual(expected, centrality)
 
@@ -286,7 +286,7 @@ class TestGraphDegreeCentrality(unittest.TestCase):
         ]
         graph.add_edges_from(edge_list)
 
-        centrality = rustworkx.graph_degree_centrality(graph)
+        centrality = rustworkx.degree_centrality(graph)
         expected = {
             0: 1.0,  # Node A has 2 edges (counting parallel edges), normalized by (n-1) = 2
             1: 1.5,  # Node B has 3 edges total (2 to A, 1 to C)

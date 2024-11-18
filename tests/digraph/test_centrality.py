@@ -260,7 +260,7 @@ class TestDiGraphDegreeCentrality(unittest.TestCase):
         self.graph.add_edges_from(edge_list)
 
     def test_degree_centrality(self):
-        centrality = rustworkx.digraph_degree_centrality(self.graph)
+        centrality = rustworkx.degree_centrality(self.graph)
         expected = {
             0: 2 / 3,  # 2 total edges / 3
             1: 2 / 3,  # 2 total edges / 3
@@ -294,14 +294,14 @@ class TestDiGraphDegreeCentrality(unittest.TestCase):
 
     def test_degree_centrality_complete_digraph(self):
         graph = rustworkx.generators.directed_complete_graph(5)
-        centrality = rustworkx.digraph_degree_centrality(graph)
+        centrality = rustworkx.degree_centrality(graph)
         expected = {0: 1.0, 1: 1.0, 2: 1.0, 3: 1.0, 4: 1.0}
         for k, v in centrality.items():
             self.assertAlmostEqual(v, expected[k])
 
     def test_degree_centrality_directed_path(self):
         graph = rustworkx.generators.directed_path_graph(5)
-        centrality = rustworkx.digraph_degree_centrality(graph)
+        centrality = rustworkx.degree_centrality(graph)
         expected = {
             0: 1 / 4,  # 1 total edge (out only) / 4
             1: 2 / 4,  # 2 total edges (1 in + 1 out) / 4

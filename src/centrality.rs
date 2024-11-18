@@ -223,7 +223,7 @@ pub fn digraph_degree_centrality(graph: &digraph::PyDiGraph) -> PyResult<Central
 /// :rtype: CentralityMapping
 #[pyfunction]
 #[pyo3(text_signature = "(graph, /)")]
-pub fn digraph_in_degree_centrality(graph: &digraph::PyDiGraph) -> PyResult<CentralityMapping> {
+pub fn in_degree_centrality(graph: &digraph::PyDiGraph) -> PyResult<CentralityMapping> {
     let centrality =
         centrality::degree_centrality(&graph.graph, Some(petgraph::Direction::Incoming));
 
@@ -248,7 +248,7 @@ pub fn digraph_in_degree_centrality(graph: &digraph::PyDiGraph) -> PyResult<Cent
 /// :rtype: CentralityMapping
 #[pyfunction]
 #[pyo3(text_signature = "(graph, /)")]
-pub fn digraph_out_degree_centrality(graph: &digraph::PyDiGraph) -> PyResult<CentralityMapping> {
+pub fn out_degree_centrality(graph: &digraph::PyDiGraph) -> PyResult<CentralityMapping> {
     let centrality =
         centrality::degree_centrality(&graph.graph, Some(petgraph::Direction::Outgoing));
 
