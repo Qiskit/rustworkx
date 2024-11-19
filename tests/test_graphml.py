@@ -12,6 +12,8 @@
 
 import unittest
 import tempfile
+import gzip
+
 import numpy
 
 import rustworkx
@@ -55,8 +57,8 @@ class TestGraphML(unittest.TestCase):
             with self.assertRaises(Exception):
                 rustworkx.read_graphml(fd.name)
 
-    def test_simple(self):
-        graph_xml = self.HEADER.format(
+    def graphml_xml_example(self):
+        return self.HEADER.format(
             """
             <key id="d0" for="node" attr.name="color" attr.type="string">
             <default>yellow</default>
@@ -80,10 +82,59 @@ class TestGraphML(unittest.TestCase):
             """
         )
 
+    def test_simple(self):
+        graph_xml = self.graphml_xml_example()
         with tempfile.NamedTemporaryFile("wt") as fd:
             fd.write(graph_xml)
             fd.flush()
             graphml = rustworkx.read_graphml(fd.name)
+            graph = graphml[0]
+            nodes = [
+                {"id": "n0", "color": "blue"},
+                {"id": "n1", "color": "yellow"},
+                {"id": "n2", "color": "green"},
+            ]
+            edges = [
+                ("n0", "n1", {"fidelity": 0.98}),
+                ("n0", "n2", {"fidelity": 0.95}),
+            ]
+            self.assertGraphEqual(graph, nodes, edges, directed=False)
+
+    def test_gzipped(self):
+        graph_xml = self.graphml_xml_example()
+
+        ## Test reading a graphmlz
+        with tempfile.NamedTemporaryFile("w+b") as fd:
+            fd.flush()
+            newname = fd.name + ".gz"
+            with gzip.open(newname, "wt") as wf:
+                wf.write(graph_xml)
+
+            graphml = rustworkx.read_graphml(newname)
+            graph = graphml[0]
+            nodes = [
+                {"id": "n0", "color": "blue"},
+                {"id": "n1", "color": "yellow"},
+                {"id": "n2", "color": "green"},
+            ]
+            edges = [
+                ("n0", "n1", {"fidelity": 0.98}),
+                ("n0", "n2", {"fidelity": 0.95}),
+            ]
+            self.assertGraphEqual(graph, nodes, edges, directed=False)
+
+    def test_gzipped_force(self):
+        graph_xml = self.graphml_xml_example()
+
+        ## Test reading a graphmlz
+        with tempfile.NamedTemporaryFile("w+b") as fd:
+            # close the file
+            fd.flush()
+            newname = fd.name + ".ext"
+            with gzip.open(newname, "wt") as wf:
+                wf.write(graph_xml)
+
+            graphml = rustworkx.read_graphml(newname, compression="gzip")
             graph = graphml[0]
             nodes = [
                 {"id": "n0", "color": "blue"},
