@@ -732,9 +732,13 @@ impl GraphML {
 /// :rtype: list[Union[PyGraph, PyDiGraph]]
 /// :raises RuntimeError: when an error is encountered while parsing the GraphML file.
 #[pyfunction]
-#[pyo3(signature=(path, compression=""),text_signature = "(path, /, compression=\"\")")]
-pub fn read_graphml(py: Python, path: &str, compression: &str) -> PyResult<Vec<PyObject>> {
-    let graphml = GraphML::from_file(path, compression)?;
+#[pyo3(signature=(path, compression=None),text_signature = "(path, /, compression=\"\")")]
+pub fn read_graphml(
+    py: Python,
+    path: &str,
+    compression: Option<String>,
+) -> PyResult<Vec<PyObject>> {
+    let graphml = GraphML::from_file(path, &compression.unwrap_or_default())?;
 
     let mut out = Vec::new();
     for graph in graphml.graphs {

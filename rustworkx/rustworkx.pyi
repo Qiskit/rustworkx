@@ -633,7 +633,7 @@ def directed_random_bipartite_graph(
 def read_graphml(
     path: str,
     /,
-    compression: str = ...,
+    compression: str | None = ...,
 ) -> list[PyGraph | PyDiGraph]: ...
 def digraph_node_link_json(
     graph: PyDiGraph[_S, _T],
