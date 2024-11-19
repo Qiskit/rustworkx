@@ -636,9 +636,10 @@ def draw_edges(
         edge_color = "k"
 
     # set edge positions
-    edge_pos = set()
+    edge_pos_keys = dict()
     for e in edge_list:
-        edge_pos.add((tuple(pos[e[0]]), tuple(pos[e[1]])))
+        edge_pos_keys[(tuple(pos[e[0]]), tuple(pos[e[1]]))] = None
+    edge_pos = edge_pos_keys.keys()
 
     # Check if edge_color is an array of floats and map to edge_cmap.
     # This is the only case handled differently from matplotlib

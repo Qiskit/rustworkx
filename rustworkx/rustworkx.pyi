@@ -124,6 +124,22 @@ def graph_closeness_centrality(
     graph: PyGraph[_S, _T],
     wf_improved: bool = ...,
 ) -> CentralityMapping: ...
+def digraph_degree_centrality(
+    graph: PyDiGraph[_S, _T],
+    /,
+) -> CentralityMapping: ...
+def in_degree_centrality(
+    graph: PyDiGraph[_S, _T],
+    /,
+) -> CentralityMapping: ...
+def out_degree_centrality(
+    graph: PyDiGraph[_S, _T],
+    /,
+) -> CentralityMapping: ...
+def graph_degree_centrality(
+    graph: PyGraph[_S, _T],
+    /,
+) -> CentralityMapping: ...
 def digraph_katz_centrality(
     graph: PyDiGraph[_S, _T],
     /,

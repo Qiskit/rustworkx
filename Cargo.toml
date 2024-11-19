@@ -68,6 +68,7 @@ features = ["abi3-py39", "extension-module", "hashbrown", "num-bigint", "num-com
 
 [dependencies.sprs]
 version = "^0.11"
+default-features = false
 features = ["multi_thread"]
 
 [profile.release]
