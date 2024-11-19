@@ -732,7 +732,7 @@ impl GraphML {
 /// :rtype: list[Union[PyGraph, PyDiGraph]]
 /// :raises RuntimeError: when an error is encountered while parsing the GraphML file.
 #[pyfunction]
-#[pyo3(signature=(path, compression=None),text_signature = "(path, /, compression=\"\")")]
+#[pyo3(signature=(path, compression=None),text_signature = "(path, /, compression=None)")]
 pub fn read_graphml(
     py: Python,
     path: &str,
