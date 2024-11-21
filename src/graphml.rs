@@ -13,11 +13,15 @@
 #![allow(clippy::borrow_as_ptr)]
 
 use std::convert::From;
+use std::ffi::OsStr;
+use std::fs::File;
+use std::io::{BufRead, BufReader};
 use std::iter::FromIterator;
 use std::num::{ParseFloatError, ParseIntError};
 use std::path::Path;
 use std::str::ParseBoolError;
 
+use flate2::bufread::GzDecoder;
 use hashbrown::HashMap;
 use indexmap::IndexMap;
 
@@ -524,19 +528,27 @@ impl GraphML {
 
         Ok(())
     }
+    /// Open file compressed with gzip, using the GzDecoder
+    /// Returns a quick_xml Reader instance
+    fn open_file_gzip<P: AsRef<Path>>(
+        path: P,
+    ) -> Result<Reader<BufReader<GzDecoder<BufReader<File>>>>, quick_xml::Error> {
+        let file = File::open(path)?;
+        let reader = BufReader::new(file);
+        let gzip_reader = BufReader::new(GzDecoder::new(reader));
+        Ok(Reader::from_reader(gzip_reader))
+    }
 
-    /// Parse a file written in GraphML format.
+    /// Parse a file written in GraphML format from a BufReader
     ///
     /// The implementation is based on a state machine in order to
     /// accept only valid GraphML syntax (e.g a `<data>` element should
     /// be nested inside a `<node>` element) where the internal state changes
     /// after handling each quick_xml event.
-    fn from_file<P: AsRef<Path>>(path: P) -> Result<GraphML, Error> {
+    fn read_graph_from_reader<R: BufRead>(mut reader: Reader<R>) -> Result<GraphML, Error> {
         let mut graphml = GraphML::default();
 
         let mut buf = Vec::new();
-        let mut reader = Reader::from_file(path)?;
-
         let mut state = State::Start;
         let mut domain_of_last_key = Domain::Node;
         let mut last_data_key = String::new();
@@ -677,6 +689,23 @@ impl GraphML {
 
         Ok(graphml)
     }
+
+    /// Read a graph from a file in the GraphML format
+    /// If the the file extension is "graphmlz" or "gz", decompress it on the fly
+    fn from_file<P: AsRef<Path>>(path: P, compression: &str) -> Result<GraphML, Error> {
+        let extension = path.as_ref().extension().unwrap_or(OsStr::new(""));
+
+        let graph: Result<GraphML, Error> =
+            if extension.eq("graphmlz") || extension.eq("gz") || compression.eq("gzip") {
+                let reader = Self::open_file_gzip(path)?;
+                Self::read_graph_from_reader(reader)
+            } else {
+                let reader = Reader::from_file(path)?;
+                Self::read_graph_from_reader(reader)
+            };
+
+        graph
+    }
 }
 
 /// Read a list of graphs from a file in GraphML format.
@@ -703,9 +732,13 @@ impl GraphML {
 /// :rtype: list[Union[PyGraph, PyDiGraph]]
 /// :raises RuntimeError: when an error is encountered while parsing the GraphML file.
 #[pyfunction]
-#[pyo3(text_signature = "(path, /)")]
-pub fn read_graphml(py: Python, path: &str) -> PyResult<Vec<PyObject>> {
-    let graphml = GraphML::from_file(path)?;
+#[pyo3(signature=(path, compression=None),text_signature = "(path, /, compression=None)")]
+pub fn read_graphml(
+    py: Python,
+    path: &str,
+    compression: Option<String>,
+) -> PyResult<Vec<PyObject>> {
+    let graphml = GraphML::from_file(path, &compression.unwrap_or_default())?;
 
     let mut out = Vec::new();
     for graph in graphml.graphs {

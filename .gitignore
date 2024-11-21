@@ -22,3 +22,4 @@ retworkx/*pyd
 *.jpg
 **/*.so
 retworkx-core/Cargo.lock
+**/.DS_Store

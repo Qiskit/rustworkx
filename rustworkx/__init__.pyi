@@ -56,6 +56,10 @@ from .rustworkx import digraph_closeness_centrality as digraph_closeness_central
 from .rustworkx import graph_closeness_centrality as graph_closeness_centrality
 from .rustworkx import digraph_katz_centrality as digraph_katz_centrality
 from .rustworkx import graph_katz_centrality as graph_katz_centrality
+from .rustworkx import digraph_degree_centrality as digraph_degree_centrality
+from .rustworkx import graph_degree_centrality as graph_degree_centrality
+from .rustworkx import in_degree_centrality as in_degree_centrality
+from .rustworkx import out_degree_centrality as out_degree_centrality
 from .rustworkx import graph_greedy_color as graph_greedy_color
 from .rustworkx import graph_greedy_edge_color as graph_greedy_edge_color
 from .rustworkx import graph_is_bipartite as graph_is_bipartite
@@ -244,6 +248,7 @@ from .rustworkx import steiner_tree as steiner_tree
 from .rustworkx import metric_closure as metric_closure
 from .rustworkx import digraph_union as digraph_union
 from .rustworkx import graph_union as graph_union
+from .rustworkx import immediate_dominators as immediate_dominators
 from .rustworkx import NodeIndices as NodeIndices
 from .rustworkx import PathLengthMapping as PathLengthMapping
 from .rustworkx import PathMapping as PathMapping
@@ -489,6 +494,9 @@ def betweenness_centrality(
 ) -> CentralityMapping: ...
 def closeness_centrality(
     graph: PyGraph[_S, _T] | PyDiGraph[_S, _T], wf_improved: bool = ...
+) -> CentralityMapping: ...
+def degree_centrality(
+    graph: PyGraph[_S, _T] | PyDiGraph[_S, _T],
 ) -> CentralityMapping: ...
 def edge_betweenness_centrality(
     graph: PyGraph[_S, _T] | PyDiGraph[_S, _T],
