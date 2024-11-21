@@ -1052,6 +1052,10 @@ def graph_union(
     merge_edges: bool = ...,
 ) -> PyGraph[_S, _T]: ...
 
+# Dominance
+
+def immediate_dominators(graph: PyDiGraph[_S, _T], start_node: int, /) -> dict[int, int]: ...
+
 # Iterators
 
 _T_co = TypeVar("_T_co", covariant=True)
