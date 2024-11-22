@@ -1,6 +1,10 @@
 queue_rules:
   - name: automerge
-    conditions:
+    queue_conditions:
+      - "#approved-reviews-by>=1"
+      - label=automerge
+      - label!=on hold
+    merge_conditions:
       - check-success=python3.9-x64 windows-latest
       - check-success=python3.9-x64 ubuntu-latest
       - check-success=python3.9-x64 macOS-latest
@@ -13,17 +17,9 @@ queue_rules:
       - check-success=Build, rustfmt, and python lint
       - check-success=Coverage
       - check-success=Build Docs
+    merge_method: squash
 
 pull_request_rules:
-  - name: automatic merge on CI success and review
-    conditions:
-      - "#approved-reviews-by>=1"
-      - label=automerge
-      - label!=on hold
-    actions:
-      queue:
-        name: automerge
-        method: squash
   - name: backport
     conditions:
       - label=stable-backport-potential
@@ -31,3 +27,7 @@ pull_request_rules:
       backport:
         branches:
           - stable/0.14
+  - name: refactored queue action rule
+    conditions: []
+    actions:
+      queue:
