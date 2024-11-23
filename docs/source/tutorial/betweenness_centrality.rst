@@ -37,7 +37,7 @@ To start we need to generate a graph:
     mpl_draw(graph)
 
 
-Calculate the Betweeness Centrality
+Calculate the Betweenness Centrality
 -----------------------------------
 
 The :func:`~rustworkx.betweenness_centrality` function can be used to calculate

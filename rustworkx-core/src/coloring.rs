@@ -401,7 +401,7 @@ where
 /// Arguments:
 ///
 /// * `graph` - The graph object to run the algorithm on
-/// * `preset_color_fn` - A callback function that will recieve the node identifier
+/// * `preset_color_fn` - A callback function that will receive the node identifier
 ///     for each node in the graph and is expected to return an `Option<usize>`
 ///     (wrapped in a `Result`) that is `None` if the node has no preset and
 ///     the usize represents the preset color.

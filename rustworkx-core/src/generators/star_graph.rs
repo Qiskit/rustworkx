@@ -22,7 +22,7 @@ use super::InvalidInputError;
 ///
 /// * `num_nodes` - The number of nodes to create a star graph for. Either this or
 ///     `weights` must be specified. If both this and `weights` are specified, weights
-///     will take priorty and this argument will be ignored
+///     will take priority and this argument will be ignored
 /// * `weights` - A `Vec` of node weight objects.
 /// * `default_node_weight` - A callable that will return the weight to use
 ///     for newly created nodes. This is ignored if `weights` is specified.

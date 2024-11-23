@@ -1073,7 +1073,7 @@ pub fn biconnected_components(graph: &graph::PyGraph) -> BiconnectedComponents {
 ///     only the chain decomposition for the connected component containing
 ///     this node will be returned. This node indicates the root of the depth-first
 ///     search tree. If this is not specified then a source will be chosen
-///     arbitrarly and repeated until all components of the graph are searched.
+///     arbitrarily and repeated until all components of the graph are searched.
 /// :returns: A list of list of edges where each inner list is a chain.
 /// :rtype: list of EdgeList
 ///

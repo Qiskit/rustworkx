@@ -34,7 +34,7 @@
 // don't store any python object, just use `impl PyGCProtocol for MyReadOnlyType {}`.
 //
 // Types `T, K, V` above should implement `PyHash`, `PyEq`, `PyDisplay` traits.
-// These are arleady implemented for many primitive rust types and `PyObject`.
+// These are already implemented for many primitive rust types and `PyObject`.
 
 #![allow(clippy::float_cmp, clippy::upper_case_acronyms)]
 
@@ -1088,7 +1088,7 @@ custom_vec_iter_impl!(
 
     The class is a read-only sequence of integers instances.
 
-    This class is a container class for the results of the digraph_maximum_bisimulation funtion.
+    This class is a container class for the results of the digraph_maximum_bisimulation function.
     It implements the Python sequence
     protocol. So you can treat the return as a read-only sequence/list
     that is integer indexed. If you want to use it as an iterator you
@@ -1144,7 +1144,7 @@ custom_vec_iter_impl!(
 
     The class is a read-only sequence of :class:`.NodeIndices` instances.
 
-    This class is a container class for the results of the digraph_maximum_bisimulation funtion.
+    This class is a container class for the results of the digraph_maximum_bisimulation function.
     It implements the Python sequence
     protocol. So you can treat the return as a read-only sequence/list
     that is integer indexed. If you want to use it as an iterator you
