@@ -1,0 +1,6 @@
+---
+features:
+  - |
+    Add the :func:`rustworkx.dominance_frontiers` function to compute
+    the dominance frontiers of all nodes in a directed graph.
+    This function mirrors the ``networkx.dominance_frontiers`` function.

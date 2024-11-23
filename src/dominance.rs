@@ -13,6 +13,8 @@
 use super::{digraph, InvalidNode, NullGraph};
 use rustworkx_core::dictmap::DictMap;
 
+use hashbrown::HashSet;
+
 use petgraph::algo::dominators;
 use petgraph::graph::NodeIndex;
 
@@ -57,4 +59,54 @@ pub fn immediate_dominators(
             .map(|res| (index.index(), res.index()))
     });
     Ok(root_dom.into_iter().chain(others_dom).collect())
+}
+
+/// Compute the dominance frontiers of all nodes in a directed graph.
+///
+/// The dominance and dominance frontiers computations use the
+/// algorithms published in 2006 by Cooper, Harvey, and Kennedy
+/// (https://hdl.handle.net/1911/96345).
+///
+/// :param PyDiGraph graph: directed graph
+/// :param int start_node: the start node for the dominance computation
+///
+/// :returns: a mapping of node indices to their dominance frontiers
+/// :rtype: dict[int, set[int]]
+///
+/// :raises NullGraph: the passed graph is empty
+/// :raises InvalidNode: the start node is not in the graph
+#[pyfunction]
+#[pyo3(text_signature = "(graph, start_node, /)")]
+pub fn dominance_frontiers(
+    graph: &digraph::PyDiGraph,
+    start_node: usize,
+) -> PyResult<DictMap<usize, HashSet<usize>>> {
+    let idom = immediate_dominators(graph, start_node)?;
+
+    let mut df: DictMap<_, _> = idom
+        .iter()
+        .map(|(&node, _)| (node, HashSet::default()))
+        .collect();
+
+    for (&node, &node_idom) in &idom {
+        let preds = graph.predecessor_indices(node);
+        if preds.nodes.len() >= 2 {
+            for mut runner in preds.nodes {
+                while runner != node_idom {
+                    df.entry(runner)
+                        .and_modify(|e| {
+                            e.insert(node);
+                        })
+                        .or_insert([node].into_iter().collect());
+                    if let Some(&runner_idom) = idom.get(&runner) {
+                        runner = runner_idom;
+                    } else {
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    Ok(df)
 }
