@@ -467,6 +467,7 @@ fn rustworkx(py: Python<'_>, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(digraph_union))?;
     m.add_wrapped(wrap_pyfunction!(graph_union))?;
     m.add_wrapped(wrap_pyfunction!(immediate_dominators))?;
+    m.add_wrapped(wrap_pyfunction!(dominance_frontiers))?;
     m.add_wrapped(wrap_pyfunction!(digraph_maximum_bisimulation))?;
     m.add_wrapped(wrap_pyfunction!(digraph_cartesian_product))?;
     m.add_wrapped(wrap_pyfunction!(graph_cartesian_product))?;

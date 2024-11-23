@@ -7,3 +7,4 @@ Dominance
    :toctree: ../../apiref
 
    rustworkx.immediate_dominators
+   rustworkx.dominance_frontiers
