@@ -51,6 +51,7 @@ def lint(session):
     session.run("cargo", "fmt", "--all", "--", "--check", external=True)
     session.run("python", "tools/find_stray_release_notes.py")
     session.run("typos", "--exclude", "releasenotes")
+    session.run("typos", "--no-check-filenames", "releasenotes")
 
 @nox.session(python=["3"])
 def docs(session):
