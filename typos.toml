@@ -1,0 +1,4 @@
+[default]
+extend-ignore-words-re = [
+  "[Ss]toer",
+]

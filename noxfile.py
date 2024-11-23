@@ -15,6 +15,7 @@ lint_deps = [
     "black~=24.8",
     "ruff~=0.6",
     "setuptools-rust",
+    "typos~=1.27",
 ]
 
 stubs_deps = [
@@ -49,6 +50,7 @@ def lint(session):
     session.run("ruff", "check", "rustworkx", "retworkx", "setup.py")
     session.run("cargo", "fmt", "--all", "--", "--check", external=True)
     session.run("python", "tools/find_stray_release_notes.py")
+    session.run("typos", "--exclude", "releasenotes")
 
 @nox.session(python=["3"])
 def docs(session):
