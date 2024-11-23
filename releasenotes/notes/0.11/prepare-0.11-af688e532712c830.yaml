@@ -56,7 +56,7 @@ features:
         g = nx.Graph()
         g.add_nodes_from([
           ("A", {"color": "turquoise", "size": "extra large"}),
-          ("B", {"color": "fuschia", "size": "tiny"}),
+          ("B", {"color": "fuchsia", "size": "tiny"}),
         ])
         g.add_edge("A", "B")
         rx_graph = rx.networkx_converter(g, keep_attributes=True)
@@ -65,7 +65,7 @@ features:
 
     will output::
 
-        [{'color': 'turquoise', 'size': 'extra large', '__networkx_node__': 'A'}, {'color': 'fuschia', 'size': 'tiny', '__networkx_node__': 'B'}]
+        [{'color': 'turquoise', 'size': 'extra large', '__networkx_node__': 'A'}, {'color': 'fuchsia', 'size': 'tiny', '__networkx_node__': 'B'}]
         WeightedEdgeList[(0, 1, {})]
 
 fixes:
