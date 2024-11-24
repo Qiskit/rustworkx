@@ -38,7 +38,7 @@ To start we need to generate a graph:
 
 
 Calculate the Betweenness Centrality
------------------------------------
+------------------------------------
 
 The :func:`~rustworkx.betweenness_centrality` function can be used to calculate
 the betweenness centrality for each node in the graph.
