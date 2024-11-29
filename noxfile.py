@@ -15,7 +15,7 @@ lint_deps = [
     "black~=24.8",
     "ruff~=0.6",
     "setuptools-rust",
-    "typos~=1.27",
+    "typos~=1.28",
 ]
 
 stubs_deps = [
