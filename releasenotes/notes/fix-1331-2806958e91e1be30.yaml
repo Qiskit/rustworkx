@@ -1,0 +1,4 @@
+---
+fixes:
+  - |
+    Fix linter errors when using Rust 1.83.
