@@ -200,7 +200,7 @@ impl GraphBase for PyDiGraph {
     type EdgeId = EdgeIndex;
 }
 
-impl<'a> NodesRemoved for &'a PyDiGraph {
+impl NodesRemoved for &PyDiGraph {
     fn nodes_removed(&self) -> bool {
         self.node_removed
     }
