@@ -886,7 +886,7 @@ impl PyDiGraph {
     ///
     /// :param int node_a: The index for the first node
     /// :param int node_b: The index for the second node
-
+    ///
     /// :returns: A list with all the data objects for the edges between nodes
     /// :rtype: list
     /// :raises NoEdgeBetweenNodes: When there is no edge between nodes
