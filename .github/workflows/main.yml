@@ -27,9 +27,9 @@ jobs:
         with:
           python-version: "3.10"
       - run: pip install -U ruff==0.6.8 black~=24.8
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: dtolnay/rust-toolchain@1.82
         with:
-          components: rustfmt
+          components: rustfmt, clippy
       - name: Test Build
         run: cargo build
       - name: Rust Format
