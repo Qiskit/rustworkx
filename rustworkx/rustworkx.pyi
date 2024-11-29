@@ -1055,6 +1055,7 @@ def graph_union(
 # Dominance
 
 def immediate_dominators(graph: PyDiGraph[_S, _T], start_node: int, /) -> dict[int, int]: ...
+def dominance_frontiers(graph: PyDiGraph[_S, _T], start_node: int, /) -> dict[int, set[int]]: ...
 
 # Iterators
 
