@@ -34,7 +34,7 @@ use super::InvalidInputError;
 /// * `bidirectional` - Whether edges are added bidirectionally. If set to
 ///     `true` then for any edge `(u, v)` an edge `(v, u)` will also be added.
 ///     If the graph is undirected this will result in a parallel edge.
-
+///
 /// # Example
 /// ```rust
 /// use rustworkx_core::petgraph;
