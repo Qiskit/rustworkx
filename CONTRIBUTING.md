@@ -284,7 +284,7 @@ cargo doc --open
 ### Type Annotations
 
 If you have added new methods, functions, or classes, and/or changed any
-signatures, type anotations for Python are required to be included in a pull
+signatures, type annotations for Python are required to be included in a pull
 request. Type annotations are added using type
 [stub files](https://typing.readthedocs.io/en/latest/source/stubs.html) which
 provide type annotations to python tooling which use type annotations. The stub
@@ -523,7 +523,7 @@ primary exception to this is adding support for new python versions. If a new
 python version is released backporting that feature change with that new support
 is an acceptable backport.
 
-In rustworkx at least until the 1.0 release we only maintaing a single stable
+In rustworkx at least until the 1.0 release we only maintain a single stable
 branch at a time for the most recent minor version release.
 
 #### Backporting procedure

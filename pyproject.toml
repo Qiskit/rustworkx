@@ -23,6 +23,11 @@ extend-exclude = ["doc"]
 "rustworkx/__init__.py" = ["F405", "F403"]
 "*.pyi" = ["F403", "F405", "PYI001", "PYI002"]
 
+[tool.typos.default]
+extend-ignore-words-re = [
+  "[Ss]toer",
+]
+
 [tool.cibuildwheel]
 manylinux-x86_64-image = "manylinux2014"
 manylinux-i686-image = "manylinux2014"

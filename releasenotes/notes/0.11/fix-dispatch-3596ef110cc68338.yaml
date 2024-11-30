@@ -8,4 +8,4 @@ fixes:
   - |
     Fixed an oversight in the :func:`~rustworkx.union` function where
     user-defined values for the ``merge_nodes`` and ``merge_edges`` arguments
-    were being ingored.
+    were being ignored.

@@ -81,7 +81,7 @@ where
 }
 
 /// Return a pair of [`petgraph::Direction`] values corresponding to the "forwards" and "backwards"
-/// direction of graph traversal, based on whether the graph is being traved forwards (following
+/// direction of graph traversal, based on whether the graph is being traversed forwards (following
 /// the edges) or backward (reversing along edges).  The order of returns is (forwards, backwards).
 #[inline(always)]
 pub fn traversal_directions(reverse: bool) -> (petgraph::Direction, petgraph::Direction) {

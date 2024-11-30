@@ -15,6 +15,7 @@ lint_deps = [
     "black~=24.8",
     "ruff~=0.6",
     "setuptools-rust",
+    "typos~=1.28",
 ]
 
 stubs_deps = [
@@ -45,6 +46,7 @@ def test_with_version(session):
 @nox.session(python=["3"])
 def lint(session):
     black(session)
+    typos(session)
     session.install(*lint_deps)
     session.run("ruff", "check", "rustworkx", "retworkx", "setup.py")
     session.run("cargo", "fmt", "--all", "--", "--check", external=True)
@@ -68,6 +70,12 @@ def docs_clean(session):
 def black(session):
     session.install(*[d for d in lint_deps if "black" in d])
     session.run("black", "rustworkx", "tests", "retworkx", *session.posargs)
+
+@nox.session(python=["3"])
+def typos(session):
+    session.install(*[d for d in lint_deps if "typos" in d])
+    session.run("typos", "--exclude", "releasenotes")
+    session.run("typos", "--no-check-filenames", "releasenotes")
 
 @nox.session(python=["3"])
 def stubs(session):

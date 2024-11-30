@@ -1,0 +1,5 @@
+---
+fixes:
+  - |
+    Fix typos detected by `typos <https://github.com/crate-ci/typos>`_.
+    Add spell checker invocations to the Nox ``lint`` session.

@@ -29,7 +29,7 @@ jobs:
       - run: pip install -U ruff==0.6.8 black~=24.8
       - uses: dtolnay/rust-toolchain@stable
         with:
-          components: rustfmt
+          components: rustfmt, clippy
       - name: Test Build
         run: cargo build
       - name: Rust Format

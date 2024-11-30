@@ -989,7 +989,7 @@ pub fn binomial_tree_graph(
 ///
 /// :returns: A directed binomial tree with 2^n vertices and 2^n - 1 edges.
 /// :rtype: PyDiGraph
-/// :raises IndexError: If the lenght of ``weights`` is greater that 2^n
+/// :raises IndexError: If the length of ``weights`` is greater that 2^n
 /// :raises OverflowError: If the input order exceeds the maximum value for the
 ///     current platform.
 ///
@@ -1059,7 +1059,7 @@ pub fn directed_binomial_tree_graph(
 ///
 /// :returns: A r-ary tree.
 /// :rtype: PyGraph
-/// :raises IndexError: If the lenght of ``weights`` is greater that n
+/// :raises IndexError: If the length of ``weights`` is greater that n
 ///
 /// .. jupyter-execute::
 ///

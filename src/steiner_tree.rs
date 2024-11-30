@@ -79,7 +79,7 @@ pub fn metric_closure(
 ///
 /// The minimum tree of ``graph`` with regard to a set of ``terminal_nodes``
 /// is a tree within ``graph`` that spans those nodes and has a minimum size
-/// (measured as the sum of edge weights) amoung all such trees.
+/// (measured as the sum of edge weights) among all such trees.
 ///
 /// The minimum steiner tree can be approximated by computing the minimum
 /// spanning tree of the subgraph of the metric closure of ``graph`` induced
