@@ -200,7 +200,7 @@ impl GraphBase for PyDiGraph {
     type EdgeId = EdgeIndex;
 }
 
-impl<'a> NodesRemoved for &'a PyDiGraph {
+impl NodesRemoved for &PyDiGraph {
     fn nodes_removed(&self) -> bool {
         self.node_removed
     }
@@ -886,7 +886,7 @@ impl PyDiGraph {
     ///
     /// :param int node_a: The index for the first node
     /// :param int node_b: The index for the second node
-
+    ///
     /// :returns: A list with all the data objects for the edges between nodes
     /// :rtype: list
     /// :raises NoEdgeBetweenNodes: When there is no edge between nodes
