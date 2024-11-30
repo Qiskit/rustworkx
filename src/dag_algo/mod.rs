@@ -524,7 +524,7 @@ pub fn collect_runs(
         // This is where a filter function error will be returned, otherwise Result is stripped away
         let py_run: Vec<PyObject> = run_result?
             .iter()
-            .map(|node| return graph.graph.node_weight(*node).into_py(py))
+            .map(|node| graph.graph.node_weight(*node).into_py(py))
             .collect();
 
         result.push(py_run)
@@ -667,7 +667,7 @@ pub fn transitive_reduction(
             );
         }
     }
-    return Ok((
+    Ok((
         digraph::PyDiGraph {
             graph: tr,
             node_removed: false,
@@ -680,5 +680,5 @@ pub fn transitive_reduction(
             .iter()
             .map(|(k, v)| (k.index(), v.index()))
             .collect::<DictMap<usize, usize>>(),
-    ));
+    ))
 }

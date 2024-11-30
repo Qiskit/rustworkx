@@ -161,7 +161,7 @@ impl GraphBase for PyGraph {
     type EdgeId = EdgeIndex;
 }
 
-impl<'a> NodesRemoved for &'a PyGraph {
+impl NodesRemoved for &PyGraph {
     fn nodes_removed(&self) -> bool {
         self.node_removed
     }

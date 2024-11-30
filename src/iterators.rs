@@ -282,7 +282,7 @@ where
     }
 }
 
-impl<'py, T> PyEq<Bound<'py, PyAny>> for T
+impl<T> PyEq<Bound<'_, PyAny>> for T
 where
     for<'p> T: PyEq<T> + Clone + FromPyObject<'p>,
 {
@@ -1031,7 +1031,7 @@ impl PyHash for EdgeList {
     }
 }
 
-impl<'py> PyEq<Bound<'py, PyAny>> for EdgeList {
+impl PyEq<Bound<'_, PyAny>> for EdgeList {
     #[inline]
     fn eq(&self, other: &Bound<PyAny>, py: Python) -> PyResult<bool> {
         PyEq::eq(&self.edges, other, py)
@@ -1119,7 +1119,7 @@ impl PyHash for IndexPartitionBlock {
     }
 }
 
-impl<'py> PyEq<Bound<'py, PyAny>> for IndexPartitionBlock {
+impl PyEq<Bound<'_, PyAny>> for IndexPartitionBlock {
     #[inline]
     fn eq(&self, other: &Bound<PyAny>, py: Python) -> PyResult<bool> {
         PyEq::eq(&self.block, other, py)
@@ -1522,7 +1522,7 @@ impl PyHash for PathMapping {
     }
 }
 
-impl<'py> PyEq<Bound<'py, PyAny>> for PathMapping {
+impl PyEq<Bound<'_, PyAny>> for PathMapping {
     #[inline]
     fn eq(&self, other: &Bound<PyAny>, py: Python) -> PyResult<bool> {
         PyEq::eq(&self.paths, other, py)
@@ -1686,7 +1686,7 @@ impl PyHash for MultiplePathMapping {
     }
 }
 
-impl<'py> PyEq<Bound<'py, PyAny>> for MultiplePathMapping {
+impl PyEq<Bound<'_, PyAny>> for MultiplePathMapping {
     #[inline]
     fn eq(&self, other: &Bound<PyAny>, py: Python) -> PyResult<bool> {
         PyEq::eq(&self.paths, other, py)
@@ -1750,7 +1750,7 @@ impl PyHash for PathLengthMapping {
     }
 }
 
-impl<'py> PyEq<Bound<'py, PyAny>> for PathLengthMapping {
+impl PyEq<Bound<'_, PyAny>> for PathLengthMapping {
     #[inline]
     fn eq(&self, other: &Bound<PyAny>, py: Python) -> PyResult<bool> {
         PyEq::eq(&self.path_lengths, other, py)

@@ -46,6 +46,8 @@ jobs:
         run: pushd rustworkx-core && cargo test && popd
       - name: rustworkx-core Docs
         run: pushd rustworkx-core && cargo doc && popd
+        env:
+          RUSTDOCFLAGS: '-D warnings'
       - uses: actions/upload-artifact@v4
         with:
           name: rustworkx_core_docs
