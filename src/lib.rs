@@ -203,7 +203,7 @@ pub trait NodesRemoved {
     fn nodes_removed(&self) -> bool;
 }
 
-impl<'a, Ty> NodesRemoved for &'a StablePyGraph<Ty>
+impl<Ty> NodesRemoved for &StablePyGraph<Ty>
 where
     Ty: EdgeType,
 {
