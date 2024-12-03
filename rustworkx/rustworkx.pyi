@@ -1224,7 +1224,7 @@ class PyGraph(Generic[_S, _T]):
     def filter_nodes(self, filter_function: Callable[[_S], bool]) -> NodeIndices: ...
     def find_node_by_weight(
         self,
-        obj: Callable[[_S], bool],
+        obj: _S,
         /,
     ) -> int | None: ...
     @staticmethod
@@ -1378,7 +1378,7 @@ class PyDiGraph(Generic[_S, _T]):
     def find_adjacent_node_by_edge(self, node: int, predicate: Callable[[_T], bool], /) -> _S: ...
     def find_node_by_weight(
         self,
-        obj: Callable[[_S], bool],
+        obj: _S,
         /,
     ) -> int | None: ...
     def find_predecessors_by_edge(
