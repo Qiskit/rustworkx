@@ -1,0 +1,12 @@
+---
+features:
+  - |
+    Added a new function, ``johnson_simple_cycles``, to the ``rustworkx-core``
+    crate. This function implements `Johnson's algorithm <https://doi.org/10.1137/0204007>`__ for finding all
+    elementary cycles in a directed graph.
+  - |
+    Added a new trait ``EdgeFindable`` to find an ``EdgeIndex`` from a graph
+    given a pair of node indices.
+  - |
+    Added a new trait ``EdgeRemovable`` to remove an edge from a graph by
+    its ``EdgeIndex``.
