@@ -1,7 +1,7 @@
 ---
 features:
   - |
-    The following methods now support iterators as inputs, in addition to
+    The following methods now support sequences and generators as inputs, in addition to
     the existing support for lists:
     * :meth:`~rustworkx.PyGraph.add_nodes_from` and :meth:`~rustworkx.PyDiGraph.add_nodes_from`
     * :meth:`~rustworkx.PyGraph.add_edges_from` and :meth:`~rustworkx.PyDiGraph.add_edges_from`
