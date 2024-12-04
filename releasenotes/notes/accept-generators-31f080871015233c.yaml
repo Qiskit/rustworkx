@@ -1,0 +1,11 @@
+---
+features:
+  - |
+    The following meths now support iterators as inputs, in addition to
+    the existing support for lists:
+    * :meth:`~rustworkx.PyGraph.add_nodes_from` and :meth:`~rustworkx.PyDiGraph.add_nodes_from`
+    * :meth:`~rustworkx.PyGraph.add_edges_from` and :meth:`~rustworkx.PyDiGraph.add_edges_from`
+    * :meth:`~rustworkx.PyGraph.add_edges_from_no_data` and :meth:`~rustworkx.PyDiGraph.add_edges_from_no_data`
+    * :meth:`~rustworkx.PyGraph.extend_from_edge_list` and :meth:`~rustworkx.PyDiGraph.extend_from_edge_list`
+    * :meth:`~rustworkx.PyGraph.extend_from_weighted_edge_list` and :meth:`~rustworkx.PyDiGraph.extend_from_weighted_edge_list`
+
