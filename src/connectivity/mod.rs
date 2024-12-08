@@ -22,12 +22,11 @@ use super::{
 
 use hashbrown::{HashMap, HashSet};
 use indexmap::IndexSet;
-use petgraph::algo;
-use petgraph::algo::condensation;
-use petgraph::graph::DiGraph;
+use petgraph::graph::{DiGraph, IndexType};
 use petgraph::stable_graph::NodeIndex;
 use petgraph::unionfind::UnionFind;
 use petgraph::visit::{EdgeRef, IntoEdgeReferences, NodeCount, NodeIndexable, Visitable};
+use petgraph::{algo, Graph};
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use pyo3::types::PyDict;
@@ -36,6 +35,7 @@ use rayon::prelude::*;
 
 use ndarray::prelude::*;
 use numpy::{IntoPyArray, PyArray2};
+use petgraph::prelude::StableGraph;
 
 use crate::iterators::{
     AllPairsMultiplePathMapping, BiconnectedComponents, Chains, EdgeList, NodeIndices,
@@ -190,6 +190,79 @@ pub fn is_strongly_connected(graph: &digraph::PyDiGraph) -> PyResult<bool> {
         return Err(NullGraph::new_err("Invalid operation on a NullGraph"));
     }
     Ok(algo::kosaraju_scc(&graph.graph).len() == 1)
+}
+
+fn condensation_inner<N, E, Ty, Ix>(
+    py: &Python,
+    g: Graph<N, E, Ty, Ix>,
+    make_acyclic: bool,
+    sccs: Option<Vec<Vec<usize>>>,
+) -> StableGraph<PyObject, PyObject, Ty, Ix>
+where
+    Ty: EdgeType,
+    Ix: IndexType,
+    N: ToPyObject,
+    E: ToPyObject,
+{
+    // Don't use into_iter to avoid extra allocations
+    let sccs = if let Some(sccs) = sccs {
+        sccs.iter()
+            .map(|row| row.iter().map(|x| NodeIndex::new(*x)).collect())
+            .collect()
+    } else {
+        algo::kosaraju_scc(&g)
+    };
+
+    let mut condensed: StableGraph<Vec<N>, E, Ty, Ix> =
+        StableGraph::with_capacity(sccs.len(), g.edge_count());
+
+    // Build a map from old indices to new ones.
+    let mut node_map = vec![NodeIndex::end(); g.node_count()];
+    for comp in sccs {
+        let new_nix = condensed.add_node(Vec::new());
+        for nix in comp {
+            node_map[nix.index()] = new_nix;
+        }
+    }
+
+    // Consume nodes and edges of the old graph and insert them into the new one.
+    let (nodes, edges) = g.into_nodes_edges();
+    for (nix, node) in nodes.into_iter().enumerate() {
+        condensed[node_map[nix]].push(node.weight);
+    }
+    for edge in edges {
+        let source = node_map[edge.source().index()];
+        let target = node_map[edge.target().index()];
+        if make_acyclic {
+            if source != target {
+                condensed.update_edge(source, target, edge.weight);
+            }
+        } else {
+            condensed.add_edge(source, target, edge.weight);
+        }
+    }
+    condensed.map(|_, w| w.to_object(*py), |_, w| w.to_object(*py))
+}
+
+#[pyfunction]
+#[pyo3(text_signature = "(graph, /, sccs=None)", signature=(graph, sccs=None))]
+pub fn condensation(
+    py: Python,
+    graph: &digraph::PyDiGraph,
+    sccs: Option<Vec<Vec<usize>>>,
+) -> digraph::PyDiGraph {
+    let g = graph.graph.clone();
+
+    let condensed = condensation_inner(&py, g.into(), true, sccs);
+
+    digraph::PyDiGraph {
+        graph: condensed,
+        cycle_state: algo::DfsSpace::default(),
+        check_cycle: false,
+        node_removed: false,
+        multigraph: true,
+        attrs: py.None(),
+    }
 }
 
 /// Return the first cycle encountered during DFS of a given PyDiGraph,
@@ -480,7 +553,7 @@ pub fn is_semi_connected(graph: &digraph::PyDiGraph) -> PyResult<bool> {
         temp_graph.add_edge(node_map[source.index()], node_map[target.index()], ());
     }
 
-    let condensed = condensation(temp_graph, true);
+    let condensed = algo::condensation(temp_graph, true);
     let n = condensed.node_count();
     let weight_fn =
         |_: petgraph::graph::EdgeReference<()>| Ok::<usize, std::convert::Infallible>(1usize);
