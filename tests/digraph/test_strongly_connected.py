@@ -65,3 +65,34 @@ class TestStronglyConnected(unittest.TestCase):
             node = G.add_node(i)
             G.add_child(node, str(i), {})
         self.assertEqual(len(rustworkx.strongly_connected_components(G)), 200000)
+
+    def test_condensation(self):
+        # Create a directed graph
+        graph = rustworkx.PyDiGraph()
+
+        # Add nodes
+        a = graph.add_node("A")
+        b = graph.add_node("B")
+        c = graph.add_node("C")
+        d = graph.add_node("D")
+        e = graph.add_node("E")
+        f = graph.add_node("F")
+        g = graph.add_node("G")
+        h = graph.add_node("H")
+
+        # Add edges
+        graph.add_edges_from([
+            (a, b, "ab"),
+            (b, e, "be"),
+            (e, f, "ef"),
+            (d, a, "da"),
+            (b, c, "bc"),
+            (h, g, "hg"),
+            (f, g, "fg")
+        ])
+        # a ----> b ----> e ----> f
+        # ^       |       ^       |
+        # |       v       |       v
+        # d <---- c       h <---- g
+
+
