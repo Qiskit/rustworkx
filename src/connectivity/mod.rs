@@ -22,7 +22,6 @@ use super::{
 
 use hashbrown::{HashMap, HashSet};
 use petgraph::algo;
-use petgraph::algo::condensation;
 use petgraph::graph::DiGraph;
 use petgraph::stable_graph::NodeIndex;
 use petgraph::unionfind::UnionFind;
@@ -35,6 +34,7 @@ use rayon::prelude::*;
 
 use ndarray::prelude::*;
 use numpy::IntoPyArray;
+use petgraph::algo::kosaraju_scc;
 
 use crate::iterators::{
     AllPairsMultiplePathMapping, BiconnectedComponents, Chains, EdgeList, NodeIndices,
@@ -112,6 +112,58 @@ pub fn strongly_connected_components(graph: &digraph::PyDiGraph) -> Vec<Vec<usiz
         .iter()
         .map(|x| x.iter().map(|id| id.index()).collect())
         .collect()
+}
+
+#[pyfunction]
+#[pyo3(text_signature = "(graph, /, sccs=None)", signature=(graph, /, sccs=None))]
+pub fn condensation(py: Python, graph: &digraph::PyDiGraph, sccs: Option<Vec<Vec<usize>>>)
+    -> digraph::PyDiGraph {
+    use petgraph::graph::NodeIndex;
+    use petgraph::{Directed, Graph};
+
+    let g = graph.graph;
+
+    // TODO: Override sccs from arg
+    let sccs = kosaraju_scc(&g);
+    let mut condensed: Graph<Vec<N>, E, Ty, Ix> = Graph::with_capacity(sccs.len(), g.edge_count());
+
+    // Build a map from old indices to new ones.
+    let mut node_map = vec![NodeIndex::end(); g.node_count()];
+    for comp in sccs {
+        let new_nix = condensed.add_node(Vec::new());
+        for nix in comp {
+            node_map[nix.index()] = new_nix;
+        }
+    }
+
+    // Consume nodes and edges of the old graph and insert them into the new one.
+    let (nodes, edges) = g.into_nodes_edges();
+    for (nix, node) in nodes.into_iter().enumerate() {
+        condensed[node_map[nix]].push(node.weight);
+    }
+    for edge in edges {
+        let source = node_map[edge.source().index()];
+        let target = node_map[edge.target().index()];
+        if make_acyclic {
+            if source != target {
+                condensed.update_edge(source, target, edge.weight);
+            }
+        } else {
+            condensed.add_edge(source, target, edge.weight);
+        }
+    }
+
+    // TODO: Fit for networkx
+    let result = condensed;
+
+    digraph::PyDiGraph {
+        graph: result.into(),
+        cycle_state: algo::DfsSpace::default(),
+        check_cycle: false,
+        node_removed: false,
+        multigraph: true,
+        attrs: py.None(),
+    }
 }
 
 /// Return the first cycle encountered during DFS of a given PyDiGraph,
@@ -295,7 +347,7 @@ pub fn is_semi_connected(graph: &digraph::PyDiGraph) -> PyResult<bool> {
         temp_graph.add_edge(node_map[source.index()], node_map[target.index()], ());
     }
 
-    let condensed = condensation(temp_graph, true);
+    let condensed = algo::condensation(temp_graph, true);
     let n = condensed.node_count();
     let weight_fn =
         |_: petgraph::graph::EdgeReference<()>| Ok::<usize, std::convert::Infallible>(1usize);
