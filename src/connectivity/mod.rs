@@ -170,9 +170,6 @@ pub fn condensation(py: Python, graph: &digraph::PyDiGraph, sccs: Option<Vec<Vec
         condensation_inner(&py, g.into(), true)
     };
 
-    // TODO: Fit for networkx
-    let result = condensed;
-
     digraph::PyDiGraph {
         graph: result,
         cycle_state: algo::DfsSpace::default(),
