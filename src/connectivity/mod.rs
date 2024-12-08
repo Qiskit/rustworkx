@@ -21,8 +21,8 @@ use super::{
 };
 
 use hashbrown::{HashMap, HashSet};
-use petgraph::algo;
-use petgraph::graph::DiGraph;
+use petgraph::{algo, Graph};
+use petgraph::graph::{DiGraph, IndexType};
 use petgraph::stable_graph::NodeIndex;
 use petgraph::unionfind::UnionFind;
 use petgraph::visit::{EdgeRef, IntoEdgeReferences, NodeCount, NodeIndexable, Visitable};
@@ -35,6 +35,7 @@ use rayon::prelude::*;
 use ndarray::prelude::*;
 use numpy::IntoPyArray;
 use petgraph::algo::kosaraju_scc;
+use petgraph::prelude::StableGraph;
 
 use crate::iterators::{
     AllPairsMultiplePathMapping, BiconnectedComponents, Chains, EdgeList, NodeIndices,
@@ -114,18 +115,19 @@ pub fn strongly_connected_components(graph: &digraph::PyDiGraph) -> Vec<Vec<usiz
         .collect()
 }
 
-#[pyfunction]
-#[pyo3(text_signature = "(graph, /, sccs=None)", signature=(graph, /, sccs=None))]
-pub fn condensation(py: Python, graph: &digraph::PyDiGraph, sccs: Option<Vec<Vec<usize>>>)
-    -> digraph::PyDiGraph {
-    use petgraph::graph::NodeIndex;
-    use petgraph::{Directed, Graph};
-
-    let g = graph.graph;
-
-    // TODO: Override sccs from arg
+pub fn condensation_inner<'a, N, E, Ty, Ix>(
+    py: &'a Python,
+    g: Graph<N, E, Ty, Ix>,
+    make_acyclic: bool,
+) -> StableGraph<PyObject, PyObject, Ty, Ix>
+    where
+        Ty: EdgeType,
+        Ix: IndexType,
+        N: ToPyObject,
+        E: ToPyObject
+{
     let sccs = kosaraju_scc(&g);
-    let mut condensed: Graph<Vec<N>, E, Ty, Ix> = Graph::with_capacity(sccs.len(), g.edge_count());
+    let mut condensed: StableGraph<Vec<N>, E, Ty, Ix> = StableGraph::with_capacity(sccs.len(), g.edge_count());
 
     // Build a map from old indices to new ones.
     let mut node_map = vec![NodeIndex::end(); g.node_count()];
@@ -152,12 +154,27 @@ pub fn condensation(py: Python, graph: &digraph::PyDiGraph, sccs: Option<Vec<Vec
             condensed.add_edge(source, target, edge.weight);
         }
     }
+    condensed.map(|_, w| w.to_object(*py), |_,w| w.to_object(*py))
+}
+
+#[pyfunction]
+#[pyo3(text_signature = "(graph, /, sccs=None)", signature=(graph, sccs=None))]
+pub fn condensation(py: Python, graph: &digraph::PyDiGraph, sccs: Option<Vec<Vec<usize>>>)
+    -> digraph::PyDiGraph {
+    let g = graph.graph.clone();
+
+    // TODO: Override sccs from arg
+    let condensed = if let Some(sccs) = sccs {
+        unimplemented!("")
+    } else {
+        condensation_inner(&py, g.into(), true)
+    };
 
     // TODO: Fit for networkx
     let result = condensed;
 
     digraph::PyDiGraph {
-        graph: result.into(),
+        graph: result,
         cycle_state: algo::DfsSpace::default(),
         check_cycle: false,
         node_removed: false,
