@@ -115,7 +115,7 @@ pub fn strongly_connected_components(graph: &digraph::PyDiGraph) -> Vec<Vec<usiz
         .collect()
 }
 
-pub fn condensation_inner<'a, N, E, Ty, Ix>(
+fn condensation_inner<'a, N, E, Ty, Ix>(
     py: &'a Python,
     g: Graph<N, E, Ty, Ix>,
     make_acyclic: bool,
