@@ -81,18 +81,18 @@ class TestStronglyConnected(unittest.TestCase):
         h = graph.add_node("H")
 
         # Add edges
-        graph.add_edges_from([
-            (a, b, "ab"),
-            (b, e, "be"),
-            (e, f, "ef"),
-            (d, a, "da"),
-            (b, c, "bc"),
-            (h, g, "hg"),
-            (f, g, "fg")
-        ])
+        graph.add_edges_from(
+            [
+                (a, b, "ab"),
+                (b, e, "be"),
+                (e, f, "ef"),
+                (d, a, "da"),
+                (b, c, "bc"),
+                (h, g, "hg"),
+                (f, g, "fg"),
+            ]
+        )
         # a ----> b ----> e ----> f
         # ^       |       ^       |
         # |       v       |       v
         # d <---- c       h <---- g
-
-
