@@ -21,11 +21,11 @@ use super::{
 };
 
 use hashbrown::{HashMap, HashSet};
-use petgraph::{algo, Graph};
 use petgraph::graph::{DiGraph, IndexType};
 use petgraph::stable_graph::NodeIndex;
 use petgraph::unionfind::UnionFind;
 use petgraph::visit::{EdgeRef, IntoEdgeReferences, NodeCount, NodeIndexable, Visitable};
+use petgraph::{algo, Graph};
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use pyo3::types::PyDict;
@@ -120,14 +120,15 @@ fn condensation_inner<'a, N, E, Ty, Ix>(
     g: Graph<N, E, Ty, Ix>,
     make_acyclic: bool,
 ) -> StableGraph<PyObject, PyObject, Ty, Ix>
-    where
-        Ty: EdgeType,
-        Ix: IndexType,
-        N: ToPyObject,
-        E: ToPyObject
+where
+    Ty: EdgeType,
+    Ix: IndexType,
+    N: ToPyObject,
+    E: ToPyObject,
 {
     let sccs = kosaraju_scc(&g);
-    let mut condensed: StableGraph<Vec<N>, E, Ty, Ix> = StableGraph::with_capacity(sccs.len(), g.edge_count());
+    let mut condensed: StableGraph<Vec<N>, E, Ty, Ix> =
+        StableGraph::with_capacity(sccs.len(), g.edge_count());
 
     // Build a map from old indices to new ones.
     let mut node_map = vec![NodeIndex::end(); g.node_count()];
@@ -154,13 +155,16 @@ fn condensation_inner<'a, N, E, Ty, Ix>(
             condensed.add_edge(source, target, edge.weight);
         }
     }
-    condensed.map(|_, w| w.to_object(*py), |_,w| w.to_object(*py))
+    condensed.map(|_, w| w.to_object(*py), |_, w| w.to_object(*py))
 }
 
 #[pyfunction]
 #[pyo3(text_signature = "(graph, /, sccs=None)", signature=(graph, sccs=None))]
-pub fn condensation(py: Python, graph: &digraph::PyDiGraph, sccs: Option<Vec<Vec<usize>>>)
-    -> digraph::PyDiGraph {
+pub fn condensation(
+    py: Python,
+    graph: &digraph::PyDiGraph,
+    sccs: Option<Vec<Vec<usize>>>,
+) -> digraph::PyDiGraph {
     let g = graph.graph.clone();
 
     // TODO: Override sccs from arg
@@ -171,7 +175,7 @@ pub fn condensation(py: Python, graph: &digraph::PyDiGraph, sccs: Option<Vec<Vec
     };
 
     digraph::PyDiGraph {
-        graph: result,
+        graph: condensed,
         cycle_state: algo::DfsSpace::default(),
         check_cycle: false,
         node_removed: false,
