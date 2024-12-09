@@ -66,33 +66,50 @@ class TestStronglyConnected(unittest.TestCase):
             G.add_child(node, str(i), {})
         self.assertEqual(len(rustworkx.strongly_connected_components(G)), 200000)
 
+class TestCondensation(unittest.TestCase):
+    def setUp(self):
+        # グラフをセットアップ
+        self.graph = rustworkx.PyDiGraph()
+        self.node_a = self.graph.add_node("a")
+        self.node_b = self.graph.add_node("b")
+        self.node_c = self.graph.add_node("c")
+        self.node_d = self.graph.add_node("d")
+        self.node_e = self.graph.add_node("e")
+        self.node_f = self.graph.add_node("f")
+        self.node_g = self.graph.add_node("g")
+        self.node_h = self.graph.add_node("h")
+
+        # エッジを追加
+        self.graph.add_edge(self.node_a, self.node_b, "a->b")
+        self.graph.add_edge(self.node_b, self.node_c, "b->c")
+        self.graph.add_edge(self.node_c, self.node_d, "c->d")
+        self.graph.add_edge(self.node_d, self.node_a, "d->a")  # サイクル: a -> b -> c -> d -> a
+
+        self.graph.add_edge(self.node_b, self.node_e, "b->e")
+        self.graph.add_edge(self.node_e, self.node_f, "e->f")
+        self.graph.add_edge(self.node_f, self.node_g, "f->g")
+        self.graph.add_edge(self.node_g, self.node_h, "g->h")
+        self.graph.add_edge(self.node_h, self.node_e, "h->e")  # サイクル: e -> f -> g -> h -> e
+
     def test_condensation(self):
-        # Create a directed graph
-        graph = rustworkx.PyDiGraph()
+        # condensation関数を呼び出し
+        condensed_graph = rustworkx.condensation(self.graph)
 
-        # Add nodes
-        a = graph.add_node("A")
-        b = graph.add_node("B")
-        c = graph.add_node("C")
-        d = graph.add_node("D")
-        e = graph.add_node("E")
-        f = graph.add_node("F")
-        g = graph.add_node("G")
-        h = graph.add_node("H")
+        # ノード数を確認（2つのサイクルが1つずつのノードに縮約される）
+        self.assertEqual(condensed_graph.node_count(), 2)  # [SCC(a, b, c, d), SCC(e, f, g, h)]
 
-        # Add edges
-        graph.add_edges_from(
-            [
-                (a, b, "ab"),
-                (b, e, "be"),
-                (e, f, "ef"),
-                (d, a, "da"),
-                (b, c, "bc"),
-                (h, g, "hg"),
-                (f, g, "fg"),
-            ]
-        )
-        # a ----> b ----> e ----> f
-        # ^       |       ^       |
-        # |       v       |       v
-        # d <---- c       h <---- g
+        # エッジ数を確認
+        self.assertEqual(condensed_graph.edge_count(), 1)  # Edge: [SCC(a, b, c, d)] -> [SCC(e, f, g, h)]
+
+        # 縮約されたノードの内容を確認
+        nodes = list(condensed_graph.nodes())
+        scc1 = nodes[0]
+        scc2 = nodes[1]
+        self.assertTrue(set(scc1) == {"a", "b", "c", "d"} or set(scc2) == {"a", "b", "c", "d"})
+        self.assertTrue(set(scc1) == {"e", "f", "g", "h"} or set(scc2) == {"e", "f", "g", "h"})
+
+        # エッジの内容を確認
+        edges = list(condensed_graph.edges())
+        self.assertEqual(len(edges), 1)
+        source, target, weight = edges[0]
+        self.assertIn("b->e", weight)  # 縮約後のグラフにおいて、正しいエッジが残っていることを確認
