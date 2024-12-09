@@ -119,6 +119,7 @@ fn condensation_inner<N, E, Ty, Ix>(
     py: &Python,
     g: Graph<N, E, Ty, Ix>,
     make_acyclic: bool,
+    sccs: Option<Vec<Vec<usize>>>,
 ) -> StableGraph<PyObject, PyObject, Ty, Ix>
 where
     Ty: EdgeType,
@@ -126,7 +127,15 @@ where
     N: ToPyObject,
     E: ToPyObject,
 {
-    let sccs = kosaraju_scc(&g);
+    // Don't use into_iter to avoid extra allocations
+    let sccs = if let Some(sccs) = sccs {
+        sccs.iter()
+            .map(|row| row.iter().map(|x| NodeIndex::new(*x)).collect())
+            .collect()
+    } else {
+        kosaraju_scc(&g)
+    };
+    
     let mut condensed: StableGraph<Vec<N>, E, Ty, Ix> =
         StableGraph::with_capacity(sccs.len(), g.edge_count());
 
@@ -167,12 +176,7 @@ pub fn condensation(
 ) -> digraph::PyDiGraph {
     let g = graph.graph.clone();
 
-    // TODO: Override sccs from arg
-    let condensed = if let Some(_) = sccs {
-        unimplemented!("")
-    } else {
-        condensation_inner(&py, g.into(), true)
-    };
+    let condensed = condensation_inner(&py, g.into(), true, sccs);
 
     digraph::PyDiGraph {
         graph: condensed,
