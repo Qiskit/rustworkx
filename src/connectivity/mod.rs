@@ -135,7 +135,7 @@ where
     } else {
         kosaraju_scc(&g)
     };
-    
+
     let mut condensed: StableGraph<Vec<N>, E, Ty, Ix> =
         StableGraph::with_capacity(sccs.len(), g.edge_count());
 
