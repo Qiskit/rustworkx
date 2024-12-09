@@ -115,8 +115,8 @@ pub fn strongly_connected_components(graph: &digraph::PyDiGraph) -> Vec<Vec<usiz
         .collect()
 }
 
-fn condensation_inner<'a, N, E, Ty, Ix>(
-    py: &'a Python,
+fn condensation_inner<N, E, Ty, Ix>(
+    py: &Python,
     g: Graph<N, E, Ty, Ix>,
     make_acyclic: bool,
 ) -> StableGraph<PyObject, PyObject, Ty, Ix>
@@ -168,7 +168,7 @@ pub fn condensation(
     let g = graph.graph.clone();
 
     // TODO: Override sccs from arg
-    let condensed = if let Some(sccs) = sccs {
+    let condensed = if let Some(_) = sccs {
         unimplemented!("")
     } else {
         condensation_inner(&py, g.into(), true)
