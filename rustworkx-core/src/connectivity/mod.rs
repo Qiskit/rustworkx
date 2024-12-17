@@ -20,6 +20,7 @@ mod core_number;
 mod cycle_basis;
 mod find_cycle;
 mod isolates;
+mod johnson_simple_cycles;
 mod min_cut;
 
 pub use all_simple_paths::{
@@ -35,4 +36,5 @@ pub use core_number::core_number;
 pub use cycle_basis::cycle_basis;
 pub use find_cycle::find_cycle;
 pub use isolates::isolates;
+pub use johnson_simple_cycles::{johnson_simple_cycles, SimpleCycleIter};
 pub use min_cut::stoer_wagner_min_cut;
