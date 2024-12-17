@@ -8,7 +8,7 @@ features:
     Added a new method, :meth:`~rustworkx.PyGraph.incident_edge_index_map`, to the
     :class:`~rustworkx.PyGraph` and :class:`~rustworkx.PyDiGraph` class. This
     method returns a mapping of edge indices for edges incident to a provided node
-    to the endoint and weight tuple for that edge index. For example:
+    to the endpoint and weight tuple for that edge index. For example:
 
     .. jupyter-execute::
 

@@ -249,6 +249,7 @@ from .rustworkx import metric_closure as metric_closure
 from .rustworkx import digraph_union as digraph_union
 from .rustworkx import graph_union as graph_union
 from .rustworkx import immediate_dominators as immediate_dominators
+from .rustworkx import dominance_frontiers as dominance_frontiers
 from .rustworkx import NodeIndices as NodeIndices
 from .rustworkx import PathLengthMapping as PathLengthMapping
 from .rustworkx import PathMapping as PathMapping

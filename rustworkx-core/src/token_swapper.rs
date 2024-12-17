@@ -437,7 +437,6 @@ where
 ///  assert_eq!(3, output.len());
 ///
 /// ```
-
 pub fn token_swapper<G>(
     graph: G,
     mapping: HashMap<G::NodeId, G::NodeId>,

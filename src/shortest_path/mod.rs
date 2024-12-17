@@ -1361,7 +1361,7 @@ pub fn graph_num_shortest_paths_unweighted(
 ///     output distance matrix.
 /// :param float null_value: An optional float that will treated as a null
 ///     value. This element will be the default in the matrix and represents
-///     the absense of a path in the graph. By default this is ``0.0``.
+///     the absence of a path in the graph. By default this is ``0.0``.
 ///
 /// :returns: The distance matrix
 /// :rtype: numpy.ndarray
@@ -1403,7 +1403,7 @@ pub fn digraph_distance_matrix(
 ///     be tuned
 /// :param float null_value: An optional float that will treated as a null
 ///     value. This element will be the default in the matrix and represents
-///     the absense of a path in the graph. By default this is ``0.0``.
+///     the absence of a path in the graph. By default this is ``0.0``.
 ///
 /// :returns: The distance matrix
 /// :rtype: numpy.ndarray

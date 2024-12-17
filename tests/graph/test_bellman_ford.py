@@ -81,19 +81,19 @@ class TestBellmanFordGraph(unittest.TestCase):
         g = rustworkx.PyGraph()
         a = g.add_node("A")
         b = g.add_node("B")
-        path_lenghts = rustworkx.graph_bellman_ford_shortest_path_lengths(
+        path_lengths = rustworkx.graph_bellman_ford_shortest_path_lengths(
             g, a, edge_cost_fn=float, goal=b
         )
         expected = rustworkx.graph_dijkstra_shortest_path_lengths(g, a, edge_cost_fn=float, goal=b)
-        self.assertEqual(expected, path_lenghts)
+        self.assertEqual(expected, path_lengths)
 
     def test_bellman_ford_length_with_no_path(self):
         g = rustworkx.PyGraph()
         a = g.add_node("A")
         g.add_node("B")
-        path_lenghts = rustworkx.graph_bellman_ford_shortest_path_lengths(g, a, edge_cost_fn=float)
+        path_lengths = rustworkx.graph_bellman_ford_shortest_path_lengths(g, a, edge_cost_fn=float)
         expected = {}
-        self.assertEqual(expected, path_lenghts)
+        self.assertEqual(expected, path_lengths)
 
     def test_bellman_ford_path_with_no_goal_set(self):
         path = rustworkx.graph_bellman_ford_shortest_paths(self.graph, self.a)
@@ -175,7 +175,7 @@ class TestBellmanFordGraph(unittest.TestCase):
         with self.assertRaises(rustworkx.NegativeCycle):
             rustworkx.bellman_ford_shortest_paths(graph, 0, weight_fn=float)
 
-    def test_raises_negative_cycle_bellman_ford_path_lenghts(self):
+    def test_raises_negative_cycle_bellman_ford_path_lengths(self):
         graph = rustworkx.PyGraph()
         graph.add_nodes_from(list(range(4)))
         graph.add_edges_from(
@@ -292,7 +292,7 @@ class TestBellmanFordGraph(unittest.TestCase):
         with self.assertRaises(rustworkx.NegativeCycle):
             rustworkx.all_pairs_bellman_ford_shortest_paths(graph, float)
 
-    def test_raises_negative_cycle_all_pairs_bellman_ford_path_lenghts(self):
+    def test_raises_negative_cycle_all_pairs_bellman_ford_path_lengths(self):
         graph = rustworkx.PyGraph()
         graph.add_nodes_from(list(range(4)))
         graph.add_edges_from(
@@ -313,7 +313,7 @@ class TestBellmanFordGraph(unittest.TestCase):
                 self.graph, len(self.graph.node_indices()) + 1, weight_fn=lambda x: float(x)
             )
 
-    def test_raises_index_error_bellman_ford_path_lenghts(self):
+    def test_raises_index_error_bellman_ford_path_lengths(self):
         with self.assertRaises(IndexError):
             rustworkx.graph_bellman_ford_shortest_path_lengths(
                 self.graph, len(self.graph.node_indices()) + 1, edge_cost_fn=lambda x: float(x)

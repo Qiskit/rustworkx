@@ -61,7 +61,7 @@ where
 /// The graph should be undirected. If `source` is specified only the chain
 /// decomposition for the connected component containing this node will be returned.
 /// This node indicates the root of the depth-first search tree. If it's not
-/// specified, a source will be chosen arbitrarly and repeated until all components
+/// specified, a source will be chosen arbitrarily and repeated until all components
 /// of the graph are searched.
 ///
 /// Returns a list of list of edges where each inner list is a chain.

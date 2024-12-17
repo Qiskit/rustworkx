@@ -81,7 +81,7 @@ where
 }
 
 /// Return a pair of [`petgraph::Direction`] values corresponding to the "forwards" and "backwards"
-/// direction of graph traversal, based on whether the graph is being traved forwards (following
+/// direction of graph traversal, based on whether the graph is being traversed forwards (following
 /// the edges) or backward (reversing along edges).  The order of returns is (forwards, backwards).
 #[inline(always)]
 pub fn traversal_directions(reverse: bool) -> (petgraph::Direction, petgraph::Direction) {
@@ -524,7 +524,7 @@ pub fn collect_runs(
         // This is where a filter function error will be returned, otherwise Result is stripped away
         let py_run: Vec<PyObject> = run_result?
             .iter()
-            .map(|node| return graph.graph.node_weight(*node).into_py(py))
+            .map(|node| graph.graph.node_weight(*node).into_py(py))
             .collect();
 
         result.push(py_run)
@@ -667,7 +667,7 @@ pub fn transitive_reduction(
             );
         }
     }
-    return Ok((
+    Ok((
         digraph::PyDiGraph {
             graph: tr,
             node_removed: false,
@@ -680,5 +680,5 @@ pub fn transitive_reduction(
             .iter()
             .map(|(k, v)| (k.index(), v.index()))
             .collect::<DictMap<usize, usize>>(),
-    ));
+    ))
 }

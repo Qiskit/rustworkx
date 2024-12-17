@@ -203,7 +203,7 @@ pub trait NodesRemoved {
     fn nodes_removed(&self) -> bool;
 }
 
-impl<'a, Ty> NodesRemoved for &'a StablePyGraph<Ty>
+impl<Ty> NodesRemoved for &StablePyGraph<Ty>
 where
     Ty: EdgeType,
 {
@@ -467,6 +467,7 @@ fn rustworkx(py: Python<'_>, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(digraph_union))?;
     m.add_wrapped(wrap_pyfunction!(graph_union))?;
     m.add_wrapped(wrap_pyfunction!(immediate_dominators))?;
+    m.add_wrapped(wrap_pyfunction!(dominance_frontiers))?;
     m.add_wrapped(wrap_pyfunction!(digraph_maximum_bisimulation))?;
     m.add_wrapped(wrap_pyfunction!(digraph_cartesian_product))?;
     m.add_wrapped(wrap_pyfunction!(graph_cartesian_product))?;

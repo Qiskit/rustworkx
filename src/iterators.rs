@@ -34,7 +34,7 @@
 // don't store any python object, just use `impl PyGCProtocol for MyReadOnlyType {}`.
 //
 // Types `T, K, V` above should implement `PyHash`, `PyEq`, `PyDisplay` traits.
-// These are arleady implemented for many primitive rust types and `PyObject`.
+// These are already implemented for many primitive rust types and `PyObject`.
 
 #![allow(clippy::float_cmp, clippy::upper_case_acronyms)]
 
@@ -282,7 +282,7 @@ where
     }
 }
 
-impl<'py, T> PyEq<Bound<'py, PyAny>> for T
+impl<T> PyEq<Bound<'_, PyAny>> for T
 where
     for<'p> T: PyEq<T> + Clone + FromPyObject<'p>,
 {
@@ -1031,7 +1031,7 @@ impl PyHash for EdgeList {
     }
 }
 
-impl<'py> PyEq<Bound<'py, PyAny>> for EdgeList {
+impl PyEq<Bound<'_, PyAny>> for EdgeList {
     #[inline]
     fn eq(&self, other: &Bound<PyAny>, py: Python) -> PyResult<bool> {
         PyEq::eq(&self.edges, other, py)
@@ -1088,7 +1088,7 @@ custom_vec_iter_impl!(
 
     The class is a read-only sequence of integers instances.
 
-    This class is a container class for the results of the digraph_maximum_bisimulation funtion.
+    This class is a container class for the results of the digraph_maximum_bisimulation function.
     It implements the Python sequence
     protocol. So you can treat the return as a read-only sequence/list
     that is integer indexed. If you want to use it as an iterator you
@@ -1119,7 +1119,7 @@ impl PyHash for IndexPartitionBlock {
     }
 }
 
-impl<'py> PyEq<Bound<'py, PyAny>> for IndexPartitionBlock {
+impl PyEq<Bound<'_, PyAny>> for IndexPartitionBlock {
     #[inline]
     fn eq(&self, other: &Bound<PyAny>, py: Python) -> PyResult<bool> {
         PyEq::eq(&self.block, other, py)
@@ -1144,7 +1144,7 @@ custom_vec_iter_impl!(
 
     The class is a read-only sequence of :class:`.NodeIndices` instances.
 
-    This class is a container class for the results of the digraph_maximum_bisimulation funtion.
+    This class is a container class for the results of the digraph_maximum_bisimulation function.
     It implements the Python sequence
     protocol. So you can treat the return as a read-only sequence/list
     that is integer indexed. If you want to use it as an iterator you
@@ -1522,7 +1522,7 @@ impl PyHash for PathMapping {
     }
 }
 
-impl<'py> PyEq<Bound<'py, PyAny>> for PathMapping {
+impl PyEq<Bound<'_, PyAny>> for PathMapping {
     #[inline]
     fn eq(&self, other: &Bound<PyAny>, py: Python) -> PyResult<bool> {
         PyEq::eq(&self.paths, other, py)
@@ -1686,7 +1686,7 @@ impl PyHash for MultiplePathMapping {
     }
 }
 
-impl<'py> PyEq<Bound<'py, PyAny>> for MultiplePathMapping {
+impl PyEq<Bound<'_, PyAny>> for MultiplePathMapping {
     #[inline]
     fn eq(&self, other: &Bound<PyAny>, py: Python) -> PyResult<bool> {
         PyEq::eq(&self.paths, other, py)
@@ -1750,7 +1750,7 @@ impl PyHash for PathLengthMapping {
     }
 }
 
-impl<'py> PyEq<Bound<'py, PyAny>> for PathLengthMapping {
+impl PyEq<Bound<'_, PyAny>> for PathLengthMapping {
     #[inline]
     fn eq(&self, other: &Bound<PyAny>, py: Python) -> PyResult<bool> {
         PyEq::eq(&self.path_lengths, other, py)

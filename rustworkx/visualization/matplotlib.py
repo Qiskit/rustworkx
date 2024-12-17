@@ -581,7 +581,7 @@ def draw_edges(
         Label for legend
 
     min_source_margin : int (default=0)
-        The minimum margin (gap) at the begining of the edge at the source.
+        The minimum margin (gap) at the beginning of the edge at the source.
 
     min_target_margin : int (default=0)
         The minimum margin (gap) at the end of the edge at the target.
@@ -978,7 +978,7 @@ def draw_edge_labels(
     ax : Matplotlib Axes object, optional
         Draw the graph in the specified Matplotlib axes.
 
-    rotate : bool (deafult=True)
+    rotate : bool (default=True)
         Rotate edge labels to lie parallel to edges
 
     clip_on : bool (default=True)

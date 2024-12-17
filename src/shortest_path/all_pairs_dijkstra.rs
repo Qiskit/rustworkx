@@ -76,10 +76,10 @@ pub fn all_pairs_dijkstra_path_lengths<Ty: EdgeType + Sync>(
     let out_map: DictMap<usize, PathLengthMapping> = node_indices
         .into_par_iter()
         .map(|x| {
-            let path_lenghts: PyResult<Vec<Option<f64>>> =
+            let path_lengths: PyResult<Vec<Option<f64>>> =
                 dijkstra(graph, x, None, |e| edge_cost(e.id()), None);
             let out_map = PathLengthMapping {
-                path_lengths: path_lenghts
+                path_lengths: path_lengths
                     .unwrap()
                     .into_iter()
                     .enumerate()

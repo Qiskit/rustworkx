@@ -161,7 +161,7 @@ impl GraphBase for PyGraph {
     type EdgeId = EdgeIndex;
 }
 
-impl<'a> NodesRemoved for &'a PyGraph {
+impl NodesRemoved for &PyGraph {
     fn nodes_removed(&self) -> bool {
         self.node_removed
     }
@@ -1124,7 +1124,7 @@ impl PyGraph {
     ///
     /// :param int node: The index of the node to get the neighbors of
     ///
-    /// :returns: A list of the neighbor node indicies
+    /// :returns: A list of the neighbor node indices
     /// :rtype: NodeIndices
     #[pyo3(text_signature = "(self, node, /)")]
     pub fn neighbors(&self, node: usize) -> NodeIndices {
@@ -1284,8 +1284,8 @@ impl PyGraph {
     /// Read an edge list file and create a new PyGraph object from the
     /// contents
     ///
-    /// The expected format for the edge list file is a line seperated list
-    /// of deliminated node ids. If there are more than 3 elements on
+    /// The expected format for the edge list file is a line separated list
+    /// of delimited node ids. If there are more than 3 elements on
     /// a line the 3rd on will be treated as a string weight for the edge
     ///
     /// :param str path: The path of the file to open

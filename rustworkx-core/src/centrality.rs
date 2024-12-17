@@ -1073,18 +1073,21 @@ mod test_katz_centrality {
 /// In the case of a graphs with more than one connected component there is
 /// an alternative improved formula that calculates the closeness centrality
 /// as "a ratio of the fraction of actors in the group who are reachable, to
-/// the average distance" [^WF]. You can enable this by setting `wf_improved` to `true`.
+/// the average distance".[^WF]
+/// You can enable this by setting `wf_improved` to `true`.
 ///
-/// [^WF] Wasserman, S., & Faust, K. (1994). Social Network Analysis:
+/// [^WF]: Wasserman, S., & Faust, K. (1994). Social Network Analysis:
 ///     Methods and Applications (Structural Analysis in the Social Sciences).
-///     Cambridge: Cambridge University Press. doi:10.1017/CBO9780511815478
+///     Cambridge: Cambridge University Press.
+///     <https://doi.org/10.1017/CBO9780511815478>
 ///
-/// Arguments:
+/// # Arguments
 ///
 /// * `graph` - The graph object to run the algorithm on
 /// * `wf_improved` - If `true`, scale by the fraction of nodes reachable.
 ///
 /// # Example
+///
 /// ```rust
 /// use rustworkx_core::petgraph;
 /// use rustworkx_core::centrality::closeness_centrality;

@@ -295,7 +295,7 @@ pub fn graph_is_subgraph_isomorphic(
 
 /// Return an iterator over all vf2 mappings between two :class:`~rustworkx.PyDiGraph` objects
 ///
-/// This funcion will run the vf2 algorithm used from
+/// This function will run the vf2 algorithm used from
 /// :func:`~rustworkx.is_isomorphic` and :func:`~rustworkx.is_subgraph_isomorphic`
 /// but instead of returning a boolean it will return an iterator over all possible
 /// mapping of node ids found from ``first`` to ``second``. If the graphs are not
@@ -333,7 +333,7 @@ pub fn graph_is_subgraph_isomorphic(
 ///     visits while searching for a solution. If it exceeds this limit, the algorithm
 ///     will stop.
 ///
-/// :returns: An iterator over dicitonaries of node indices from ``first`` to node
+/// :returns: An iterator over dictionaries of node indices from ``first`` to node
 ///     indices in ``second`` representing the mapping found.
 /// :rtype: Iterable[NodeMap]
 #[pyfunction]
@@ -374,7 +374,7 @@ pub fn digraph_vf2_mapping(
 
 /// Return an iterator over all vf2 mappings between two :class:`~rustworkx.PyGraph` objects
 ///
-/// This funcion will run the vf2 algorithm used from
+/// This function will run the vf2 algorithm used from
 /// :func:`~rustworkx.is_isomorphic` and :func:`~rustworkx.is_subgraph_isomorphic`
 /// but instead of returning a boolean it will return an iterator over all possible
 /// mapping of node ids found from ``first`` to ``second``. If the graphs are not
@@ -411,7 +411,7 @@ pub fn digraph_vf2_mapping(
 ///     visits while searching for a solution. If it exceeds this limit, the algorithm
 ///     will stop. Default: ``None``.
 ///
-/// :returns: An iterator over dicitonaries of node indices from ``first`` to node
+/// :returns: An iterator over dictionaries of node indices from ``first`` to node
 ///     indices in ``second`` representing the mapping found.
 /// :rtype: Iterable[NodeMap]
 #[pyfunction]
