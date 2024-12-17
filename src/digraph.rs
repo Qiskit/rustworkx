@@ -200,7 +200,7 @@ impl GraphBase for PyDiGraph {
     type EdgeId = EdgeIndex;
 }
 
-impl<'a> NodesRemoved for &'a PyDiGraph {
+impl NodesRemoved for &PyDiGraph {
     fn nodes_removed(&self) -> bool {
         self.node_removed
     }
@@ -637,15 +637,15 @@ impl PyDiGraph {
         let children = self
             .graph
             .neighbors_directed(index, petgraph::Direction::Outgoing);
-        let mut succesors: Vec<&PyObject> = Vec::new();
+        let mut successors: Vec<&PyObject> = Vec::new();
         let mut used_indices: HashSet<NodeIndex> = HashSet::new();
         for succ in children {
             if !used_indices.contains(&succ) {
-                succesors.push(self.graph.node_weight(succ).unwrap());
+                successors.push(self.graph.node_weight(succ).unwrap());
                 used_indices.insert(succ);
             }
         }
-        succesors
+        successors
     }
 
     /// Return a list of all the node predecessor data.
@@ -692,7 +692,7 @@ impl PyDiGraph {
         filter_fn: PyObject,
     ) -> PyResult<Vec<&PyObject>> {
         let index = NodeIndex::new(node);
-        let mut succesors: Vec<&PyObject> = Vec::new();
+        let mut successors: Vec<&PyObject> = Vec::new();
         let mut used_indices: HashSet<NodeIndex> = HashSet::new();
 
         let filter_edge = |edge: &PyObject| -> PyResult<bool> {
@@ -710,11 +710,11 @@ impl PyDiGraph {
                 let edge_weight = edge.weight();
                 if filter_edge(edge_weight)? {
                     used_indices.insert(succ);
-                    succesors.push(self.graph.node_weight(succ).unwrap());
+                    successors.push(self.graph.node_weight(succ).unwrap());
                 }
             }
         }
-        Ok(succesors)
+        Ok(successors)
     }
 
     /// Return a filtered list of predecessor data such that each
@@ -886,7 +886,7 @@ impl PyDiGraph {
     ///
     /// :param int node_a: The index for the first node
     /// :param int node_b: The index for the second node
-
+    ///
     /// :returns: A list with all the data objects for the edges between nodes
     /// :rtype: list
     /// :raises NoEdgeBetweenNodes: When there is no edge between nodes
@@ -1004,7 +1004,7 @@ impl PyDiGraph {
     /// :meth:`remove_node_retain_edges_by_id`.
     ///
     /// :param int node: The index of the node to remove. If the index is not
-    ///     present in the graph it will be ingored and this function willl have
+    ///     present in the graph it will be ignored and this function will have
     ///     no effect.
     /// :param bool use_outgoing: If set to true the weight/data from the
     ///     edge outgoing from ``node`` will be used in the retained edge
@@ -1754,12 +1754,12 @@ impl PyDiGraph {
 
     /// Get the successor indices of a node.
     ///
-    /// This will return a list of the node indicies for the succesors of
+    /// This will return a list of the node indices for the successors of
     /// a node
     ///
     /// :param int node: The index of the node to get the successors of
     ///
-    /// :returns: A list of the neighbor node indicies
+    /// :returns: A list of the neighbor node indices
     /// :rtype: NodeIndices
     #[pyo3(text_signature = "(self, node, /)")]
     pub fn successor_indices(&self, node: usize) -> NodeIndices {
@@ -1774,12 +1774,12 @@ impl PyDiGraph {
 
     /// Get the predecessor indices of a node.
     ///
-    /// This will return a list of the node indicies for the predecessors of
+    /// This will return a list of the node indices for the predecessors of
     /// a node
     ///
     /// :param int node: The index of the node to get the predecessors of
     ///
-    /// :returns: A list of the neighbor node indicies
+    /// :returns: A list of the neighbor node indices
     /// :rtype: NodeIndices
     #[pyo3(text_signature = "(self, node, /)")]
     pub fn predecessor_indices(&self, node: usize) -> NodeIndices {
@@ -2162,8 +2162,8 @@ impl PyDiGraph {
     /// Read an edge list file and create a new PyDiGraph object from the
     /// contents
     ///
-    /// The expected format for the edge list file is a line seperated list
-    /// of deliminated node ids. If there are more than 3 elements on
+    /// The expected format for the edge list file is a line separated list
+    /// of delimited node ids. If there are more than 3 elements on
     /// a line the 3rd on will be treated as a string weight for the edge
     ///
     /// :param str path: The path of the file to open

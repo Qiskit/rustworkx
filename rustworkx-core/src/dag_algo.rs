@@ -33,7 +33,7 @@ use num_traits::{Num, Zero};
 use crate::err::LayersError;
 
 /// Return a pair of [`petgraph::Direction`] values corresponding to the "forwards" and "backwards"
-/// direction of graph traversal, based on whether the graph is being traved forwards (following
+/// direction of graph traversal, based on whether the graph is being traversed forwards (following
 /// the edges) or backward (reversing along edges).  The order of returns is (forwards, backwards).
 #[inline(always)]
 pub fn traversal_directions(reverse: bool) -> (petgraph::Direction, petgraph::Direction) {
@@ -719,7 +719,7 @@ where
     Some(runs)
 }
 
-/// Auxiliary struct to make the output of [`collect_runs`] iteratable
+/// Auxiliary struct to make the output of [`collect_runs`] iterable
 ///
 /// If the filtering function passed to [`collect_runs`] returns an error, it is propagated
 /// through `next` as `Err`. In this case the run in which the error occurred will be skipped

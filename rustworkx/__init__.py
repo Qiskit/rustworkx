@@ -24,7 +24,7 @@ class PyDAG(PyDiGraph):
     """A class for creating direct acyclic graphs.
 
     PyDAG is just an alias of the PyDiGraph class and behaves identically to
-    the :class:`~rustworkx.PyDiGraph` class and can be used interchangably
+    the :class:`~rustworkx.PyDiGraph` class and can be used interchangeably
     with ``PyDiGraph``. It currently exists solely as a backwards
     compatibility alias for users of rustworkx from prior to the
     0.4.0 release when there was no PyDiGraph class.
@@ -641,7 +641,7 @@ def dfs_edges(graph, source=None):
     :param int source: An optional node index to use as the starting node
         for the depth-first search. The edge list will only return edges in
         the components reachable from this index. If this is not specified
-        then a source will be chosen arbitrarly and repeated until all
+        then a source will be chosen arbitrarily and repeated until all
         components of the graph are searched.
 
     :returns: A list of edges as a tuple of the form ``(source, target)`` in
@@ -1003,7 +1003,7 @@ def bipartite_layout(
     :param graph: The graph to generate the layout for. Can either be a
         :class:`~rustworkx.PyGraph` or :class:`~rustworkx.PyDiGraph`
     :param set first_nodes: The set of node indices on the left (or top if
-        horitontal is true)
+        horizontal is true)
     :param bool horizontal: An optional bool specifying the orientation of the
         layout
     :param float scale: An optional scaling factor to scale positions
@@ -1344,7 +1344,7 @@ def vf2_mapping(
     """
     Return an iterator over all vf2 mappings between two graphs.
 
-    This funcion will run the vf2 algorithm used from
+    This function will run the vf2 algorithm used from
     :func:`~rustworkx.is_isomorphic` and :func:`~rustworkx.is_subgraph_isomorphic`
     but instead of returning a boolean it will return an iterator over all possible
     mapping of node ids found from ``first`` to ``second``. If the graphs are not
@@ -1381,7 +1381,7 @@ def vf2_mapping(
         algorithm visits while searching for a solution. If it exceeds this limit,
         the algorithm will stop. Default: ``None``.
 
-    :returns: An iterator over dicitonaries of node indices from ``first`` to node
+    :returns: An iterator over dictionaries of node indices from ``first`` to node
         indices in ``second`` representing the mapping found.
     :rtype: Iterable[NodeMap]
     """
@@ -1555,7 +1555,7 @@ def bfs_search(graph, source, visitor):
         or a :class:`~rustworkx.PyDiGraph`
     :param List[int] source: An optional list of node indices to use as the starting
         nodes for the breadth-first search. If this is not specified then a source
-        will be chosen arbitrarly and repeated until all components of the
+        will be chosen arbitrarily and repeated until all components of the
         graph are searched.
     :param visitor: A visitor object that is invoked at the event points inside the
         algorithm. This should be a subclass of :class:`~rustworkx.visit.BFSVisitor`.
@@ -1625,7 +1625,7 @@ def dfs_search(graph, source, visitor):
     :param PyGraph graph: The graph to be used.
     :param List[int] source: An optional list of node indices to use as the starting
         nodes for the depth-first search. If this is not specified then a source
-        will be chosen arbitrarly and repeated until all components of the
+        will be chosen arbitrarily and repeated until all components of the
         graph are searched.
     :param visitor: A visitor object that is invoked at the event points inside the
         algorithm. This should be a subclass of :class:`~rustworkx.visit.DFSVisitor`.
@@ -1678,7 +1678,7 @@ def dijkstra_search(graph, source, weight_fn, visitor):
         or a :class:`~rustworkx.PyDiGraph`.
     :param List[int] source: An optional list of node indices to use as the starting nodes
         for the dijkstra search. If this is not specified then a source
-        will be chosen arbitrarly and repeated until all components of the
+        will be chosen arbitrarily and repeated until all components of the
         graph are searched.
     :param weight_fn: An optional weight function for an edge. It will accept
         a single argument, the edge's weight object and will return a float which

@@ -237,7 +237,7 @@ pub fn digraph_random_layout(
 ///
 /// :param PyGraph graph: The graph to generate the layout for
 /// :param set first_nodes: The set of node indices on the left (or top if
-///     horitontal is true)
+///     horizontal is true)
 /// :param bool horizontal: An optional bool specifying the orientation of the
 ///     layout
 /// :param float scale: An optional scaling factor to scale positions

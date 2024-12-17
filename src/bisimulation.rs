@@ -309,11 +309,11 @@ fn maximum_bisimulation(graph: &StablePyGraph<Directed>) -> Option<Vec<Block>> {
         let mut counterimage = build_counterimage(graph, smaller_component);
 
         let counterimage_group = group_by_counterimage(counterimage.clone(), &node_to_block_vec);
-        let ((new_fine_blocks, removeable_fine_blocks), coarse_block_that_are_now_compound) =
+        let ((new_fine_blocks, removable_fine_blocks), coarse_block_that_are_now_compound) =
             split_blocks_with_grouped_counterimage(counterimage_group, &mut node_to_block_vec);
 
         all_fine_blocks.extend(new_fine_blocks);
-        all_fine_blocks.retain(|x| !removeable_fine_blocks.iter().any(|y| Rc::ptr_eq(x, y)));
+        all_fine_blocks.retain(|x| !removable_fine_blocks.iter().any(|y| Rc::ptr_eq(x, y)));
         queue.extend(coarse_block_that_are_now_compound);
 
         // counterimage = E^{-1}(B) - E^{-1}(S-B)
@@ -327,11 +327,11 @@ fn maximum_bisimulation(graph: &StablePyGraph<Directed>) -> Option<Vec<Block>> {
         }
 
         let counterimage_group = group_by_counterimage(counterimage, &node_to_block_vec);
-        let ((new_fine_blocks, removeable_fine_blocks), coarse_block_that_are_now_compound) =
+        let ((new_fine_blocks, removable_fine_blocks), coarse_block_that_are_now_compound) =
             split_blocks_with_grouped_counterimage(counterimage_group, &mut node_to_block_vec);
 
         all_fine_blocks.extend(new_fine_blocks);
-        all_fine_blocks.retain(|x| !removeable_fine_blocks.iter().any(|y| Rc::ptr_eq(x, y)));
+        all_fine_blocks.retain(|x| !removable_fine_blocks.iter().any(|y| Rc::ptr_eq(x, y)));
         queue.extend(coarse_block_that_are_now_compound);
     }
 

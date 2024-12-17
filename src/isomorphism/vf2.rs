@@ -168,7 +168,7 @@ where
     fn sort(&self, graph: &StablePyGraph<Ty>) -> Vec<NodeIndex> {
         let n = graph.node_bound();
 
-        let dout: Vec<usize> = (0..n)
+        let d_out: Vec<usize> = (0..n)
             .map(|idx| {
                 graph
                     .neighbors_directed(graph.from_index(idx), Outgoing)
@@ -176,9 +176,9 @@ where
             })
             .collect();
 
-        let mut din: Vec<usize> = vec![0; n];
+        let mut d_in: Vec<usize> = vec![0; n];
         if graph.is_directed() {
-            din = (0..n)
+            d_in = (0..n)
                 .map(|idx| {
                     graph
                         .neighbors_directed(graph.from_index(idx), Incoming)
@@ -202,9 +202,9 @@ where
                     .max_by_key(|&(_, &node)| {
                         (
                             conn_in[node],
-                            dout[node],
+                            d_out[node],
                             conn_out[node],
-                            din[node],
+                            d_in[node],
                             Reverse(node),
                         )
                     })
@@ -256,7 +256,7 @@ where
         };
 
         let mut sorted_nodes: Vec<usize> = graph.node_indices().map(|node| node.index()).collect();
-        sorted_nodes.par_sort_by_key(|&node| (dout[node], din[node], Reverse(node)));
+        sorted_nodes.par_sort_by_key(|&node| (d_out[node], d_in[node], Reverse(node)));
         sorted_nodes.reverse();
 
         for node in sorted_nodes {

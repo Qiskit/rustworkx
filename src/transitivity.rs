@@ -127,14 +127,14 @@ fn _digraph_triangles(graph: &digraph::PyDiGraph, node: usize) -> (usize, usize)
             .sum::<usize>();
     }
 
-    let din: usize = in_neighbors.len();
-    let dout: usize = out_neighbors.len();
+    let d_in: usize = in_neighbors.len();
+    let d_out: usize = out_neighbors.len();
 
-    let dtot = dout + din;
-    let dbil: usize = out_neighbors.intersection(&in_neighbors).count();
-    let triples: usize = match dtot {
+    let d_tot = d_out + d_in;
+    let d_bil: usize = out_neighbors.intersection(&in_neighbors).count();
+    let triples: usize = match d_tot {
         0 => 0,
-        _ => dtot * (dtot - 1) - 2 * dbil,
+        _ => d_tot * (d_tot - 1) - 2 * d_bil,
     };
 
     (triangles / 2, triples)

@@ -1200,7 +1200,7 @@ class TestAllPairsPathLengthMapping(unittest.TestCase):
     def test_str(self):
         res = rustworkx.all_pairs_dijkstra_path_lengths(self.dag, lambda _: 3.14)
         # Since all_pairs_dijkstra_path_lengths() is parallel the order of the
-        # output is non-determinisitic
+        # output is non-deterministic
         valid_values = [
             "AllPairsPathLengthMapping{1: PathLengthMapping{}, " "0: PathLengthMapping{1: 3.14}}",
             "AllPairsPathLengthMapping{"

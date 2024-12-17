@@ -1,7 +1,7 @@
 ---
 features:
   - |
-    Added a new function, :func:`~.transitive_reduction` which returns the transtive reduction
+    Added a new function, :func:`~.transitive_reduction` which returns the transitive reduction
     of a given :class:`~rustworkx.PyDiGraph` and a dictionary with the mapping of indices from the given graph to the returned graph.
     The given graph must be a Directed Acyclic Graph (DAG).
     For example:

@@ -23,9 +23,9 @@ use petgraph::visit::{Data, NodeIndexable};
 ///
 /// * `default_node_weight` - A callable that will receive a boolean, indicating
 ///     if a node is part of Mr Hi's faction (True) or the Officer's faction (false).
-///     It shoudl return the node weight according to the desired type.
+///     It should return the node weight according to the desired type.
 /// * `default_edge_weight` - A callable that will receive the integer representing
-///     the strenght of the relation between two nodes. It should return the edge
+///     the strength of the relation between two nodes. It should return the edge
 ///      weight according to the desired type.
 ///
 pub fn karate_club_graph<G, T, F, H, M>(mut default_node_weight: F, mut default_edge_weight: H) -> G

@@ -646,7 +646,11 @@ def directed_random_bipartite_graph(
 
 # Read Write
 
-def read_graphml(path: str, /) -> list[PyGraph | PyDiGraph]: ...
+def read_graphml(
+    path: str,
+    /,
+    compression: str | None = ...,
+) -> list[PyGraph | PyDiGraph]: ...
 def digraph_node_link_json(
     graph: PyDiGraph[_S, _T],
     /,
@@ -1048,6 +1052,11 @@ def graph_union(
     merge_edges: bool = ...,
 ) -> PyGraph[_S, _T]: ...
 
+# Dominance
+
+def immediate_dominators(graph: PyDiGraph[_S, _T], start_node: int, /) -> dict[int, int]: ...
+def dominance_frontiers(graph: PyDiGraph[_S, _T], start_node: int, /) -> dict[int, set[int]]: ...
+
 # Iterators
 
 _T_co = TypeVar("_T_co", covariant=True)
@@ -1215,7 +1224,7 @@ class PyGraph(Generic[_S, _T]):
     def filter_nodes(self, filter_function: Callable[[_S], bool]) -> NodeIndices: ...
     def find_node_by_weight(
         self,
-        obj: Callable[[_S], bool],
+        obj: _S,
         /,
     ) -> int | None: ...
     @staticmethod
@@ -1369,7 +1378,7 @@ class PyDiGraph(Generic[_S, _T]):
     def find_adjacent_node_by_edge(self, node: int, predicate: Callable[[_T], bool], /) -> _S: ...
     def find_node_by_weight(
         self,
-        obj: Callable[[_S], bool],
+        obj: _S,
         /,
     ) -> int | None: ...
     def find_predecessors_by_edge(

@@ -211,7 +211,7 @@ class TestNodes(unittest.TestCase):
         for weight in weights:
             dag.add_edge(nodes[0], nodes[1], weight)
             dag.add_edge(nodes[1], nodes[2], weight)
-        # The middle node has three precessor edges and three successor edges, where each set has
+        # The middle node has three predecessor edges and three successor edges, where each set has
         # one edge each of three weights. Edges should be paired up in bijection during the removal.
         dag.remove_node_retain_edges_by_id(nodes[1])
         self.assertEqual(set(dag.node_indices()), {nodes[0], nodes[2]})
