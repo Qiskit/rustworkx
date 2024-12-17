@@ -301,11 +301,11 @@ impl SimpleCycleIter {
 
 /// /// Find all simple cycles of a graph
 ///
-/// A "simple cycle" (called an elementary circuit in [1]) is a cycle (or closed path)
+/// A "simple cycle" (called an elementary circuit in [^Johnson75]) is a cycle (or closed path)
 /// where no node appears more than once.
 ///
-/// This function is a an implementation of Johnson's algorithm [1] also based
-/// on the non-recursive implementation found in NetworkX. [2][3]
+/// This function is a an implementation of Johnson's algorithm [^Johnson75] also based
+/// on the non-recursive implementation found in NetworkX[^NetworkDevs24] with code available on Github[^GitHub24].
 ///
 /// To handle self cycles in a manner consistent with the NetworkX implementation you should
 /// use the ``self_cycles`` argument to collect manually collected self cycle and then remove
@@ -326,9 +326,9 @@ impl SimpleCycleIter {
 /// The return from this function is not guaranteed to have a particular order for either the
 /// cycles or the indices in each cycle.
 ///
-/// [1] https://doi.org/10.1137/0204007
-/// [2] https://networkx.org/documentation/stable/reference/algorithms/generated/networkx.algorithms.cycles.simple_cycles.html
-/// [3] https://github.com/networkx/networkx/blob/networkx-2.8.4/networkx/algorithms/cycles.py#L98-L222
+/// [^Johnson75]: <https://doi.org/10.1137/0204007>
+/// [^NetworkDevs24]: <https://networkx.org/documentation/stable/reference/algorithms/generated/networkx.algorithms.cycles.simple_cycles.html>
+/// [^GitHub24]: <https://github.com/networkx/networkx/blob/networkx-2.8.4/networkx/algorithms/cycles.py#L98-L222>
 ///
 /// # Example:
 ///
