@@ -27,4 +27,4 @@ pub use astar::astar;
 pub use bellman_ford::{bellman_ford, negative_cycle_finder};
 pub use dijkstra::dijkstra;
 pub use k_shortest_path::k_shortest_path;
-pub use simple_shortest_paths::get_shortest_paths;
+pub use simple_shortest_paths::{dijkstra_k_shortest_paths,get_smallest_k_paths_yen};
