@@ -64,14 +64,14 @@ use crate::iterators::EdgeList;
 /// :param int source: An optional node index to use as the starting node
 ///     for the depth-first search. The edge list will only return edges in
 ///     the components reachable from this index. If this is not specified
-///     then a source will be chosen arbitrarly and repeated until all
+///     then a source will be chosen arbitrarily and repeated until all
 ///     components of the graph are searched.
 ///
 /// :returns: A list of edges as a tuple of the form ``(source, target)`` in
 ///     depth-first order
 /// :rtype: EdgeList
 #[pyfunction]
-#[pyo3(text_signature = "(graph, /, source=None)")]
+#[pyo3(text_signature = "(graph, /, source=None)", signature = (graph, source=None))]
 pub fn digraph_dfs_edges(graph: &digraph::PyDiGraph, source: Option<usize>) -> EdgeList {
     EdgeList {
         edges: dfs_edges(&graph.graph, source.map(NodeIndex::new)),
@@ -109,14 +109,14 @@ pub fn digraph_dfs_edges(graph: &digraph::PyDiGraph, source: Option<usize>) -> E
 /// :param int source: An optional node index to use as the starting node
 ///     for the depth-first search. The edge list will only return edges in
 ///     the components reachable from this index. If this is not specified
-///     then a source will be chosen arbitrarly and repeated until all
+///     then a source will be chosen arbitrarily and repeated until all
 ///     components of the graph are searched.
 ///
 /// :returns: A list of edges as a tuple of the form ``(source, target)`` in
 ///     depth-first order
 /// :rtype: EdgeList
 #[pyfunction]
-#[pyo3(text_signature = "(graph, /, source=None)")]
+#[pyo3(text_signature = "(graph, /, source=None)", signature = (graph, source=None))]
 pub fn graph_dfs_edges(graph: &graph::PyGraph, source: Option<usize>) -> EdgeList {
     EdgeList {
         edges: dfs_edges(&graph.graph, source.map(NodeIndex::new)),
@@ -310,7 +310,7 @@ pub fn descendants(graph: &digraph::PyDiGraph, node: usize) -> HashSet<usize> {
 /// :param PyDiGraph graph: The graph to be used.
 /// :param List[int] source: An optional list of node indices to use as the starting nodes
 ///     for the breadth-first search. If this is not specified then a source
-///     will be chosen arbitrarly and repeated until all components of the
+///     will be chosen arbitrarily and repeated until all components of the
 ///     graph are searched.
 /// :param visitor: A visitor object that is invoked at the event points inside the
 ///     algorithm. This should be a subclass of :class:`~rustworkx.visit.BFSVisitor`.
@@ -318,6 +318,7 @@ pub fn descendants(graph: &digraph::PyDiGraph, node: usize) -> HashSet<usize> {
 ///     preserve argument ordering from an earlier version) but it is a required argument
 ///     and will raise a ``TypeError`` if not specified.
 #[pyfunction]
+#[pyo3(signature = (graph, source=None, visitor=None))]
 pub fn digraph_bfs_search(
     py: Python,
     graph: &digraph::PyDiGraph,
@@ -402,7 +403,7 @@ pub fn digraph_bfs_search(
 /// :param PyGraph graph: The graph to be used.
 /// :param List[int] source: An optional list of node indices to use as the starting nodes
 ///     for the breadth-first search. If this is not specified then a source
-///     will be chosen arbitrarly and repeated until all components of the
+///     will be chosen arbitrarily and repeated until all components of the
 ///     graph are searched.
 /// :param visitor: A visitor object that is invoked at the event points inside the
 ///     algorithm. This should be a subclass of :class:`~rustworkx.visit.BFSVisitor`.
@@ -410,6 +411,7 @@ pub fn digraph_bfs_search(
 ///     preserve argument ordering from an earlier version) but it is a required argument
 ///     and will raise a ``TypeError`` if not specified.
 #[pyfunction]
+#[pyo3(signature = (graph, source=None, visitor=None))]
 pub fn graph_bfs_search(
     py: Python,
     graph: &graph::PyGraph,
@@ -492,7 +494,7 @@ pub fn graph_bfs_search(
 /// :param PyDiGraph graph: The graph to be used.
 /// :param List[int] source: An optional list of node indices to use as the starting nodes
 ///     for the depth-first search. If this is not specified then a source
-///     will be chosen arbitrarly and repeated until all components of the
+///     will be chosen arbitrarily and repeated until all components of the
 ///     graph are searched.
 /// :param visitor: A visitor object that is invoked at the event points inside the
 ///     algorithm. This should be a subclass of :class:`~rustworkx.visit.DFSVisitor`.
@@ -500,6 +502,7 @@ pub fn graph_bfs_search(
 ///     preserve argument ordering from an earlier version) but it is a required argument
 ///     and will raise a ``TypeError`` if not specified.
 #[pyfunction]
+#[pyo3(signature = (graph, source=None, visitor=None))]
 pub fn digraph_dfs_search(
     py: Python,
     graph: &digraph::PyDiGraph,
@@ -582,7 +585,7 @@ pub fn digraph_dfs_search(
 /// :param PyGraph graph: The graph to be used.
 /// :param List[int] source: An optional list of node indices to use as the starting nodes
 ///     for the depth-first search. If this is not specified then a source
-///     will be chosen arbitrarly and repeated until all components of the
+///     will be chosen arbitrarily and repeated until all components of the
 ///     graph are searched.
 /// :param visitor: A visitor object that is invoked at the event points inside the
 ///     algorithm. This should be a subclass of :class:`~rustworkx.visit.DFSVisitor`.
@@ -590,6 +593,7 @@ pub fn digraph_dfs_search(
 ///     preserve argument ordering from an earlier version) but it is a required argument
 ///     and will raise a ``TypeError`` if not specified.
 #[pyfunction]
+#[pyo3(signature = (graph, source=None, visitor=None))]
 pub fn graph_dfs_search(
     py: Python,
     graph: &graph::PyGraph,
@@ -654,7 +658,7 @@ pub fn graph_dfs_search(
 /// :param PyDiGraph graph: The graph to be used.
 /// :param List[int] source: An optional list of node indices to use as the starting nodes
 ///     for the dijkstra search. If this is not specified then a source
-///     will be chosen arbitrarly and repeated until all components of the
+///     will be chosen arbitrarily and repeated until all components of the
 ///     graph are searched.
 /// :param weight_fn: An optional weight function for an edge. It will accept
 ///     a single argument, the edge's weight object and will return a float which
@@ -666,6 +670,7 @@ pub fn graph_dfs_search(
 ///     preserve argument ordering from an earlier version) but it is a required argument
 ///     and will raise a ``TypeError`` if not specified.
 #[pyfunction]
+#[pyo3(signature = (graph, source=None, weight_fn=None, visitor=None))]
 pub fn digraph_dijkstra_search(
     py: Python,
     graph: &digraph::PyDiGraph,
@@ -735,7 +740,7 @@ pub fn digraph_dijkstra_search(
 /// :param PyGraph graph: The graph to be used.
 /// :param List[int] source: An optional list of node indices to use as the starting nodes
 ///     for the dijkstra search. If this is not specified then a source
-///     will be chosen arbitrarly and repeated until all components of the
+///     will be chosen arbitrarily and repeated until all components of the
 ///     graph are searched.
 /// :param weight_fn: An optional weight function for an edge. It will accept
 ///     a single argument, the edge's weight object and will return a float which
@@ -747,6 +752,7 @@ pub fn digraph_dijkstra_search(
 ///     preserve argument ordering from an earlier version) but it is a required argument
 ///     and will raise a ``TypeError`` if not specified.
 #[pyfunction]
+#[pyo3(signature = (graph, source=None, weight_fn=None, visitor=None))]
 pub fn graph_dijkstra_search(
     py: Python,
     graph: &graph::PyGraph,

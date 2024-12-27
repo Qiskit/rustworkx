@@ -26,18 +26,28 @@ class _DrawKwargs(typing.TypedDict, total=False):
     node_list: list[int]
     edge_list: list[int]
     node_size: int | list[int]
-    node_color: str | tuple[float, float, float] | tuple[float, float, float, float] | list[
+    node_color: (
         str
-    ] | list[tuple[float, float, float]] | list[tuple[float, float, float, float]]
+        | tuple[float, float, float]
+        | tuple[float, float, float, float]
+        | list[str]
+        | list[tuple[float, float, float]]
+        | list[tuple[float, float, float, float]]
+    )
     node_shape: str
     alpha: float
     cmap: Colormap
     vmin: float
     vmax: float
     linewidths: float | list[float]
-    edge_color: str | tuple[float, float, float] | tuple[float, float, float, float] | list[
+    edge_color: (
         str
-    ] | list[tuple[float, float, float]] | list[tuple[float, float, float, float]]
+        | tuple[float, float, float]
+        | tuple[float, float, float, float]
+        | list[str]
+        | list[tuple[float, float, float]]
+        | list[tuple[float, float, float, float]]
+    )
     edge_cmap: Colormap
     edge_vmin: float
     edge_vmax: float

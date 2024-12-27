@@ -538,7 +538,7 @@ where
     }
 
     // Reconstruct coloring of the original graph by iterating over the edges, finding the
-    // correponding edge (endpoints) in the multigraph, and selecting the last (not yet
+    // corresponding edge (endpoints) in the multigraph, and selecting the last (not yet
     // assigned) color of that edge
     let mut edge_coloring: DictMap<G::EdgeId, usize> = DictMap::with_capacity(graph.edge_count());
     for edge in graph.edge_references() {

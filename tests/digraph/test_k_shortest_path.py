@@ -89,8 +89,8 @@ class TestKShortestpath(unittest.TestCase):
         g = rustworkx.PyDiGraph()
         a = g.add_node("A")
         b = g.add_node("B")
-        path_lenghts = rustworkx.digraph_k_shortest_path_lengths(
+        path_lengths = rustworkx.digraph_k_shortest_path_lengths(
             g, start=a, k=1, edge_cost=float, goal=b
         )
         expected = {}
-        self.assertEqual(expected, path_lenghts)
+        self.assertEqual(expected, path_lengths)

@@ -121,7 +121,7 @@ class TestMPLDraw(unittest.TestCase):
                     min_source_margin=100,
                     min_target_margin=100,
                 )
-                _save_images(fig, "test_node_shape_%s.png" % node_shape)
+                _save_images(fig, f"test_node_shape_{node_shape}.png")
 
     def test_alpha_iter(self):
         graph = rustworkx.generators.grid_graph(4, 6)

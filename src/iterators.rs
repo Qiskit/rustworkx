@@ -34,12 +34,11 @@
 // don't store any python object, just use `impl PyGCProtocol for MyReadOnlyType {}`.
 //
 // Types `T, K, V` above should implement `PyHash`, `PyEq`, `PyDisplay` traits.
-// These are arleady implemented for many primitive rust types and `PyObject`.
+// These are already implemented for many primitive rust types and `PyObject`.
 
 #![allow(clippy::float_cmp, clippy::upper_case_acronyms)]
 
 use std::collections::hash_map::DefaultHasher;
-use std::convert::TryInto;
 use std::hash::Hasher;
 
 use num_bigint::BigUint;
@@ -283,7 +282,7 @@ where
     }
 }
 
-impl<'py, T> PyEq<Bound<'py, PyAny>> for T
+impl<T> PyEq<Bound<'_, PyAny>> for T
 where
     for<'p> T: PyEq<T> + Clone + FromPyObject<'p>,
 {
@@ -410,10 +409,26 @@ trait PyGCProtocol {
     fn __clear__(&mut self) {}
 }
 
-#[derive(FromPyObject)]
-enum SliceOrInt<'a> {
+/// A Python-space indexer for the standard `PySequence` type; a single integer or a slice.
+///
+/// These come in as `isize`s from Python space, since Python typically allows negative indices.
+/// Copied from https://github.com/Qiskit/qiskit/pull/12669
+pub enum PySequenceIndex<'py> {
     Int(isize),
-    Slice(&'a PySlice),
+    Slice(Bound<'py, PySlice>),
+}
+
+impl<'py> FromPyObject<'py> for PySequenceIndex<'py> {
+    fn extract_bound(ob: &Bound<'py, PyAny>) -> PyResult<Self> {
+        // `slice` can't be subclassed in Python, so it's safe (and faster) to check for it exactly.
+        // The `downcast_exact` check is just a pointer comparison, so while `slice` is the less
+        // common input, doing that first has little-to-no impact on the speed of the `isize` path,
+        // while the reverse makes `slice` inputs significantly slower.
+        if let Ok(slice) = ob.downcast_exact::<PySlice>() {
+            return Ok(Self::Slice(slice.clone()));
+        }
+        Ok(Self::Int(ob.extract()?))
+    }
 }
 
 trait PyConvertToPyArray {
@@ -531,6 +546,10 @@ macro_rules! custom_vec_iter_impl {
                 Python::with_gil(|py| Ok(format!("{}{}", stringify!($name), self.$data.str(py)?)))
             }
 
+            fn __repr__(&self) -> PyResult<String> {
+                self.__str__()
+            }
+
             fn __hash__(&self) -> PyResult<u64> {
                 let mut hasher = DefaultHasher::new();
                 Python::with_gil(|py| PyHash::hash(&self.$data, py, &mut hasher))?;
@@ -542,9 +561,9 @@ macro_rules! custom_vec_iter_impl {
                 Ok(self.$data.len())
             }
 
-            fn __getitem__(&self, py: Python, idx: SliceOrInt) -> PyResult<PyObject> {
+            fn __getitem__(&self, py: Python, idx: PySequenceIndex) -> PyResult<PyObject> {
                 match idx {
-                    SliceOrInt::Slice(slc) => {
+                    PySequenceIndex::Slice(slc) => {
                         let len = self.$data.len().try_into().unwrap();
                         let indices = slc.indices(len)?;
                         let mut out_vec: Vec<$T> = Vec::new();
@@ -571,7 +590,7 @@ macro_rules! custom_vec_iter_impl {
                         }
                         Ok(out_vec.into_py(py))
                     }
-                    SliceOrInt::Int(idx) => {
+                    PySequenceIndex::Int(idx) => {
                         let len = self.$data.len() as isize;
                         if idx >= len || idx < -len {
                             Err(PyIndexError::new_err(format!("Invalid index, {}", idx)))
@@ -599,6 +618,7 @@ macro_rules! custom_vec_iter_impl {
                 }
             }
 
+            #[pyo3(signature = (dtype=None, copy=None))]
             fn __array__(
                 &self,
                 py: Python,
@@ -1011,7 +1031,7 @@ impl PyHash for EdgeList {
     }
 }
 
-impl<'py> PyEq<Bound<'py, PyAny>> for EdgeList {
+impl PyEq<Bound<'_, PyAny>> for EdgeList {
     #[inline]
     fn eq(&self, other: &Bound<PyAny>, py: Python) -> PyResult<bool> {
         PyEq::eq(&self.edges, other, py)
@@ -1068,7 +1088,7 @@ custom_vec_iter_impl!(
 
     The class is a read-only sequence of integers instances.
 
-    This class is a container class for the results of the digraph_maximum_bisimulation funtion.
+    This class is a container class for the results of the digraph_maximum_bisimulation function.
     It implements the Python sequence
     protocol. So you can treat the return as a read-only sequence/list
     that is integer indexed. If you want to use it as an iterator you
@@ -1099,7 +1119,7 @@ impl PyHash for IndexPartitionBlock {
     }
 }
 
-impl<'py> PyEq<Bound<'py, PyAny>> for IndexPartitionBlock {
+impl PyEq<Bound<'_, PyAny>> for IndexPartitionBlock {
     #[inline]
     fn eq(&self, other: &Bound<PyAny>, py: Python) -> PyResult<bool> {
         PyEq::eq(&self.block, other, py)
@@ -1124,7 +1144,7 @@ custom_vec_iter_impl!(
 
     The class is a read-only sequence of :class:`.NodeIndices` instances.
 
-    This class is a container class for the results of the digraph_maximum_bisimulation funtion.
+    This class is a container class for the results of the digraph_maximum_bisimulation function.
     It implements the Python sequence
     protocol. So you can treat the return as a read-only sequence/list
     that is integer indexed. If you want to use it as an iterator you
@@ -1502,7 +1522,7 @@ impl PyHash for PathMapping {
     }
 }
 
-impl<'py> PyEq<Bound<'py, PyAny>> for PathMapping {
+impl PyEq<Bound<'_, PyAny>> for PathMapping {
     #[inline]
     fn eq(&self, other: &Bound<PyAny>, py: Python) -> PyResult<bool> {
         PyEq::eq(&self.paths, other, py)
@@ -1666,7 +1686,7 @@ impl PyHash for MultiplePathMapping {
     }
 }
 
-impl<'py> PyEq<Bound<'py, PyAny>> for MultiplePathMapping {
+impl PyEq<Bound<'_, PyAny>> for MultiplePathMapping {
     #[inline]
     fn eq(&self, other: &Bound<PyAny>, py: Python) -> PyResult<bool> {
         PyEq::eq(&self.paths, other, py)
@@ -1730,7 +1750,7 @@ impl PyHash for PathLengthMapping {
     }
 }
 
-impl<'py> PyEq<Bound<'py, PyAny>> for PathLengthMapping {
+impl PyEq<Bound<'_, PyAny>> for PathLengthMapping {
     #[inline]
     fn eq(&self, other: &Bound<PyAny>, py: Python) -> PyResult<bool> {
         PyEq::eq(&self.path_lengths, other, py)

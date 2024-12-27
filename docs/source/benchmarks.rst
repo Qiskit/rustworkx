@@ -2,7 +2,7 @@
 Rustworkx Comparison Benchmarks With Other Libraries
 ****************************************************
 
-rustworkx is competitive against other popular graph libraries for Python. We compared rustworkx to the igraph, graph-tools and NetworkIt libraries `in a benchmark consisting of four tasks available on Github for reproducibility <https://github.com/mtreinish/retworkx-comparison-benchmarks>`__. We report the results from a machine with an Intel(R) i9-9900K CPU at 3.60GHz with eight cores, 16 theads, and 32GB of RAM avaialble. 
+rustworkx is competitive against other popular graph libraries for Python. We compared rustworkx to the igraph, graph-tools and NetworkIt libraries `in a benchmark consisting of four tasks available on Github for reproducibility <https://github.com/mtreinish/retworkx-comparison-benchmarks>`__. We report the results from a machine with an Intel(R) i9-9900K CPU at 3.60GHz with eight cores, 16 threads, and 32GB of RAM available.
 
 Graph Creation
 ==============

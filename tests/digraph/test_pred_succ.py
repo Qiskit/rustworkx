@@ -274,7 +274,7 @@ class TestBfsSuccessors(unittest.TestCase):
             res,
         )
 
-    def test_bfs_succesors(self):
+    def test_bfs_successors(self):
         dag = rustworkx.PyDAG()
         node_a = dag.add_node(0)
         node_b = dag.add_child(node_a, 1, {})

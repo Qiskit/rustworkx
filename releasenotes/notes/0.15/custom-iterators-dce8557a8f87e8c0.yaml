@@ -7,4 +7,4 @@ features:
     of approximately 40% for iterating through the custom iterables.
 
     These types are not directly nameable or constructable from Python space, and other than the
-    performance improvement, the behavior should largely not be noticable from Python space.
+    performance improvement, the behavior should largely not be noticeable from Python space.

@@ -68,8 +68,8 @@ class TestKShortestpath(unittest.TestCase):
         g = rustworkx.PyGraph()
         a = g.add_node("A")
         b = g.add_node("B")
-        path_lenghts = rustworkx.graph_k_shortest_path_lengths(
+        path_lengths = rustworkx.graph_k_shortest_path_lengths(
             g, start=a, k=1, edge_cost=float, goal=b
         )
         expected = {}
-        self.assertEqual(expected, path_lenghts)
+        self.assertEqual(expected, path_lengths)
