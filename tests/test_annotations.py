@@ -29,7 +29,7 @@ class TestAnnotationSubscriptions(unittest.TestCase):
             graph.__class_getitem__((int, int)),
             types.GenericAlias,
         )
-    
+
     def test_dag(self):
         graph: rx.PyDAG[int, int] = rx.PyDAG()
         self.assertIsInstance(
