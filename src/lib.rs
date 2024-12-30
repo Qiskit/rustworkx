@@ -376,6 +376,19 @@ fn find_node_by_weight<Ty: EdgeType>(
     Ok(index)
 }
 
+fn generic_class_getitem(
+    cls: &Bound<'_, pyo3::types::PyType>,
+    key: &Bound<'_, PyAny>,
+) -> PyResult<PyObject> {
+    Python::with_gil(|py| -> PyResult<PyObject> {
+        let types_mod = py.import_bound("types")?;
+        let types_generic_alias = types_mod.getattr("GenericAlias")?;
+        let args = (cls, key);
+        let generic_alias = types_generic_alias.call1(args)?;
+        Ok(generic_alias.into())
+    })
+}
+
 // The provided node is invalid.
 create_exception!(rustworkx, InvalidNode, PyException);
 // Performing this operation would result in trying to add a cycle to a DAG.

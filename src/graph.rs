@@ -26,7 +26,7 @@ use rustworkx_core::graph_ext::*;
 use pyo3::exceptions::PyIndexError;
 use pyo3::gc::PyVisit;
 use pyo3::prelude::*;
-use pyo3::types::{IntoPyDict, PyBool, PyDict, PyList, PyString, PyTuple};
+use pyo3::types::{IntoPyDict, PyBool, PyDict, PyList, PyString, PyTuple, PyType};
 use pyo3::PyTraverseError;
 use pyo3::Python;
 
@@ -40,7 +40,8 @@ use crate::iterators::NodeMap;
 use super::dot_utils::build_dot;
 use super::iterators::{EdgeIndexMap, EdgeIndices, EdgeList, NodeIndices, WeightedEdgeList};
 use super::{
-    find_node_by_weight, weight_callable, IsNan, NoEdgeBetweenNodes, NodesRemoved, StablePyGraph,
+    find_node_by_weight, generic_class_getitem, weight_callable, IsNan, NoEdgeBetweenNodes,
+    NodesRemoved, StablePyGraph,
 };
 
 use crate::RxPyResult;
@@ -1992,6 +1993,15 @@ impl PyGraph {
             }
             None => Err(PyIndexError::new_err("No node found for index")),
         }
+    }
+
+    #[classmethod]
+    #[pyo3(signature = (key, /))]
+    pub fn __class_getitem__(
+        cls: &Bound<'_, PyType>,
+        key: &Bound<'_, PyAny>,
+    ) -> PyResult<PyObject> {
+        generic_class_getitem(cls, key)
     }
 
     // Functions to enable Python Garbage Collection
