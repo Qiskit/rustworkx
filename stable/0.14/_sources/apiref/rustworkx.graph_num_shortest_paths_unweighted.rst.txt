@@ -1,0 +1,6 @@
+﻿rustworkx.graph\_num\_shortest\_paths\_unweighted
+=================================================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: graph_num_shortest_paths_unweighted
