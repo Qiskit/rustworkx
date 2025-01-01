@@ -14,6 +14,8 @@ import rustworkx as rx
 import types
 import unittest
 
+from typing import Optional
+
 
 class TestAnnotationSubscriptions(unittest.TestCase):
     def test_digraph(self):
@@ -36,3 +38,39 @@ class TestAnnotationSubscriptions(unittest.TestCase):
             graph.__class_getitem__((int, int)),
             types.GenericAlias,
         )
+
+    def test_custom_vector_allowed(self):
+        graph: rx.PyGraph[Optional[int], Optional[int]] = rx.generators.path_graph(5)
+        we_list: rx.WeightedEdgeList[Optional[int]] = graph.weighted_edge_list()
+        self.assertIsInstance(
+            we_list.__class_getitem__((Optional[int],)),
+            types.GenericAlias,
+        )
+
+    def test_custom_vector_not_allowed(self):
+        graph: rx.PyGraph[Optional[int], Optional[int]] = rx.generators.path_graph(5)
+        edge_list: rx.EdgeList = graph.edge_list()
+        with self.assertRaises(TypeError):
+            self.assertIsInstance(
+                edge_list.__class_getitem__((Optional[int],)),
+                types.GenericAlias,
+            )
+
+    def test_custom_hashmap_allowed(self):
+        graph: rx.PyGraph[Optional[int], Optional[int]] = rx.generators.path_graph(5)
+        ei_map: rx.WeightedEdgeList[Optional[int]] = graph.edge_index_map()
+        self.assertIsInstance(
+            ei_map.__class_getitem__((Optional[int],)),
+            types.GenericAlias,
+        )
+
+    def test_custom_vector_not_allowed(self):
+        graph: rx.PyGraph[Optional[int], Optional[int]] = rx.generators.path_graph(5)
+        all_pairs_pm: rx.AllPairsPathMapping = rx.all_pairs_dijkstra_shortest_paths(
+            graph, lambda _: 1.0
+        )
+        with self.assertRaises(TypeError):
+            self.assertIsInstance(
+                all_pairs_pm.__class_getitem__((Optional[int],)),
+                types.GenericAlias,
+            )
