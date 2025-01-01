@@ -64,7 +64,7 @@ class TestAnnotationSubscriptions(unittest.TestCase):
             types.GenericAlias,
         )
 
-    def test_custom_vector_not_allowed(self):
+    def test_custom_hashmap_not_allowed(self):
         graph: rx.PyGraph[Optional[int], Optional[int]] = rx.generators.path_graph(5)
         all_pairs_pm: rx.AllPairsPathMapping = rx.all_pairs_dijkstra_shortest_paths(
             graph, lambda _: 1.0
