@@ -41,12 +41,15 @@
 use std::collections::hash_map::DefaultHasher;
 use std::hash::Hasher;
 
+use super::generic_class_getitem;
 use num_bigint::BigUint;
 use rustworkx_core::dictmap::*;
 
 use ndarray::prelude::*;
 use numpy::IntoPyArray;
-use pyo3::exceptions::{PyIndexError, PyKeyError, PyNotImplementedError, PyValueError};
+use pyo3::exceptions::{
+    PyIndexError, PyKeyError, PyNotImplementedError, PyTypeError, PyValueError,
+};
 use pyo3::gc::PyVisit;
 use pyo3::prelude::*;
 use pyo3::types::IntoPyDict;
@@ -616,6 +619,24 @@ macro_rules! custom_vec_iter_impl {
                     inner: Some(self_.clone_ref(py)),
                     index: 0,
                 }
+            }
+
+            #[classmethod]
+            #[pyo3(signature = (key, /))]
+            pub fn __class_getitem__(
+                cls: &Bound<'_, pyo3::types::PyType>,
+                key: &Bound<'_, PyAny>,
+            ) -> PyResult<PyObject> {
+                let class_string = stringify!($name);
+                const ALLOWED_GENERIC_CLASSES: [&str; 3] =
+                    ["BFSSuccessors", "BFSPredecessors", "WeightedEdgeList"];
+                if !ALLOWED_GENERIC_CLASSES.contains(&class_string) {
+                    return Err(PyTypeError::new_err(format!(
+                        "type 'rustworkx.{}' is not subscriptable",
+                        class_string
+                    )));
+                }
+                generic_class_getitem(cls, key)
             }
 
             #[pyo3(signature = (dtype=None, copy=None))]
@@ -1288,6 +1309,23 @@ macro_rules! custom_hash_map_iter_impl {
                     Some(data) => Ok(data.clone()),
                     None => Err(PyIndexError::new_err("No node found for index")),
                 }
+            }
+
+            #[classmethod]
+            #[pyo3(signature = (key, /))]
+            pub fn __class_getitem__(
+                cls: &Bound<'_, pyo3::types::PyType>,
+                key: &Bound<'_, PyAny>,
+            ) -> PyResult<PyObject> {
+                let class_string = stringify!($name);
+                const ALLOWED_GENERIC_CLASSES: [&str; 1] = ["EdgeIndexMap"];
+                if !ALLOWED_GENERIC_CLASSES.contains(&class_string) {
+                    return Err(PyTypeError::new_err(format!(
+                        "type 'rustworkx.{}' is not subscriptable",
+                        class_string
+                    )));
+                }
+                generic_class_getitem(cls, key)
             }
 
             fn __iter__(slf: PyRef<Self>) -> $nameKeys {

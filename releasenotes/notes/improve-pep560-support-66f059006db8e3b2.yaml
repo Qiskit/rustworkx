@@ -1,0 +1,21 @@
+---
+features:
+  - |
+    The :class:`PyDiGraph() <rustworkx.PyDiGraph>` and :class:`PyGraph() <rustworkx.PyGraph>`
+    classes now have better support for
+    `PEP 560 <https://peps.python.org/pep-0560/>`__. Building off of the previous
+    releases which introduced type annotations, the following code snippet is now valid:
+
+    .. jupyter-execute::
+
+      import rustworkx as rx
+
+      graph: rx.PyGraph[int, int] = rx.PyGraph()
+
+
+    Previously, users had to rely on post-poned evaluation of type annotations from
+    `PEP 563 <https://peps.python.org/pep-0563/>`__ for annotations to work.
+
+    Refer to `issue 1345 <https://github.com/Qiskit/rustworkx/issues/1345>`__ for
+    more information.
+    
