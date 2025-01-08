@@ -10,6 +10,7 @@
 # For implementation details, see __init__.py and src/lib.rs
 
 import numpy as np
+import numpy.typing as npt
 
 from typing import Generic, TypeVar, Any, Callable, overload
 from collections.abc import Iterator, Sequence
@@ -283,7 +284,7 @@ def distance_matrix(
     parallel_threshold: int = ...,
     as_undirected: bool = ...,
     null_value: float = ...,
-) -> np.ndarray: ...
+) -> npt.NDArray[np.float64]: ...
 def unweighted_average_shortest_path_length(
     graph: PyGraph | PyDiGraph,
     parallel_threshold: int = ...,
@@ -294,7 +295,7 @@ def adjacency_matrix(
     weight_fn: Callable[[_T], float] | None = ...,
     default_weight: float = ...,
     null_value: float = ...,
-) -> np.ndarray: ...
+) -> npt.NDArray[np.float64]: ...
 def all_simple_paths(
     graph: PyGraph | PyDiGraph,
     from_: int,
@@ -313,13 +314,13 @@ def floyd_warshall_numpy(
     weight_fn: Callable[[_T], float] | None = ...,
     default_weight: float = ...,
     parallel_threshold: int = ...,
-) -> np.ndarray: ...
+) -> npt.NDArray[np.float64]: ...
 def floyd_warshall_successor_and_distance(
     graph: PyGraph[_S, _T] | PyDiGraph[_S, _T],
     weight_fn: Callable[[_T], float] | None = ...,
     default_weight: float | None = ...,
     parallel_threshold: int | None = ...,
-) -> tuple[np.ndarray, np.ndarray]: ...
+) -> tuple[npt.NDArray[np.float64], npt.NDArray[np.float64]]: ...
 def astar_shortest_path(
     graph: PyGraph[_S, _T] | PyDiGraph[_S, _T],
     node: int,
