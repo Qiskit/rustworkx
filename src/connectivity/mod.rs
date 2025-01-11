@@ -594,6 +594,60 @@ pub fn graph_local_complement(
     let node_neighbors: HashSet<NodeIndex> = graph.graph.neighbors(node).collect();
     let node_neighbors_vec: Vec<&NodeIndex> = node_neighbors.iter().collect();
     for (i, neighbor_i) in node_neighbors_vec.iter().enumerate() {
+        // Ensure checking pairs of neighbors is only done once
+        let (_nodes_head, nodes_tail) = node_neighbors_vec.split_at(i + 1);
+        for neighbor_j in nodes_tail.iter() {
+            if complement_graph.has_edge(neighbor_i.index(), neighbor_j.index()) {
+                let _ = complement_graph.remove_edge(neighbor_i.index(), neighbor_j.index());
+            } else {
+                complement_graph
+                    .graph
+                    .add_edge(**neighbor_i, **neighbor_j, py.None());
+            }
+        }
+    }
+
+    Ok(complement_graph)
+}
+
+/// Local complementation of a node applied to a directed graph.
+///
+/// :param PyDiGraph graph: The graph to be used.
+/// :param int node: A node in the graph.
+///
+/// :returns: The locally complemented graph.
+/// :rtype: PyDiGraph
+///
+/// .. note::
+///
+///     Parallel edges and self-loops are never created,
+///     even if the :attr:`~rustworkx.PyDiGraph.multigraph`
+///     attribute is set to ``True``
+#[pyfunction]
+#[pyo3(text_signature = "(graph, node, /)")]
+pub fn digraph_local_complement(
+    py: Python,
+    graph: &digraph::PyDiGraph,
+    node: usize,
+) -> PyResult<digraph::PyDiGraph> {
+    let mut complement_graph = graph.clone(); // keep same node indices
+
+    let node = NodeIndex::new(node);
+    if !graph.graph.contains_node(node) {
+        return Err(InvalidNode::new_err(
+            "The input index for 'node' is not a valid node index",
+        ));
+    }
+
+    // Local complementation
+    let node_neighbors: HashSet<NodeIndex> = graph
+        .graph
+        .neighbors_directed(node, petgraph::Direction::Outgoing)
+        .collect();
+    // TODO: node can be neighbor of itself, i.e. do we have to filter the Vec to remove node?
+    let node_neighbors_vec: Vec<&NodeIndex> = node_neighbors.iter().collect();
+    for (i, neighbor_i) in node_neighbors_vec.iter().enumerate() {
+        // Ensure checking pairs of neighbors is only done once
         let (_nodes_head, nodes_tail) = node_neighbors_vec.split_at(i + 1);
         for (j, neighbor_j) in nodes_tail.iter().enumerate() {
             if complement_graph.has_edge(i, j) {
@@ -605,53 +659,6 @@ pub fn graph_local_complement(
             }
         }
     }
-
-    // One has to remove all edges between the neighbors first to check if
-    // an edge has already been created/deleted during local complementation
-    // complement_graph.graph.remove_edge();
-    // for neighbor_i in &node_neighbors {
-    //     for neighbor_j in &node_neighbors {
-    //         if neighbor_i != neighbor_j {}
-    //     }
-    // }
-
-    // let node_neighbors = graph.graph.neighbors(node);
-    // for neighbor_i in node_neighbors.clone() {
-    //     for neighbor_j in node_neighbors.clone() {
-    //         // for node_a in graph.graph.node_indices() {
-    //         //     for node_b in graph.graph.node_indices() {
-    //         if neighbor_i != neighbor_j && (complement_graph.multigraph)
-    //         // || complement_graph.has_edge(neighbor_i.index(), neighbor_j.index()))
-    //         {
-    //             let connected = complement_graph.has_edge(neighbor_i.index(), neighbor_j.index());
-    //             if connected {
-    //                 // complement_graph.graph.remove_edge(e);
-    //             } else {
-    //                 complement_graph
-    //                     .graph
-    //                     .add_edge(neighbor_i, neighbor_j, py.None());
-    //             }
-    //         }
-
-    //         // // check if the two neighbors are connected
-    //         // match graph.graph.find_edge(neighbor_i, neighbor_j) {
-    //         //     Some(edge) => {
-    //         //         complement_graph.graph.remove_edge(edge).unwrap();
-    //         //     } // Safely unwrap since edge exists
-    //         //     None => {
-    //         //         complement_graph
-    //         //             .graph
-    //         //             .add_edge(neighbor_i, neighbor_i, py.None());
-    //         //     }
-    //         // };
-
-    //         // let edges_i_j = graph.graph.edges_connecting(neighbor_i, neighbor_j);
-    //         // for edge in edges_i_j {
-    //         // }
-    //         // let nedges = edges_i_j.size_hint();
-    //         // if edges_i_j.next().is_none() {}
-    //     }
-    // }
 
     Ok(complement_graph)
 }

@@ -868,6 +868,24 @@ def complement(graph):
 
 
 @_rustworkx_dispatch
+def local_complement(graph, node):
+    """Local complementation of a node applied to a graph.
+
+    :param graph: The graph to be used, can be either a
+        :class:`~rustworkx.PyGraph` or :class:`~rustworkx.PyDiGraph`.
+    :param int node: A node index.
+
+    :returns: The locally complemented graph.
+    :rtype: :class:`~rustworkx.PyGraph` or :class:`~rustworkx.PyDiGraph`
+
+    .. note::
+        Parallel edges and self-loops are never created,
+        even if the ``multigraph`` is set to ``True``
+    """
+    raise TypeError("Invalid Input Type %s for graph" % type(graph))
+
+
+@_rustworkx_dispatch
 def random_layout(graph, center=None, seed=None):
     """Generate a random layout
 
