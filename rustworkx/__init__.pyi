@@ -26,8 +26,8 @@ else:
 # rustworkx module we need to explicitly re-export every inner function from
 # rustworkx.rustworkx (the root rust module) in the form:
 # `from .rustworkx import foo as foo` so that mypy will treat `rustworkx.foo`
-# as a valid path
-import rustworkx.visit as visit
+# as a valid path.
+from . import visit as visit
 
 from .rustworkx import DAGHasCycle as DAGHasCycle
 from .rustworkx import DAGWouldCycle as DAGWouldCycle
