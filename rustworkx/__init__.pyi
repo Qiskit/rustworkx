@@ -459,7 +459,7 @@ def spring_layout(
 def networkx_converter(graph: Any, keep_attributes: bool = ...) -> PyGraph | PyDiGraph: ...
 def bipartite_layout(
     graph: PyGraph[_S, _T] | PyDiGraph[_S, _T],
-    first_nodes,
+    first_nodes: set[int],
     horizontal: bool = ...,
     scale: int = ...,
     center: tuple[float, float] | None = ...,
@@ -594,7 +594,7 @@ def dijkstra_search(
 ) -> None: ...
 def bellman_ford_shortest_paths(
     graph: PyGraph[_S, _T] | PyDiGraph[_S, _T],
-    source,
+    source: int,
     target: int | None = ...,
     weight_fn: Callable[[_T], float] | None = ...,
     default_weight: float = ...,
