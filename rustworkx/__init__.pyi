@@ -9,11 +9,17 @@
 # This file contains only type annotations for PyO3 functions and classes
 # For implementation details, see __init__.py and src/lib.rs
 
+import sys
 import numpy as np
 import numpy.typing as npt
 
-from typing import Generic, TypeVar, Any, Callable, overload
+from typing import Generic, Any, Callable, overload
 from collections.abc import Iterator, Sequence
+
+if sys.version_info >= (3, 13):
+    from typing import TypeVar
+else:
+    from typing_extensions import TypeVar
 
 # Re-Exports of rust native functions in rustworkx.rustworkx
 # To workaround limitations in mypy around re-exporting objects from the inner
@@ -271,8 +277,8 @@ from .rustworkx import AllPairsMultiplePathMapping as AllPairsMultiplePathMappin
 from .rustworkx import PyGraph as PyGraph
 from .rustworkx import PyDiGraph as PyDiGraph
 
-_S = TypeVar("_S")
-_T = TypeVar("_T")
+_S = TypeVar("_S", default=Any)
+_T = TypeVar("_T", default=Any)
 _BFSVisitor = TypeVar("_BFSVisitor", bound=visit.BFSVisitor)
 _DFSVisitor = TypeVar("_DFSVisitor", bound=visit.DFSVisitor)
 _DijkstraVisitor = TypeVar("_DijkstraVisitor", bound=visit.DijkstraVisitor)
@@ -454,7 +460,7 @@ def spring_layout(
 def networkx_converter(graph: Any, keep_attributes: bool = ...) -> PyGraph | PyDiGraph: ...
 def bipartite_layout(
     graph: PyGraph[_S, _T] | PyDiGraph[_S, _T],
-    first_nodes,
+    first_nodes: set[int],
     horizontal: bool = ...,
     scale: int = ...,
     center: tuple[float, float] | None = ...,
@@ -589,7 +595,7 @@ def dijkstra_search(
 ) -> None: ...
 def bellman_ford_shortest_paths(
     graph: PyGraph[_S, _T] | PyDiGraph[_S, _T],
-    source,
+    source: int,
     target: int | None = ...,
     weight_fn: Callable[[_T], float] | None = ...,
     default_weight: float = ...,
