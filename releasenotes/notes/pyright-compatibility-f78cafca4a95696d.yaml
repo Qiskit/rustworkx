@@ -1,0 +1,6 @@
+---
+fixes:
+  - |
+    Enhanced the compatibility of the type annotations with `pyright` in strict
+    mode. See `issue 1242 <https://github.com/Qiskit/rustworkx/issues/1242>`__ for
+    more details.
