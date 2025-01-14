@@ -326,6 +326,7 @@ where
     let mut v = *first;
     let mut u: Option<G::NodeId> = None;
     // Backtrack from this node to find the path
+    #[allow(clippy::unnecessary_map_or)]
     while u.map_or(true, |u| u != v) {
         path.push(v);
         u = Some(v);
