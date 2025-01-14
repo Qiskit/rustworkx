@@ -16,7 +16,6 @@ import unittest
 
 from typing import Optional
 
-
 class TestAnnotationSubscriptions(unittest.TestCase):
     def test_digraph(self):
         graph: rx.PyDiGraph[int, int] = rx.PyDiGraph()
