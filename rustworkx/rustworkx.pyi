@@ -11,7 +11,6 @@
 
 from .visit import BFSVisitor, DFSVisitor, DijkstraVisitor
 from typing import (
-    TypeVar,
     Callable,
     final,
     Any,
@@ -35,9 +34,15 @@ from rustworkx import generators  # noqa
 from typing_extensions import Self
 
 import numpy as np
+import sys
 
-_S = TypeVar("_S")
-_T = TypeVar("_T")
+if sys.version_info >= (3, 13):
+    from typing import TypeVar
+else:
+    from typing_extensions import TypeVar
+
+_S = TypeVar("_S", default=Any)
+_T = TypeVar("_T", default=Any)
 
 class DAGHasCycle(Exception): ...
 class DAGWouldCycle(Exception): ...
@@ -316,7 +321,7 @@ def layers(
     first_layer: list[int],
     /,
     index_output: bool = ...,
-) -> list[_S] | list[int]: ...
+) -> list[list[_S]] | list[list[int]]: ...
 @final
 class TopologicalSorter:
     def __init__(
@@ -1059,7 +1064,7 @@ def dominance_frontiers(graph: PyDiGraph[_S, _T], start_node: int, /) -> dict[in
 
 # Iterators
 
-_T_co = TypeVar("_T_co", covariant=True)
+_T_co = TypeVar("_T_co", covariant=True, default=Any)
 
 class _RustworkxCustomVecIter(Generic[_T_co], Sequence[_T_co], ABC):
     def __init__(self) -> None: ...
