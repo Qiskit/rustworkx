@@ -27,6 +27,7 @@ use pyo3::exceptions::PyIndexError;
 use pyo3::gc::PyVisit;
 use pyo3::prelude::*;
 use pyo3::types::{IntoPyDict, PyBool, PyDict, PyList, PyString, PyTuple, PyType};
+use pyo3::IntoPyObjectExt;
 use pyo3::PyTraverseError;
 use pyo3::Python;
 
@@ -211,15 +212,18 @@ impl PyGraph {
         }
     }
 
-    fn __getnewargs_ex__<'py>(&self, py: Python<'py>) -> (Py<PyTuple>, Bound<'py, PyDict>) {
-        (
-            (self.multigraph, self.attrs.clone_ref(py)).into_py(py),
+    fn __getnewargs_ex__<'py>(
+        &self,
+        py: Python<'py>,
+    ) -> PyResult<(Bound<'py, PyTuple>, Bound<'py, PyDict>)> {
+        Ok((
+            (self.multigraph, self.attrs.clone_ref(py)).into_pyobject(py)?,
             [
                 ("node_count_hint", self.graph.node_bound()),
                 ("edge_count_hint", self.graph.edge_bound()),
             ]
-            .into_py_dict_bound(py),
-        )
+            .into_py_dict(py)?,
+        ))
     }
 
     fn __getstate__(&self, py: Python) -> PyResult<PyObject> {
@@ -229,7 +233,7 @@ impl PyGraph {
         // save nodes to a list along with its index
         for node_idx in self.graph.node_indices() {
             let node_data = self.graph.node_weight(node_idx).unwrap();
-            nodes.push((node_idx.index(), node_data).to_object(py));
+            nodes.push((node_idx.index(), node_data).into_py_any(py)?);
         }
 
         // edges are saved with none (deleted edges) instead of their index to save space
@@ -238,16 +242,16 @@ impl PyGraph {
             let edge = match self.graph.edge_weight(idx) {
                 Some(edge_w) => {
                     let endpoints = self.graph.edge_endpoints(idx).unwrap();
-                    (endpoints.0.index(), endpoints.1.index(), edge_w).to_object(py)
+                    (endpoints.0.index(), endpoints.1.index(), edge_w).into_py_any(py)?
                 }
                 None => py.None(),
             };
             edges.push(edge);
         }
 
-        let out_dict = PyDict::new_bound(py);
-        let nodes_lst: PyObject = PyList::new_bound(py, nodes).into();
-        let edges_lst: PyObject = PyList::new_bound(py, edges).into();
+        let out_dict = PyDict::new(py);
+        let nodes_lst: PyObject = PyList::new(py, nodes)?.into_any().unbind();
+        let edges_lst: PyObject = PyList::new(py, edges)?.into_any().unbind();
         out_dict.set_item("nodes", nodes_lst)?;
         out_dict.set_item("edges", edges_lst)?;
         out_dict.set_item("nodes_removed", self.node_removed)?;
@@ -879,7 +883,7 @@ impl PyGraph {
     #[pyo3(text_signature = "(self, obj_list, /)")]
     pub fn add_edges_from(&mut self, obj_list: Bound<'_, PyAny>) -> PyResult<EdgeIndices> {
         let mut out_list = Vec::new();
-        for py_obj in obj_list.iter()? {
+        for py_obj in obj_list.try_iter()? {
             let obj = py_obj?.extract::<(usize, usize, PyObject)>()?;
             out_list.push(self.add_edge(obj.0, obj.1, obj.2)?);
         }
@@ -907,7 +911,7 @@ impl PyGraph {
         obj_list: Bound<'_, PyAny>,
     ) -> PyResult<EdgeIndices> {
         let mut out_list: Vec<usize> = Vec::new();
-        for py_obj in obj_list.iter()? {
+        for py_obj in obj_list.try_iter()? {
             let obj = py_obj?.extract::<(usize, usize)>()?;
             out_list.push(self.add_edge(obj.0, obj.1, py.None())?);
         }
@@ -933,7 +937,7 @@ impl PyGraph {
         py: Python,
         edge_list: Bound<'_, PyAny>,
     ) -> PyResult<()> {
-        for py_obj in edge_list.iter()? {
+        for py_obj in edge_list.try_iter()? {
             let (source, target) = py_obj?.extract::<(usize, usize)>()?;
             let max_index = cmp::max(source, target);
             while max_index >= self.node_count() {
@@ -967,7 +971,7 @@ impl PyGraph {
         py: Python,
         edge_list: Bound<'_, PyAny>,
     ) -> PyResult<()> {
-        for py_obj in edge_list.iter()? {
+        for py_obj in edge_list.try_iter()? {
             let (source, target, weight) = py_obj?.extract::<(usize, usize, PyObject)>()?;
             let max_index = cmp::max(source, target);
             while max_index >= self.node_count() {
@@ -1024,7 +1028,7 @@ impl PyGraph {
     ///     pair of nodes.
     #[pyo3(text_signature = "(self, index_list, /)")]
     pub fn remove_edges_from(&mut self, index_list: Bound<'_, PyAny>) -> PyResult<()> {
-        for py_obj in index_list.iter()? {
+        for py_obj in index_list.try_iter()? {
             let (x, y) = py_obj?.extract::<(usize, usize)>()?;
             let (p_index, c_index) = (NodeIndex::new(x), NodeIndex::new(y));
             let edge_index = match self.graph.find_edge(p_index, c_index) {
@@ -1057,7 +1061,7 @@ impl PyGraph {
     #[pyo3(text_signature = "(self, obj_list, /)")]
     pub fn add_nodes_from(&mut self, obj_list: Bound<'_, PyAny>) -> PyResult<NodeIndices> {
         let mut out_list = Vec::new();
-        for py_obj in obj_list.iter()? {
+        for py_obj in obj_list.try_iter()? {
             let obj = py_obj?.extract::<PyObject>()?;
             out_list.push(self.graph.add_node(obj).index());
         }
@@ -1073,7 +1077,7 @@ impl PyGraph {
     ///     graph
     #[pyo3(text_signature = "(self, index_list, /)")]
     pub fn remove_nodes_from(&mut self, index_list: Bound<'_, PyAny>) -> PyResult<()> {
-        for py_obj in index_list.iter()? {
+        for py_obj in index_list.try_iter()? {
             let node = py_obj?.extract::<usize>()?;
             self.remove_node(node)?;
         }
@@ -1258,14 +1262,14 @@ impl PyGraph {
         text_signature = "(self, /, node_attr=None, edge_attr=None, graph_attr=None, filename=None)",
         signature = (node_attr=None, edge_attr=None, graph_attr=None, filename=None)
     )]
-    pub fn to_dot(
+    pub fn to_dot<'py>(
         &self,
-        py: Python,
+        py: Python<'py>,
         node_attr: Option<PyObject>,
         edge_attr: Option<PyObject>,
         graph_attr: Option<BTreeMap<String, String>>,
         filename: Option<String>,
-    ) -> PyResult<Option<PyObject>> {
+    ) -> PyResult<Option<Bound<'py, PyString>>> {
         match filename {
             Some(filename) => {
                 let mut file = File::create(filename)?;
@@ -1275,9 +1279,7 @@ impl PyGraph {
             None => {
                 let mut file = Vec::<u8>::new();
                 build_dot(py, &self.graph, &mut file, graph_attr, node_attr, edge_attr)?;
-                Ok(Some(
-                    PyString::new_bound(py, str::from_utf8(&file)?).to_object(py),
-                ))
+                Ok(Some(PyString::new(py, str::from_utf8(&file)?)))
             }
         }
     }
@@ -1361,7 +1363,7 @@ impl PyGraph {
                 src = match label_map.get(src_str) {
                     Some(index) => *index,
                     None => {
-                        let index = out_graph.add_node(src_str.to_object(py)).index();
+                        let index = out_graph.add_node(src_str.into_py_any(py)?).index();
                         label_map.insert(src_str.to_string(), index);
                         index
                     }
@@ -1369,7 +1371,7 @@ impl PyGraph {
                 target = match label_map.get(target_str) {
                     Some(index) => *index,
                     None => {
-                        let index = out_graph.add_node(target_str.to_object(py)).index();
+                        let index = out_graph.add_node(target_str.into_py_any(py)?).index();
                         label_map.insert(target_str.to_string(), index);
                         index
                     }
@@ -1389,7 +1391,7 @@ impl PyGraph {
                     Some(del) => pieces[2..].join(del),
                     None => pieces[2..].join(&' '.to_string()),
                 };
-                PyString::new_bound(py, &weight_str).into()
+                PyString::new(py, &weight_str).into_any().unbind()
             } else {
                 py.None()
             };
@@ -1496,7 +1498,7 @@ impl PyGraph {
         py: Python<'p>,
         matrix: PyReadonlyArray2<'p, f64>,
         null_value: f64,
-    ) -> PyGraph {
+    ) -> PyResult<PyGraph> {
         _from_adjacency_matrix(py, matrix, null_value)
     }
 
@@ -1533,7 +1535,7 @@ impl PyGraph {
         py: Python<'p>,
         matrix: PyReadonlyArray2<'p, Complex64>,
         null_value: Complex64,
-    ) -> PyGraph {
+    ) -> PyResult<PyGraph> {
         _from_adjacency_matrix(py, matrix, null_value)
     }
 
@@ -1643,7 +1645,7 @@ impl PyGraph {
                 weight.clone_ref(py),
             );
         }
-        let out_dict = PyDict::new_bound(py);
+        let out_dict = PyDict::new(py);
         for (orig_node, new_node) in new_node_map.iter() {
             out_dict.set_item(orig_node.index(), new_node.index())?;
         }
@@ -2129,7 +2131,7 @@ fn weight_transform_callable(
     match map_fn {
         Some(map_fn) => {
             let res = map_fn.call1(py, (value,))?;
-            Ok(res.to_object(py))
+            res.into_py_any(py)
         }
         None => Ok(value.clone_ref(py)),
     }
@@ -2139,46 +2141,43 @@ fn _from_adjacency_matrix<'p, T>(
     py: Python<'p>,
     matrix: PyReadonlyArray2<'p, T>,
     null_value: T,
-) -> PyGraph
+) -> PyResult<PyGraph>
 where
-    T: Copy + std::cmp::PartialEq + numpy::Element + pyo3::ToPyObject + IsNan,
+    T: Copy + std::cmp::PartialEq + numpy::Element + pyo3::IntoPyObject<'p> + IsNan,
 {
     let array = matrix.as_array();
     let shape = array.shape();
     let mut out_graph = StablePyGraph::<Undirected>::default();
     let _node_indices: Vec<NodeIndex> = (0..shape[0])
-        .map(|node| out_graph.add_node(node.to_object(py)))
-        .collect();
-    array
-        .axis_iter(Axis(0))
-        .enumerate()
-        .for_each(|(index, row)| {
-            let source_index = NodeIndex::new(index);
-            for (target_index, elem) in row.iter().enumerate() {
-                if target_index < index {
-                    continue;
-                }
-                if null_value.is_nan() {
-                    if !elem.is_nan() {
-                        out_graph.add_edge(
-                            source_index,
-                            NodeIndex::new(target_index),
-                            elem.to_object(py),
-                        );
-                    }
-                } else if *elem != null_value {
+        .map(|node| Ok(out_graph.add_node(node.into_py_any(py)?)))
+        .collect::<PyResult<Vec<NodeIndex>>>()?;
+    for (index, row) in array.axis_iter(Axis(0)).enumerate() {
+        let source_index = NodeIndex::new(index);
+        for (target_index, elem) in row.iter().enumerate() {
+            if target_index < index {
+                continue;
+            }
+            if null_value.is_nan() {
+                if !elem.is_nan() {
                     out_graph.add_edge(
                         source_index,
                         NodeIndex::new(target_index),
-                        elem.to_object(py),
+                        elem.into_py_any(py)?,
                     );
                 }
+            } else if *elem != null_value {
+                out_graph.add_edge(
+                    source_index,
+                    NodeIndex::new(target_index),
+                    elem.into_py_any(py)?,
+                );
             }
-        });
-    PyGraph {
+        }
+    }
+    Ok(PyGraph {
         graph: out_graph,
         node_removed: false,
         multigraph: true,
         attrs: py.None(),
-    }
+    })
 }

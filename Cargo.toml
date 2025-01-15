@@ -26,12 +26,12 @@ license = "Apache-2.0"
 [workspace.dependencies]
 ahash = "0.8.6"
 fixedbitset = "0.5.7"
-hashbrown = { version = ">=0.13, <0.15", features = ["rayon"] }
 indexmap = { version = ">=1.9, <3", features = ["rayon"] }
 ndarray = { version = "0.16.1", features = ["rayon"] }
 num-traits = "0.2"
-numpy = "0.22"
 petgraph = "0.7.0"
+hashbrown = { version = ">=0.13, <0.16", features = ["rayon"] }
+numpy = "0.23"
 rand = "0.8"
 rand_pcg = "0.3"
 rayon = "1.10"
@@ -63,7 +63,7 @@ rustworkx-core = { path = "rustworkx-core", version = "=0.16.0" }
 flate2 = "1.0.35"
 
 [dependencies.pyo3]
-version = "0.22.6"
+version = "0.23"
 features = ["abi3-py39", "extension-module", "hashbrown", "num-bigint", "num-complex", "indexmap", "py-clone"]
 
 [dependencies.sprs]
@@ -73,9 +73,6 @@ features = ["multi_thread"]
 
 [features]
 default = []
-# TODO: remove this once PyO3 is updated to 0.23. Currently, this is a bug in PyO3 0.22
-# that leaks some of their features in a public macro. However, this was removed in 0.23.
-gil-refs = ["pyo3/gil-refs"]
 
 [profile.release]
 lto = 'fat'
