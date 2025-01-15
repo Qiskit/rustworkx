@@ -11,10 +11,17 @@
 
 from typing import Any, Generic, TypeVar
 
+import sys
+
+if sys.version_info >= (3, 13):
+    from typing import TypeVar
+else:
+    from typing_extensions import TypeVar
+
 class StopSearch(Exception): ...
 class PruneSearch(Exception): ...
 
-_T = TypeVar("_T")
+_T = TypeVar("_T", default=Any)
 
 class BFSVisitor(Generic[_T]):
     def discover_vertex(self, v: int) -> Any: ...

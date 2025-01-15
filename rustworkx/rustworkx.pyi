@@ -31,8 +31,6 @@ from collections.abc import (
 from abc import ABC
 from rustworkx import generators  # noqa
 
-# from collections.abc import Sequence as SequenceCollection
-from typing_extensions import Self
 
 import numpy as np
 import sys
@@ -41,6 +39,13 @@ if sys.version_info >= (3, 13):
     from typing import TypeVar
 else:
     from typing_extensions import TypeVar
+
+import sys
+
+if sys.version_info >= (3, 11):
+    from typing import Self
+else:
+    from typing_extensions import Self
 
 _S = TypeVar("_S", default=Any)
 _T = TypeVar("_T", default=Any)
@@ -974,41 +979,41 @@ def graph_transitivity(graph: PyGraph, /) -> float: ...
 
 # Traversal
 
-_BFSVisitor = TypeVar("_BFSVisitor", bound=BFSVisitor)
-_DFSVisitor = TypeVar("_DFSVisitor", bound=DFSVisitor)
-_DijkstraVisitor = TypeVar("_DijkstraVisitor", bound=DijkstraVisitor)
+_BFSVisitor = TypeVar("_BFSVisitor", bound=BFSVisitor, default=BFSVisitor)
+_DFSVisitor = TypeVar("_DFSVisitor", bound=DFSVisitor, default=DFSVisitor)
+_DijkstraVisitor = TypeVar("_DijkstraVisitor", bound=DijkstraVisitor, default=DijkstraVisitor)
 
 def digraph_bfs_search(
     graph: PyDiGraph,
     source: Sequence[int] | None = ...,
-    visitor: _BFSVisitor | None = ...,
+    visitor: _BFSVisitor = ...,
 ) -> None: ...
 def graph_bfs_search(
     graph: PyGraph,
     source: Sequence[int] | None = ...,
-    visitor: _BFSVisitor | None = ...,
+    visitor: _BFSVisitor = ...,
 ) -> None: ...
 def digraph_dfs_search(
     graph: PyDiGraph,
     source: Sequence[int] | None = ...,
-    visitor: _DFSVisitor | None = ...,
+    visitor: _DFSVisitor = ...,
 ) -> None: ...
 def graph_dfs_search(
     graph: PyGraph,
     source: Sequence[int] | None = ...,
-    visitor: _DFSVisitor | None = ...,
+    visitor: _DFSVisitor = ...,
 ) -> None: ...
 def digraph_dijkstra_search(
     graph: PyDiGraph,
     source: Sequence[int] | None = ...,
     weight_fn: Callable[[Any], float] | None = ...,
-    visitor: _DijkstraVisitor | None = ...,
+    visitor: _DijkstraVisitor = ...,
 ) -> None: ...
 def graph_dijkstra_search(
     graph: PyGraph,
     source: Sequence[int] | None = ...,
     weight_fn: Callable[[Any], float] | None = ...,
-    visitor: _DijkstraVisitor | None = ...,
+    visitor: _DijkstraVisitor = ...,
 ) -> None: ...
 def digraph_dfs_edges(graph: PyDiGraph[_S, _T], /, source: int | None = ...) -> EdgeList: ...
 def graph_dfs_edges(graph: PyGraph[_S, _T], /, source: int | None = ...) -> EdgeList: ...
