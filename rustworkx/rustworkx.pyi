@@ -983,34 +983,34 @@ _DijkstraVisitor = TypeVar("_DijkstraVisitor", bound=DijkstraVisitor, default=Di
 def digraph_bfs_search(
     graph: PyDiGraph,
     source: Sequence[int] | None = ...,
-    visitor: _BFSVisitor = ...,
+    visitor: _BFSVisitor | None = ...,
 ) -> None: ...
 def graph_bfs_search(
     graph: PyGraph,
     source: Sequence[int] | None = ...,
-    visitor: _BFSVisitor = ...,
+    visitor: _BFSVisitor | None = ...,
 ) -> None: ...
 def digraph_dfs_search(
     graph: PyDiGraph,
     source: Sequence[int] | None = ...,
-    visitor: _DFSVisitor = ...,
+    visitor: _DFSVisitor | None = ...,
 ) -> None: ...
 def graph_dfs_search(
     graph: PyGraph,
     source: Sequence[int] | None = ...,
-    visitor: _DFSVisitor = ...,
+    visitor: _DFSVisitor | None = ...,
 ) -> None: ...
 def digraph_dijkstra_search(
     graph: PyDiGraph,
     source: Sequence[int] | None = ...,
     weight_fn: Callable[[Any], float] | None = ...,
-    visitor: _DijkstraVisitor = ...,
+    visitor: _DijkstraVisitor | None = ...,
 ) -> None: ...
 def graph_dijkstra_search(
     graph: PyGraph,
     source: Sequence[int] | None = ...,
     weight_fn: Callable[[Any], float] | None = ...,
-    visitor: _DijkstraVisitor = ...,
+    visitor: _DijkstraVisitor | None = ...,
 ) -> None: ...
 def digraph_dfs_edges(graph: PyDiGraph[_S, _T], /, source: int | None = ...) -> EdgeList: ...
 def graph_dfs_edges(graph: PyGraph[_S, _T], /, source: int | None = ...) -> EdgeList: ...
