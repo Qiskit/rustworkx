@@ -980,95 +980,37 @@ _BFSVisitor = TypeVar("_BFSVisitor", bound=BFSVisitor, default=BFSVisitor)
 _DFSVisitor = TypeVar("_DFSVisitor", bound=DFSVisitor, default=DFSVisitor)
 _DijkstraVisitor = TypeVar("_DijkstraVisitor", bound=DijkstraVisitor, default=DijkstraVisitor)
 
-@overload
 def digraph_bfs_search(
     graph: PyDiGraph,
-    source: Sequence[int] | None,
-    visitor: _BFSVisitor,
-) -> None: ...
-@overload
-def digraph_bfs_search(
-    graph: PyDiGraph,
-    *,
+    source: Sequence[int] | None = ...,
     visitor: _BFSVisitor = ...,
 ) -> None: ...
-@overload
 def graph_bfs_search(
     graph: PyGraph,
-    source: Sequence[int] | None,
-    visitor: _BFSVisitor,
+    source: Sequence[int] | None = ...,
+    visitor: _BFSVisitor = ...,
 ) -> None: ...
-@overload
-def graph_bfs_search(
-    graph: PyGraph,
-    *,
-    visitor: _BFSVisitor,
-) -> None: ...
-@overload
 def digraph_dfs_search(
     graph: PyDiGraph,
-    source: Sequence[int] | None,
-    visitor: _DFSVisitor,
-) -> None: ...
-@overload
-def digraph_dfs_search(
-    graph: PyDiGraph,
-    *,
+    source: Sequence[int] | None = ...,
     visitor: _DFSVisitor = ...,
 ) -> None: ...
-@overload
 def graph_dfs_search(
     graph: PyGraph,
-    source: Sequence[int] | None,
-    visitor: _DFSVisitor,
-) -> None: ...
-@overload
-def graph_dfs_search(
-    graph: PyGraph,
-    *,
-    visitor: _DFSVisitor,
-) -> None: ...
-@overload
-def digraph_dijkstra_search(
-    graph: PyDiGraph,
-    source: Sequence[int] | None,
-    weight_fn: Callable[[Any], float] | None,
-    visitor: _DijkstraVisitor,
-) -> None: ...
-@overload
-def digraph_dijkstra_search(
-    graph: PyDiGraph,
-    *,
-    weight_fn: Callable[[Any], float] | None = ...,
-    visitor: _DijkstraVisitor,
-) -> None: ...
-@overload
-def digraph_dijkstra_search(
-    graph: PyDiGraph,
-    *,
     source: Sequence[int] | None = ...,
-    visitor: _DijkstraVisitor,
+    visitor: _DFSVisitor = ...,
 ) -> None: ...
-@overload
-def graph_dijkstra_search(
-    graph: PyGraph,
-    source: Sequence[int] | None,
-    weight_fn: Callable[[Any], float] | None,
-    visitor: _DijkstraVisitor,
-) -> None: ...
-@overload
-def graph_dijkstra_search(
-    graph: PyGraph,
-    *,
-    weight_fn: Callable[[Any], float] | None = ...,
-    visitor: _DijkstraVisitor,
-) -> None: ...
-@overload
-def graph_dijkstra_search(
-    graph: PyGraph,
-    *,
+def digraph_dijkstra_search(
+    graph: PyDiGraph,
     source: Sequence[int] | None = ...,
-    visitor: _DijkstraVisitor,
+    weight_fn: Callable[[Any], float] | None = ...,
+    visitor: _DijkstraVisitor = ...,
+) -> None: ...
+def graph_dijkstra_search(
+    graph: PyGraph,
+    source: Sequence[int] | None = ...,
+    weight_fn: Callable[[Any], float] | None = ...,
+    visitor: _DijkstraVisitor = ...,
 ) -> None: ...
 def digraph_dfs_edges(graph: PyDiGraph[_S, _T], /, source: int | None = ...) -> EdgeList: ...
 def graph_dfs_edges(graph: PyGraph[_S, _T], /, source: int | None = ...) -> EdgeList: ...
