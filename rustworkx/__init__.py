@@ -1490,7 +1490,7 @@ def cartesian_product(
 
 
 @_rustworkx_dispatch
-def bfs_search(graph, source, visitor):
+def bfs_search(graph, source=None, visitor=None):
     """Breadth-first traversal of a directed/undirected graph.
 
     The pseudo-code for the BFS algorithm is listed below, with the annotated
@@ -1564,7 +1564,7 @@ def bfs_search(graph, source, visitor):
 
 
 @_rustworkx_dispatch
-def dfs_search(graph, source, visitor):
+def dfs_search(graph, source=None, visitor=None):
     """Depth-first traversal of a directed/undirected graph.
 
     The pseudo-code for the DFS algorithm is listed below, with the annotated
@@ -1634,7 +1634,7 @@ def dfs_search(graph, source, visitor):
 
 
 @_rustworkx_dispatch
-def dijkstra_search(graph, source, weight_fn, visitor):
+def dijkstra_search(graph, source=None, weight_fn=None, visitor=None):
     """Dijkstra traversal of a graph.
 
     The pseudo-code for the Dijkstra algorithm is listed below, with the annotated

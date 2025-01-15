@@ -576,20 +576,49 @@ def cartesian_product(
     first: PyDiGraph,
     second: PyDiGraph,
 ) -> tuple[PyDiGraph, ProductNodeMap]: ...
+@overload
 def bfs_search(
     graph: PyGraph | PyDiGraph,
     source: Sequence[int] | None,
     visitor: _BFSVisitor,
 ) -> None: ...
+@overload
+def bfs_search(
+    graph: PyGraph | PyDiGraph,
+    *,
+    visitor: _BFSVisitor,
+) -> None: ...
+@overload
 def dfs_search(
     graph: PyGraph | PyDiGraph,
     source: Sequence[int] | None,
     visitor: _DFSVisitor,
 ) -> None: ...
+@overload
+def dfs_search(
+    graph: PyGraph | PyDiGraph,
+    *,
+    visitor: _DFSVisitor,
+) -> None: ...
+@overload
 def dijkstra_search(
     graph: PyGraph | PyDiGraph,
     source: Sequence[int] | None,
-    weight_fn: Callable[[Any], float],
+    weight_fn: Callable[[Any], float] | None,
+    visitor: _DijkstraVisitor,
+) -> None: ...
+@overload
+def dijkstra_search(
+    graph: PyGraph | PyDiGraph,
+    *,
+    source: Sequence[int] | None = ...,
+    visitor: _DijkstraVisitor,
+) -> None: ...
+@overload
+def dijkstra_search(
+    graph: PyGraph | PyDiGraph,
+    *,
+    weight_fn: Callable[[Any], float] | None = ...,
     visitor: _DijkstraVisitor,
 ) -> None: ...
 def bellman_ford_shortest_paths(
