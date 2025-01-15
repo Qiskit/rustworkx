@@ -31,9 +31,6 @@ from collections.abc import (
 from abc import ABC
 from rustworkx import generators  # noqa
 
-# from collections.abc import Sequence as SequenceCollection
-from typing_extensions import Self
-
 import numpy as np
 import numpy.typing as npt
 import sys
@@ -42,6 +39,11 @@ if sys.version_info >= (3, 13):
     from typing import TypeVar
 else:
     from typing_extensions import TypeVar
+
+if sys.version_info >= (3, 11):
+    from typing import Self
+else:
+    from typing_extensions import Self
 
 _S = TypeVar("_S", default=Any)
 _T = TypeVar("_T", default=Any)
@@ -975,9 +977,9 @@ def graph_transitivity(graph: PyGraph, /) -> float: ...
 
 # Traversal
 
-_BFSVisitor = TypeVar("_BFSVisitor", bound=BFSVisitor)
-_DFSVisitor = TypeVar("_DFSVisitor", bound=DFSVisitor)
-_DijkstraVisitor = TypeVar("_DijkstraVisitor", bound=DijkstraVisitor)
+_BFSVisitor = TypeVar("_BFSVisitor", bound=BFSVisitor, default=BFSVisitor)
+_DFSVisitor = TypeVar("_DFSVisitor", bound=DFSVisitor, default=DFSVisitor)
+_DijkstraVisitor = TypeVar("_DijkstraVisitor", bound=DijkstraVisitor, default=DijkstraVisitor)
 
 def digraph_bfs_search(
     graph: PyDiGraph,
