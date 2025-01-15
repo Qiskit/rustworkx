@@ -31,7 +31,6 @@ from collections.abc import (
 from abc import ABC
 from rustworkx import generators  # noqa
 
-
 import numpy as np
 import sys
 
