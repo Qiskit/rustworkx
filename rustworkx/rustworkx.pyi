@@ -39,8 +39,6 @@ if sys.version_info >= (3, 13):
 else:
     from typing_extensions import TypeVar
 
-import sys
-
 if sys.version_info >= (3, 11):
     from typing import Self
 else:
