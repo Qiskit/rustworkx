@@ -9,7 +9,7 @@
 # This file contains only type annotations for PyO3 functions and classes
 # For implementation details, see visit.py
 
-from typing import Any, Generic, TypeVar
+from typing import Any, Generic
 
 import sys
 
