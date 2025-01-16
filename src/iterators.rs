@@ -54,6 +54,7 @@ use pyo3::gc::PyVisit;
 use pyo3::prelude::*;
 use pyo3::types::IntoPyDict;
 use pyo3::types::PySlice;
+use pyo3::IntoPyObjectExt;
 use pyo3::PyTraverseError;
 
 macro_rules! last_type {
@@ -298,7 +299,7 @@ where
 
 impl<'py, K, V> PyEq<Bound<'py, PyAny>> for DictMap<K, V>
 where
-    for<'p> K: PyEq<K> + Clone + pyo3::ToPyObject,
+    for<'p> K: PyEq<K> + Clone + pyo3::IntoPyObject<'py>,
     for<'p> V: PyEq<Bound<'py, PyAny>>,
 {
     #[inline]
@@ -307,7 +308,7 @@ where
             return Ok(false);
         }
         for (key, value) in self {
-            match other.get_item(key) {
+            match other.get_item(key.clone()) {
                 Ok(other_raw) => {
                     if !PyEq::eq(value, &other_raw, py)? {
                         return Ok(false);
@@ -435,14 +436,14 @@ impl<'py> FromPyObject<'py> for PySequenceIndex<'py> {
 }
 
 trait PyConvertToPyArray {
-    fn convert_to_pyarray(&self, py: Python) -> PyResult<PyObject>;
+    fn convert_to_pyarray<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>>;
 }
 
 macro_rules! py_convert_to_py_array_impl {
     ($($t:ty)*) => ($(
         impl PyConvertToPyArray for Vec<$t> {
-            fn convert_to_pyarray(&self, py: Python) -> PyResult<PyObject> {
-                Ok(self.clone().into_pyarray_bound(py).into())
+            fn convert_to_pyarray<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+                Ok(self.clone().into_pyarray(py).into_any())
             }
         }
     )*)
@@ -451,9 +452,12 @@ macro_rules! py_convert_to_py_array_impl {
 macro_rules! py_convert_to_py_array_obj_impl {
     ($t:ty) => {
         impl PyConvertToPyArray for Vec<$t> {
-            fn convert_to_pyarray(&self, py: Python) -> PyResult<PyObject> {
-                let pyobj_vec: Vec<PyObject> = self.iter().map(|x| x.clone().into_py(py)).collect();
-                Ok(pyobj_vec.into_pyarray_bound(py).into())
+            fn convert_to_pyarray<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+                let pyobj_vec: Vec<PyObject> = self
+                    .iter()
+                    .map(|x| x.clone().into_py_any(py))
+                    .collect::<PyResult<Vec<PyObject>>>()?;
+                Ok(pyobj_vec.into_pyarray(py).into_any())
             }
         }
     };
@@ -465,7 +469,7 @@ py_convert_to_py_array_obj_impl! {EdgeList}
 py_convert_to_py_array_obj_impl! {(PyObject, Vec<PyObject>)}
 
 impl PyConvertToPyArray for Vec<(usize, usize)> {
-    fn convert_to_pyarray(&self, py: Python) -> PyResult<PyObject> {
+    fn convert_to_pyarray<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
         let mut mat = Array2::<usize>::from_elem((self.len(), 2), 0);
 
         for (index, element) in self.iter().enumerate() {
@@ -473,21 +477,21 @@ impl PyConvertToPyArray for Vec<(usize, usize)> {
             mat[[index, 1]] = element.1;
         }
 
-        Ok(mat.into_pyarray_bound(py).into())
+        Ok(mat.into_pyarray(py).into_any())
     }
 }
 
 impl PyConvertToPyArray for Vec<(usize, usize, PyObject)> {
-    fn convert_to_pyarray(&self, py: Python) -> PyResult<PyObject> {
+    fn convert_to_pyarray<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
         let mut mat = Array2::<PyObject>::from_elem((self.len(), 3), py.None());
 
         for (index, element) in self.iter().enumerate() {
-            mat[[index, 0]] = element.0.into_py(py);
-            mat[[index, 1]] = element.1.into_py(py);
+            mat[[index, 0]] = element.0.into_py_any(py)?;
+            mat[[index, 1]] = element.1.into_py_any(py)?;
             mat[[index, 2]] = element.2.clone();
         }
 
-        Ok(mat.into_pyarray_bound(py).into())
+        Ok(mat.into_pyarray(py).into_any())
     }
 }
 
@@ -591,7 +595,7 @@ macro_rules! custom_vec_iter_impl {
                                 cond = pos < indices.stop;
                             }
                         }
-                        Ok(out_vec.into_py(py))
+                        out_vec.into_py_any(py)
                     }
                     PySequenceIndex::Int(idx) => {
                         let len = self.$data.len() as isize;
@@ -599,9 +603,9 @@ macro_rules! custom_vec_iter_impl {
                             Err(PyIndexError::new_err(format!("Invalid index, {}", idx)))
                         } else if idx < 0 {
                             let len = self.$data.len();
-                            Ok(self.$data[len - idx.unsigned_abs()].clone().into_py(py))
+                            self.$data[len - idx.unsigned_abs()].clone().into_py_any(py)
                         } else {
-                            Ok(self.$data[idx as usize].clone().into_py(py))
+                            self.$data[idx as usize].clone().into_py_any(py)
                         }
                     }
                 }
@@ -640,12 +644,12 @@ macro_rules! custom_vec_iter_impl {
             }
 
             #[pyo3(signature = (dtype=None, copy=None))]
-            fn __array__(
+            fn __array__<'py>(
                 &self,
-                py: Python,
+                py: Python<'py>,
                 dtype: Option<PyObject>,
                 copy: Option<bool>,
-            ) -> PyResult<PyObject> {
+            ) -> PyResult<Bound<'py, PyAny>> {
                 if copy == Some(false) {
                     return Err(PyValueError::new_err(
                         "A copy is needed to return an array from this object.",
@@ -654,12 +658,10 @@ macro_rules! custom_vec_iter_impl {
                 let res = self.$data.convert_to_pyarray(py)?;
                 Ok(match dtype {
                     Some(dtype) => {
-                        let numpy_mod = py.import_bound("numpy")?;
+                        let numpy_mod = py.import("numpy")?;
                         let args = (res,);
-                        let kwargs = [("dtype", dtype)].into_py_dict_bound(py);
-                        numpy_mod
-                            .call_method("asarray", args, Some(&kwargs))?
-                            .into()
+                        let kwargs = [("dtype", dtype)].into_py_dict(py)?;
+                        numpy_mod.call_method("asarray", args, Some(&kwargs))?
                     }
                     None => res,
                 })
@@ -685,14 +687,14 @@ macro_rules! custom_vec_iter_impl {
 
         #[pymethods]
         impl $iter {
-            fn __next__(&mut self, py: Python) -> Option<Py<PyAny>> {
+            fn __next__<'py>(&mut self, py: Python<'py>) -> PyResult<Option<Bound<'py, PyAny>>> {
                 let data = self.inner.as_ref().unwrap().borrow(py);
                 if self.index < data.$data.len() {
-                    let out = data.$data[self.index].clone().into_py(py);
+                    let out = data.$data[self.index].clone().into_pyobject(py)?.into_any();
                     self.index += 1;
-                    Some(out)
+                    Ok(Some(out))
                 } else {
-                    None
+                    Ok(None)
                 }
             }
 
@@ -735,15 +737,15 @@ macro_rules! custom_vec_iter_impl {
 
         #[pymethods]
         impl $reversed {
-            fn __next__(&mut self, py: Python) -> Option<Py<PyAny>> {
+            fn __next__(&mut self, py: Python) -> PyResult<Option<Py<PyAny>>> {
                 let data = self.inner.as_ref().unwrap().borrow(py);
                 let len = data.$data.len();
                 if self.index < len {
-                    let out = data.$data[len - self.index - 1].clone().into_py(py);
+                    let out = data.$data[len - self.index - 1].clone().into_py_any(py)?;
                     self.index += 1;
-                    Some(out)
+                    Ok(Some(out))
                 } else {
-                    None
+                    Ok(None)
                 }
             }
 

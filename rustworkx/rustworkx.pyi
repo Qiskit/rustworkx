@@ -31,16 +31,19 @@ from collections.abc import (
 from abc import ABC
 from rustworkx import generators  # noqa
 
-# from collections.abc import Sequence as SequenceCollection
-from typing_extensions import Self
-
 import numpy as np
+import numpy.typing as npt
 import sys
 
 if sys.version_info >= (3, 13):
     from typing import TypeVar
 else:
     from typing_extensions import TypeVar
+
+if sys.version_info >= (3, 11):
+    from typing import Self
+else:
+    from typing_extensions import Self
 
 _S = TypeVar("_S", default=Any)
 _T = TypeVar("_T", default=Any)
@@ -206,7 +209,7 @@ def digraph_adjacency_matrix(
     default_weight: float = ...,
     null_value: float = ...,
     parallel_edge: str = ...,
-) -> np.ndarray: ...
+) -> npt.NDArray[np.float64]: ...
 def graph_adjacency_matrix(
     graph: PyGraph[_S, _T],
     /,
@@ -214,7 +217,7 @@ def graph_adjacency_matrix(
     default_weight: float = ...,
     null_value: float = ...,
     parallel_edge: str = ...,
-) -> np.ndarray: ...
+) -> npt.NDArray[np.float64]: ...
 def cycle_basis(graph: PyGraph, /, root: int | None = ...) -> list[list[int]]: ...
 def articulation_points(graph: PyGraph, /) -> set[int]: ...
 def bridges(graph: PyGraph, /) -> set[tuple[int]]: ...
@@ -595,14 +598,14 @@ def undirected_gnp_random_graph(
 ) -> PyGraph: ...
 def directed_sbm_random_graph(
     sizes: list[int],
-    probabilities: np.ndarray,
+    probabilities: npt.NDArray[np.float64],
     loops: bool,
     /,
     seed: int | None = ...,
 ) -> PyDiGraph: ...
 def undirected_sbm_random_graph(
     sizes: list[int],
-    probabilities: np.ndarray,
+    probabilities: npt.NDArray[np.float64],
     loops: bool,
     /,
     seed: int | None = ...,
@@ -863,13 +866,13 @@ def digraph_distance_matrix(
     parallel_threshold: int | None = ...,
     as_undirected: bool | None = ...,
     null_value: float | None = ...,
-) -> np.ndarray: ...
+) -> npt.NDArray[np.float64]: ...
 def graph_distance_matrix(
     graph: PyGraph,
     /,
     parallel_threshold: int | None = ...,
     null_value: float | None = ...,
-) -> np.ndarray: ...
+) -> npt.NDArray[np.float64]: ...
 def digraph_floyd_warshall(
     graph: PyDiGraph[_S, _T],
     /,
@@ -892,14 +895,14 @@ def digraph_floyd_warshall_numpy(
     as_undirected: bool | None = ...,
     default_weight: float | None = ...,
     parallel_threshold: int | None = ...,
-) -> np.ndarray: ...
+) -> npt.NDArray[np.float64]: ...
 def graph_floyd_warshall_numpy(
     graph: PyGraph[_S, _T],
     /,
     weight_fn: Callable[[_T], float] | None = ...,
     default_weight: float | None = ...,
     parallel_threshold: int | None = ...,
-) -> np.ndarray: ...
+) -> npt.NDArray[np.float64]: ...
 def digraph_floyd_warshall_successor_and_distance(
     graph: PyDiGraph[_S, _T],
     /,
@@ -907,14 +910,14 @@ def digraph_floyd_warshall_successor_and_distance(
     as_undirected: bool | None = ...,
     default_weight: float | None = ...,
     parallel_threshold: int | None = ...,
-) -> tuple[np.ndarray, np.ndarray]: ...
+) -> tuple[npt.NDArray[np.float64], npt.NDArray[np.float64]]: ...
 def graph_floyd_warshall_successor_and_distance(
     graph: PyGraph[_S, _T],
     /,
     weight_fn: Callable[[_T], float] | None = ...,
     default_weight: float | None = ...,
     parallel_threshold: int | None = ...,
-) -> tuple[np.ndarray, np.ndarray]: ...
+) -> tuple[npt.NDArray[np.float64], npt.NDArray[np.float64]]: ...
 def find_negative_cycle(
     graph: PyDiGraph[_S, _T],
     edge_cost_fn: Callable[[_T], float],
@@ -974,9 +977,9 @@ def graph_transitivity(graph: PyGraph, /) -> float: ...
 
 # Traversal
 
-_BFSVisitor = TypeVar("_BFSVisitor", bound=BFSVisitor)
-_DFSVisitor = TypeVar("_DFSVisitor", bound=DFSVisitor)
-_DijkstraVisitor = TypeVar("_DijkstraVisitor", bound=DijkstraVisitor)
+_BFSVisitor = TypeVar("_BFSVisitor", bound=BFSVisitor, default=BFSVisitor)
+_DFSVisitor = TypeVar("_DFSVisitor", bound=DFSVisitor, default=DFSVisitor)
+_DijkstraVisitor = TypeVar("_DijkstraVisitor", bound=DijkstraVisitor, default=DijkstraVisitor)
 
 def digraph_bfs_search(
     graph: PyDiGraph,
@@ -1081,7 +1084,9 @@ class _RustworkxCustomVecIter(Generic[_T_co], Sequence[_T_co], ABC):
     def __len__(self) -> int: ...
     def __ne__(self, other: object) -> bool: ...
     def __setstate__(self, state: Sequence[_T_co]) -> None: ...
-    def __array__(self, dtype: np.dtype | None = ..., copy: bool | None = ...) -> np.ndarray: ...
+    def __array__(
+        self, dtype: np.dtype[Any] | None = ..., copy: bool | None = ...
+    ) -> npt.NDArray[Any]: ...
     def __iter__(self) -> Iterator[_T_co]: ...
     def __reversed__(self) -> Iterator[_T_co]: ...
 
@@ -1239,11 +1244,11 @@ class PyGraph(Generic[_S, _T]):
     ) -> int | None: ...
     @staticmethod
     def from_adjacency_matrix(
-        matrix: np.ndarray, /, null_value: float = ...
+        matrix: npt.NDArray[np.float64], /, null_value: float = ...
     ) -> PyGraph[int, float]: ...
     @staticmethod
     def from_complex_adjacency_matrix(
-        matrix: np.ndarray, /, null_value: complex = ...
+        matrix: npt.NDArray[np.complex64], /, null_value: complex = ...
     ) -> PyGraph[int, complex]: ...
     def get_all_edge_data(self, node_a: int, node_b: int, /) -> list[_T]: ...
     def get_edge_data(self, node_a: int, node_b: int, /) -> _T: ...
@@ -1404,11 +1409,11 @@ class PyDiGraph(Generic[_S, _T]):
     ) -> list[_S]: ...
     @staticmethod
     def from_adjacency_matrix(
-        matrix: np.ndarray, /, null_value: float = ...
+        matrix: npt.NDArray[np.float64], /, null_value: float = ...
     ) -> PyDiGraph[int, float]: ...
     @staticmethod
     def from_complex_adjacency_matrix(
-        matrix: np.ndarray, /, null_value: complex = ...
+        matrix: npt.NDArray[np.complex64], /, null_value: complex = ...
     ) -> PyDiGraph[int, complex]: ...
     def get_all_edge_data(self, node_a: int, node_b: int, /) -> list[_T]: ...
     def get_edge_data(self, node_a: int, node_b: int, /) -> _T: ...
