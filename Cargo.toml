@@ -71,9 +71,6 @@ version = "^0.11"
 default-features = false
 features = ["multi_thread"]
 
-[features]
-default = []
-
 [profile.release]
 lto = 'fat'
 codegen-units = 1
