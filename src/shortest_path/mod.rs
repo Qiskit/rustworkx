@@ -31,7 +31,7 @@ use petgraph::visit::NodeCount;
 use pyo3::exceptions::PyIndexError;
 use pyo3::exceptions::PyValueError;
 
-use numpy::IntoPyArray;
+use numpy::{IntoPyArray, PyArray2};
 
 use rustworkx_core::dictmap::*;
 use rustworkx_core::shortest_path::{
@@ -1067,13 +1067,13 @@ pub fn graph_floyd_warshall(
     signature=(graph, weight_fn=None, default_weight=1.0, parallel_threshold=300),
     text_signature = "(graph, /, weight_fn=None, default_weight=1.0, parallel_threshold=300)"
 )]
-pub fn graph_floyd_warshall_numpy(
-    py: Python,
+pub fn graph_floyd_warshall_numpy<'py>(
+    py: Python<'py>,
     graph: &graph::PyGraph,
     weight_fn: Option<PyObject>,
     default_weight: f64,
     parallel_threshold: usize,
-) -> PyResult<PyObject> {
+) -> PyResult<Bound<'py, PyArray2<f64>>> {
     let (matrix, _) = floyd_warshall::floyd_warshall_numpy(
         py,
         &graph.graph,
@@ -1083,8 +1083,10 @@ pub fn graph_floyd_warshall_numpy(
         false,
         parallel_threshold,
     )?;
-    Ok(matrix.into_pyarray_bound(py).into())
+    Ok(matrix.into_pyarray(py))
 }
+
+type FloydWarshallReturn<'py> = (Bound<'py, PyArray2<f64>>, Bound<'py, PyArray2<usize>>);
 
 /// Find all-pairs shortest path lengths using Floyd's algorithm
 ///
@@ -1140,13 +1142,13 @@ pub fn graph_floyd_warshall_numpy(
 signature=(graph, weight_fn=None, default_weight=1.0, parallel_threshold=300),
 text_signature = "(graph, /, weight_fn=None, default_weight=1.0, parallel_threshold=300)"
 )]
-pub fn graph_floyd_warshall_successor_and_distance(
-    py: Python,
+pub fn graph_floyd_warshall_successor_and_distance<'py>(
+    py: Python<'py>,
     graph: &graph::PyGraph,
     weight_fn: Option<PyObject>,
     default_weight: f64,
     parallel_threshold: usize,
-) -> PyResult<(PyObject, PyObject)> {
+) -> PyResult<FloydWarshallReturn<'py>> {
     let (matrix, next) = floyd_warshall::floyd_warshall_numpy(
         py,
         &graph.graph,
@@ -1156,10 +1158,7 @@ pub fn graph_floyd_warshall_successor_and_distance(
         true,
         parallel_threshold,
     )?;
-    Ok((
-        matrix.into_pyarray_bound(py).into(),
-        next.unwrap().into_pyarray_bound(py).into(),
-    ))
+    Ok((matrix.into_pyarray(py), next.unwrap().into_pyarray(py)))
 }
 
 /// Find all-pairs shortest path lengths using Floyd's algorithm
@@ -1202,14 +1201,14 @@ pub fn graph_floyd_warshall_successor_and_distance(
 signature=(graph, weight_fn=None, as_undirected=false, default_weight=1.0, parallel_threshold=300),
 text_signature = "(graph, /, weight_fn=None, as_undirected=False, default_weight=1.0, parallel_threshold=300)"
 )]
-pub fn digraph_floyd_warshall_numpy(
-    py: Python,
+pub fn digraph_floyd_warshall_numpy<'py>(
+    py: Python<'py>,
     graph: &digraph::PyDiGraph,
     weight_fn: Option<PyObject>,
     as_undirected: bool,
     default_weight: f64,
     parallel_threshold: usize,
-) -> PyResult<PyObject> {
+) -> PyResult<Bound<'py, PyArray2<f64>>> {
     let (matrix, _) = floyd_warshall::floyd_warshall_numpy(
         py,
         &graph.graph,
@@ -1219,7 +1218,7 @@ pub fn digraph_floyd_warshall_numpy(
         false,
         parallel_threshold,
     )?;
-    Ok(matrix.into_pyarray_bound(py).into())
+    Ok(matrix.into_pyarray(py))
 }
 
 /// Find all-pairs shortest path lengths using Floyd's algorithm
@@ -1278,14 +1277,14 @@ pub fn digraph_floyd_warshall_numpy(
 signature=(graph, weight_fn=None, as_undirected=false, default_weight=1.0, parallel_threshold=300),
 text_signature = "(graph, /, weight_fn=None, as_undirected=False, default_weight=1.0, parallel_threshold=300)"
 )]
-pub fn digraph_floyd_warshall_successor_and_distance(
-    py: Python,
+pub fn digraph_floyd_warshall_successor_and_distance<'py>(
+    py: Python<'py>,
     graph: &digraph::PyDiGraph,
     weight_fn: Option<PyObject>,
     as_undirected: bool,
     default_weight: f64,
     parallel_threshold: usize,
-) -> PyResult<(PyObject, PyObject)> {
+) -> PyResult<FloydWarshallReturn<'py>> {
     let (matrix, next) = floyd_warshall::floyd_warshall_numpy(
         py,
         &graph.graph,
@@ -1295,10 +1294,7 @@ pub fn digraph_floyd_warshall_successor_and_distance(
         true,
         parallel_threshold,
     )?;
-    Ok((
-        matrix.into_pyarray_bound(py).into(),
-        next.unwrap().into_pyarray_bound(py).into(),
-    ))
+    Ok((matrix.into_pyarray(py), next.unwrap().into_pyarray(py)))
 }
 
 /// Get the number of unweighted shortest paths from a source node
@@ -1370,20 +1366,20 @@ pub fn graph_num_shortest_paths_unweighted(
     signature=(graph, parallel_threshold=300, as_undirected=false, null_value=0.0),
     text_signature = "(graph, /, parallel_threshold=300, as_undirected=False, null_value=0.0)"
 )]
-pub fn digraph_distance_matrix(
-    py: Python,
+pub fn digraph_distance_matrix<'py>(
+    py: Python<'py>,
     graph: &digraph::PyDiGraph,
     parallel_threshold: usize,
     as_undirected: bool,
     null_value: f64,
-) -> PyObject {
+) -> Bound<'py, PyArray2<f64>> {
     let matrix = distance_matrix::compute_distance_matrix(
         &graph.graph,
         parallel_threshold,
         as_undirected,
         null_value,
     );
-    matrix.into_pyarray_bound(py).into()
+    matrix.into_pyarray(py)
 }
 
 /// Get the distance matrix for an undirected graph
@@ -1412,19 +1408,19 @@ pub fn digraph_distance_matrix(
     signature=(graph, parallel_threshold=300, null_value=0.0),
     text_signature = "(graph, /, parallel_threshold=300, null_value=0.0)"
 )]
-pub fn graph_distance_matrix(
-    py: Python,
+pub fn graph_distance_matrix<'py>(
+    py: Python<'py>,
     graph: &graph::PyGraph,
     parallel_threshold: usize,
     null_value: f64,
-) -> PyObject {
+) -> Bound<'py, PyArray2<f64>> {
     let matrix = distance_matrix::compute_distance_matrix(
         &graph.graph,
         parallel_threshold,
         true,
         null_value,
     );
-    matrix.into_pyarray_bound(py).into()
+    matrix.into_pyarray(py)
 }
 
 /// Return the average shortest path length for a :class:`~rustworkx.PyDiGraph`

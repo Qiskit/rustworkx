@@ -34,7 +34,7 @@ use pyo3::Python;
 use rayon::prelude::*;
 
 use ndarray::prelude::*;
-use numpy::IntoPyArray;
+use numpy::{IntoPyArray, PyArray2};
 
 use crate::iterators::{
     AllPairsMultiplePathMapping, BiconnectedComponents, Chains, EdgeList, NodeIndices,
@@ -353,14 +353,14 @@ pub fn is_semi_connected(graph: &digraph::PyDiGraph) -> PyResult<bool> {
     signature=(graph, weight_fn=None, default_weight=1.0, null_value=0.0, parallel_edge="sum"),
     text_signature = "(graph, /, weight_fn=None, default_weight=1.0, null_value=0.0, parallel_edge=\"sum\")"
 )]
-pub fn digraph_adjacency_matrix(
-    py: Python,
+pub fn digraph_adjacency_matrix<'py>(
+    py: Python<'py>,
     graph: &digraph::PyDiGraph,
     weight_fn: Option<PyObject>,
     default_weight: f64,
     null_value: f64,
     parallel_edge: &str,
-) -> PyResult<PyObject> {
+) -> PyResult<Bound<'py, PyArray2<f64>>> {
     let n = graph.node_count();
     let mut matrix = Array2::<f64>::from_elem((n, n), null_value);
     let mut parallel_edge_count = HashMap::new();
@@ -398,7 +398,7 @@ pub fn digraph_adjacency_matrix(
             }
         }
     }
-    Ok(matrix.into_pyarray_bound(py).into())
+    Ok(matrix.into_pyarray(py))
 }
 
 /// Return the adjacency matrix for a PyGraph class
@@ -438,14 +438,14 @@ pub fn digraph_adjacency_matrix(
     signature=(graph, weight_fn=None, default_weight=1.0, null_value=0.0, parallel_edge="sum"),
     text_signature = "(graph, /, weight_fn=None, default_weight=1.0, null_value=0.0, parallel_edge=\"sum\")"
 )]
-pub fn graph_adjacency_matrix(
-    py: Python,
+pub fn graph_adjacency_matrix<'py>(
+    py: Python<'py>,
     graph: &graph::PyGraph,
     weight_fn: Option<PyObject>,
     default_weight: f64,
     null_value: f64,
     parallel_edge: &str,
-) -> PyResult<PyObject> {
+) -> PyResult<Bound<'py, PyArray2<f64>>> {
     let n = graph.node_count();
     let mut matrix = Array2::<f64>::from_elem((n, n), null_value);
     let mut parallel_edge_count = HashMap::new();
@@ -491,7 +491,7 @@ pub fn graph_adjacency_matrix(
             }
         }
     }
-    Ok(matrix.into_pyarray_bound(py).into())
+    Ok(matrix.into_pyarray(py))
 }
 
 /// Compute the complement of an undirected graph.
@@ -888,7 +888,7 @@ pub fn graph_longest_simple_path(graph: &graph::PyGraph) -> Option<NodeIndices> 
 #[pyo3(text_signature = "(graph, /)")]
 pub fn graph_core_number(py: Python, graph: &graph::PyGraph) -> PyResult<PyObject> {
     let cores = connectivity::core_number(&graph.graph);
-    let out_dict = PyDict::new_bound(py);
+    let out_dict = PyDict::new(py);
     for (k, v) in cores {
         out_dict.set_item(k.index(), v)?;
     }
@@ -914,7 +914,7 @@ pub fn graph_core_number(py: Python, graph: &graph::PyGraph) -> PyResult<PyObjec
 #[pyo3(text_signature = "(graph, /)")]
 pub fn digraph_core_number(py: Python, graph: &digraph::PyDiGraph) -> PyResult<PyObject> {
     let cores = connectivity::core_number(&graph.graph);
-    let out_dict = PyDict::new_bound(py);
+    let out_dict = PyDict::new(py);
     for (k, v) in cores {
         out_dict.set_item(k.index(), v)?;
     }
