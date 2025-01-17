@@ -118,7 +118,7 @@ impl TopologicalSorter {
         let ready_nodes = if let Some(initial) = initial {
             let dag = &dag.borrow(py);
             initial
-                .iter()?
+                .try_iter()?
                 .map(|maybe_index| {
                     let node = NodeIndex::new(maybe_index?.extract::<usize>()?);
                     // If we're using an initial set, it's possible that the user gave us an
@@ -176,10 +176,10 @@ impl TopologicalSorter {
     ///
     /// :returns: A list of node indices of all the ready nodes.
     /// :rtype: List
-    fn get_ready<'py>(&mut self, py: Python<'py>) -> Bound<'py, PyList> {
+    fn get_ready<'py>(&mut self, py: Python<'py>) -> PyResult<Bound<'py, PyList>> {
         self.num_passed_out += self.ready_nodes.len();
         if let Some(node2state) = self.node2state.as_mut() {
-            PyList::new_bound(
+            PyList::new(
                 py,
                 self.ready_nodes.drain(..).map(|nx| {
                     node2state.insert(nx, NodeState::Ready);
@@ -187,7 +187,7 @@ impl TopologicalSorter {
                 }),
             )
         } else {
-            PyList::new_bound(py, self.ready_nodes.drain(..).map(|nx| nx.index()))
+            PyList::new(py, self.ready_nodes.drain(..).map(|nx| nx.index()))
         }
     }
 
@@ -215,7 +215,7 @@ impl TopologicalSorter {
             }
             Ok(())
         } else {
-            for node in nodes.iter()? {
+            for node in nodes.try_iter()? {
                 self.done_single(nodes.py(), NodeIndex::new(node?.extract()?))?
             }
             Ok(())

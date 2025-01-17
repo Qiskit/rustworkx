@@ -9,18 +9,25 @@
 # This file contains only type annotations for PyO3 functions and classes
 # For implementation details, see __init__.py and src/lib.rs
 
+import sys
 import numpy as np
+import numpy.typing as npt
 
-from typing import Generic, TypeVar, Any, Callable, overload
+from typing import Generic, Any, Callable, overload
 from collections.abc import Iterator, Sequence
+
+if sys.version_info >= (3, 13):
+    from typing import TypeVar
+else:
+    from typing_extensions import TypeVar
 
 # Re-Exports of rust native functions in rustworkx.rustworkx
 # To workaround limitations in mypy around re-exporting objects from the inner
 # rustworkx module we need to explicitly re-export every inner function from
 # rustworkx.rustworkx (the root rust module) in the form:
 # `from .rustworkx import foo as foo` so that mypy will treat `rustworkx.foo`
-# as a valid path
-import rustworkx.visit as visit
+# as a valid path.
+from . import visit as visit
 
 from .rustworkx import DAGHasCycle as DAGHasCycle
 from .rustworkx import DAGWouldCycle as DAGWouldCycle
@@ -270,8 +277,8 @@ from .rustworkx import AllPairsMultiplePathMapping as AllPairsMultiplePathMappin
 from .rustworkx import PyGraph as PyGraph
 from .rustworkx import PyDiGraph as PyDiGraph
 
-_S = TypeVar("_S")
-_T = TypeVar("_T")
+_S = TypeVar("_S", default=Any)
+_T = TypeVar("_T", default=Any)
 _BFSVisitor = TypeVar("_BFSVisitor", bound=visit.BFSVisitor)
 _DFSVisitor = TypeVar("_DFSVisitor", bound=visit.DFSVisitor)
 _DijkstraVisitor = TypeVar("_DijkstraVisitor", bound=visit.DijkstraVisitor)
@@ -283,7 +290,7 @@ def distance_matrix(
     parallel_threshold: int = ...,
     as_undirected: bool = ...,
     null_value: float = ...,
-) -> np.ndarray: ...
+) -> npt.NDArray[np.float64]: ...
 def unweighted_average_shortest_path_length(
     graph: PyGraph | PyDiGraph,
     parallel_threshold: int = ...,
@@ -294,7 +301,7 @@ def adjacency_matrix(
     weight_fn: Callable[[_T], float] | None = ...,
     default_weight: float = ...,
     null_value: float = ...,
-) -> np.ndarray: ...
+) -> npt.NDArray[np.float64]: ...
 def all_simple_paths(
     graph: PyGraph | PyDiGraph,
     from_: int,
@@ -313,13 +320,13 @@ def floyd_warshall_numpy(
     weight_fn: Callable[[_T], float] | None = ...,
     default_weight: float = ...,
     parallel_threshold: int = ...,
-) -> np.ndarray: ...
+) -> npt.NDArray[np.float64]: ...
 def floyd_warshall_successor_and_distance(
     graph: PyGraph[_S, _T] | PyDiGraph[_S, _T],
     weight_fn: Callable[[_T], float] | None = ...,
     default_weight: float | None = ...,
     parallel_threshold: int | None = ...,
-) -> tuple[np.ndarray, np.ndarray]: ...
+) -> tuple[npt.NDArray[np.float64], npt.NDArray[np.float64]]: ...
 def astar_shortest_path(
     graph: PyGraph[_S, _T] | PyDiGraph[_S, _T],
     node: int,
@@ -453,7 +460,7 @@ def spring_layout(
 def networkx_converter(graph: Any, keep_attributes: bool = ...) -> PyGraph | PyDiGraph: ...
 def bipartite_layout(
     graph: PyGraph[_S, _T] | PyDiGraph[_S, _T],
-    first_nodes,
+    first_nodes: set[int],
     horizontal: bool = ...,
     scale: int = ...,
     center: tuple[float, float] | None = ...,
@@ -588,7 +595,7 @@ def dijkstra_search(
 ) -> None: ...
 def bellman_ford_shortest_paths(
     graph: PyGraph[_S, _T] | PyDiGraph[_S, _T],
-    source,
+    source: int,
     target: int | None = ...,
     weight_fn: Callable[[_T], float] | None = ...,
     default_weight: float = ...,
