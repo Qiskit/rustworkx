@@ -18,11 +18,11 @@ import rustworkx
 class TestLocalComplement(unittest.TestCase):
     def test_clique(self):
         N = 5
-        graph = rustworkx.PyGraph()
+        graph = rustworkx.PyGraph(multigraph=False)
         graph.extend_from_edge_list([(i, j) for i in range(N) for j in range(N) if i < j])
 
         for node in range(0, N):
-            expected_graph = rustworkx.PyGraph()
+            expected_graph = rustworkx.PyGraph(multigraph=False)
             expected_graph.extend_from_edge_list([(i, node) for i in range(0, N) if i != node])
 
             complement_graph = rustworkx.local_complement(graph, node)
@@ -36,10 +36,10 @@ class TestLocalComplement(unittest.TestCase):
 
     def test_empty(self):
         N = 5
-        graph = rustworkx.PyGraph()
+        graph = rustworkx.PyGraph(multigraph=False)
         graph.add_nodes_from([i for i in range(N)])
 
-        expected_graph = rustworkx.PyGraph()
+        expected_graph = rustworkx.PyGraph(multigraph=False)
         expected_graph.add_nodes_from([i for i in range(N)])
 
         complement_graph = rustworkx.local_complement(graph, 0)
@@ -50,20 +50,22 @@ class TestLocalComplement(unittest.TestCase):
             )
         )
 
-    # TODO: More tests!
+    def test_local_complement(self):
+        # Example took from https://arxiv.org/abs/1910.03969, figure 1
+        graph = rustworkx.PyGraph(multigraph=False)
+        graph.extend_from_edge_list(
+            [(0, 1), (0, 3), (0, 5), (1, 2), (2, 3), (2, 4), (3, 4), (3, 5)]
+        )
 
-    # TODO
-    # def test_multigraph(self):
-    #     graph = rustworkx.PyGraph(multigraph=True)
-    #     graph.extend_from_edge_list([(0, 1), (1, 0), (0, 0)])
+        expected_graph = rustworkx.PyGraph(multigraph=False)
+        expected_graph.extend_from_edge_list(
+            [(0, 1), (0, 3), (0, 5), (1, 2), (1, 3), (1, 5), (2, 3), (2, 4), (3, 4)]
+        )
 
-    #     expected_graph = rustworkx.PyGraph(multigraph=True)
-    #     expected_graph.extend_from_edge_list([(0, 1), (1, 0), (0, 0)])
-
-    #     complement_graph = rustworkx.local_complement(graph, 0)
-    #     self.assertTrue(
-    #         rustworkx.is_isomorphic(
-    #             expected_graph,
-    #             complement_graph,
-    #         )
-    #     )
+        complement_graph = rustworkx.local_complement(graph, 0)
+        self.assertTrue(
+            rustworkx.is_isomorphic(
+                expected_graph,
+                complement_graph,
+            )
+        )
