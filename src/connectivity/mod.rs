@@ -574,8 +574,7 @@ pub fn digraph_complement(py: Python, graph: &digraph::PyDiGraph) -> PyResult<di
 ///     This function assumes that there are no self loops
 ///     in the provided graph.
 ///     Returns an error if the :attr:`~rustworkx.PyGraph.multigraph`
-///     attribute is set to ``True``. This function assumes
-///     that there are no self loops in the provided graph.
+///     attribute is set to ``True``.
 #[pyfunction]
 #[pyo3(text_signature = "(graph, node, /)")]
 pub fn graph_local_complement(
