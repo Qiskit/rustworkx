@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [tool.black]
 line-length = 100
-target-version = ['py38', 'py39', 'py310', 'py311']
+target-version = ['py39', 'py310', 'py311', 'py312']
 
 [tool.ruff]
 line-length = 105 # more lenient than black due to long function signatures
@@ -16,21 +16,26 @@ lint.select = [
     "PYI", # flake8-pyi
     "Q",   # flake8-quotes
 ]
-target-version = "py38"
+target-version = "py39"
 extend-exclude = ["doc"]
 
 [tool.ruff.lint.per-file-ignores]
 "rustworkx/__init__.py" = ["F405", "F403"]
 "*.pyi" = ["F403", "F405", "PYI001", "PYI002"]
 
+[tool.typos.default]
+extend-ignore-words-re = [
+  "[Ss]toer",
+]
+
 [tool.cibuildwheel]
 manylinux-x86_64-image = "manylinux2014"
 manylinux-i686-image = "manylinux2014"
-skip = "pp* cp36-* cp37-* *win32 *musllinux*i686"
+skip = "pp* cp36-* cp37-* cp38-* *win32 *musllinux*i686"
 test-requires = "networkx"
 test-command = "python -m unittest discover {project}/tests"
 before-build = "pip install -U setuptools-rust"
-test-skip = "cp38-*musllinux* *linux_s390x *ppc64le"
+test-skip = "*linux_s390x *ppc64le"
 
 [tool.cibuildwheel.linux]
 before-all = "yum install -y wget && {package}/tools/install_rust.sh"

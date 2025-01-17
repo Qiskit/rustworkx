@@ -34,7 +34,7 @@ use pyo3::Python;
 use rayon::prelude::*;
 
 use ndarray::prelude::*;
-use numpy::IntoPyArray;
+use numpy::{IntoPyArray, PyArray2};
 
 use crate::iterators::{
     AllPairsMultiplePathMapping, BiconnectedComponents, Chains, EdgeList, NodeIndices,
@@ -71,7 +71,7 @@ use rustworkx_core::dag_algo::longest_path;
 /// .. [1] Paton, K. An algorithm for finding a fundamental set of
 ///    cycles of a graph. Comm. ACM 12, 9 (Sept 1969), 514-518.
 #[pyfunction]
-#[pyo3(text_signature = "(graph, /, root=None)")]
+#[pyo3(text_signature = "(graph, /, root=None)", signature = (graph, root=None))]
 pub fn cycle_basis(graph: &graph::PyGraph, root: Option<usize>) -> Vec<Vec<usize>> {
     connectivity::cycle_basis(&graph.graph, root.map(NodeIndex::new))
         .into_iter()
@@ -92,8 +92,11 @@ pub fn cycle_basis(graph: &graph::PyGraph, root: Option<usize>) -> Vec<Vec<usize
 /// [3] https://github.com/networkx/networkx/blob/networkx-2.8.4/networkx/algorithms/cycles.py#L98-L222
 #[pyfunction]
 #[pyo3(text_signature = "(graph, /)")]
-pub fn simple_cycles(graph: &digraph::PyDiGraph) -> johnson_simple_cycles::SimpleCycleIter {
-    johnson_simple_cycles::SimpleCycleIter::new(graph)
+pub fn simple_cycles(
+    graph: Bound<digraph::PyDiGraph>,
+    py: Python,
+) -> PyResult<johnson_simple_cycles::PySimpleCycleIter> {
+    johnson_simple_cycles::PySimpleCycleIter::new(py, graph)
 }
 
 /// Compute the strongly connected components for a directed graph
@@ -125,7 +128,7 @@ pub fn strongly_connected_components(graph: &digraph::PyDiGraph) -> Vec<Vec<usiz
 ///     forms a cycle (loop) in the input graph
 /// :rtype: EdgeList
 #[pyfunction]
-#[pyo3(text_signature = "(graph, /, source=None)")]
+#[pyo3(text_signature = "(graph, /, source=None)", signature=(graph, source=None))]
 pub fn digraph_find_cycle(graph: &digraph::PyDiGraph, source: Option<usize>) -> EdgeList {
     EdgeList {
         edges: connectivity::find_cycle(&graph.graph, source.map(NodeIndex::new))
@@ -350,14 +353,14 @@ pub fn is_semi_connected(graph: &digraph::PyDiGraph) -> PyResult<bool> {
     signature=(graph, weight_fn=None, default_weight=1.0, null_value=0.0, parallel_edge="sum"),
     text_signature = "(graph, /, weight_fn=None, default_weight=1.0, null_value=0.0, parallel_edge=\"sum\")"
 )]
-pub fn digraph_adjacency_matrix(
-    py: Python,
+pub fn digraph_adjacency_matrix<'py>(
+    py: Python<'py>,
     graph: &digraph::PyDiGraph,
     weight_fn: Option<PyObject>,
     default_weight: f64,
     null_value: f64,
     parallel_edge: &str,
-) -> PyResult<PyObject> {
+) -> PyResult<Bound<'py, PyArray2<f64>>> {
     let n = graph.node_count();
     let mut matrix = Array2::<f64>::from_elem((n, n), null_value);
     let mut parallel_edge_count = HashMap::new();
@@ -395,7 +398,7 @@ pub fn digraph_adjacency_matrix(
             }
         }
     }
-    Ok(matrix.into_pyarray_bound(py).into())
+    Ok(matrix.into_pyarray(py))
 }
 
 /// Return the adjacency matrix for a PyGraph class
@@ -435,14 +438,14 @@ pub fn digraph_adjacency_matrix(
     signature=(graph, weight_fn=None, default_weight=1.0, null_value=0.0, parallel_edge="sum"),
     text_signature = "(graph, /, weight_fn=None, default_weight=1.0, null_value=0.0, parallel_edge=\"sum\")"
 )]
-pub fn graph_adjacency_matrix(
-    py: Python,
+pub fn graph_adjacency_matrix<'py>(
+    py: Python<'py>,
     graph: &graph::PyGraph,
     weight_fn: Option<PyObject>,
     default_weight: f64,
     null_value: f64,
     parallel_edge: &str,
-) -> PyResult<PyObject> {
+) -> PyResult<Bound<'py, PyArray2<f64>>> {
     let n = graph.node_count();
     let mut matrix = Array2::<f64>::from_elem((n, n), null_value);
     let mut parallel_edge_count = HashMap::new();
@@ -488,7 +491,7 @@ pub fn graph_adjacency_matrix(
             }
         }
     }
-    Ok(matrix.into_pyarray_bound(py).into())
+    Ok(matrix.into_pyarray(py))
 }
 
 /// Compute the complement of an undirected graph.
@@ -575,7 +578,7 @@ pub fn digraph_complement(py: Python, graph: &digraph::PyDiGraph) -> PyResult<di
 /// :returns: A list of lists where each inner list is a path of node indices
 /// :rtype: list
 #[pyfunction]
-#[pyo3(text_signature = "(graph, origin, to, /, min_depth=None, cutoff=None)")]
+#[pyo3(text_signature = "(graph, origin, to, /, min_depth=None, cutoff=None)", signature = (graph, origin, to, min_depth=None, cutoff=None))]
 pub fn graph_all_simple_paths(
     graph: &graph::PyGraph,
     origin: usize,
@@ -629,7 +632,7 @@ pub fn graph_all_simple_paths(
 /// :returns: A list of lists where each inner list is a path
 /// :rtype: list
 #[pyfunction]
-#[pyo3(text_signature = "(graph, origin, to, /, min_depth=None, cutoff=None)")]
+#[pyo3(text_signature = "(graph, origin, to, /, min_depth=None, cutoff=None)", signature = (graph, origin, to, min_depth=None, cutoff=None))]
 pub fn digraph_all_simple_paths(
     graph: &digraph::PyDiGraph,
     origin: usize,
@@ -687,7 +690,7 @@ pub fn digraph_all_simple_paths(
 ///
 /// :raises ValueError: If ``min_depth`` or ``cutoff`` are < 2
 #[pyfunction]
-#[pyo3(text_signature = "(graph, /, min_depth=None, cutoff=None)")]
+#[pyo3(text_signature = "(graph, /, min_depth=None, cutoff=None)", signature = (graph, min_depth=None, cutoff=None))]
 pub fn digraph_all_pairs_all_simple_paths(
     graph: &digraph::PyDiGraph,
     min_depth: Option<usize>,
@@ -749,7 +752,7 @@ pub fn connected_subgraphs(graph: &PyGraph, k: usize) -> PyResult<Vec<Vec<usize>
 ///
 /// :raises ValueError: If ``min_depth`` or ``cutoff`` are < 2.
 #[pyfunction]
-#[pyo3(text_signature = "(graph, /, min_depth=None, cutoff=None)")]
+#[pyo3(text_signature = "(graph, /, min_depth=None, cutoff=None)", signature = (graph, min_depth=None, cutoff=None))]
 pub fn graph_all_pairs_all_simple_paths(
     graph: &graph::PyGraph,
     min_depth: Option<usize>,
@@ -885,7 +888,7 @@ pub fn graph_longest_simple_path(graph: &graph::PyGraph) -> Option<NodeIndices> 
 #[pyo3(text_signature = "(graph, /)")]
 pub fn graph_core_number(py: Python, graph: &graph::PyGraph) -> PyResult<PyObject> {
     let cores = connectivity::core_number(&graph.graph);
-    let out_dict = PyDict::new_bound(py);
+    let out_dict = PyDict::new(py);
     for (k, v) in cores {
         out_dict.set_item(k.index(), v)?;
     }
@@ -911,7 +914,7 @@ pub fn graph_core_number(py: Python, graph: &graph::PyGraph) -> PyResult<PyObjec
 #[pyo3(text_signature = "(graph, /)")]
 pub fn digraph_core_number(py: Python, graph: &digraph::PyDiGraph) -> PyResult<PyObject> {
     let cores = connectivity::core_number(&graph.graph);
-    let out_dict = PyDict::new_bound(py);
+    let out_dict = PyDict::new(py);
     for (k, v) in cores {
         out_dict.set_item(k.index(), v)?;
     }
@@ -939,7 +942,7 @@ pub fn digraph_core_number(py: Python, graph: &digraph::PyDiGraph) -> PyResult<P
 /// .. [stoer_simple_1997] Stoer, Mechthild and Frank Wagner, "A simple min-cut
 ///     algorithm". Journal of the ACM 44 (4), 585-591, 1997.
 #[pyfunction]
-#[pyo3(text_signature = "(graph, /, weight_fn=None)")]
+#[pyo3(text_signature = "(graph, /, weight_fn=None)", signature = (graph, weight_fn=None))]
 pub fn stoer_wagner_min_cut(
     py: Python,
     graph: &graph::PyGraph,
@@ -1073,7 +1076,7 @@ pub fn biconnected_components(graph: &graph::PyGraph) -> BiconnectedComponents {
 ///     only the chain decomposition for the connected component containing
 ///     this node will be returned. This node indicates the root of the depth-first
 ///     search tree. If this is not specified then a source will be chosen
-///     arbitrarly and repeated until all components of the graph are searched.
+///     arbitrarily and repeated until all components of the graph are searched.
 /// :returns: A list of list of edges where each inner list is a chain.
 /// :rtype: list of EdgeList
 ///
@@ -1081,7 +1084,7 @@ pub fn biconnected_components(graph: &graph::PyGraph) -> BiconnectedComponents {
 ///       and 2-edge-connectivity." *Information Processing Letters*,
 ///       113, 241–244. Elsevier. <https://doi.org/10.1016/j.ipl.2013.01.016>
 #[pyfunction]
-#[pyo3(text_signature = "(graph, /, source=None)")]
+#[pyo3(text_signature = "(graph, /, source=None)", signature = (graph, source=None))]
 pub fn chain_decomposition(graph: graph::PyGraph, source: Option<usize>) -> Chains {
     let chains = connectivity::chain_decomposition(&graph.graph, source.map(NodeIndex::new));
     Chains {

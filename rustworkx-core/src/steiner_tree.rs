@@ -437,6 +437,9 @@ where
     Ok(out_edges)
 }
 
+/// Solution to a minimum Steiner tree problem.
+///
+/// This `struct` is created by the [steiner_tree] function.
 pub struct SteinerTreeResult {
     pub used_node_indices: HashSet<usize>,
     pub used_edge_endpoints: HashSet<(usize, usize)>,
@@ -446,7 +449,7 @@ pub struct SteinerTreeResult {
 ///
 /// The minimum tree of ``graph`` with regard to a set of ``terminal_nodes``
 /// is a tree within ``graph`` that spans those nodes and has a minimum size
-/// (measured as the sum of edge weights) amoung all such trees.
+/// (measured as the sum of edge weights) among all such trees.
 ///
 /// The minimum steiner tree can be approximated by computing the minimum
 /// spanning tree of the subgraph of the metric closure of ``graph`` induced
@@ -454,21 +457,25 @@ pub struct SteinerTreeResult {
 /// complete graph in which each edge is weighted by the shortest path distance
 /// between nodes in ``graph``.
 ///
-/// This algorithm [1]_ produces a tree whose weight is within a
-/// :math:`(2 - (2 / t))` factor of the weight of the optimal Steiner tree
-/// where :math:`t` is the number of terminal nodes. The algorithm implemented
-/// here is due to [2]_ . It avoids computing all pairs shortest paths but rather
-/// reduces the problem to a single source shortest path and a minimum spanning tree
-/// problem.
+/// This algorithm by Kou, Markowsky, and Berman[^KouMarkowskyBerman1981]
+/// produces a tree whose weight is within a `(2 - (2 / t))` factor of
+/// the weight of the optimal Steiner tree where `t` is the number of
+/// terminal nodes.
+/// The algorithm implemented here is due to Mehlhorn[^Mehlhorn1987]. It avoids
+/// computing all pairs shortest paths but rather reduces the problem to a
+/// single source shortest path and a minimum spanning tree problem.
 ///
-/// Arguments:
-///     `graph`: The input graph to compute the steiner tree of
-///     `terminal_nodes`: The terminal nodes of the steiner tree
-///     `weight_fn`: A callable weight function that will be passed an edge reference
-///         for each edge in the graph and it is expected to return a `Result<f64>`
-///         which if it doesn't error represents the weight of that edge.
+/// # Arguments
 ///
-/// Returns a custom struct that contains a set of nodes and edges and `None`
+/// - `graph` -  The input graph to compute the Steiner tree of
+/// - `terminal_nodes` - The terminal nodes of the Steiner tree
+/// - `weight_fn` - A callable weight function that will be passed an edge reference
+///   for each edge in the graph and it is expected to return a [`Result<f64>`]
+///   which if it doesn't error represents the weight of that edge.
+///
+/// # Returns
+///
+/// A custom struct that contains a set of nodes and edges and `None`
 /// if the graph is disconnected relative to the terminal nodes.
 ///
 /// # Example
@@ -509,13 +516,14 @@ pub struct SteinerTreeResult {
 /// let tree = steiner_tree(&input_graph, &terminal_nodes, weight_fn).unwrap().unwrap();
 /// ```
 ///
-/// .. [1] Kou, Markowsky & Berman,
+/// [^KouMarkowskyBerman1981]: Kou, Markowsky & Berman,
 ///    "A fast algorithm for Steiner trees"
-///    Acta Informatica 15, 141–145 (1981).
-///    https://link.springer.com/article/10.1007/BF00288961
-/// .. [2] Kurt Mehlhorn,
+///    Acta Informatica 15, 141–145 (1981)
+///    <https://link.springer.com/article/10.1007/BF00288961>
+/// [^Mehlhorn1987]: Kurt Mehlhorn,
 ///    "A faster approximation algorithm for the Steiner problem in graphs"
-///    https://doi.org/10.1016/0020-0190(88)90066-X
+///    Information Processing Letters 27(3), 125-128 (1987)
+///    <https://doi.org/10.1016/0020-0190(88)90066-X>
 pub fn steiner_tree<G, F, E>(
     graph: G,
     terminal_nodes: &[G::NodeId],

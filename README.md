@@ -77,7 +77,7 @@ it just as it would if there was a prebuilt binary available.
 > [!NOTE]  
 > To build from source you will need to ensure you have pip >=19.0.0
 installed, which supports PEP-517, or that you have manually installed
-`setuptools-rust` prior to running `pip install rustworkx`. If you recieve an
+`setuptools-rust` prior to running `pip install rustworkx`. If you receive an
 error about `setuptools-rust` not being found you should upgrade pip with
 `pip install -U pip` or manually install `setuptools-rust` with
 `pip install setuptools-rust` and try again.

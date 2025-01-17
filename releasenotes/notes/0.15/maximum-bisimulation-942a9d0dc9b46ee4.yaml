@@ -4,7 +4,7 @@ features:
     compute the maximum bisimulation or relational coarsest partition of a
     graph. This function is based on the algorithm described in the publication
     "Three partition refinement algorithms" by Paige and Tarjan. This function
-    recieves a graph and returns a
+    receives a graph and returns a
     :class:`~rustworkx.RelationalCoarsestPartition`.
   - |
     Added a new class :class:`~rustworkx.RelationalCoarsestPartition` to output

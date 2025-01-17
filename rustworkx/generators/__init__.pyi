@@ -12,7 +12,8 @@
 from rustworkx import PyGraph
 from rustworkx import PyDiGraph
 
-from typing import Sequence, Any
+from typing import Any
+from collections.abc import Sequence
 
 def cycle_graph(
     num_nodes: int | None = ..., weights: Sequence[Any] | None = ..., multigraph: bool = ...
@@ -131,3 +132,4 @@ def directed_complete_graph(
     multigraph: bool = ...,
 ) -> PyDiGraph: ...
 def dorogovtsev_goltsev_mendes_graph(n: int) -> PyGraph: ...
+def karate_club_graph(multigraph: bool = ...) -> PyGraph: ...

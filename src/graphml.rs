@@ -13,11 +13,15 @@
 #![allow(clippy::borrow_as_ptr)]
 
 use std::convert::From;
+use std::ffi::OsStr;
+use std::fs::File;
+use std::io::{BufRead, BufReader};
 use std::iter::FromIterator;
 use std::num::{ParseFloatError, ParseIntError};
 use std::path::Path;
 use std::str::ParseBoolError;
 
+use flate2::bufread::GzDecoder;
 use hashbrown::HashMap;
 use indexmap::IndexMap;
 
@@ -31,6 +35,7 @@ use petgraph::{Directed, Undirected};
 
 use pyo3::exceptions::PyException;
 use pyo3::prelude::*;
+use pyo3::IntoPyObjectExt;
 use pyo3::PyErr;
 
 use crate::{digraph::PyDiGraph, graph::PyGraph, StablePyGraph};
@@ -135,16 +140,20 @@ enum Value {
     UnDefined,
 }
 
-impl IntoPy<PyObject> for Value {
-    fn into_py(self, py: Python) -> PyObject {
+impl<'py> IntoPyObject<'py> for Value {
+    type Target = PyAny;
+    type Output = Bound<'py, Self::Target>;
+    type Error = PyErr;
+
+    fn into_pyobject(self, py: Python<'py>) -> Result<Self::Output, Self::Error> {
         match self {
-            Value::Boolean(val) => val.into_py(py),
-            Value::Int(val) => val.into_py(py),
-            Value::Float(val) => val.into_py(py),
-            Value::Double(val) => val.into_py(py),
-            Value::String(val) => val.into_py(py),
-            Value::Long(val) => val.into_py(py),
-            Value::UnDefined => py.None(),
+            Value::Boolean(val) => val.into_pyobject(py)?.into_bound_py_any(py),
+            Value::Int(val) => Ok(val.into_pyobject(py)?.into_any()),
+            Value::Float(val) => Ok(val.into_pyobject(py)?.into_any()),
+            Value::Double(val) => Ok(val.into_pyobject(py)?.into_any()),
+            Value::String(val) => Ok(val.into_pyobject(py)?.into_any()),
+            Value::Long(val) => Ok(val.into_pyobject(py)?.into_any()),
+            Value::UnDefined => Ok(py.None().into_bound(py)),
         }
     }
 }
@@ -259,8 +268,12 @@ impl Graph {
     }
 }
 
-impl IntoPy<PyObject> for Graph {
-    fn into_py(self, py: Python) -> PyObject {
+impl<'py> IntoPyObject<'py> for Graph {
+    type Target = PyAny;
+    type Output = Bound<'py, Self::Target>;
+    type Error = PyErr;
+
+    fn into_pyobject(self, py: Python<'py>) -> Result<Self::Output, Self::Error> {
         macro_rules! make_graph {
             ($graph:ident) => {
                 let mut mapping = HashMap::with_capacity(self.nodes.len());
@@ -270,7 +283,7 @@ impl IntoPy<PyObject> for Graph {
                     // not by a hashable String.
                     node.data
                         .insert(String::from("id"), Value::String(node.id.clone()));
-                    mapping.insert(node.id, $graph.add_node(node.data.into_py(py)));
+                    mapping.insert(node.id, $graph.add_node(node.data.into_py_any(py)?));
                 }
 
                 for mut edge in self.edges {
@@ -282,7 +295,7 @@ impl IntoPy<PyObject> for Graph {
                             if let Some(id) = edge.id {
                                 edge.data.insert(String::from("id"), Value::String(id));
                             }
-                            $graph.add_edge(source, target, edge.data.into_py(py));
+                            $graph.add_edge(source, target, edge.data.into_py_any(py)?);
                         }
                         _ => {
                             // We skip an edge if one of its endpoints was not added earlier in the graph.
@@ -302,10 +315,10 @@ impl IntoPy<PyObject> for Graph {
                     graph,
                     node_removed: false,
                     multigraph: true,
-                    attrs: self.attributes.into_py(py),
+                    attrs: self.attributes.into_py_any(py)?,
                 };
 
-                out.into_py(py)
+                Ok(out.into_pyobject(py)?.into_any())
             }
             Direction::Directed => {
                 let mut graph =
@@ -318,10 +331,10 @@ impl IntoPy<PyObject> for Graph {
                     check_cycle: false,
                     node_removed: false,
                     multigraph: true,
-                    attrs: self.attributes.into_py(py),
+                    attrs: self.attributes.into_py_any(py)?,
                 };
 
-                out.into_py(py)
+                Ok(out.into_pyobject(py)?.into_any())
             }
         }
     }
@@ -524,19 +537,27 @@ impl GraphML {
 
         Ok(())
     }
+    /// Open file compressed with gzip, using the GzDecoder
+    /// Returns a quick_xml Reader instance
+    fn open_file_gzip<P: AsRef<Path>>(
+        path: P,
+    ) -> Result<Reader<BufReader<GzDecoder<BufReader<File>>>>, quick_xml::Error> {
+        let file = File::open(path)?;
+        let reader = BufReader::new(file);
+        let gzip_reader = BufReader::new(GzDecoder::new(reader));
+        Ok(Reader::from_reader(gzip_reader))
+    }
 
-    /// Parse a file written in GraphML format.
+    /// Parse a file written in GraphML format from a BufReader
     ///
     /// The implementation is based on a state machine in order to
     /// accept only valid GraphML syntax (e.g a `<data>` element should
     /// be nested inside a `<node>` element) where the internal state changes
     /// after handling each quick_xml event.
-    fn from_file<P: AsRef<Path>>(path: P) -> Result<GraphML, Error> {
+    fn read_graph_from_reader<R: BufRead>(mut reader: Reader<R>) -> Result<GraphML, Error> {
         let mut graphml = GraphML::default();
 
         let mut buf = Vec::new();
-        let mut reader = Reader::from_file(path)?;
-
         let mut state = State::Start;
         let mut domain_of_last_key = Domain::Node;
         let mut last_data_key = String::new();
@@ -677,6 +698,23 @@ impl GraphML {
 
         Ok(graphml)
     }
+
+    /// Read a graph from a file in the GraphML format
+    /// If the the file extension is "graphmlz" or "gz", decompress it on the fly
+    fn from_file<P: AsRef<Path>>(path: P, compression: &str) -> Result<GraphML, Error> {
+        let extension = path.as_ref().extension().unwrap_or(OsStr::new(""));
+
+        let graph: Result<GraphML, Error> =
+            if extension.eq("graphmlz") || extension.eq("gz") || compression.eq("gzip") {
+                let reader = Self::open_file_gzip(path)?;
+                Self::read_graph_from_reader(reader)
+            } else {
+                let reader = Reader::from_file(path)?;
+                Self::read_graph_from_reader(reader)
+            };
+
+        graph
+    }
 }
 
 /// Read a list of graphs from a file in GraphML format.
@@ -703,13 +741,17 @@ impl GraphML {
 /// :rtype: list[Union[PyGraph, PyDiGraph]]
 /// :raises RuntimeError: when an error is encountered while parsing the GraphML file.
 #[pyfunction]
-#[pyo3(text_signature = "(path, /)")]
-pub fn read_graphml(py: Python, path: &str) -> PyResult<Vec<PyObject>> {
-    let graphml = GraphML::from_file(path)?;
+#[pyo3(signature=(path, compression=None),text_signature = "(path, /, compression=None)")]
+pub fn read_graphml<'py>(
+    py: Python<'py>,
+    path: &str,
+    compression: Option<String>,
+) -> PyResult<Vec<Bound<'py, PyAny>>> {
+    let graphml = GraphML::from_file(path, &compression.unwrap_or_default())?;
 
     let mut out = Vec::new();
     for graph in graphml.graphs {
-        out.push(graph.into_py(py))
+        out.push(graph.into_pyobject(py)?)
     }
 
     Ok(out)

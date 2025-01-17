@@ -74,11 +74,11 @@ class TestDijkstraGraph(unittest.TestCase):
         g = rustworkx.PyGraph()
         a = g.add_node("A")
         b = g.add_node("B")
-        path_lenghts = rustworkx.graph_dijkstra_shortest_path_lengths(
+        path_lengths = rustworkx.graph_dijkstra_shortest_path_lengths(
             g, a, edge_cost_fn=float, goal=b
         )
         expected = {}
-        self.assertEqual(expected, path_lenghts)
+        self.assertEqual(expected, path_lengths)
 
     def test_dijkstra_path_with_no_goal_set(self):
         path = rustworkx.graph_dijkstra_shortest_paths(self.graph, self.a)
@@ -253,7 +253,7 @@ class TestDijkstraGraph(unittest.TestCase):
                         graph, edge_cost_fn=lambda _: invalid_weight
                     )
 
-    def all_pairs_dijkstra_lenghts_with_invalid_weights(self):
+    def all_pairs_dijkstra_lengths_with_invalid_weights(self):
         graph = rustworkx.generators.path_graph(2)
         for invalid_weight in [float("nan"), -1]:
             with self.subTest(invalid_weight=invalid_weight):

@@ -28,6 +28,7 @@ use rustworkx_core::traversal::dfs_edges;
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use pyo3::types::PyList;
+use pyo3::IntoPyObjectExt;
 use pyo3::Python;
 
 use petgraph::algo;
@@ -81,7 +82,7 @@ where
 }
 
 /// Return a pair of [`petgraph::Direction`] values corresponding to the "forwards" and "backwards"
-/// direction of graph traversal, based on whether the graph is being traved forwards (following
+/// direction of graph traversal, based on whether the graph is being traversed forwards (following
 /// the edges) or backward (reversing along edges).  The order of returns is (forwards, backwards).
 #[inline(always)]
 pub fn traversal_directions(reverse: bool) -> (petgraph::Direction, petgraph::Direction) {
@@ -111,7 +112,7 @@ pub fn traversal_directions(reverse: bool) -> (petgraph::Direction, petgraph::Di
 /// :raises Exception: If an unexpected error occurs or a path can't be found
 /// :raises DAGHasCycle: If the input PyDiGraph has a cycle
 #[pyfunction]
-#[pyo3(text_signature = "(graph, /, weight_fn=None)")]
+#[pyo3(text_signature = "(graph, /, weight_fn=None)", signature = (graph, weight_fn=None))]
 pub fn dag_longest_path(
     py: Python,
     graph: &digraph::PyDiGraph,
@@ -151,7 +152,7 @@ pub fn dag_longest_path(
 /// :raises Exception: If an unexpected error occurs or a path can't be found
 /// :raises DAGHasCycle: If the input PyDiGraph has a cycle
 #[pyfunction]
-#[pyo3(text_signature = "(graph, /, weight_fn=None)")]
+#[pyo3(text_signature = "(graph, /, weight_fn=None)", signature = (graph, weight_fn=None))]
 pub fn dag_longest_path_length(
     py: Python,
     graph: &digraph::PyDiGraph,
@@ -313,7 +314,7 @@ pub fn layers(
             .collect(),
     );
     if index_output {
-        let pylist = PyList::empty_bound(py);
+        let pylist = PyList::empty(py);
         for layer in result {
             match layer {
                 Ok(layer) => pylist.append(
@@ -327,7 +328,7 @@ pub fn layers(
         }
         Ok(pylist.into())
     } else {
-        let pylist = PyList::empty_bound(py);
+        let pylist = PyList::empty(py);
         for layer in result {
             match layer {
                 Ok(layer) => pylist.append(
@@ -394,7 +395,7 @@ pub fn lexicographical_topological_sort(
     let initial: Option<Vec<NodeIndex>> = match initial {
         Some(initial) => {
             let mut initial_vec: Vec<NodeIndex> = Vec::new();
-            for maybe_index in initial.iter()? {
+            for maybe_index in initial.try_iter()? {
                 let node = NodeIndex::new(maybe_index?.extract::<usize>()?);
                 initial_vec.push(node);
             }
@@ -403,12 +404,12 @@ pub fn lexicographical_topological_sort(
         None => None,
     };
     let out_list = core_lexico_topo_sort(&dag.graph, key_callable, reverse, initial.as_deref())?;
-    Ok(PyList::new_bound(
+    Ok(PyList::new(
         py,
         out_list
             .into_iter()
             .map(|node| dag.graph[node].clone_ref(py)),
-    )
+    )?
     .into())
 }
 
@@ -524,8 +525,8 @@ pub fn collect_runs(
         // This is where a filter function error will be returned, otherwise Result is stripped away
         let py_run: Vec<PyObject> = run_result?
             .iter()
-            .map(|node| return graph.graph.node_weight(*node).into_py(py))
-            .collect();
+            .map(|node| graph.graph.node_weight(*node).into_py_any(py))
+            .collect::<PyResult<Vec<PyObject>>>()?;
 
         result.push(py_run)
     }
@@ -585,7 +586,7 @@ pub fn collect_bicolor_runs(
                     .into_iter()
                     .map(|node_index| {
                         let node_weight = dag.node_weight(node_index).expect("Invalid NodeId");
-                        node_weight.into_py(py)
+                        node_weight.into_py_any(py).unwrap()
                     })
                     .collect()
             })
@@ -667,7 +668,7 @@ pub fn transitive_reduction(
             );
         }
     }
-    return Ok((
+    Ok((
         digraph::PyDiGraph {
             graph: tr,
             node_removed: false,
@@ -680,5 +681,5 @@ pub fn transitive_reduction(
             .iter()
             .map(|(k, v)| (k.index(), v.index()))
             .collect::<DictMap<usize, usize>>(),
-    ));
+    ))
 }

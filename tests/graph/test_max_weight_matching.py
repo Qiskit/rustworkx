@@ -10,7 +10,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-# These tests are adapated from the networkx test cases:
+# These tests are adapted from the networkx test cases:
 # https://github.com/networkx/networkx/blob/3351206a3ce5b3a39bb2fc451e93ef545b96c95b/networkx/algorithms/tests/test_matching.py
 
 import random
@@ -27,7 +27,7 @@ def match_dict_to_set(match):
 
 class TestMaxWeightMatching(unittest.TestCase):
     def compare_match_sets(self, rx_match, expected_match):
-        for (u, v) in rx_match:
+        for u, v in rx_match:
             if (u, v) not in expected_match and (v, u) not in expected_match:
                 self.fail(
                     f"Element {(u, v)} and it's reverse {(v, u)} not found in "
@@ -49,7 +49,7 @@ class TestMaxWeightMatching(unittest.TestCase):
             return weight["weight"]
 
         not_match = False
-        for (u, v) in rx_matches:
+        for u, v in rx_matches:
             if (u, v) not in nx_matches:
                 if (v, u) not in nx_matches:
                     not_match = True
@@ -57,11 +57,11 @@ class TestMaxWeightMatching(unittest.TestCase):
         if not_match:
             self.assertTrue(
                 rustworkx.is_matching(rx_graph, rx_matches),
-                "%s is not a valid matching" % rx_matches,
+                f"{rx_matches} is not a valid matching",
             )
             self.assertTrue(
                 rustworkx.is_maximal_matching(rx_graph, rx_matches),
-                "%s is not a maximal matching" % rx_matches,
+                f"{rx_matches} is not a maximal matching",
             )
             self.assertEqual(
                 sum(map(get_rx_weight, rx_matches)),

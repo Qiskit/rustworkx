@@ -205,7 +205,7 @@ pub fn digraph_spring_layout(
 /// :returns: The random layout of the graph.
 /// :rtype: Pos2DMapping
 #[pyfunction]
-#[pyo3(text_signature = "(graph, / center=None, seed=None)")]
+#[pyo3(text_signature = "(graph, / center=None, seed=None)", signature = (graph, center=None, seed=None))]
 pub fn graph_random_layout(
     graph: &graph::PyGraph,
     center: Option<[f64; 2]>,
@@ -224,7 +224,7 @@ pub fn graph_random_layout(
 /// :returns: The random layout of the graph.
 /// :rtype: Pos2DMapping
 #[pyfunction]
-#[pyo3(text_signature = "(graph, / center=None, seed=None)")]
+#[pyo3(text_signature = "(graph, / center=None, seed=None)", signature = (graph, center=None, seed=None))]
 pub fn digraph_random_layout(
     graph: &digraph::PyDiGraph,
     center: Option<[f64; 2]>,
@@ -237,7 +237,7 @@ pub fn digraph_random_layout(
 ///
 /// :param PyGraph graph: The graph to generate the layout for
 /// :param set first_nodes: The set of node indices on the left (or top if
-///     horitontal is true)
+///     horizontal is true)
 /// :param bool horizontal: An optional bool specifying the orientation of the
 ///     layout
 /// :param float scale: An optional scaling factor to scale positions
@@ -319,7 +319,7 @@ pub fn digraph_bipartite_layout(
 /// :returns: The circular layout of the graph.
 /// :rtype: Pos2DMapping
 #[pyfunction]
-#[pyo3(text_signature = "(graph, /, scale=1, center=None)")]
+#[pyo3(text_signature = "(graph, /, scale=1, center=None)", signature = (graph, scale=None, center=None))]
 pub fn graph_circular_layout(
     graph: &graph::PyGraph,
     scale: Option<f64>,
@@ -338,7 +338,7 @@ pub fn graph_circular_layout(
 /// :returns: The circular layout of the graph.
 /// :rtype: Pos2DMapping
 #[pyfunction]
-#[pyo3(text_signature = "(graph, /, scale=1, center=None)")]
+#[pyo3(text_signature = "(graph, /, scale=1, center=None)", signature = (graph, scale=None, center=None))]
 pub fn digraph_circular_layout(
     graph: &digraph::PyDiGraph,
     scale: Option<f64>,
@@ -361,7 +361,7 @@ pub fn digraph_circular_layout(
 /// :returns: The shell layout of the graph.
 /// :rtype: Pos2DMapping
 #[pyfunction]
-#[pyo3(text_signature = "(graph, /, nlist=None, rotate=None, scale=1, center=None)")]
+#[pyo3(text_signature = "(graph, /, nlist=None, rotate=None, scale=1, center=None)", signature = (graph, nlist=None, rotate=None, scale=None, center=None))]
 pub fn graph_shell_layout(
     graph: &graph::PyGraph,
     nlist: Option<Vec<Vec<usize>>>,
@@ -385,7 +385,7 @@ pub fn graph_shell_layout(
 /// :returns: The shell layout of the graph.
 /// :rtype: Pos2DMapping
 #[pyfunction]
-#[pyo3(text_signature = "(graph, /, nlist=None, rotate=None, scale=1, center=None)")]
+#[pyo3(text_signature = "(graph, /, nlist=None, rotate=None, scale=1, center=None)", signature = (graph, nlist=None, rotate=None, scale=None, center=None))]
 pub fn digraph_shell_layout(
     graph: &digraph::PyDiGraph,
     nlist: Option<Vec<Vec<usize>>>,

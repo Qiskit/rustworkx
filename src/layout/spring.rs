@@ -183,7 +183,7 @@ pub fn rescale(pos: &mut [Point], scale: Nt, indices: Vec<usize>) {
     mu[0] /= n as Nt;
     mu[1] /= n as Nt;
 
-    // substract mean and find max coordinate for all axes
+    // subtract mean and find max coordinate for all axes
     let mut lim = f64::NEG_INFINITY;
     for n in indices {
         let [px, py] = pos.get_mut(n).unwrap();

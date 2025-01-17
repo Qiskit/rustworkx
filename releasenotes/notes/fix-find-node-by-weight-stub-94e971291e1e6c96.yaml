@@ -1,0 +1,7 @@
+---
+fixes:
+  - |
+    Fixed a bug in the type hints for :meth:`~rustworkx.PyGraph.find_node_by_weight`
+    and :meth:`~rustworkx.PyDiGraph.find_node_by_weight`.
+    Refer to `issue 1243 <https://github.com/Qiskit/rustworkx/issues/1322>`__ for
+    more information.
