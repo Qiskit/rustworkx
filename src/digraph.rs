@@ -1842,6 +1842,29 @@ impl PyDiGraph {
         }
     }
 
+    /// Return the list of incoming edge indices to a provided node
+    ///
+    /// This method will return the incoming edges of the provided
+    /// ``node``.
+    ///
+    /// :param int node: The node index to get incoming edges from. If
+    ///     this node index is not present in the graph this method will
+    ///     return an empty list and not error.
+    ///
+    /// :returns: A list of the incoming edge indices to a node in the graph
+    /// :rtype: EdgeIndices
+    #[pyo3(text_signature = "(self, node, /)")]
+    pub fn in_edge_indices(&self, node: usize) -> EdgeIndices {
+        let node_index = NodeIndex::new(node);
+        EdgeIndices {
+            edges: self
+                .graph
+                .edges_directed(node_index, petgraph::Direction::Incoming)
+                .map(|e| e.id().index())
+                .collect(),
+        }
+    }
+
     /// Return the index map of edges incident to a provided node
     ///
     /// By default this method will only return the outgoing edges of
