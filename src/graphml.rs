@@ -35,6 +35,7 @@ use petgraph::{Directed, Undirected};
 
 use pyo3::exceptions::PyException;
 use pyo3::prelude::*;
+use pyo3::IntoPyObjectExt;
 use pyo3::PyErr;
 
 use crate::{digraph::PyDiGraph, graph::PyGraph, StablePyGraph};
@@ -139,16 +140,20 @@ enum Value {
     UnDefined,
 }
 
-impl IntoPy<PyObject> for Value {
-    fn into_py(self, py: Python) -> PyObject {
+impl<'py> IntoPyObject<'py> for Value {
+    type Target = PyAny;
+    type Output = Bound<'py, Self::Target>;
+    type Error = PyErr;
+
+    fn into_pyobject(self, py: Python<'py>) -> Result<Self::Output, Self::Error> {
         match self {
-            Value::Boolean(val) => val.into_py(py),
-            Value::Int(val) => val.into_py(py),
-            Value::Float(val) => val.into_py(py),
-            Value::Double(val) => val.into_py(py),
-            Value::String(val) => val.into_py(py),
-            Value::Long(val) => val.into_py(py),
-            Value::UnDefined => py.None(),
+            Value::Boolean(val) => val.into_pyobject(py)?.into_bound_py_any(py),
+            Value::Int(val) => Ok(val.into_pyobject(py)?.into_any()),
+            Value::Float(val) => Ok(val.into_pyobject(py)?.into_any()),
+            Value::Double(val) => Ok(val.into_pyobject(py)?.into_any()),
+            Value::String(val) => Ok(val.into_pyobject(py)?.into_any()),
+            Value::Long(val) => Ok(val.into_pyobject(py)?.into_any()),
+            Value::UnDefined => Ok(py.None().into_bound(py)),
         }
     }
 }
@@ -263,8 +268,12 @@ impl Graph {
     }
 }
 
-impl IntoPy<PyObject> for Graph {
-    fn into_py(self, py: Python) -> PyObject {
+impl<'py> IntoPyObject<'py> for Graph {
+    type Target = PyAny;
+    type Output = Bound<'py, Self::Target>;
+    type Error = PyErr;
+
+    fn into_pyobject(self, py: Python<'py>) -> Result<Self::Output, Self::Error> {
         macro_rules! make_graph {
             ($graph:ident) => {
                 let mut mapping = HashMap::with_capacity(self.nodes.len());
@@ -274,7 +283,7 @@ impl IntoPy<PyObject> for Graph {
                     // not by a hashable String.
                     node.data
                         .insert(String::from("id"), Value::String(node.id.clone()));
-                    mapping.insert(node.id, $graph.add_node(node.data.into_py(py)));
+                    mapping.insert(node.id, $graph.add_node(node.data.into_py_any(py)?));
                 }
 
                 for mut edge in self.edges {
@@ -286,7 +295,7 @@ impl IntoPy<PyObject> for Graph {
                             if let Some(id) = edge.id {
                                 edge.data.insert(String::from("id"), Value::String(id));
                             }
-                            $graph.add_edge(source, target, edge.data.into_py(py));
+                            $graph.add_edge(source, target, edge.data.into_py_any(py)?);
                         }
                         _ => {
                             // We skip an edge if one of its endpoints was not added earlier in the graph.
@@ -306,10 +315,10 @@ impl IntoPy<PyObject> for Graph {
                     graph,
                     node_removed: false,
                     multigraph: true,
-                    attrs: self.attributes.into_py(py),
+                    attrs: self.attributes.into_py_any(py)?,
                 };
 
-                out.into_py(py)
+                Ok(out.into_pyobject(py)?.into_any())
             }
             Direction::Directed => {
                 let mut graph =
@@ -322,10 +331,10 @@ impl IntoPy<PyObject> for Graph {
                     check_cycle: false,
                     node_removed: false,
                     multigraph: true,
-                    attrs: self.attributes.into_py(py),
+                    attrs: self.attributes.into_py_any(py)?,
                 };
 
-                out.into_py(py)
+                Ok(out.into_pyobject(py)?.into_any())
             }
         }
     }
@@ -733,16 +742,16 @@ impl GraphML {
 /// :raises RuntimeError: when an error is encountered while parsing the GraphML file.
 #[pyfunction]
 #[pyo3(signature=(path, compression=None),text_signature = "(path, /, compression=None)")]
-pub fn read_graphml(
-    py: Python,
+pub fn read_graphml<'py>(
+    py: Python<'py>,
     path: &str,
     compression: Option<String>,
-) -> PyResult<Vec<PyObject>> {
+) -> PyResult<Vec<Bound<'py, PyAny>>> {
     let graphml = GraphML::from_file(path, &compression.unwrap_or_default())?;
 
     let mut out = Vec::new();
     for graph in graphml.graphs {
-        out.push(graph.into_py(py))
+        out.push(graph.into_pyobject(py)?)
     }
 
     Ok(out)

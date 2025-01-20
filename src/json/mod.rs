@@ -19,6 +19,7 @@ use crate::{digraph, graph, JSONDeserializationError, StablePyGraph};
 use petgraph::{algo, Directed, Undirected};
 
 use pyo3::prelude::*;
+use pyo3::IntoPyObjectExt;
 use pyo3::Python;
 
 /// Parse a node-link format JSON file to generate a graph
@@ -44,13 +45,13 @@ use pyo3::Python;
 /// :rtype: PyGraph | PyDiGraph
 #[pyfunction]
 #[pyo3(signature = (path, graph_attrs=None, node_attrs=None, edge_attrs=None))]
-pub fn from_node_link_json_file(
-    py: Python,
+pub fn from_node_link_json_file<'py>(
+    py: Python<'py>,
     path: &str,
     graph_attrs: Option<PyObject>,
     node_attrs: Option<PyObject>,
     edge_attrs: Option<PyObject>,
-) -> PyResult<PyObject> {
+) -> PyResult<Bound<'py, PyAny>> {
     let file = File::open(path)?;
     let reader = BufReader::new(file);
     let graph: node_link_data::GraphInput = match serde_json::from_reader(reader) {
@@ -65,7 +66,7 @@ pub fn from_node_link_json_file(
     let attrs: PyObject = match graph.attrs {
         Some(ref attrs) => match graph_attrs {
             Some(ref callback) => callback.call1(py, (attrs.clone(),))?,
-            None => attrs.to_object(py),
+            None => attrs.into_py_any(py)?,
         },
         None => py.None(),
     };
@@ -83,7 +84,8 @@ pub fn from_node_link_json_file(
             multigraph,
             attrs,
         }
-        .into_py(py)
+        .into_pyobject(py)?
+        .into_any()
     } else {
         let mut inner_graph: StablePyGraph<Undirected> =
             StablePyGraph::with_capacity(graph.nodes.len(), graph.links.len());
@@ -95,7 +97,8 @@ pub fn from_node_link_json_file(
             multigraph,
             attrs,
         }
-        .into_py(py)
+        .into_pyobject(py)?
+        .into_any()
     })
 }
 
@@ -122,13 +125,13 @@ pub fn from_node_link_json_file(
 /// :rtype: PyGraph | PyDiGraph
 #[pyfunction]
 #[pyo3(signature = (data, graph_attrs=None, node_attrs=None, edge_attrs=None))]
-pub fn parse_node_link_json(
-    py: Python,
+pub fn parse_node_link_json<'py>(
+    py: Python<'py>,
     data: &str,
     graph_attrs: Option<PyObject>,
     node_attrs: Option<PyObject>,
     edge_attrs: Option<PyObject>,
-) -> PyResult<PyObject> {
+) -> PyResult<Bound<'py, PyAny>> {
     let graph: node_link_data::GraphInput = match serde_json::from_str(data) {
         Ok(v) => v,
         Err(e) => {
@@ -141,7 +144,7 @@ pub fn parse_node_link_json(
     let attrs: PyObject = match graph.attrs {
         Some(ref attrs) => match graph_attrs {
             Some(ref callback) => callback.call1(py, (attrs.clone(),))?,
-            None => attrs.to_object(py),
+            None => attrs.into_py_any(py)?,
         },
         None => py.None(),
     };
@@ -158,7 +161,8 @@ pub fn parse_node_link_json(
             multigraph,
             attrs,
         }
-        .into_py(py)
+        .into_pyobject(py)?
+        .into_any()
     } else {
         let mut inner_graph: StablePyGraph<Undirected> =
             StablePyGraph::with_capacity(graph.nodes.len(), graph.links.len());
@@ -169,7 +173,8 @@ pub fn parse_node_link_json(
             multigraph,
             attrs,
         }
-        .into_py(py)
+        .into_pyobject(py)?
+        .into_any()
     })
 }
 

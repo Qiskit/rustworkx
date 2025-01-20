@@ -17,6 +17,7 @@ use petgraph::Undirected;
 use pyo3::exceptions::{PyIndexError, PyOverflowError, PyValueError};
 use pyo3::prelude::*;
 use pyo3::wrap_pyfunction;
+use pyo3::IntoPyObjectExt;
 use pyo3::Python;
 
 use super::{digraph, graph, StablePyGraph};
@@ -1152,8 +1153,11 @@ pub fn hexagonal_lattice_graph(
 ) -> PyResult<graph::PyGraph> {
     let default_fn = || py.None();
     let graph: StablePyGraph<Undirected> = if with_positions {
-        let node_position_fn =
-            |u: usize, v: usize| _hexagonal_lattice_node_position(u, v).to_object(py);
+        let node_position_fn = |u: usize, v: usize| {
+            _hexagonal_lattice_node_position(u, v)
+                .into_py_any(py)
+                .unwrap()
+        };
         match core_generators::hexagonal_lattice_graph_weighted(
             rows,
             cols,
@@ -1229,8 +1233,11 @@ pub fn directed_hexagonal_lattice_graph(
 ) -> PyResult<digraph::PyDiGraph> {
     let default_fn = || py.None();
     let graph: StablePyGraph<Directed> = if with_positions {
-        let node_position_fn =
-            |u: usize, v: usize| _hexagonal_lattice_node_position(u, v).to_object(py);
+        let node_position_fn = |u: usize, v: usize| {
+            _hexagonal_lattice_node_position(u, v)
+                .into_py_any(py)
+                .unwrap()
+        };
         match core_generators::hexagonal_lattice_graph_weighted(
             rows,
             cols,
@@ -1754,10 +1761,10 @@ pub fn dorogovtsev_goltsev_mendes_graph(py: Python, n: usize) -> PyResult<graph:
 )]
 pub fn karate_club_graph(py: Python, multigraph: bool) -> PyResult<graph::PyGraph> {
     let default_node_fn = |w: bool| match w {
-        true => "Mr. Hi".to_object(py),
-        false => "Officer".to_object(py),
+        true => "Mr. Hi".into_py_any(py).unwrap(),
+        false => "Officer".into_py_any(py).unwrap(),
     };
-    let default_edge_fn = |w: usize| (w as f64).to_object(py);
+    let default_edge_fn = |w: usize| (w as f64).into_py_any(py).unwrap();
     let graph: StablePyGraph<Undirected> =
         core_generators::karate_club_graph(default_node_fn, default_edge_fn);
     Ok(graph::PyGraph {

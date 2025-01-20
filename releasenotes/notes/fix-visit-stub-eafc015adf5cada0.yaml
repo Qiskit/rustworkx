@@ -1,0 +1,7 @@
+---
+fixes:
+  - |
+    Fixed a bug in the discoverability of the type hints for the `rustworkx.visit` module.
+    Classes declared in the module are also now properly annotated as accepting generic types. 
+    Refer to `issue 1352 <https://github.com/Qiskit/rustworkx/issues/1352>`__ for
+    more information.

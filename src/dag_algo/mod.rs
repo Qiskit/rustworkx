@@ -28,6 +28,7 @@ use rustworkx_core::traversal::dfs_edges;
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use pyo3::types::PyList;
+use pyo3::IntoPyObjectExt;
 use pyo3::Python;
 
 use petgraph::algo;
@@ -313,7 +314,7 @@ pub fn layers(
             .collect(),
     );
     if index_output {
-        let pylist = PyList::empty_bound(py);
+        let pylist = PyList::empty(py);
         for layer in result {
             match layer {
                 Ok(layer) => pylist.append(
@@ -327,7 +328,7 @@ pub fn layers(
         }
         Ok(pylist.into())
     } else {
-        let pylist = PyList::empty_bound(py);
+        let pylist = PyList::empty(py);
         for layer in result {
             match layer {
                 Ok(layer) => pylist.append(
@@ -394,7 +395,7 @@ pub fn lexicographical_topological_sort(
     let initial: Option<Vec<NodeIndex>> = match initial {
         Some(initial) => {
             let mut initial_vec: Vec<NodeIndex> = Vec::new();
-            for maybe_index in initial.iter()? {
+            for maybe_index in initial.try_iter()? {
                 let node = NodeIndex::new(maybe_index?.extract::<usize>()?);
                 initial_vec.push(node);
             }
@@ -403,12 +404,12 @@ pub fn lexicographical_topological_sort(
         None => None,
     };
     let out_list = core_lexico_topo_sort(&dag.graph, key_callable, reverse, initial.as_deref())?;
-    Ok(PyList::new_bound(
+    Ok(PyList::new(
         py,
         out_list
             .into_iter()
             .map(|node| dag.graph[node].clone_ref(py)),
-    )
+    )?
     .into())
 }
 
@@ -524,8 +525,8 @@ pub fn collect_runs(
         // This is where a filter function error will be returned, otherwise Result is stripped away
         let py_run: Vec<PyObject> = run_result?
             .iter()
-            .map(|node| graph.graph.node_weight(*node).into_py(py))
-            .collect();
+            .map(|node| graph.graph.node_weight(*node).into_py_any(py))
+            .collect::<PyResult<Vec<PyObject>>>()?;
 
         result.push(py_run)
     }
@@ -585,7 +586,7 @@ pub fn collect_bicolor_runs(
                     .into_iter()
                     .map(|node_index| {
                         let node_weight = dag.node_weight(node_index).expect("Invalid NodeId");
-                        node_weight.into_py(py)
+                        node_weight.into_py_any(py).unwrap()
                     })
                     .collect()
             })

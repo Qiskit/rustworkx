@@ -18,6 +18,7 @@ use hashbrown::HashMap;
 use serde::{Deserialize, Serialize};
 
 use pyo3::prelude::*;
+use pyo3::IntoPyObjectExt;
 use pyo3::Python;
 
 use petgraph::visit::EdgeRef;
@@ -88,7 +89,7 @@ pub fn parse_node_link_data<Ty: EdgeType>(
         let payload = match node.data {
             Some(data) => match node_attrs {
                 Some(ref callback) => callback.call1(*py, (data,))?,
-                None => data.to_object(*py),
+                None => data.into_py_any(*py)?,
             },
             None => py.None(),
         };
@@ -102,7 +103,7 @@ pub fn parse_node_link_data<Ty: EdgeType>(
         let data = match edge.data {
             Some(data) => match edge_attrs {
                 Some(ref callback) => callback.call1(*py, (data,))?,
-                None => data.to_object(*py),
+                None => data.into_py_any(*py)?,
             },
             None => py.None(),
         };

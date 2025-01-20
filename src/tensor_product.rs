@@ -19,6 +19,7 @@ use petgraph::visit::{EdgeRef, IntoEdgeReferences};
 use petgraph::{algo, EdgeType};
 
 use pyo3::prelude::*;
+use pyo3::IntoPyObjectExt;
 use pyo3::Python;
 
 fn tensor_product<Ty: EdgeType>(
@@ -26,7 +27,7 @@ fn tensor_product<Ty: EdgeType>(
     first: &StablePyGraph<Ty>,
     second: &StablePyGraph<Ty>,
     undirected: bool,
-) -> (StablePyGraph<Ty>, ProductNodeMap) {
+) -> PyResult<(StablePyGraph<Ty>, ProductNodeMap)> {
     let num_nodes = first.node_count() * second.node_count();
     let mut num_edges = first.edge_count() * second.edge_count();
 
@@ -41,7 +42,7 @@ fn tensor_product<Ty: EdgeType>(
         for y in second.node_indices() {
             let weight_x = &first[x];
             let weight_y = &second[y];
-            let n0 = final_graph.add_node((weight_x, weight_y).into_py(py));
+            let n0 = final_graph.add_node((weight_x, weight_y).into_py_any(py)?);
             hash_nodes.insert((x, y), n0);
         }
     }
@@ -63,7 +64,7 @@ fn tensor_product<Ty: EdgeType>(
                     edge_first.weight().clone_ref(py),
                     edge_second.weight().clone_ref(py),
                 )
-                    .into_py(py),
+                    .into_py_any(py)?,
             );
         }
     }
@@ -91,7 +92,7 @@ fn tensor_product<Ty: EdgeType>(
                         edge_first.weight().clone_ref(py),
                         edge_second.weight().clone_ref(py),
                     )
-                        .into_py(py),
+                        .into_py_any(py)?,
                 );
             }
         }
@@ -104,7 +105,7 @@ fn tensor_product<Ty: EdgeType>(
             .collect(),
     };
 
-    (final_graph, out_node_map)
+    Ok((final_graph, out_node_map))
 }
 
 /// Return a new PyGraph by forming the tensor product from two input
@@ -142,10 +143,10 @@ pub fn graph_tensor_product(
     py: Python,
     first: &graph::PyGraph,
     second: &graph::PyGraph,
-) -> (graph::PyGraph, ProductNodeMap) {
-    let (out_graph, out_node_map) = tensor_product(py, &first.graph, &second.graph, true);
+) -> PyResult<(graph::PyGraph, ProductNodeMap)> {
+    let (out_graph, out_node_map) = tensor_product(py, &first.graph, &second.graph, true)?;
 
-    (
+    Ok((
         graph::PyGraph {
             graph: out_graph,
             multigraph: true,
@@ -153,7 +154,7 @@ pub fn graph_tensor_product(
             attrs: py.None(),
         },
         out_node_map,
-    )
+    ))
 }
 
 /// Return a new PyDiGraph by forming the tensor product from two input
@@ -191,10 +192,10 @@ pub fn digraph_tensor_product(
     py: Python,
     first: &digraph::PyDiGraph,
     second: &digraph::PyDiGraph,
-) -> (digraph::PyDiGraph, ProductNodeMap) {
-    let (out_graph, out_node_map) = tensor_product(py, &first.graph, &second.graph, false);
+) -> PyResult<(digraph::PyDiGraph, ProductNodeMap)> {
+    let (out_graph, out_node_map) = tensor_product(py, &first.graph, &second.graph, false)?;
 
-    (
+    Ok((
         digraph::PyDiGraph {
             graph: out_graph,
             cycle_state: algo::DfsSpace::default(),
@@ -204,5 +205,5 @@ pub fn digraph_tensor_product(
             attrs: py.None(),
         },
         out_node_map,
-    )
+    ))
 }

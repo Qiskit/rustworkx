@@ -17,6 +17,7 @@ use crate::{digraph, graph, StablePyGraph};
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use pyo3::types::PyDict;
+use pyo3::IntoPyObjectExt;
 use pyo3::Python;
 
 use petgraph::algo;
@@ -87,7 +88,7 @@ pub fn directed_gnp_random_graph(
     // in the python interface, we do it here.
     let nodes: Vec<NodeIndex> = graph.node_indices().collect();
     for node in nodes.iter() {
-        graph[*node] = node.index().to_object(py);
+        graph[*node] = node.index().into_py_any(py)?;
     }
     Ok(digraph::PyDiGraph {
         graph,
@@ -155,7 +156,7 @@ pub fn undirected_gnp_random_graph(
     // in the python interface, we do it here.
     let nodes: Vec<NodeIndex> = graph.node_indices().collect();
     for node in nodes.iter() {
-        graph[*node] = node.index().to_object(py);
+        graph[*node] = node.index().into_py_any(py)?;
     }
     Ok(graph::PyGraph {
         graph,
@@ -209,7 +210,7 @@ pub fn directed_gnm_random_graph(
     // in the python interface, we do it here.
     let nodes: Vec<NodeIndex> = graph.node_indices().collect();
     for node in nodes.iter() {
-        graph[*node] = node.index().to_object(py);
+        graph[*node] = node.index().into_py_any(py)?;
     }
     Ok(digraph::PyDiGraph {
         graph,
@@ -265,7 +266,7 @@ pub fn undirected_gnm_random_graph(
     // in the python interface, we do it here.
     let nodes: Vec<NodeIndex> = graph.node_indices().collect();
     for node in nodes.iter() {
-        graph[*node] = node.index().to_object(py);
+        graph[*node] = node.index().into_py_any(py)?;
     }
     Ok(graph::PyGraph {
         graph,
@@ -469,8 +470,8 @@ pub fn random_geometric_graph(
     }
 
     for pval in pos.iter() {
-        let pos_dict = PyDict::new_bound(py);
-        pos_dict.set_item("pos", pval.to_object(py))?;
+        let pos_dict = PyDict::new(py);
+        pos_dict.set_item("pos", pval.into_py_any(py)?)?;
 
         inner_graph.add_node(pos_dict.into());
     }
