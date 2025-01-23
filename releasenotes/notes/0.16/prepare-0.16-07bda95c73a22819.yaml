@@ -5,7 +5,7 @@ prelude: >
     * Enhanced support for type checking with `mypy` and `pyright`
     * Support for reading GraphML files that are compressed
     * New dominance algorithms
-  This release uses `Python Stable ABI <https://docs.python.org/3.9/c-api/stable.html>`__,
+  This release uses the `Python Stable ABI <https://docs.python.org/3.9/c-api/stable.html>`__,
   all will be compatible with all versions from Python 3.9 onwards. The published
   binaries have been tested with Python 3.9 to 3.13, although they will likely
   work with future versions like 3.14.
