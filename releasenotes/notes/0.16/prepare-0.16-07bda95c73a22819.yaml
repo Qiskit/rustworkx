@@ -1,6 +1,6 @@
 ---
 prelude: >
-  This is a new Rustworkx release  with many bug fixes and new features to
+  This is a new Rustworkx release with many bug fixes and new features to
   the library. The highlights of this release are:
 
     * Enhanced support for type checking with `mypy` and `pyright`
