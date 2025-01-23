@@ -12,4 +12,4 @@ prelude: >
   binaries have been tested with Python 3.9 to 3.13, although they will likely
   work with future versions like 3.14.
   We'd like to thank all the users that reported issues and contributed to this release.
-  This is the rustworkx with the most contributions from the community to date!
+  This is the rustworkx release with the most individual contributors to date!
