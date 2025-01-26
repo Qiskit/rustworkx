@@ -31,6 +31,8 @@ pub use biconnected::bridges;
 pub use chain::chain_decomposition;
 pub use conn_components::bfs_undirected;
 pub use conn_components::connected_components;
+pub use conn_components::is_connected;
+pub use conn_components::node_connected_component;
 pub use conn_components::number_connected_components;
 pub use core_number::core_number;
 pub use cycle_basis::cycle_basis;
