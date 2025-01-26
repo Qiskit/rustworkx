@@ -5,39 +5,6 @@ on:
     branches:
       - 'stable/**'
 jobs:
-  build_wheels_aarch64:
-    name: Build wheels on ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
-    environment: release
-    permissions:
-      id-token: write
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-24.04-arm]
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        name: Install Python
-        with:
-          python-version: '3.10'
-      - uses: dtolnay/rust-toolchain@stable
-      - name: Install cibuildwheel
-        run: |
-          python -m pip install cibuildwheel==2.21.3
-      - name: Build wheels
-        run: |
-          python -m cibuildwheel --output-dir wheelhouse
-        env:
-          CIBW_SKIP: cp36-* cp37-* pp* *musl*
-      - uses: actions/upload-artifact@v4
-        with:
-          path: ./wheelhouse/*.whl
-          name: wheel-builds-aarch64
-      - name: Publish package distributions to PyPI
-        uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          packages-dir: wheelhouse/
   build_wheels_musl_aarch64:
     name: Build wheels on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
