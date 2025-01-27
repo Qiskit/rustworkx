@@ -7,7 +7,7 @@ features:
 
     .. jupyter-execute::
 
-        import rustworkx as rx
+        import rustworkx 
         
         # Example taken from Figure 1 a) in https://arxiv.org/abs/1910.03969
         graph = rustworkx.PyGraph(multigraph=False)
