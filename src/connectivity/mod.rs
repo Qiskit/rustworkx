@@ -21,6 +21,7 @@ use super::{
 };
 
 use hashbrown::{HashMap, HashSet};
+use indexmap::IndexSet;
 use petgraph::algo;
 use petgraph::algo::condensation;
 use petgraph::graph::DiGraph;
@@ -577,7 +578,7 @@ pub fn digraph_complement(py: Python, graph: &digraph::PyDiGraph) -> PyResult<di
 ///     attribute is set to ``True``.
 #[pyfunction]
 #[pyo3(text_signature = "(graph, node, /)")]
-pub fn graph_local_complement(
+pub fn local_complement(
     py: Python,
     graph: &graph::PyGraph,
     node: usize,
@@ -598,47 +599,25 @@ pub fn graph_local_complement(
     }
 
     // Local complementation
-    let node_neighbors: HashSet<NodeIndex> = graph.graph.neighbors(node).collect();
+    let node_neighbors: IndexSet<NodeIndex> = graph.graph.neighbors(node).collect();
     let node_neighbors_vec: Vec<&NodeIndex> = node_neighbors.iter().collect();
     for (i, neighbor_i) in node_neighbors_vec.iter().enumerate() {
         // Ensure checking pairs of neighbors is only done once
-        let (_nodes_head, nodes_tail) = node_neighbors_vec.split_at(i + 1);
+        let (_, nodes_tail) = node_neighbors_vec.split_at(i + 1);
         for neighbor_j in nodes_tail.iter() {
-            if complement_graph.has_edge(neighbor_i.index(), neighbor_j.index()) {
-                let _ = complement_graph.remove_edge(neighbor_i.index(), neighbor_j.index());
-            } else {
-                complement_graph
-                    .graph
-                    .add_edge(**neighbor_i, **neighbor_j, py.None());
+            let res = complement_graph.remove_edge(neighbor_i.index(), neighbor_j.index());
+            match res {
+                Ok(_) => (),
+                Err(_) => {
+                    let _ = complement_graph
+                        .graph
+                        .add_edge(**neighbor_i, **neighbor_j, py.None());
+                }
             }
         }
     }
 
     Ok(complement_graph)
-}
-
-/// Local complementation is not defined on a directed graph.
-/// This functions just returns an error.
-///
-/// :param PyDiGraph graph: The graph to be used.
-/// :param int node: A node in the graph.
-///
-/// :returns: The locally complemented graph.
-/// :rtype: PyDiGraph
-///
-/// .. note::
-///
-///     This function just returns an error.
-#[pyfunction]
-#[pyo3(text_signature = "(graph, node, /)")]
-pub fn digraph_local_complement(
-    _py: Python,
-    _graph: &digraph::PyDiGraph,
-    _node: usize,
-) -> PyResult<digraph::PyDiGraph> {
-    Err(PyValueError::new_err(
-        "Local complementation not defined for directed graphs!",
-    ))
 }
 
 /// Return all simple paths between 2 nodes in a PyGraph object

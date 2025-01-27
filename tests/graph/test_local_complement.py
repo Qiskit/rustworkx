@@ -16,10 +16,21 @@ import rustworkx
 
 
 class TestLocalComplement(unittest.TestCase):
+    def test_multigraph(self):
+        graph = rustworkx.PyGraph(multigraph=True)
+        node = graph.add_node("")
+        with self.assertRaises(ValueError):
+            rustworkx.local_complement(graph, node)
+
+    def test_invalid_node(self):
+        graph = rustworkx.PyGraph(multigraph=False)
+        node = graph.add_node("")
+        with self.assertRaises(rustworkx.InvalidNode):
+            rustworkx.local_complement(graph, node + 1)
+
     def test_clique(self):
         N = 5
-        graph = rustworkx.PyGraph(multigraph=False)
-        graph.extend_from_edge_list([(i, j) for i in range(N) for j in range(N) if i < j])
+        graph = rustworkx.generators.complete_graph(N, multigraph=False)
 
         for node in range(0, N):
             expected_graph = rustworkx.PyGraph(multigraph=False)
@@ -36,11 +47,9 @@ class TestLocalComplement(unittest.TestCase):
 
     def test_empty(self):
         N = 5
-        graph = rustworkx.PyGraph(multigraph=False)
-        graph.add_nodes_from([i for i in range(N)])
+        graph = rustworkx.generators.empty_graph(N, multigraph=False)
 
-        expected_graph = rustworkx.PyGraph(multigraph=False)
-        expected_graph.add_nodes_from([i for i in range(N)])
+        expected_graph = rustworkx.generators.empty_graph(N, multigraph=False)
 
         complement_graph = rustworkx.local_complement(graph, 0)
         self.assertTrue(
