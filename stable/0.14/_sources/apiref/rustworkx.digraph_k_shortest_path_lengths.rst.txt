@@ -1,0 +1,6 @@
+﻿rustworkx.digraph\_k\_shortest\_path\_lengths
+=============================================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: digraph_k_shortest_path_lengths
