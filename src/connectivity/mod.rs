@@ -21,6 +21,7 @@ use super::{
 };
 
 use hashbrown::{HashMap, HashSet};
+use indexmap::IndexSet;
 use petgraph::algo;
 use petgraph::algo::condensation;
 use petgraph::graph::DiGraph;
@@ -554,6 +555,64 @@ pub fn digraph_complement(py: Python, graph: &digraph::PyDiGraph) -> PyResult<di
         for node_b in graph.graph.node_indices() {
             if node_a != node_b && !old_neighbors.contains(&node_b) {
                 complement_graph.add_edge(node_a.index(), node_b.index(), py.None())?;
+            }
+        }
+    }
+
+    Ok(complement_graph)
+}
+
+/// Local complementation of a node applied to an undirected graph.
+///
+/// :param PyGraph graph: The graph to be used.
+/// :param int node: A node in the graph.
+///
+/// :returns: The locally complemented graph.
+/// :rtype: PyGraph
+///
+/// .. note::
+///
+///     This function assumes that there are no self loops
+///     in the provided graph.
+///     Returns an error if the :attr:`~rustworkx.PyGraph.multigraph`
+///     attribute is set to ``True``.
+#[pyfunction]
+#[pyo3(text_signature = "(graph, node, /)")]
+pub fn local_complement(
+    py: Python,
+    graph: &graph::PyGraph,
+    node: usize,
+) -> PyResult<graph::PyGraph> {
+    if graph.multigraph {
+        return Err(PyValueError::new_err(
+            "Local complementation not defined for multigraphs!",
+        ));
+    }
+
+    let mut complement_graph = graph.clone(); // keep same node indices
+
+    let node = NodeIndex::new(node);
+    if !graph.graph.contains_node(node) {
+        return Err(InvalidNode::new_err(
+            "The input index for 'node' is not a valid node index",
+        ));
+    }
+
+    // Local complementation
+    let node_neighbors: IndexSet<NodeIndex> = graph.graph.neighbors(node).collect();
+    let node_neighbors_vec: Vec<&NodeIndex> = node_neighbors.iter().collect();
+    for (i, neighbor_i) in node_neighbors_vec.iter().enumerate() {
+        // Ensure checking pairs of neighbors is only done once
+        let (_, nodes_tail) = node_neighbors_vec.split_at(i + 1);
+        for neighbor_j in nodes_tail.iter() {
+            let res = complement_graph.remove_edge(neighbor_i.index(), neighbor_j.index());
+            match res {
+                Ok(_) => (),
+                Err(_) => {
+                    let _ = complement_graph
+                        .graph
+                        .add_edge(**neighbor_i, **neighbor_j, py.None());
+                }
             }
         }
     }
