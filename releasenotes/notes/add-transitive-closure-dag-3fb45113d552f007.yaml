@@ -1,0 +1,16 @@
+---
+features:
+  - |
+    Added a new function ``descendants_at_distance`` to the rustworkx-core
+    crate under the ``traversal`` module
+  - |
+    Added a new function ``build_transitive_closure_dag`` to the rustworkx-core
+    crate under the ``traversal`` module.
+  - |
+    Added a new function, :func:`~.transitive_closure_dag`, which provides
+    an optimize method for computing the transitive closure of an input
+    DAG.
+  - |
+    Added a new function :func:`~.descendants_at_distance` which provides
+    a method to find the nodes at a fixed distance from a source in
+    a graph object.
