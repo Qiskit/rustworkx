@@ -56,30 +56,44 @@ pub enum BfsEvent<N, E> {
 ///
 /// ***Panics** if you attempt to prune a node from its `Finish` event.
 ///
-/// The pseudo-code for the BFS algorithm is listed below, with the annotated
-/// event points, for which the given visitor object will be called with the
-/// appropriate method.
+/// Pseudo-code for the iterative breadth-first search algorithm is listed below, including
+/// the event points for which the given visitor object will be called with the appropriate
+/// method.
 ///
 /// ```norust
-/// BFS(G, s)
-///   for each vertex u in V
-///       color[u] := WHITE
-///   end for
-///   color[s] := GRAY
-///   EQUEUE(Q, s)                             discover vertex s
-///   while (Q != Ø)
-///       u := DEQUEUE(Q)
-///       for each vertex v in Adj[u]          (u,v) is a tree edge
-///           if (color[v] = WHITE)
-///               color[v] = GRAY
-///           else                             (u,v) is a non - tree edge
-///               if (color[v] = GRAY)         (u,v) has a gray target
-///                   ...
-///               else if (color[v] = BLACK)   (u,v) has a black target
-///                   ...
-///       end for
-///       color[u] := BLACK                    finish vertex u
-///   end while
+/// def BFSIterator(G, I, F):
+///   # color each vertex in WHITE, GRAY, BLACK for undiscovered,
+///   # discovered and finished, respectively, to track its status
+///   color = {}                          # set color to empty map
+///   for u in G:                         # u is a vertex in G
+///       color[u] = WHITE
+///   for s in I:                         # s is a vertex in I
+///     BFSVisit(G, s, F, color)
+///
+///
+/// def BFS(G, s, F, color):
+///   if color[s] != WHITE:
+///     return
+///   color[s] = GRAY
+///   F.Discover(s)
+///   Q = deque()                         # Q is an empty FIFO queue
+///   Q.appendleft(s)
+///   while len(Q) > 0:
+///     u = Q.pop()
+///     for v, w in G.OutEdges(u):        # v is a vertex, w is a weight
+///       if color[v] == WHITE:
+///         F.TreeEdge(u, v, w)
+///         color[v] = GRAY
+///         F.Discover(v)
+///         Q.appendleft(v)
+///       else:
+///         F.NonTreeEdge(u, v, w)
+///         if color[v] == GRAY:
+///           F.GrayTargetEdge(u,v,w)
+///         elif color[v] == BLACK:
+///           F.BlackTargetEdge(u, v, w)
+///     color[u] = BLACK
+///     F.Finish(u)
 /// ```
 ///
 /// # Example returning [`Control`](petgraph::visit::Control).
