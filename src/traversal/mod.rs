@@ -248,39 +248,62 @@ pub fn descendants(graph: &digraph::PyDiGraph, node: usize) -> HashSet<usize> {
         .collect()
 }
 
-/// Breadth-first traversal of a directed graph.
+/// Iterative breadth-first traversal of a directed graph.
 ///
-/// The pseudo-code for the BFS algorithm is listed below, with the annotated
-/// event points, for which the given visitor object will be called with the
-/// appropriate method.
+/// Pseudo-code for the iterative breadth-first search algorithm is
+/// listed below, including the event points for which the given
+/// :class:`~rustworkx.visit.BFSVisitor` visitor object will be called with
+/// the appropriate method.
 ///
 /// ::
 ///
-///     BFS(G, s)
-///       for each vertex u in V
-///           color[u] := WHITE
-///       end for
-///       color[s] := GRAY
-///       EQUEUE(Q, s)                             discover vertex s
-///       while (Q != Ø)
-///           u := DEQUEUE(Q)
-///           for each vertex v in Adj[u]          (u,v) is a tree edge
-///               if (color[v] = WHITE)
-///                   color[v] = GRAY
-///               else                             (u,v) is a non - tree edge
-///                   if (color[v] = GRAY)         (u,v) has a gray target
-///                       ...
-///                   else if (color[v] = BLACK)   (u,v) has a black target
-///                       ...
-///           end for
-///           color[u] := BLACK                    finish vertex u
-///       end while
+///   def BFSIterator(G, I, F):
+///     # color each vertex in WHITE, GRAY, BLACK for undiscovered,
+///     # discovered and finished, respectively, to track its status
+///     color = {}                          
+///     for u in G:                         # u is a vertex in G
+///         color[u] = WHITE                # color all as undiscovered
+///     for s in I:                         # s is a vertex in I
+///       BFSVisit(G, s, F, color)
+///   
+///   
+///   def BFS(G, s, F, color):
+///     if color[s] != WHITE:
+///       return
+///     color[s] = GRAY
+///     F.Discover(s)
+///     Q = deque()                         # Q is an empty FIFO queue
+///     Q.appendleft(s)
+///     while len(Q) > 0:
+///       u = Q.pop()
+///       for v, w in G.OutEdges(u):        # v is a vertex, w is a weight
+///         if color[v] == WHITE:
+///           F.TreeEdge(u, v, w)
+///           color[v] = GRAY
+///           F.Discover(v)
+///           Q.appendleft(v)
+///         else:
+///           F.NonTreeEdge(u, v, w)
+///           if color[v] == GRAY:
+///             F.GrayTargetEdge(u,v,w)
+///           elif color[v] == BLACK:
+///             F.BlackTargetEdge(u, v, w)
+///       color[u] = BLACK
+///       F.Finish(u)
 ///
-/// If an exception is raised inside the callback function, the graph traversal
+/// If an exception is raised inside the callback method of the 
+/// :class:`~rustworkx.visit.BFSVisitor` instance, the graph traversal
 /// will be stopped immediately. You can exploit this to exit early by raising a
 /// :class:`~rustworkx.visit.StopSearch` exception, in which case the search function
 /// will return but without raising back the exception. You can also prune part of the
 /// search tree by raising :class:`~rustworkx.visit.PruneSearch`.
+///
+/// .. seealso::
+///
+///     For more information on the breadth-first search algorithm, see:
+///
+///     Thomas H. Cormen, Charles E. Leiserson, Ronald L. Rivest and Clifford Stein
+///     (2022). Introduction to algorithms. MIT Press. ISBN: 9780262046305
 ///
 /// In the following example we keep track of the tree edges:
 ///
@@ -300,18 +323,63 @@ pub fn descendants(graph: &digraph::PyDiGraph, node: usize) -> HashSet<usize> {
 ///        graph = rx.PyDiGraph()
 ///        graph.extend_from_edge_list([(1, 3), (0, 1), (2, 1), (0, 2)])
 ///        vis = TreeEdgesRecorder()
-///        rx.bfs_search(graph, [0], vis)
+///        rx.digraph_bfs_search(graph, [0], vis)
 ///        print('Tree edges:', vis.edges)
+///
+/// Here is another example, using the :class:`~rustworkx.visit.PruneSearch`
+/// exception, to find the shortest path between two vertices with some
+/// restrictions on the edges
+/// (for a more efficient ways to find the shortest path, see :ref:`shortest-paths`):
+///
+/// .. jupyter-execute::
+///
+///     import rustworkx as rx
+///     from rustworkx.visit import BFSVisitor, PruneSearch
+///
+///
+///     graph = rx.PyDiGraph()
+///     home, market, school = graph.add_nodes_from(['home', 'market', 'school'])
+///     graph.add_edges_from_no_data(
+///         [(school, home), (school, market), (market, home)]
+///     )
+///    
+///     class DistanceHomeFinder(BFSVisitor):
+///
+///         def __init__(self):
+///             self.distance = {}
+/// 
+///         def discover_vertex(self, vertex):
+///             self.distance.setdefault(vertex, 0)
+/// 
+///         def tree_edge(self, edge):
+///             source, target, _ = edge
+///             # the road directly from home to school is closed
+///             if {source, target} == {home, school}:
+///                 raise PruneSearch
+///             self.distance[target] = self.distance[source] + 1
+///
+///     vis = DistanceHomeFinder()
+///     rx.digraph_bfs_search(graph, [school], vis)
+///     print('Distance from school to home:', vis.distance[home])
 ///
 /// .. note::
 ///
 ///     Graph can **not** be mutated while traversing.
+///     Trying to do so raises an exception.
+///
+///
+/// .. note::
+///
+///     An exception is raised if the :class:`~rustworkx.visit.PruneSearch` is
+///     raised in the :class:`~rustworkx.visit.BFSVisitor.finish_vertex` event.
+///
 ///
 /// :param PyDiGraph graph: The graph to be used.
-/// :param List[int] source: An optional list of node indices to use as the starting nodes
-///     for the breadth-first search. If this is not specified then a source
+/// :param source: An optional list of node indices to use as the starting nodes
+///     for the breadth-first search. If ``None`` or not specified then a source
 ///     will be chosen arbitrarily and repeated until all components of the
 ///     graph are searched.
+///     This can be a ``Sequence[int]`` or ``None``.
 /// :param visitor: A visitor object that is invoked at the event points inside the
 ///     algorithm. This should be a subclass of :class:`~rustworkx.visit.BFSVisitor`.
 ///     This has a default value of ``None`` as a backwards compatibility artifact (to
@@ -341,39 +409,63 @@ pub fn digraph_bfs_search(
     Ok(())
 }
 
-/// Breadth-first traversal of an undirected graph.
+/// Iterative breadth-first traversal of an undirected graph.
 ///
-/// The pseudo-code for the BFS algorithm is listed below, with the annotated
-/// event points, for which the given visitor object will be called with the
-/// appropriate method.
+/// Pseudo-code for the iterative breadth-first search algorithm is
+/// listed below, including the event points for which the given
+/// :class:`~rustworkx.visit.BFSVisitor` visitor object will be called with
+/// the appropriate method.
 ///
 /// ::
 ///
-///     BFS(G, s)
-///       for each vertex u in V
-///           color[u] := WHITE
-///       end for
-///       color[s] := GRAY
-///       EQUEUE(Q, s)                             discover vertex s
-///       while (Q != Ø)
-///           u := DEQUEUE(Q)
-///           for each vertex v in Adj[u]          (u,v) is a tree edge
-///               if (color[v] = WHITE)
-///                   color[v] = GRAY
-///               else                             (u,v) is a non - tree edge
-///                   if (color[v] = GRAY)         (u,v) has a gray target
-///                       ...
-///                   else if (color[v] = BLACK)   (u,v) has a black target
-///                       ...
-///           end for
-///           color[u] := BLACK                    finish vertex u
-///       end while
+///     def BFSIterator(G, I, F):
+///       # color each vertex in WHITE, GRAY, BLACK for undiscovered,
+///       # discovered and finished, respectively, to track its status
+///       color = {}                          
+///       for u in G:                         # u is a vertex in G
+///           color[u] = WHITE                # color all as undiscovered
+///       for s in I:                         # s is a vertex in I
+///         BFSVisit(G, s, F, color)
+///       
+///       
+///     def BFS(G, s, F, color):
+///       if color[s] != WHITE:
+///         return
+///       color[s] = GRAY
+///       F.Discover(s)
+///       Q = deque()                         # Q is an empty FIFO queue
+///       Q.appendleft(s)
+///       while len(Q) > 0:
+///         u = Q.pop()
+///         for v, w in G.OutEdges(u):        # v is a vertex, w is a weight
+///           if color[v] == WHITE:
+///             F.TreeEdge(u, v, w)
+///             color[v] = GRAY
+///             F.Discover(v)
+///             Q.appendleft(v)
+///           else:
+///             F.NonTreeEdge(u, v, w)
+///             if color[v] == GRAY:
+///               F.GrayTargetEdge(u,v,w)
+///             elif color[v] == BLACK:
+///               F.BlackTargetEdge(u, v, w)
+///         color[u] = BLACK
+///         F.Finish(u)
 ///
-/// If an exception is raised inside the callback function, the graph traversal
+/// If an exception is raised inside the callback method of the
+/// :class:`~rustworkx.visit.BFSVisitor` instance, the graph traversal
 /// will be stopped immediately. You can exploit this to exit early by raising a
 /// :class:`~rustworkx.visit.StopSearch` exception, in which case the search function
 /// will return but without raising back the exception. You can also prune part of the
 /// search tree by raising :class:`~rustworkx.visit.PruneSearch`.
+///
+/// 
+/// .. seealso::
+///     
+///     For more information on the breadth-first search algorithm, see:
+///     
+///     Thomas H. Cormen, Charles E. Leiserson, Ronald L. Rivest and Clifford Stein
+///     (2022). Introduction to algorithms. MIT Press. ISBN: 9780262046305
 ///
 /// In the following example we keep track of the tree edges:
 ///
@@ -393,18 +485,62 @@ pub fn digraph_bfs_search(
 ///        graph = rx.PyGraph()
 ///        graph.extend_from_edge_list([(1, 3), (0, 1), (2, 1), (0, 2)])
 ///        vis = TreeEdgesRecorder()
-///        rx.bfs_search(graph, [0], vis)
+///        rx.graph_bfs_search(graph, [0], vis)
 ///        print('Tree edges:', vis.edges)
+///
+/// Here is another example, using the :class:`~rustworkx.visit.PruneSearch`
+/// exception, to find the shortest path between two vertices with some
+/// restrictions on the edges
+/// (for a more efficient ways to find the shortest path, see :ref:`shortest-paths`):
+///
+/// .. jupyter-execute::
+///
+///     import rustworkx as rx
+///     from rustworkx.visit import BFSVisitor, PruneSearch
+///
+///
+///     graph = rx.PyGraph()
+///     home, market, school = graph.add_nodes_from(['home', 'market', 'school'])
+///     graph.add_edges_from_no_data(
+///         [(school, home), (school, market), (market, home)]
+///     )
+///    
+///     class DistanceHomeFinder(BFSVisitor):
+///
+///         def __init__(self):
+///             self.distance = {}
+/// 
+///         def discover_vertex(self, vertex):
+///             self.distance.setdefault(vertex, 0)
+/// 
+///         def tree_edge(self, edge):
+///             source, target, _ = edge
+///             # the road directly from home to school is closed
+///             if {source, target} == {home, school}:
+///                 raise PruneSearch
+///             self.distance[target] = self.distance[source] + 1
+///
+///     vis = DistanceHomeFinder()
+///     rx.graph_bfs_search(graph, [school], vis)
+///     print('Distance from school to home:', vis.distance[home])
 ///
 /// .. note::
 ///
 ///     Graph can **not** be mutated while traversing.
+///     Trying to do so raises an exception.
+///
+///
+/// .. note::
+///     An exception is raised if the :class:`~rustworkx.visit.PruneSearch` is raised in the 
+///     :class:`~rustworkx.visit.BFSVisitor.finish_vertex` event.
+///
 ///
 /// :param PyGraph graph: The graph to be used.
-/// :param List[int] source: An optional list of node indices to use as the starting nodes
-///     for the breadth-first search. If this is not specified then a source
+/// :param source: An optional list of node indices to use as the starting nodes
+///     for the breadth-first search. If ``None`` or not specified then a source
 ///     will be chosen arbitrarily and repeated until all components of the
 ///     graph are searched.
+///     This can be a ``Sequence[int]`` or ``None``.
 /// :param visitor: A visitor object that is invoked at the event points inside the
 ///     algorithm. This should be a subclass of :class:`~rustworkx.visit.BFSVisitor`.
 ///     This has a default value of ``None`` as a backwards compatibility artifact (to
