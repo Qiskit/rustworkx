@@ -66,9 +66,9 @@ pub enum BfsEvent<N, E> {
 ///   # discovered and finished, respectively, to track its status
 ///   color = {}                          # set color to empty map
 ///   for u in G:                         # u is a vertex in G
-///       color[u] = WHITE
+///     color[u] = WHITE                  # color all as undiscovered
 ///   for s in I:                         # s is a vertex in I
-///     BFSVisit(G, s, F, color)
+///     BFS(G, s, F, color)
 ///
 ///
 /// def BFS(G, s, F, color):

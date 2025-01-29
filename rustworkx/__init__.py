@@ -1500,39 +1500,39 @@ def bfs_search(graph, source, visitor):
 
     ::
 
-      def BFSIterator(G, I, F):
-        # color each vertex in WHITE, GRAY, BLACK for undiscovered,
-        # discovered and finished, respectively, to track its status
-        color = {}                          
-        for u in G:                         # u is a vertex in G
-            color[u] = WHITE                # color all as undiscovered
-        for s in I:                         # s is a vertex in I
-          BFSVisit(G, s, F, color)
+        def BFSIterator(G, I, F):
+          # color each vertex in WHITE, GRAY, BLACK for undiscovered,
+          # discovered and finished, respectively, to track its status
+          color = {}                          
+          for u in G:                         # u is a vertex in G
+            color[u] = WHITE                  # color all as undiscovered
+          for s in I:                         # s is a vertex in I
+            BFS(G, s, F, color)
 
 
-      def BFS(G, s, F, color):
-        if color[s] != WHITE:
-          return
-        color[s] = GRAY
-        F.Discover(s)
-        Q = deque()                         # Q is an empty FIFO queue
-        Q.appendleft(s)
-        while len(Q) > 0:
-          u = Q.pop()
-          for v, w in G.OutEdges(u):        # v is a vertex, w is a weight
-            if color[v] == WHITE:
-              F.TreeEdge(u, v, w)
-              color[v] = GRAY
-              F.Discover(v)
-              Q.appendleft(v)
-            else:
-              F.NonTreeEdge(u, v, w)
-              if color[v] == GRAY:
-                F.GrayTargetEdge(u,v,w)
-              elif color[v] == BLACK:
-                F.BlackTargetEdge(u, v, w)
-          color[u] = BLACK
-          F.Finish(u)
+        def BFS(G, s, F, color):
+          if color[s] != WHITE:
+            return
+          color[s] = GRAY
+          F.Discover(s)
+          Q = deque()                         # Q is an empty FIFO queue
+          Q.appendleft(s)
+          while len(Q) > 0:
+            u = Q.pop()
+            for v, w in G.OutEdges(u):        # v is a vertex, w is a weight
+              if color[v] == WHITE:
+                F.TreeEdge(u, v, w)
+                color[v] = GRAY
+                F.Discover(v)
+                Q.appendleft(v)
+              else:
+                F.NonTreeEdge(u, v, w)
+                if color[v] == GRAY:
+                  F.GrayTargetEdge(u,v,w)
+                elif color[v] == BLACK:
+                  F.BlackTargetEdge(u, v, w)
+            color[u] = BLACK
+            F.Finish(u)
 
     If an exception is raised inside the callback method of the 
     :class:`~rustworkx.visit.BFSVisitor` instance, the graph traversal
@@ -1633,7 +1633,7 @@ def bfs_search(graph, source, visitor):
 
 @_rustworkx_dispatch
 def dfs_search(graph, source, visitor):
-    """Depth-first traversal of a directed/undirected graph.
+    """Iterative depth-first traversal of a directed/undirected graph.
 
     The pseudo-code for the DFS algorithm is listed below, with the annotated
     event points, for which the given visitor object will be called with the
