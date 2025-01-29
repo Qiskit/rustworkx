@@ -570,37 +570,67 @@ pub fn graph_bfs_search(
     Ok(())
 }
 
-/// Depth-first traversal of a directed graph.
+/// Iterative depth-first traversal of a directed graph.
 ///
-/// The pseudo-code for the DFS algorithm is listed below, with the annotated
-/// event points, for which the given visitor object will be called with the
-/// appropriate method.
+/// Pseudo-code for the iterative depth-first search algorithm is
+/// listed below, including the event points, for which the given
+/// :class:`~rustworkx.visit.DFSVisitor` visitor object will be called with
+/// the appropriate method.
 ///
 /// ::
 ///
-///     DFS(G)
-///       for each vertex u in V
-///           color[u] := WHITE                 initialize vertex u
-///       end for
-///       time := 0
-///       call DFS-VISIT(G, source)             start vertex s
+///     def DFSIterator(G, I, F):
+///       color = {}
+///       for u in G:                         # u is a vertex in G
+///         color[u] = WHITE                  # color all as undiscovered
+///       time = -1
+///       for s in I:                         # s is a vertex in I
+///         time = DFS(G, s, F, color, time)
 ///
-///     DFS-VISIT(G, u)
-///       color[u] := GRAY                      discover vertex u
-///       for each v in Adj[u]                  examine edge (u,v)
-///           if (color[v] = WHITE)             (u,v) is a tree edge
-///               all DFS-VISIT(G, v)
-///           else if (color[v] = GRAY)         (u,v) is a back edge
-///           ...
-///           else if (color[v] = BLACK)        (u,v) is a cross or forward edge
-///           ...
-///       end for
-///       color[u] := BLACK                     finish vertex u
 ///
-/// If an exception is raised inside the callback function, the graph traversal
+///     def DFS(G, s, F, color, time):
+///       if color[u] != WHITE:
+///         return time
+///       color[s] = GRAY
+///       time += 1
+///       F.Discover(s, time)
+///       Q = [s]                             # LIFO vertex queue
+///       while len(Q) > 0:
+///         u = Q[-1]
+///         n = None
+///         for v, w in G.OutEdges(u):         # v is a vertex, w is a weight
+///           if color[v] == WHITE:
+///             F.TreeEdge(u,v,w)
+///             color[v] = GRAY
+///             time += 1
+///             F.Discover(v, time)
+///             n = v                         # n set as next vertex
+///             break
+///           elif color[v] == GRAY:
+///             F.BackEdge
+///           elif color[v] == BLACK:
+///             F.CrossForwardEdge(u,v,w)
+///         if n is not None:
+///           Q.append(v)
+///         else:
+///           color[u] = BLACK
+///           time += 1
+///           F.Finish(u, time)
+///           Q.pop()                         # remove u from queue
+///       return time
+///
+/// If an exception is raised inside the callback method of the
+/// :class:`~rustworkx.visit.DFSVisitor` instance, the graph traversal
 /// will be stopped immediately. You can exploit this to exit early by raising a
 /// :class:`~rustworkx.visit.StopSearch` exception. You can also prune part of the
 /// search tree by raising :class:`~rustworkx.visit.PruneSearch`.
+///
+/// .. seealso::
+///
+///     For more information on the depth-first search algorithm, see:
+///
+///     Thomas H. Cormen, Charles E. Leiserson, Ronald L. Rivest and Clifford Stein
+///     (2022). Introduction to algorithms. MIT Press. ISBN: 9780262046305
 ///
 /// In the following example we keep track of the tree edges:
 ///
@@ -617,21 +647,28 @@ pub fn graph_bfs_search(
 ///            def tree_edge(self, edge):
 ///                self.edges.append(edge)
 ///
-///        graph = rx.PyGraph()
+///        graph = rx.PyDiGraph()
 ///        graph.extend_from_edge_list([(1, 3), (0, 1), (2, 1), (0, 2)])
 ///        vis = TreeEdgesRecorder()
-///        rx.dfs_search(graph, [0], vis)
+///        rx.digraph_dfs_search(graph, [0], vis)
 ///        print('Tree edges:', vis.edges)
 ///
 /// .. note::
 ///
 ///     Graph can *not* be mutated while traversing.
+///     Trying to do so raises an exception.
+///
+///
+/// .. note::
+///     An exception is raised if the :class:`~rustworkx.visit.PruneSearch` is
+///     raised in the :class:`~rustworkx.visit.DFSVisitor.finish_vertex` event.
 ///
 /// :param PyDiGraph graph: The graph to be used.
-/// :param List[int] source: An optional list of node indices to use as the starting nodes
-///     for the depth-first search. If this is not specified then a source
+/// :param source: An optional list of node indices to use as the starting nodes
+///     for the depth-first search. If ``None`` or not specified then a source
 ///     will be chosen arbitrarily and repeated until all components of the
 ///     graph are searched.
+///     This can be a ``Sequence[int]`` or ``None``.
 /// :param visitor: A visitor object that is invoked at the event points inside the
 ///     algorithm. This should be a subclass of :class:`~rustworkx.visit.DFSVisitor`.
 ///     This has a default value of ``None`` as a backwards compatibility artifact (to
@@ -661,37 +698,67 @@ pub fn digraph_dfs_search(
     Ok(())
 }
 
-/// Depth-first traversal of an undirected graph.
+/// Iterative depth-first traversal of an undirected graph.
 ///
-/// The pseudo-code for the DFS algorithm is listed below, with the annotated
-/// event points, for which the given visitor object will be called with the
-/// appropriate method.
+/// Pseudo-code for the iterative depth-first search algorithm is
+/// listed below, including the event points, for which the given
+/// :class:`~rustworkx.visit.DFSVisitor` visitor object will be called with
+/// the appropriate method.
 ///
 /// ::
 ///
-///     DFS(G)
-///       for each vertex u in V
-///           color[u] := WHITE                 initialize vertex u
-///       end for
-///       time := 0
-///       call DFS-VISIT(G, source)             start vertex s
+///     def DFSIterator(G, I, F):
+///       color = {}
+///       for u in G:                         # u is a vertex in G
+///         color[u] = WHITE                  # color all as undiscovered
+///       time = -1
+///       for s in I:                         # s is a vertex in I
+///         time = DFS(G, s, F, color, time)
 ///
-///     DFS-VISIT(G, u)
-///       color[u] := GRAY                      discover vertex u
-///       for each v in Adj[u]                  examine edge (u,v)
-///           if (color[v] = WHITE)             (u,v) is a tree edge
-///               all DFS-VISIT(G, v)
-///           else if (color[v] = GRAY)         (u,v) is a back edge
-///           ...
-///           else if (color[v] = BLACK)        (u,v) is a cross or forward edge
-///           ...
-///       end for
-///       color[u] := BLACK                     finish vertex u
 ///
-/// If an exception is raised inside the callback function, the graph traversal
+///     def DFS(G, s, F, color, time):
+///       if color[u] != WHITE:
+///         return time
+///       color[s] = GRAY
+///       time += 1
+///       F.Discover(s, time)
+///       Q = [s]                             # LIFO vertex queue
+///       while len(Q) > 0:
+///         u = Q[-1]
+///         n = None
+///         for v, w in G.OutEdges(u):         # v is a vertex, w is a weight
+///           if color[v] == WHITE:
+///             F.TreeEdge(u,v,w)
+///             color[v] = GRAY
+///             time += 1
+///             F.Discover(v, time)
+///             n = v                         # n set as next vertex
+///             break
+///           elif color[v] == GRAY:
+///             F.BackEdge
+///           elif color[v] == BLACK:
+///             F.CrossForwardEdge(u,v,w)
+///         if n is not None:
+///           Q.append(v)
+///         else:
+///           color[u] = BLACK
+///           time += 1
+///           F.Finish(u, time)
+///           Q.pop()                         # remove u from queue
+///       return time
+///
+/// If an exception is raised inside the callback method of the
+/// :class:`~rustworkx.visit.DFSVisitor` instance, the graph traversal
 /// will be stopped immediately. You can exploit this to exit early by raising a
 /// :class:`~rustworkx.visit.StopSearch` exception. You can also prune part of the
 /// search tree by raising :class:`~rustworkx.visit.PruneSearch`.
+///
+/// .. seealso::
+///
+///     For more information on the depth-first search algorithm, see:
+///
+///     Thomas H. Cormen, Charles E. Leiserson, Ronald L. Rivest and Clifford Stein
+///     (2022). Introduction to algorithms. MIT Press. ISBN: 9780262046305
 ///
 /// In the following example we keep track of the tree edges:
 ///
@@ -711,18 +778,25 @@ pub fn digraph_dfs_search(
 ///        graph = rx.PyGraph()
 ///        graph.extend_from_edge_list([(1, 3), (0, 1), (2, 1), (0, 2)])
 ///        vis = TreeEdgesRecorder()
-///        rx.dfs_search(graph, [0], vis)
+///        rx.graph_dfs_search(graph, [0], vis)
 ///        print('Tree edges:', vis.edges)
 ///
 /// .. note::
 ///
 ///     Graph can *not* be mutated while traversing.
+///     Trying to do so raises an exception.
+///
+///
+/// .. note::
+///     An exception is raised if the :class:`~rustworkx.visit.PruneSearch` is
+///     raised in the :class:`~rustworkx.visit.DFSVisitor.finish_vertex` event.
 ///
 /// :param PyGraph graph: The graph to be used.
-/// :param List[int] source: An optional list of node indices to use as the starting nodes
-///     for the depth-first search. If this is not specified then a source
+/// :param source: An optional list of node indices to use as the starting nodes
+///     for the depth-first search. If ``None`` or not specified then a source
 ///     will be chosen arbitrarily and repeated until all components of the
 ///     graph are searched.
+///     This can be a ``Sequence[int]`` or ``None``.
 /// :param visitor: A visitor object that is invoked at the event points inside the
 ///     algorithm. This should be a subclass of :class:`~rustworkx.visit.DFSVisitor`.
 ///     This has a default value of ``None`` as a backwards compatibility artifact (to
