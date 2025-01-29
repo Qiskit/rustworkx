@@ -1096,14 +1096,14 @@ def betweenness_centrality(graph, normalized=True, endpoints=False, parallel_thr
     r"""Returns the betweenness centrality of each node in the graph.
 
     Betweenness centrality of a node :math:`v` is the sum of the
-    fraction of all-pairs shortest paths that pass through :math`v`
+    fraction of all-pairs shortest paths that pass through :math:`v`
 
     .. math::
 
        c_B(v) =\sum_{s,t \in V} \frac{\sigma(s, t|v)}{\sigma(s, t)}
 
     where :math:`V` is the set of nodes, :math:`\sigma(s, t)` is the number of
-    shortest :math`(s, t)` paths, and :math:`\sigma(s, t|v)` is the number of
+    shortest :math:`(s, t)` paths, and :math:`\sigma(s, t|v)` is the number of
     those paths  passing through some  node :math:`v` other than :math:`s, t`.
     If :math:`s = t`, :math:`\sigma(s, t) = 1`, and if :math:`v \in {s, t}`,
     :math:`\sigma(s, t|v) = 0`
@@ -1120,7 +1120,7 @@ def betweenness_centrality(graph, normalized=True, endpoints=False, parallel_thr
 
     See Also
     --------
-    edge_betweenness_centrality
+    :func:`~rustworkx.edge_betweenness_centrality`
 
     :param PyDiGraph graph: The input graph
     :param bool normalized: Whether to normalize the betweenness scores by
@@ -1170,7 +1170,7 @@ def closeness_centrality(graph, wf_improved=True):
     formula can be used with the ``wf_improved`` argument.
 
     :param graph: The input graph. Can either be a
-        :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`.
+        :class:`~rustworkx.PyGraph` or :class:`~rustworkx.PyDiGraph`.
     :param bool wf_improved: This is optional; the default is True. If True,
         scale by the fraction of nodes reachable.
 
@@ -1203,7 +1203,7 @@ def edge_betweenness_centrality(graph, normalized=True, parallel_threshold=50):
     r"""Compute the edge betweenness centrality of all edges in a graph.
 
     Edge betweenness centrality of an edge :math:`e` is the sum of the
-    fraction of all-pairs shortest paths that pass through :math`e`
+    fraction of all-pairs shortest paths that pass through :math:`e`
 
     .. math::
 
@@ -1225,7 +1225,7 @@ def edge_betweenness_centrality(graph, normalized=True, parallel_threshold=50):
 
     See Also
     --------
-    betweenness_centrality
+    :func:`~rustworkx.betweenness_centrality`
 
     :param PyGraph graph: The input graph
     :param bool normalized: Whether to normalize the betweenness scores by the
@@ -1491,39 +1491,62 @@ def cartesian_product(
 
 @_rustworkx_dispatch
 def bfs_search(graph, source, visitor):
-    """Breadth-first traversal of a directed/undirected graph.
+    """Iterative breadth-first traversal of a directed/undirected graph.
 
-    The pseudo-code for the BFS algorithm is listed below, with the annotated
-    event points, for which the given visitor object will be called with the
-    appropriate method.
+    Pseudo-code for the iterative breadth-first search algorithm is
+    listed below, including the event points for which the given
+    :class:`~rustworkx.visit.BFSVisitor` visitor object will be called with
+    the appropriate method.
 
     ::
 
-        BFS(G, s)
-          for each vertex u in V
-              color[u] := WHITE
-          end for
-          color[s] := GRAY
-          EQUEUE(Q, s)                             discover vertex s
-          while (Q != Ø)
-              u := DEQUEUE(Q)
-              for each vertex v in Adj[u]          (u,v) is a tree edge
-                  if (color[v] = WHITE)
-                      color[v] = GRAY
-                  else                             (u,v) is a non - tree edge
-                      if (color[v] = GRAY)         (u,v) has a gray target
-                          ...
-                      else if (color[v] = BLACK)   (u,v) has a black target
-                          ...
-              end for
-              color[u] := BLACK                    finish vertex u
-          end while
+      def BFSIterator(G, I, F):
+        # color each vertex in WHITE, GRAY, BLACK for undiscovered,
+        # discovered and finished, respectively, to track its status
+        color = {}                          
+        for u in G:                         # u is a vertex in G
+            color[u] = WHITE                # color all as undiscovered
+        for s in I:                         # s is a vertex in I
+          BFSVisit(G, s, F, color)
 
-    If an exception is raised inside the callback function, the graph traversal
+
+      def BFS(G, s, F, color):
+        if color[s] != WHITE:
+          return
+        color[s] = GRAY
+        F.Discover(s)
+        Q = deque()                         # Q is an empty FIFO queue
+        Q.appendleft(s)
+        while len(Q) > 0:
+          u = Q.pop()
+          for v, w in G.OutEdges(u):        # v is a vertex, w is a weight
+            if color[v] == WHITE:
+              F.TreeEdge(u, v, w)
+              color[v] = GRAY
+              F.Discover(v)
+              Q.appendleft(v)
+            else:
+              F.NonTreeEdge(u, v, w)
+              if color[v] == GRAY:
+                F.GrayTargetEdge(u,v,w)
+              elif color[v] == BLACK:
+                F.BlackTargetEdge(u, v, w)
+          color[u] = BLACK
+          F.Finish(u)
+
+    If an exception is raised inside the callback method of the 
+    :class:`~rustworkx.visit.BFSVisitor` instance, the graph traversal
     will be stopped immediately. You can exploit this to exit early by raising a
     :class:`~rustworkx.visit.StopSearch` exception, in which case the search function
     will return but without raising back the exception. You can also prune part of
     the search tree by raising :class:`~rustworkx.visit.PruneSearch`.
+
+    .. seealso::
+
+        For more information on the breadth-first search algorithm, see:
+
+        Thomas H. Cormen, Charles E. Leiserson, Ronald L. Rivest and Clifford Stein
+        (2022). Introduction to algorithms. MIT Press. ISBN: 9780262046305
 
     In the following example we keep track of the tree edges:
 
@@ -1547,16 +1570,61 @@ def bfs_search(graph, source, visitor):
         rx.bfs_search(graph, [0], vis)
         print('Tree edges:', vis.edges)
 
+    Here is another example, using the :class:`~rustworkx.visit.PruneSearch`
+    exception, to find the shortest path between two vertices with some
+    restrictions on the edges
+    (for a more efficient ways to find the shortest path, see :ref:`shortest-paths`):
+
+    .. jupyter-execute::
+
+        import rustworkx as rx
+        from rustworkx.visit import BFSVisitor, PruneSearch
+
+
+        graph = rx.PyGraph()
+        home, market, school = graph.add_nodes_from(['home', 'market', 'school'])
+        graph.add_edges_from_no_data(
+            [(school, home), (school, market), (market, home)]
+        )
+        
+        class DistanceHomeFinder(BFSVisitor):
+
+            def __init__(self):
+                self.distance = {}
+
+            def discover_vertex(self, vertex):
+                self.distance.setdefault(vertex, 0)
+
+            def tree_edge(self, edge):
+                source, target, _ = edge
+                # the road directly from home to school is closed
+                if {source, target} == {home, school}:
+                    raise PruneSearch
+                self.distance[target] = self.distance[source] + 1
+
+        vis = DistanceHomeFinder()
+        rx.bfs_search(graph, [school], vis)
+        print('Distance from school to home:', vis.distance[home])
+
     .. note::
 
         Graph can **not** be mutated while traversing.
+        Trying to do so raises an exception.
+
+
+    .. note::
+
+        An exception is raised if the :class:`~rustworkx.visit.PruneSearch` is
+        raised in the :class:`~rustworkx.visit.BFSVisitor.finish_vertex` event.
+
 
     :param graph: The graph to be used. This can be a :class:`~rustworkx.PyGraph`
         or a :class:`~rustworkx.PyDiGraph`
-    :param List[int] source: An optional list of node indices to use as the starting
-        nodes for the breadth-first search. If this is not specified then a source
+    :param source: An optional list of node indices to use as the starting
+        nodes for the breadth-first search. If ``None`` or not specified then a source
         will be chosen arbitrarily and repeated until all components of the
         graph are searched.
+        This can be a ``Sequence[int]`` or ``None``.
     :param visitor: A visitor object that is invoked at the event points inside the
         algorithm. This should be a subclass of :class:`~rustworkx.visit.BFSVisitor`.
     """
@@ -1831,7 +1899,7 @@ def node_link_json(graph, path=None, graph_attrs=None, node_attrs=None, edge_att
     """Generate a JSON object representing a graph in a node-link format
 
     :param graph: The graph to generate the JSON for. Can either be a
-        :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`.
+        :class:`~rustworkx.PyGraph` or :class:`~rustworkx.PyDiGraph`.
     :param str path: An optional path to write the JSON output to. If specified
         the function will not return anything and instead will write the JSON
         to the file specified.
