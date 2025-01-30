@@ -291,7 +291,7 @@ pub fn descendants(graph: &digraph::PyDiGraph, node: usize) -> HashSet<usize> {
 ///         color[u] = BLACK
 ///         F.Finish(u)
 ///
-/// If an exception is raised inside the callback method of the 
+/// If an exception is raised inside the callback method of the
 /// :class:`~rustworkx.visit.BFSVisitor` instance, the graph traversal
 /// will be stopped immediately. You can exploit this to exit early by raising a
 /// :class:`~rustworkx.visit.StopSearch` exception, in which case the search function
@@ -347,10 +347,10 @@ pub fn descendants(graph: &digraph::PyDiGraph, node: usize) -> HashSet<usize> {
 ///
 ///         def __init__(self):
 ///             self.distance = {}
-/// 
+///
 ///         def discover_vertex(self, vertex):
 ///             self.distance.setdefault(vertex, 0)
-/// 
+///
 ///         def tree_edge(self, edge):
 ///             source, target, _ = edge
 ///             # the road directly from home to school is closed
@@ -459,7 +459,7 @@ pub fn digraph_bfs_search(
 /// will return but without raising back the exception. You can also prune part of the
 /// search tree by raising :class:`~rustworkx.visit.PruneSearch`.
 ///
-/// 
+///
 /// .. seealso::
 ///     
 ///     For more information on the breadth-first search algorithm, see:
@@ -504,15 +504,15 @@ pub fn digraph_bfs_search(
 ///     graph.add_edges_from_no_data(
 ///         [(school, home), (school, market), (market, home)]
 ///     )
-///    
+///
 ///     class DistanceHomeFinder(BFSVisitor):
 ///
 ///         def __init__(self):
 ///             self.distance = {}
-/// 
+///
 ///         def discover_vertex(self, vertex):
 ///             self.distance.setdefault(vertex, 0)
-/// 
+///
 ///         def tree_edge(self, edge):
 ///             source, target, _ = edge
 ///             # the road directly from home to school is closed
@@ -531,7 +531,7 @@ pub fn digraph_bfs_search(
 ///
 ///
 /// .. note::
-///     An exception is raised if the :class:`~rustworkx.visit.PruneSearch` is raised in the 
+///     An exception is raised if the :class:`~rustworkx.visit.PruneSearch` is raised in the
 ///     :class:`~rustworkx.visit.BFSVisitor.finish_vertex` event.
 ///
 ///

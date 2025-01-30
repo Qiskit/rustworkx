@@ -1503,7 +1503,7 @@ def bfs_search(graph, source, visitor):
         def BFSIterator(G, I, F):
           # color each vertex in WHITE, GRAY, BLACK for undiscovered,
           # discovered and finished, respectively, to track its status
-          color = {}                          
+          color = {}
           for u in G:                         # u is a vertex in G
             color[u] = WHITE                  # color all as undiscovered
           for s in I:                         # s is a vertex in I
@@ -1534,7 +1534,7 @@ def bfs_search(graph, source, visitor):
             color[u] = BLACK
             F.Finish(u)
 
-    If an exception is raised inside the callback method of the 
+    If an exception is raised inside the callback method of the
     :class:`~rustworkx.visit.BFSVisitor` instance, the graph traversal
     will be stopped immediately. You can exploit this to exit early by raising a
     :class:`~rustworkx.visit.StopSearch` exception, in which case the search function
@@ -1586,7 +1586,7 @@ def bfs_search(graph, source, visitor):
         graph.add_edges_from_no_data(
             [(school, home), (school, market), (market, home)]
         )
-        
+
         class DistanceHomeFinder(BFSVisitor):
 
             def __init__(self):
@@ -1636,7 +1636,7 @@ def dfs_search(graph, source, visitor):
     """Iterative depth-first traversal of a directed/undirected graph.
 
     Pseudo-code for the iterative depth-first search algorithm is
-    listed below, including the event points, for which the given 
+    listed below, including the event points, for which the given
     :class:`rustworkx.visit.DFSVisitor` visitor object will be called with
     the appropriate method.
 
@@ -1649,8 +1649,8 @@ def dfs_search(graph, source, visitor):
           time = -1
           for s in I:                         # s is a vertex in I
             time = DFS(G, s, F, color, time)
-        
-        
+
+
         def DFS(G, s, F, color, time):
           if color[u] != WHITE:
             return time
