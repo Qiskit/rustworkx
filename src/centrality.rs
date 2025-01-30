@@ -32,7 +32,7 @@ use rustworkx_core::centrality;
 /// Compute the betweenness centrality of all nodes in a PyGraph.
 ///
 /// Betweenness centrality of a node :math:`v` is the sum of the
-/// fraction of all-pairs shortest paths that pass through :math`v`
+/// fraction of all-pairs shortest paths that pass through :math:`v`
 ///
 /// .. math::
 ///
@@ -56,7 +56,7 @@ use rustworkx_core::centrality;
 ///
 /// See Also
 /// --------
-/// graph_edge_betweenness_centrality
+/// :func:`~rustworkx.graph_edge_betweenness_centrality`
 ///
 /// :param PyGraph graph: The input graph
 /// :param bool normalized: Whether to normalize the betweenness scores by the number of distinct
@@ -100,14 +100,14 @@ pub fn graph_betweenness_centrality(
 /// Compute the betweenness centrality of all nodes in a PyDiGraph.
 ///
 /// Betweenness centrality of a node :math:`v` is the sum of the
-/// fraction of all-pairs shortest paths that pass through :math`v`
+/// fraction of all-pairs shortest paths that pass through :math:`v`
 ///
 /// .. math::
 ///
 ///    c_B(v) =\sum_{s,t \in V} \frac{\sigma(s, t|v)}{\sigma(s, t)}
 ///
 /// where :math:`V` is the set of nodes, :math:`\sigma(s, t)` is the number of
-/// shortest :math`(s, t)` paths, and :math:`\sigma(s, t|v)` is the number of
+/// shortest :math:`(s, t)` paths, and :math:`\sigma(s, t|v)` is the number of
 /// those paths  passing through some  node :math:`v` other than :math:`s, t`.
 /// If :math:`s = t`, :math:`\sigma(s, t) = 1`, and if :math:`v \in {s, t}`,
 /// :math:`\sigma(s, t|v) = 0`
@@ -124,7 +124,7 @@ pub fn graph_betweenness_centrality(
 ///
 /// See Also
 /// --------
-/// digraph_edge_betweenness_centrality
+/// :func:`~rustworkx.digraph_edge_betweenness_centrality`
 ///
 /// :param PyDiGraph graph: The input graph
 /// :param bool normalized: Whether to normalize the betweenness scores by the number of distinct
@@ -291,7 +291,7 @@ pub fn out_degree_centrality(graph: &digraph::PyDiGraph) -> PyResult<CentralityM
 /// formula can be used with the ``wf_improved`` argument.
 ///
 /// :param PyGraph graph: The input graph. Can either be a
-///     :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`.
+///     :class:`~rustworkx.PyGraph` or :class:`~rustworkx.PyDiGraph`.
 /// :param bool wf_improved: This is optional; the default is True. If True,
 ///     scale by the fraction of nodes reachable.
 ///
@@ -339,7 +339,7 @@ pub fn graph_closeness_centrality(graph: &graph::PyGraph, wf_improved: bool) -> 
 /// formula can be used with the ``wf_improved`` argument.
 ///
 /// :param PyDiGraph graph: The input graph. Can either be a
-///     :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`.
+///     :class:`~rustworkx.PyGraph` or :class:`~rustworkx.PyDiGraph`.
 /// :param bool wf_improved: This is optional; the default is True. If True,
 ///     scale by the fraction of nodes reachable.
 ///
@@ -363,7 +363,7 @@ pub fn digraph_closeness_centrality(
 /// Compute the edge betweenness centrality of all edges in a :class:`~PyGraph`.
 ///
 /// Edge betweenness centrality of an edge :math:`e` is the sum of the
-/// fraction of all-pairs shortest paths that pass through :math`e`
+/// fraction of all-pairs shortest paths that pass through :math:`e`
 ///
 /// .. math::
 ///
@@ -385,7 +385,7 @@ pub fn digraph_closeness_centrality(
 ///
 /// See Also
 /// --------
-/// graph_betweenness_centrality
+/// :func:`~rustworkx.graph_betweenness_centrality`
 ///
 /// :param PyGraph graph: The input graph
 /// :param bool normalized: Whether to normalize the betweenness scores by the number of distinct
@@ -425,7 +425,7 @@ pub fn graph_edge_betweenness_centrality(
 /// Compute the edge betweenness centrality of all edges in a :class:`~PyDiGraph`.
 ///
 /// Edge betweenness centrality of an edge :math:`e` is the sum of the
-/// fraction of all-pairs shortest paths that pass through :math`e`
+/// fraction of all-pairs shortest paths that pass through :math:`e`
 ///
 /// .. math::
 ///
@@ -447,7 +447,7 @@ pub fn graph_edge_betweenness_centrality(
 ///
 /// See Also
 /// --------
-/// digraph_betweenness_centrality
+/// :func:`~rustworkx.digraph_betweenness_centrality`
 ///
 /// :param PyGraph graph: The input graph
 /// :param bool normalized: Whether to normalize the betweenness scores by the number of distinct

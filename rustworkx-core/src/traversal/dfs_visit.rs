@@ -65,6 +65,52 @@ pub enum DfsEvent<N, E> {
 ///
 /// ***Panics** if you attempt to prune a node from its `Finish` event.
 ///
+/// Pseudo-code for the iterative depth-first search algorithm is listed below, including
+/// the event points for which the given visitor object will be called with the appropriate
+/// method.
+///
+/// ```norust
+/// def DFSIterator(G, I, F):
+///   color = {}                          # set color to empty map
+///   for u in G:                         # u is a vertex in G
+///     color[u] = WHITE                  # color all as undiscovered
+///   time = -1
+///   for s in I:                         # s is a vertex in I
+///     time = DFS(G, s, F, color, time)
+///
+///
+/// def DFS(G, s, F, color, time):
+///   if color[u] != WHITE:
+///     return time
+///   color[s] = GRAY
+///   time += 1
+///   F.Discover(s, time)
+///   Q = [s]                             # LIFO vertex queue
+///   while len(Q) > 0:
+///     u = Q[-1]
+///     n = None
+///     for v, w in G.OutEdges(u):         # v is a vertex, w is a weight
+///       if color[v] == WHITE:
+///         F.TreeEdge(u,v,w)
+///         color[v] = GRAY
+///         time += 1
+///         F.Discover(v, time)
+///         n = v                         # n set as next vertex
+///         break
+///       elif color[v] == GRAY:
+///         F.BackEdge
+///       elif color[v] == BLACK:
+///         F.CrossForwardEdge(u,v,w)
+///     if n is not None:
+///       Q.append(v)
+///     else:
+///       color[u] = BLACK
+///       time += 1
+///       F.Finish(u, time)
+///       Q.pop()                         # remove u from queue
+///   return time
+/// ```
+///
 /// # Example returning `Control`.
 ///
 /// Find a path from vertex 0 to 5, and exit the visit as soon as we reach
