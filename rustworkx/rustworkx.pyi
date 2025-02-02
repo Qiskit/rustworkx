@@ -233,6 +233,11 @@ def graph_complement(
     graph: PyGraph[_S, _T],
     /,
 ) -> PyGraph[_S, _T | None]: ...
+def local_complement(
+    graph: PyGraph[_S, _T],
+    node: int,
+    /,
+) -> PyGraph[_S, _T | None]: ...
 def digraph_all_simple_paths(
     graph: PyDiGraph,
     origin: int,

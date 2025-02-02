@@ -89,6 +89,7 @@ from .rustworkx import chain_decomposition as chain_decomposition
 from .rustworkx import digraph_find_cycle as digraph_find_cycle
 from .rustworkx import digraph_complement as digraph_complement
 from .rustworkx import graph_complement as graph_complement
+from .rustworkx import local_complement as local_complement
 from .rustworkx import digraph_all_simple_paths as digraph_all_simple_paths
 from .rustworkx import graph_all_simple_paths as graph_all_simple_paths
 from .rustworkx import digraph_all_pairs_all_simple_paths as digraph_all_pairs_all_simple_paths

@@ -1,0 +1,18 @@
+---
+features:
+  - |
+    Added a new function, :func:`~rustworkx.local_complement` which
+    performs the local complementation of a node applied to a graph 
+    For example:
+
+    .. jupyter-execute::
+
+        import rustworkx 
+        
+        # Example taken from Figure 1 a) in https://arxiv.org/abs/1910.03969
+        graph = rustworkx.PyGraph(multigraph=False)
+        graph.extend_from_edge_list(
+            [(0, 1), (0, 3), (0, 5), (1, 2), (2, 3), (2, 4), (3, 4), (3, 5)]
+        )
+
+        complement_graph = rustworkx.local_complement(graph, 0)

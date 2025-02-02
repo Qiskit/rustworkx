@@ -37,6 +37,7 @@ typed API based on the data type.
    rustworkx.graph_transitivity
    rustworkx.graph_core_number
    rustworkx.graph_complement
+   rustworkx.local_complement
    rustworkx.graph_union
    rustworkx.graph_tensor_product
    rustworkx.graph_token_swapper
