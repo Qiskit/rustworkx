@@ -29,12 +29,12 @@ jobs:
       run: |
         tools/build_documentation_release.sh
     - name: Upload artifact
-      uses: actions/upload-pages-artifact@v2
+      uses: actions/upload-pages-artifact@v3
       with:
         name: html_docs
         path: release_docs/
     - name: Deploy
-      uses: peaceiris/actions-gh-pages@v3
+      uses: peaceiris/actions-gh-pages@v4
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         publish_branch: gh-pages
