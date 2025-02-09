@@ -808,6 +808,49 @@ pub fn graph_dfs_search(
 /// will return but without raising back the exception. You can also prune part of the
 /// search tree by raising :class:`~rustworkx.visit.PruneSearch`.
 ///
+/// In the following example we find the shortest path from vertex 0 to 5, and exit the visit as
+/// soon as we reach the goal vertex:
+///
+/// .. jupyter-execute::
+///
+///     import rustworkx as rx
+///     from rustworkx.visit import DijkstraVisitor, StopSearch
+///
+///     graph = rx.PyDiGraph()
+///     graph.extend_from_edge_list([
+///         (0, 1), (0, 2), (0, 3), (0, 4),
+///         (1, 3),
+///         (2, 3), (2, 4),
+///         (4, 5),
+///     ])
+///
+///     class PathFinder(DijkstraVisitor):
+///
+///         def __init__(self, start, goal):
+///             self.start = start
+///             self.goal = goal
+///             self.predecessors = {}
+///
+///         def get_path(self):
+///             n = self.goal
+///             rev_path = [n]
+///             while n != self.start:
+///                 n = self.predecessors[n]
+///                 rev_path.append(n)
+///             return list(reversed(rev_path))
+///
+///         def discover_vertex(self, vertex, cost):
+///             if vertex == self.goal:
+///                 raise StopSearch
+///
+///         def edge_relaxed(self, edge):
+///             self.predecessors[edge[1]] = edge[0]
+///
+///     start = 0
+///     vis = PathFinder(start=start, goal=5)
+///     rx.digraph_dijkstra_search(graph, [start], weight_fn=None, visitor=vis)
+///     print('Path:', vis.get_path())
+///
 /// .. note::
 ///
 ///     Graph can **not** be mutated while traversing.
@@ -905,6 +948,49 @@ pub fn digraph_dijkstra_search(
 /// :class:`~rustworkx.visit.StopSearch` exception, in which case the search function
 /// will return but without raising back the exception. You can also prune part of the
 /// search tree by raising :class:`~rustworkx.visit.PruneSearch`.
+///
+/// In the following example we find the shortest path from vertex 0 to 5, and exit the visit as
+/// soon as we reach the goal vertex:
+///
+/// .. jupyter-execute::
+///
+///     import rustworkx as rx
+///     from rustworkx.visit import DijkstraVisitor, StopSearch
+///
+///     graph = rx.PyGraph()
+///     graph.extend_from_edge_list([
+///         (0, 1), (0, 2), (0, 3), (0, 4),
+///         (1, 3),
+///         (2, 3), (2, 4),
+///         (4, 5),
+///     ])
+///
+///     class PathFinder(DijkstraVisitor):
+///
+///         def __init__(self, start, goal):
+///             self.start = start
+///             self.goal = goal
+///             self.predecessors = {}
+///
+///         def get_path(self):
+///             n = self.goal
+///             rev_path = [n]
+///             while n != self.start:
+///                 n = self.predecessors[n]
+///                 rev_path.append(n)
+///             return list(reversed(rev_path))
+///
+///         def discover_vertex(self, vertex, cost):
+///             if vertex == self.goal:
+///                 raise StopSearch
+///
+///         def edge_relaxed(self, edge):
+///             self.predecessors[edge[1]] = edge[0]
+///
+///     start = 0
+///     vis = PathFinder(start=start, goal=5)
+///     rx.graph_dijkstra_search(graph, [start], weight_fn=None, visitor=vis)
+///     print('Path:', vis.get_path())
 ///
 /// .. note::
 ///
