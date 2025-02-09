@@ -250,7 +250,7 @@ pub fn descendants(graph: &digraph::PyDiGraph, node: usize) -> HashSet<usize> {
 
 /// Breadth-first traversal of a directed graph with several source vertices.
 ///
-/// Python code for the breadth-first search algorithm with a single source vertex is
+/// Pseudo-code for the breadth-first search algorithm with a single source vertex is
 /// listed below with annotated event points at which a method of the given
 /// :class:`~rustworkx.visit.BFSVisitor` is called.
 ///
@@ -395,7 +395,7 @@ pub fn digraph_bfs_search(
 
 /// Breadth-first traversal of a undirected graph with several source vertices.
 ///
-/// Python code for the breadth-first search algorithm with a single source vertex is
+/// Pseudo-code for the breadth-first search algorithm with a single source vertex is
 /// listed below with annotated event points at which a method of the given
 /// :class:`~rustworkx.visit.BFSVisitor` is called.
 ///
