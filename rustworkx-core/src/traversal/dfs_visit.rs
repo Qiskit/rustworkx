@@ -65,50 +65,41 @@ pub enum DfsEvent<N, E> {
 ///
 /// ***Panics** if you attempt to prune a node from its `Finish` event.
 ///
-/// Pseudo-code for the iterative depth-first search algorithm is listed below, including
-/// the event points for which the given visitor object will be called with the appropriate
-/// method.
+/// The pseudo-code for the DFS algorithm is listed below, with the annotated event points,
+/// for which the given visitor object will be called with the appropriate method.
 ///
 /// ```norust
-/// def DFSIterator(G, I, F):
-///   color = {}                          # set color to empty map
-///   for u in G:                         # u is a vertex in G
-///     color[u] = WHITE                  # color all as undiscovered
-///   time = -1
-///   for s in I:                         # s is a vertex in I
-///     time = DFS(G, s, F, color, time)
-///
-///
-/// def DFS(G, s, F, color, time):
-///   if color[u] != WHITE:
-///     return time
-///   color[s] = GRAY
-///   time += 1
-///   F.Discover(s, time)
-///   Q = [s]                             # LIFO vertex queue
-///   while len(Q) > 0:
-///     u = Q[-1]
-///     n = None
-///     for v, w in G.OutEdges(u):         # v is a vertex, w is a weight
-///       if color[v] == WHITE:
-///         F.TreeEdge(u,v,w)
-///         color[v] = GRAY
-///         time += 1
-///         F.Discover(v, time)
-///         n = v                         # n set as next vertex
+/// // G - graph, s - single source node
+/// DFS(G, s)
+///   let color be a mapping                        // color[u] - vertex u color WHITE/GRAY/BLACK
+///   for each u in G                               // u - vertex in G
+///     color[u] := WHITE                           // color all as undiscovered
+///   end for
+///   time := 0
+///   let S be a stack
+///   PUSH(S, (s, iterator of OutEdges(G, s)))      // S - stack of vertices and edge iterators
+///   color[s] := GRAY                              // event: Discover(s, time)
+///   while (S is not empty)
+///     let (u, iterator) := LAST(S)
+///     flag := False                               // whether edge to undiscovered vertex found
+///     for each v, w in iterator                   // v - target vertex, w - edge weight
+///       if (WHITE = color[v])                     // event: TreeEdge(u, v, w)
+///         time := time + 1
+///         color[v] := GRAY                        // event: Discover(v, time)
+///         flag := True
 ///         break
-///       elif color[v] == GRAY:
-///         F.BackEdge
-///       elif color[v] == BLACK:
-///         F.CrossForwardEdge(u,v,w)
-///     if n is not None:
-///       Q.append(v)
-///     else:
-///       color[u] = BLACK
-///       time += 1
-///       F.Finish(u, time)
-///       Q.pop()                         # remove u from queue
-///   return time
+///       elif (GRAY = color[v])                    // event: BackEdge(u, v, w)
+///         ...
+///       elif (BLACK = color[v])                   // event: CrossForwardEdge(u, v, w)
+///         ...
+///     end for
+///     if (flag is True)
+///       PUSH(S, (v, iterator of OutEdges(G, v)))
+///     elif (flag is False)
+///       time := time + 1
+///       color[u] := BLACK                         // event: Finish(u, time)
+///       POP(S)
+///   end while
 /// ```
 ///
 /// # Example returning `Control`.

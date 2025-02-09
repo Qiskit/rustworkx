@@ -248,48 +248,37 @@ pub fn descendants(graph: &digraph::PyDiGraph, node: usize) -> HashSet<usize> {
         .collect()
 }
 
-/// Iterative breadth-first traversal of a directed graph.
+/// Breadth-first traversal of a directed graph with several source vertices.
 ///
-/// Pseudo-code for the iterative breadth-first search algorithm is
-/// listed below, including the event points for which the given
-/// :class:`~rustworkx.visit.BFSVisitor` visitor object will be called with
-/// the appropriate method.
+/// Python code for the breadth-first search algorithm with a single source vertex is
+/// listed below with annotated event points at which a method of the given
+/// :class:`~rustworkx.visit.BFSVisitor` is called.
 ///
 /// ::
 ///
-///     def BFSIterator(G, I, F):
-///       # color each vertex in WHITE, GRAY, BLACK for undiscovered,
-///       # discovered and finished, respectively, to track its status
-///       color = {}                          
-///       for u in G:                         # u is a vertex in G
-///         color[u] = WHITE                  # color all as undiscovered
-///       for s in I:                         # s is a vertex in I
-///         BFS(G, s, F, color)
-///
-///
-///     def BFS(G, s, F, color):
-///       if color[s] != WHITE:
-///         return
-///       color[s] = GRAY
-///       F.Discover(s)
-///       Q = deque()                         # Q is an empty FIFO queue
-///       Q.appendleft(s)
-///       while len(Q) > 0:
-///         u = Q.pop()
-///         for v, w in G.OutEdges(u):        # v is a vertex, w is a weight
-///           if color[v] == WHITE:
-///             F.TreeEdge(u, v, w)
-///             color[v] = GRAY
-///             F.Discover(v)
-///             Q.appendleft(v)
-///           else:
-///             F.NonTreeEdge(u, v, w)
-///             if color[v] == GRAY:
-///               F.GrayTargetEdge(u,v,w)
-///             elif color[v] == BLACK:
-///               F.BlackTargetEdge(u, v, w)
-///         color[u] = BLACK
-///         F.Finish(u)
+///   # G - graph, s - single source node
+///   BFS(G, s)
+///     let color be a mapping             # color[u] - vertex u color WHITE/GRAY/BLACK
+///     for each u in G                    # u - vertex in G
+///       color[u] := WHITE                # color all vertices as undiscovered
+///     end for
+///     let Q be a queue
+///     ENQUEUE(Q, s)
+///     color[s] := GRAY                   # event: discover_vertex(s)
+///     while (Q is not empty)
+///       u := DEQUEUE(Q)
+///       for each v, w in OutEdges(G, u)  # v - target vertex, w - edge weight
+///         if (WHITE = color[v])          # event: tree_edge((u, v, w))
+///           color[v] := GRAY             # event: discover_vertex(v)
+///           ENQUEUE(Q, v)
+///         else                           # event: non_tree_edge((u, v, w))
+///           if (GRAY = color[v])         # event: gray_target_edge((u, v, w))
+///             ...                       
+///           elif (BLACK = color[v])      # event: black_target_edge((u, v, w))
+///             ...                       
+///       end for
+///       color[u] := BLACK                # event: finish_vertex(u)
+///     end while
 ///
 /// If an exception is raised inside the callback method of the
 /// :class:`~rustworkx.visit.BFSVisitor` instance, the graph traversal
@@ -297,6 +286,8 @@ pub fn descendants(graph: &digraph::PyDiGraph, node: usize) -> HashSet<usize> {
 /// :class:`~rustworkx.visit.StopSearch` exception, in which case the search function
 /// will return but without raising back the exception. You can also prune part of the
 /// search tree by raising :class:`~rustworkx.visit.PruneSearch`.
+///
+/// For several source nodes, the BFS algorithm is applied on source nodes by the given order.
 ///
 /// .. seealso::
 ///
@@ -409,48 +400,37 @@ pub fn digraph_bfs_search(
     Ok(())
 }
 
-/// Iterative breadth-first traversal of an undirected graph.
+/// Breadth-first traversal of a undirected graph with several source vertices.
 ///
-/// Pseudo-code for the iterative breadth-first search algorithm is
-/// listed below, including the event points for which the given
-/// :class:`~rustworkx.visit.BFSVisitor` visitor object will be called with
-/// the appropriate method.
+/// Python code for the breadth-first search algorithm with a single source vertex is
+/// listed below with annotated event points at which a method of the given
+/// :class:`~rustworkx.visit.BFSVisitor` is called.
 ///
 /// ::
 ///
-///     def BFSIterator(G, I, F):
-///       # color each vertex in WHITE, GRAY, BLACK for undiscovered,
-///       # discovered and finished, respectively, to track its status
-///       color = {}                          
-///       for u in G:                         # u is a vertex in G
-///         color[u] = WHITE                  # color all as undiscovered
-///       for s in I:                         # s is a vertex in I
-///         BFS(G, s, F, color)
-///       
-///       
-///     def BFS(G, s, F, color):
-///       if color[s] != WHITE:
-///         return
-///       color[s] = GRAY
-///       F.Discover(s)
-///       Q = deque()                         # Q is an empty FIFO queue
-///       Q.appendleft(s)
-///       while len(Q) > 0:
-///         u = Q.pop()
-///         for v, w in G.OutEdges(u):        # v is a vertex, w is a weight
-///           if color[v] == WHITE:
-///             F.TreeEdge(u, v, w)
-///             color[v] = GRAY
-///             F.Discover(v)
-///             Q.appendleft(v)
-///           else:
-///             F.NonTreeEdge(u, v, w)
-///             if color[v] == GRAY:
-///               F.GrayTargetEdge(u,v,w)
-///             elif color[v] == BLACK:
-///               F.BlackTargetEdge(u, v, w)
-///         color[u] = BLACK
-///         F.Finish(u)
+///   # G - graph, s - single source node
+///   BFS(G, s)
+///     let color be a mapping             # color[u] - vertex u color WHITE/GRAY/BLACK
+///     for each u in G                    # u - vertex in G
+///       color[u] := WHITE                # color all vertices as undiscovered
+///     end for
+///     let Q be a queue
+///     ENQUEUE(Q, s)
+///     color[s] := GRAY                   # event: discover_vertex(s)
+///     while (Q is not empty)
+///       u := DEQUEUE(Q)
+///       for each v, w in OutEdges(G, u)  # v - target vertex, w - edge weight
+///         if (WHITE = color[v])          # event: tree_edge((u, v, w))
+///           color[v] := GRAY             # event: discover_vertex(v)
+///           ENQUEUE(Q, v)
+///         else                           # event: non_tree_edge((u, v, w))
+///           if (GRAY = color[v])         # event: gray_target_edge((u, v, w))
+///             ...                       
+///           elif (BLACK = color[v])      # event: black_target_edge((u, v, w))
+///             ...                       
+///       end for
+///       color[u] := BLACK                # event: finish_vertex(u)
+///     end while
 ///
 /// If an exception is raised inside the callback method of the
 /// :class:`~rustworkx.visit.BFSVisitor` instance, the graph traversal
@@ -459,6 +439,7 @@ pub fn digraph_bfs_search(
 /// will return but without raising back the exception. You can also prune part of the
 /// search tree by raising :class:`~rustworkx.visit.PruneSearch`.
 ///
+/// For several source nodes, the BFS algorithm is applied on source nodes by the given order.
 ///
 /// .. seealso::
 ///     
@@ -570,60 +551,53 @@ pub fn graph_bfs_search(
     Ok(())
 }
 
-/// Iterative depth-first traversal of a directed graph.
+/// Depth-first traversal of a directed graph with several source vertices.
 ///
-/// Pseudo-code for the iterative depth-first search algorithm is
-/// listed below, including the event points, for which the given
-/// :class:`~rustworkx.visit.DFSVisitor` visitor object will be called with
-/// the appropriate method.
+/// Pseudo-code for the depth-first search algorithm with a single source vertex is
+/// listed below with annotated event points at which a method of the given
+/// :class:`~rustworkx.visit.DFSVisitor` is called.
 ///
 /// ::
 ///
-///     def DFSIterator(G, I, F):
-///       color = {}
-///       for u in G:                         # u is a vertex in G
-///         color[u] = WHITE                  # color all as undiscovered
-///       time = -1
-///       for s in I:                         # s is a vertex in I
-///         time = DFS(G, s, F, color, time)
-///
-///
-///     def DFS(G, s, F, color, time):
-///       if color[u] != WHITE:
-///         return time
-///       color[s] = GRAY
-///       time += 1
-///       F.Discover(s, time)
-///       Q = [s]                             # LIFO vertex queue
-///       while len(Q) > 0:
-///         u = Q[-1]
-///         n = None
-///         for v, w in G.OutEdges(u):         # v is a vertex, w is a weight
-///           if color[v] == WHITE:
-///             F.TreeEdge(u,v,w)
-///             color[v] = GRAY
-///             time += 1
-///             F.Discover(v, time)
-///             n = v                         # n set as next vertex
-///             break
-///           elif color[v] == GRAY:
-///             F.BackEdge
-///           elif color[v] == BLACK:
-///             F.CrossForwardEdge(u,v,w)
-///         if n is not None:
-///           Q.append(v)
-///         else:
-///           color[u] = BLACK
-///           time += 1
-///           F.Finish(u, time)
-///           Q.pop()                         # remove u from queue
-///       return time
+///   # G - graph, s - single source node
+///   DFS(G, s)
+///     let color be a mapping                        # color[u] - vertex u color WHITE/GRAY/BLACK
+///     for each u in G                               # u - vertex in G
+///       color[u] := WHITE                           # color all as undiscovered
+///     end for
+///     time := 0
+///     let S be a stack
+///     PUSH(S, (s, iterator of OutEdges(G, s)))      # S - stack of vertices and edge iterators
+///     color[s] := GRAY                              # event: discover_vertex(s, time)
+///     while (S is not empty)
+///       let (u, iterator) := LAST(S)
+///       flag := False                               # whether edge to undiscovered vertex found
+///       for each v, w in iterator                   # v - target vertex, w - edge weight
+///         if (WHITE = color[v])                     # event: tree_edge((u, v, w))
+///           time := time + 1
+///           color[v] := GRAY                        # event: discover_vertex(v, time)
+///           flag := True
+///           break
+///         elif (GRAY = color[v])                    # event: back_edge((u, v, w))
+///           ...
+///         elif (BLACK = color[v])                   # event: forward_or_cross_edge((u, v, w))
+///           ...
+///       end for
+///       if (flag is True)
+///         PUSH(S, (v, iterator of OutEdges(G, v)))
+///       elif (flag is False)
+///         time := time + 1
+///         color[u] := BLACK                         # event: finish_vertex(u, time)
+///         POP(S)
+///     end while
 ///
 /// If an exception is raised inside the callback method of the
 /// :class:`~rustworkx.visit.DFSVisitor` instance, the graph traversal
 /// will be stopped immediately. You can exploit this to exit early by raising a
 /// :class:`~rustworkx.visit.StopSearch` exception. You can also prune part of the
 /// search tree by raising :class:`~rustworkx.visit.PruneSearch`.
+///
+/// For several source nodes, the DFS algorithm is applied on source nodes by the given order.
 ///
 /// .. seealso::
 ///
@@ -698,60 +672,53 @@ pub fn digraph_dfs_search(
     Ok(())
 }
 
-/// Iterative depth-first traversal of an undirected graph.
+/// Depth-first traversal of an undirected graph with several source vertices.
 ///
-/// Pseudo-code for the iterative depth-first search algorithm is
-/// listed below, including the event points, for which the given
-/// :class:`~rustworkx.visit.DFSVisitor` visitor object will be called with
-/// the appropriate method.
+/// Pseudo-code for the depth-first search algorithm with a single source vertex is
+/// listed below with annotated event points at which a method of the given
+/// :class:`~rustworkx.visit.DFSVisitor` is called.
 ///
 /// ::
 ///
-///     def DFSIterator(G, I, F):
-///       color = {}
-///       for u in G:                         # u is a vertex in G
-///         color[u] = WHITE                  # color all as undiscovered
-///       time = -1
-///       for s in I:                         # s is a vertex in I
-///         time = DFS(G, s, F, color, time)
-///
-///
-///     def DFS(G, s, F, color, time):
-///       if color[u] != WHITE:
-///         return time
-///       color[s] = GRAY
-///       time += 1
-///       F.Discover(s, time)
-///       Q = [s]                             # LIFO vertex queue
-///       while len(Q) > 0:
-///         u = Q[-1]
-///         n = None
-///         for v, w in G.OutEdges(u):         # v is a vertex, w is a weight
-///           if color[v] == WHITE:
-///             F.TreeEdge(u,v,w)
-///             color[v] = GRAY
-///             time += 1
-///             F.Discover(v, time)
-///             n = v                         # n set as next vertex
-///             break
-///           elif color[v] == GRAY:
-///             F.BackEdge
-///           elif color[v] == BLACK:
-///             F.CrossForwardEdge(u,v,w)
-///         if n is not None:
-///           Q.append(v)
-///         else:
-///           color[u] = BLACK
-///           time += 1
-///           F.Finish(u, time)
-///           Q.pop()                         # remove u from queue
-///       return time
+///   # G - graph, s - single source node
+///   DFS(G, s)
+///     let color be a mapping                        # color[u] - vertex u color WHITE/GRAY/BLACK
+///     for each u in G                               # u - vertex in G
+///       color[u] := WHITE                           # color all as undiscovered
+///     end for
+///     time := 0
+///     let S be a stack
+///     PUSH(S, (s, iterator of OutEdges(G, s)))      # S - stack of vertices and edge iterators
+///     color[s] := GRAY                              # event: discover_vertex(s, time)
+///     while (S is not empty)
+///       let (u, iterator) := LAST(S)
+///       flag := False                               # whether edge to undiscovered vertex found
+///       for each v, w in iterator                   # v - target vertex, w - edge weight
+///         if (WHITE = color[v])                     # event: tree_edge((u, v, w))
+///           time := time + 1
+///           color[v] := GRAY                        # event: discover_vertex(v, time)
+///           flag := True
+///           break
+///         elif (GRAY = color[v])                    # event: back_edge((u, v, w))
+///           ...
+///         elif (BLACK = color[v])                   # event: forward_or_cross_edge((u, v, w))
+///           ...
+///       end for
+///       if (flag is True)
+///         PUSH(S, (v, iterator of OutEdges(G, v)))
+///       elif (flag is False)
+///         time := time + 1
+///         color[u] := BLACK                         # event: finish_vertex(u, time)
+///         POP(S)
+///     end while
 ///
 /// If an exception is raised inside the callback method of the
 /// :class:`~rustworkx.visit.DFSVisitor` instance, the graph traversal
 /// will be stopped immediately. You can exploit this to exit early by raising a
 /// :class:`~rustworkx.visit.StopSearch` exception. You can also prune part of the
 /// search tree by raising :class:`~rustworkx.visit.PruneSearch`.
+///
+/// For several source nodes, the DFS algorithm is applied on source nodes by the given order.
 ///
 /// .. seealso::
 ///

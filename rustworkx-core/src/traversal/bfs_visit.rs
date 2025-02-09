@@ -56,44 +56,33 @@ pub enum BfsEvent<N, E> {
 ///
 /// ***Panics** if you attempt to prune a node from its `Finish` event.
 ///
-/// Pseudo-code for the iterative breadth-first search algorithm is listed below, including
-/// the event points for which the given visitor object will be called with the appropriate
-/// method.
+/// The pseudo-code for the BFS algorithm is listed below, with the annotated event points,
+/// for which the given visitor object will be called with the appropriate method.
 ///
 /// ```norust
-/// def BFSIterator(G, I, F):
-///   # color each vertex in WHITE, GRAY, BLACK for undiscovered,
-///   # discovered and finished, respectively, to track its status
-///   color = {}                          # set color to empty map
-///   for u in G:                         # u is a vertex in G
-///     color[u] = WHITE                  # color all as undiscovered
-///   for s in I:                         # s is a vertex in I
-///     BFS(G, s, F, color)
-///
-///
-/// def BFS(G, s, F, color):
-///   if color[s] != WHITE:
-///     return
-///   color[s] = GRAY
-///   F.Discover(s)
-///   Q = deque()                         # Q is an empty FIFO queue
-///   Q.appendleft(s)
-///   while len(Q) > 0:
-///     u = Q.pop()
-///     for v, w in G.OutEdges(u):        # v is a vertex, w is a weight
-///       if color[v] == WHITE:
-///         F.TreeEdge(u, v, w)
-///         color[v] = GRAY
-///         F.Discover(v)
-///         Q.appendleft(v)
-///       else:
-///         F.NonTreeEdge(u, v, w)
-///         if color[v] == GRAY:
-///           F.GrayTargetEdge(u,v,w)
-///         elif color[v] == BLACK:
-///           F.BlackTargetEdge(u, v, w)
-///     color[u] = BLACK
-///     F.Finish(u)
+/// // G - graph, s - single source node
+/// BFS(G, s)
+///   let color be a mapping             // color[u] - vertex u color WHITE/GRAY/BLACK
+///   for each u in G                    // u - vertex in G
+///     color[u] := WHITE                // color all vertices as undiscovered
+///   end for
+///   let Q be a queue
+///   ENQUEUE(Q, s)
+///   color[s] := GRAY                   // event: Discover(s)
+///   while (Q is not empty)
+///     u := DEQUEUE(Q)
+///     for each v, w in OutEdges(G, u)  // v - target vertex, w - edge weight
+///       if (WHITE = color[v])          // event: TreeEdge(u, v, w)
+///         color[v] := GRAY             // event: Discover(v)
+///         ENQUEUE(Q, v)
+///       else                           // event: NonTreeEdge(u, v, w)
+///         if (GRAY = color[v])         // event: GrayTargetEdge(u, v, w)
+///           ...                       
+///         elif (BLACK = color[v])      // event: BlackTargetEdge(u, v, w)
+///           ...                       
+///     end for
+///     color[u] := BLACK                // event: Finish(u)
+///   end while
 /// ```
 ///
 /// # Example returning [`Control`](petgraph::visit::Control).
