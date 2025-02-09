@@ -65,7 +65,7 @@ pub enum DfsEvent<N, E> {
 ///
 /// ***Panics** if you attempt to prune a node from its `Finish` event.
 ///
-/// The pseudo-code for the DFS algorithm is listed below, with the annotated event points,
+/// Pseudo-code for the DFS algorithm is listed below, with the annotated event points,
 /// for which the given visitor object will be called with the appropriate method.
 ///
 /// ```norust

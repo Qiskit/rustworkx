@@ -1523,6 +1523,8 @@ def bfs_search(graph, source, visitor):
           color[u] := BLACK                # event: finish_vertex(u)
         end while
 
+    For several source nodes, the BFS algorithm is applied on source nodes by the given order.
+
     If an exception is raised inside the callback method of the
     :class:`~rustworkx.visit.BFSVisitor` instance, the graph traversal
     will be stopped immediately. You can exploit this to exit early by raising a
@@ -1530,22 +1532,12 @@ def bfs_search(graph, source, visitor):
     will return but without raising back the exception. You can also prune part of
     the search tree by raising :class:`~rustworkx.visit.PruneSearch`.
 
-    For several source nodes, the BFS algorithm is applied on source nodes by the given order.
-
-    .. seealso::
-
-        For more information on the breadth-first search algorithm, see:
-
-        Thomas H. Cormen, Charles E. Leiserson, Ronald L. Rivest and Clifford Stein
-        (2022). Introduction to algorithms. MIT Press. ISBN: 9780262046305
-
     In the following example we keep track of the tree edges:
 
     .. jupyter-execute::
 
         import rustworkx as rx
         from rustworkx.visit import BFSVisitor
-
 
         class TreeEdgesRecorder(BFSVisitor):
 
@@ -1664,20 +1656,13 @@ def dfs_search(graph, source, visitor):
             POP(S)
         end while
 
+    For several source nodes, the DFS algorithm is applied on source nodes by the given order.
+
     If an exception is raised inside the callback method of the
     :class:`~rustworkx.visit.DFSVisitor` instance, the graph traversal
     will be stopped immediately. You can exploit this to exit early by raising a
     :class:`~rustworkx.visit.StopSearch` exception. You can also prune part of the
     search tree by raising :class:`~rustworkx.visit.PruneSearch`.
-
-    For several source nodes, the DFS algorithm is applied on source nodes by the given order.
-
-    .. seealso::
-
-        For more information on the depth-first search algorithm, see:
-
-        Thomas H. Cormen, Charles E. Leiserson, Ronald L. Rivest and Clifford Stein
-        (2022). Introduction to algorithms. MIT Press. ISBN: 9780262046305
 
     In the following example we keep track of the tree edges:
 
@@ -1726,36 +1711,44 @@ def dfs_search(graph, source, visitor):
 
 @_rustworkx_dispatch
 def dijkstra_search(graph, source, weight_fn, visitor):
-    """Dijkstra traversal of a graph.
+    """Dijkstra traversal of a graph with several source vertices.
 
-    The pseudo-code for the Dijkstra algorithm is listed below, with the annotated
-    event points, for which the given visitor object will be called with the
-    appropriate method.
+    Pseudo-code for the Dijkstra algorithm with a single source vertex is
+    listed below with annotated event points at which a method of the given
+    :class:`~rustworkx.visit.DijkstraVisitor` is called.
 
     ::
 
-        DIJKSTRA(G, source, weight)
-          for each vertex u in V
-              d[u] := infinity
-              p[u] := u
-          end for
-          d[source] := 0
-          INSERT(Q, source)
-          while (Q != Ø)
-              u := EXTRACT-MIN(Q)                         discover vertex u
-              for each vertex v in Adj[u]                 examine edge (u,v)
-                  if (weight[(u,v)] + d[u] < d[v])        edge (u,v) relaxed
-                      d[v] := weight[(u,v)] + d[u]
-                      p[v] := u
-                      DECREASE-KEY(Q, v)
-                  else                                    edge (u,v) not relaxed
-                      ...
-                  if (d[v] was originally infinity)
-                      INSERT(Q, v)
-              end for                                     finish vertex u
-          end while
+      # G - graph, s - single source node, weight - edge cost function
+      DIJKSTRA(G, s, weight)
+        let score be empty mapping
+        let visited be empty set
+        let Q be a priority queue
+        score[s] := 0.0
+        PUSH(Q, (score[s], s))                # only score determines the priority
+        while Q is not empty
+          cost, u := POP-MIN(Q)
+          if u in visited
+            continue
+          PUT(visited, u)                     # event: discover_vertex(u, cost)
+          for each _, v, w in OutEdges(G, u)  # v - target vertex, w - edge weight
+            ...                               # event: examine_edge((u, v, w))
+            if v in visited
+              continue
+            next_cost = cost + weight(w)
+            if {(v is key in score)
+                and (score[v] <= next_cost)}  # event: edge_not_relaxed((u, v, w))
+              ...
+            else:                             # v not scored or scored higher
+              score[v] = next_cost            # event: edge_relaxed((u, v, w))
+              PUSH(Q, (next_cost, v))
+          end for                             # event: finish_vertex(u)
+        end while
 
-    If an exception is raised inside the callback function, the graph traversal
+    For several source nodes, the Dijkstra algorithm is applied on source nodes by the given order.
+
+    If an exception is raised inside the callback method of the
+    :class:`~rustworkx.visit.DijkstraVisitor` instance, the graph traversal
     will be stopped immediately. You can exploit this to exit early by raising a
     :class:`~rustworkx.visit.StopSearch` exception, in which case the search function
     will return but without raising back the exception. You can also prune part of the
@@ -1764,13 +1757,21 @@ def dijkstra_search(graph, source, weight_fn, visitor):
     .. note::
 
         Graph can **not** be mutated while traversing.
+        Trying to do so raises an exception.
+
+
+    .. note::
+
+        An exception is raised if the :class:`~rustworkx.visit.PruneSearch` is
+        raised in the :class:`~rustworkx.visit.DijkstraVisitor.finish_vertex` event.
 
     :param graph: The graph to be used. This can be a :class:`~rustworkx.PyGraph`
         or a :class:`~rustworkx.PyDiGraph`.
-    :param List[int] source: An optional list of node indices to use as the starting nodes
-        for the dijkstra search. If this is not specified then a source
+    :param source: An optional list of node indices to use as the starting nodes
+        for the dijkstra search. If ``None`` or not specified then a source
         will be chosen arbitrarily and repeated until all components of the
         graph are searched.
+        This can be a ``Sequence[int]`` or ``None``.
     :param weight_fn: An optional weight function for an edge. It will accept
         a single argument, the edge's weight object and will return a float which
         will be used to represent the weight/cost of the edge. If not specified,
