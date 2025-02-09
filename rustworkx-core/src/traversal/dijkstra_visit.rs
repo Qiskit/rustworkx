@@ -94,25 +94,30 @@ pub enum DijkstraEvent<N, E, K> {
 /// appropriate method.
 ///
 /// ```norust
-/// DIJKSTRA(G, source, weight)
-///   for each vertex u in V
-///       d[u] := infinity
-///       p[u] := u
-///   end for
-///   d[source] := 0
-///   INSERT(Q, source)
-///   while (Q != Ø)
-///       u := EXTRACT-MIN(Q)                         discover vertex u
-///       for each vertex v in Adj[u]                 examine edge (u,v)
-///           if (weight[(u,v)] + d[u] < d[v])        edge (u,v) relaxed
-///               d[v] := weight[(u,v)] + d[u]
-///               p[v] := u
-///               DECREASE-KEY(Q, v)
-///           else                                    edge (u,v) not relaxed
-///               ...
-///           if (d[v] was originally infinity)
-///               INSERT(Q, v)
-///       end for                                     finish vertex u
+/// // G - graph, s - single source node, weight - edge cost function
+/// DIJKSTRA(G, s, weight)
+///   let score be empty mapping
+///   let visited be empty set
+///   let Q be a priority queue
+///   score[s] := DEFAULT_COST
+///   PUSH(Q, (score[s], s))                // only score determines the priority
+///   while Q is not empty
+///     cost, u := POP-MIN(Q)
+///     if u in visited
+///       continue
+///     PUT(visited, u)                     // event: Discover(u, cost)
+///     for each _, v, w in OutEdges(G, u)  // v - target vertex, w - edge weight
+///       ...                               // event: ExamineEdge(u, v, w)
+///       if v in visited
+///         continue
+///       next_cost = cost + weight(w)
+///       if {(v is key in score)
+///           and (score[v] <= next_cost)}  // event: EdgeNotRelaxed(u, v, w)
+///         ...                             
+///       else:                             // v not scored or scored higher
+///         score[v] = next_cost            // event: EdgeRelaxed(u, v, w)
+///         PUSH(Q, (next_cost, v))
+///     end for                             // event: Finish(u)
 ///   end while
 /// ```
 ///

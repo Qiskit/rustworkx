@@ -248,35 +248,42 @@ pub fn descendants(graph: &digraph::PyDiGraph, node: usize) -> HashSet<usize> {
         .collect()
 }
 
-/// Breadth-first traversal of a directed graph.
+/// Breadth-first traversal of a directed graph with several source vertices.
 ///
-/// The pseudo-code for the BFS algorithm is listed below, with the annotated
-/// event points, for which the given visitor object will be called with the
-/// appropriate method.
+/// Pseudo-code for the breadth-first search algorithm with a single source vertex is
+/// listed below with annotated event points at which a method of the given
+/// :class:`~rustworkx.visit.BFSVisitor` is called.
 ///
 /// ::
 ///
-///     BFS(G, s)
-///       for each vertex u in V
-///           color[u] := WHITE
+///   # G - graph, s - single source node
+///   BFS(G, s)
+///     let color be a mapping             # color[u] - vertex u color WHITE/GRAY/BLACK
+///     for each u in G                    # u - vertex in G
+///       color[u] := WHITE                # color all vertices as undiscovered
+///     end for
+///     let Q be a queue
+///     ENQUEUE(Q, s)
+///     color[s] := GRAY                   # event: discover_vertex(s)
+///     while (Q is not empty)
+///       u := DEQUEUE(Q)
+///       for each v, w in OutEdges(G, u)  # v - target vertex, w - edge weight
+///         if (WHITE = color[v])          # event: tree_edge((u, v, w))
+///           color[v] := GRAY             # event: discover_vertex(v)
+///           ENQUEUE(Q, v)
+///         else                           # event: non_tree_edge((u, v, w))
+///           if (GRAY = color[v])         # event: gray_target_edge((u, v, w))
+///             ...                       
+///           elif (BLACK = color[v])      # event: black_target_edge((u, v, w))
+///             ...                       
 ///       end for
-///       color[s] := GRAY
-///       EQUEUE(Q, s)                             discover vertex s
-///       while (Q != Ø)
-///           u := DEQUEUE(Q)
-///           for each vertex v in Adj[u]          (u,v) is a tree edge
-///               if (color[v] = WHITE)
-///                   color[v] = GRAY
-///               else                             (u,v) is a non - tree edge
-///                   if (color[v] = GRAY)         (u,v) has a gray target
-///                       ...
-///                   else if (color[v] = BLACK)   (u,v) has a black target
-///                       ...
-///           end for
-///           color[u] := BLACK                    finish vertex u
-///       end while
+///       color[u] := BLACK                # event: finish_vertex(u)
+///     end while
 ///
-/// If an exception is raised inside the callback function, the graph traversal
+/// For several source nodes, the BFS algorithm is applied on source nodes by the given order.
+///
+/// If an exception is raised inside the callback method of the
+/// :class:`~rustworkx.visit.BFSVisitor` instance, the graph traversal
 /// will be stopped immediately. You can exploit this to exit early by raising a
 /// :class:`~rustworkx.visit.StopSearch` exception, in which case the search function
 /// will return but without raising back the exception. You can also prune part of the
@@ -300,18 +307,63 @@ pub fn descendants(graph: &digraph::PyDiGraph, node: usize) -> HashSet<usize> {
 ///        graph = rx.PyDiGraph()
 ///        graph.extend_from_edge_list([(1, 3), (0, 1), (2, 1), (0, 2)])
 ///        vis = TreeEdgesRecorder()
-///        rx.bfs_search(graph, [0], vis)
+///        rx.digraph_bfs_search(graph, [0], vis)
 ///        print('Tree edges:', vis.edges)
+///
+/// Here is another example, using the :class:`~rustworkx.visit.PruneSearch`
+/// exception, to find the shortest path between two vertices with some
+/// restrictions on the edges
+/// (for a more efficient ways to find the shortest path, see :ref:`shortest-paths`):
+///
+/// .. jupyter-execute::
+///
+///     import rustworkx as rx
+///     from rustworkx.visit import BFSVisitor, PruneSearch
+///
+///
+///     graph = rx.PyDiGraph()
+///     home, market, school = graph.add_nodes_from(['home', 'market', 'school'])
+///     graph.add_edges_from_no_data(
+///         [(school, home), (school, market), (market, home)]
+///     )
+///    
+///     class DistanceHomeFinder(BFSVisitor):
+///
+///         def __init__(self):
+///             self.distance = {}
+///
+///         def discover_vertex(self, vertex):
+///             self.distance.setdefault(vertex, 0)
+///
+///         def tree_edge(self, edge):
+///             source, target, _ = edge
+///             # the road directly from home to school is closed
+///             if {source, target} == {home, school}:
+///                 raise PruneSearch
+///             self.distance[target] = self.distance[source] + 1
+///
+///     vis = DistanceHomeFinder()
+///     rx.digraph_bfs_search(graph, [school], vis)
+///     print('Distance from school to home:', vis.distance[home])
 ///
 /// .. note::
 ///
 ///     Graph can **not** be mutated while traversing.
+///     Trying to do so raises an exception.
+///
+///
+/// .. note::
+///
+///     An exception is raised if the :class:`~rustworkx.visit.PruneSearch` is
+///     raised in the :class:`~rustworkx.visit.BFSVisitor.finish_vertex` event.
+///
 ///
 /// :param PyDiGraph graph: The graph to be used.
-/// :param List[int] source: An optional list of node indices to use as the starting nodes
-///     for the breadth-first search. If this is not specified then a source
+/// :param source: An optional list of node indices to use as the starting nodes
+///     for the breadth-first search. If ``None`` or not specified then a source
 ///     will be chosen arbitrarily and repeated until all components of the
 ///     graph are searched.
+///     This can be a ``Sequence[int]`` or ``None``.
 /// :param visitor: A visitor object that is invoked at the event points inside the
 ///     algorithm. This should be a subclass of :class:`~rustworkx.visit.BFSVisitor`.
 ///     This has a default value of ``None`` as a backwards compatibility artifact (to
@@ -341,35 +393,42 @@ pub fn digraph_bfs_search(
     Ok(())
 }
 
-/// Breadth-first traversal of an undirected graph.
+/// Breadth-first traversal of a undirected graph with several source vertices.
 ///
-/// The pseudo-code for the BFS algorithm is listed below, with the annotated
-/// event points, for which the given visitor object will be called with the
-/// appropriate method.
+/// Pseudo-code for the breadth-first search algorithm with a single source vertex is
+/// listed below with annotated event points at which a method of the given
+/// :class:`~rustworkx.visit.BFSVisitor` is called.
 ///
 /// ::
 ///
-///     BFS(G, s)
-///       for each vertex u in V
-///           color[u] := WHITE
+///   # G - graph, s - single source node
+///   BFS(G, s)
+///     let color be a mapping             # color[u] - vertex u color WHITE/GRAY/BLACK
+///     for each u in G                    # u - vertex in G
+///       color[u] := WHITE                # color all vertices as undiscovered
+///     end for
+///     let Q be a queue
+///     ENQUEUE(Q, s)
+///     color[s] := GRAY                   # event: discover_vertex(s)
+///     while (Q is not empty)
+///       u := DEQUEUE(Q)
+///       for each v, w in OutEdges(G, u)  # v - target vertex, w - edge weight
+///         if (WHITE = color[v])          # event: tree_edge((u, v, w))
+///           color[v] := GRAY             # event: discover_vertex(v)
+///           ENQUEUE(Q, v)
+///         else                           # event: non_tree_edge((u, v, w))
+///           if (GRAY = color[v])         # event: gray_target_edge((u, v, w))
+///             ...                       
+///           elif (BLACK = color[v])      # event: black_target_edge((u, v, w))
+///             ...                       
 ///       end for
-///       color[s] := GRAY
-///       EQUEUE(Q, s)                             discover vertex s
-///       while (Q != Ø)
-///           u := DEQUEUE(Q)
-///           for each vertex v in Adj[u]          (u,v) is a tree edge
-///               if (color[v] = WHITE)
-///                   color[v] = GRAY
-///               else                             (u,v) is a non - tree edge
-///                   if (color[v] = GRAY)         (u,v) has a gray target
-///                       ...
-///                   else if (color[v] = BLACK)   (u,v) has a black target
-///                       ...
-///           end for
-///           color[u] := BLACK                    finish vertex u
-///       end while
+///       color[u] := BLACK                # event: finish_vertex(u)
+///     end while
 ///
-/// If an exception is raised inside the callback function, the graph traversal
+/// For several source nodes, the BFS algorithm is applied on source nodes by the given order.
+///
+/// If an exception is raised inside the callback method of the
+/// :class:`~rustworkx.visit.BFSVisitor` instance, the graph traversal
 /// will be stopped immediately. You can exploit this to exit early by raising a
 /// :class:`~rustworkx.visit.StopSearch` exception, in which case the search function
 /// will return but without raising back the exception. You can also prune part of the
@@ -393,18 +452,62 @@ pub fn digraph_bfs_search(
 ///        graph = rx.PyGraph()
 ///        graph.extend_from_edge_list([(1, 3), (0, 1), (2, 1), (0, 2)])
 ///        vis = TreeEdgesRecorder()
-///        rx.bfs_search(graph, [0], vis)
+///        rx.graph_bfs_search(graph, [0], vis)
 ///        print('Tree edges:', vis.edges)
+///
+/// Here is another example, using the :class:`~rustworkx.visit.PruneSearch`
+/// exception, to find the shortest path between two vertices with some
+/// restrictions on the edges
+/// (for a more efficient ways to find the shortest path, see :ref:`shortest-paths`):
+///
+/// .. jupyter-execute::
+///
+///     import rustworkx as rx
+///     from rustworkx.visit import BFSVisitor, PruneSearch
+///
+///
+///     graph = rx.PyGraph()
+///     home, market, school = graph.add_nodes_from(['home', 'market', 'school'])
+///     graph.add_edges_from_no_data(
+///         [(school, home), (school, market), (market, home)]
+///     )
+///
+///     class DistanceHomeFinder(BFSVisitor):
+///
+///         def __init__(self):
+///             self.distance = {}
+///
+///         def discover_vertex(self, vertex):
+///             self.distance.setdefault(vertex, 0)
+///
+///         def tree_edge(self, edge):
+///             source, target, _ = edge
+///             # the road directly from home to school is closed
+///             if {source, target} == {home, school}:
+///                 raise PruneSearch
+///             self.distance[target] = self.distance[source] + 1
+///
+///     vis = DistanceHomeFinder()
+///     rx.graph_bfs_search(graph, [school], vis)
+///     print('Distance from school to home:', vis.distance[home])
 ///
 /// .. note::
 ///
 ///     Graph can **not** be mutated while traversing.
+///     Trying to do so raises an exception.
+///
+///
+/// .. note::
+///     An exception is raised if the :class:`~rustworkx.visit.PruneSearch` is raised in the
+///     :class:`~rustworkx.visit.BFSVisitor.finish_vertex` event.
+///
 ///
 /// :param PyGraph graph: The graph to be used.
-/// :param List[int] source: An optional list of node indices to use as the starting nodes
-///     for the breadth-first search. If this is not specified then a source
+/// :param source: An optional list of node indices to use as the starting nodes
+///     for the breadth-first search. If ``None`` or not specified then a source
 ///     will be chosen arbitrarily and repeated until all components of the
 ///     graph are searched.
+///     This can be a ``Sequence[int]`` or ``None``.
 /// :param visitor: A visitor object that is invoked at the event points inside the
 ///     algorithm. This should be a subclass of :class:`~rustworkx.visit.BFSVisitor`.
 ///     This has a default value of ``None`` as a backwards compatibility artifact (to
@@ -434,34 +537,50 @@ pub fn graph_bfs_search(
     Ok(())
 }
 
-/// Depth-first traversal of a directed graph.
+/// Depth-first traversal of a directed graph with several source vertices.
 ///
-/// The pseudo-code for the DFS algorithm is listed below, with the annotated
-/// event points, for which the given visitor object will be called with the
-/// appropriate method.
+/// Pseudo-code for the depth-first search algorithm with a single source vertex is
+/// listed below with annotated event points at which a method of the given
+/// :class:`~rustworkx.visit.DFSVisitor` is called.
 ///
 /// ::
 ///
-///     DFS(G)
-///       for each vertex u in V
-///           color[u] := WHITE                 initialize vertex u
-///       end for
-///       time := 0
-///       call DFS-VISIT(G, source)             start vertex s
-///
-///     DFS-VISIT(G, u)
-///       color[u] := GRAY                      discover vertex u
-///       for each v in Adj[u]                  examine edge (u,v)
-///           if (color[v] = WHITE)             (u,v) is a tree edge
-///               all DFS-VISIT(G, v)
-///           else if (color[v] = GRAY)         (u,v) is a back edge
+///   # G - graph, s - single source node
+///   DFS(G, s)
+///     let color be a mapping                        # color[u] - vertex u color WHITE/GRAY/BLACK
+///     for each u in G                               # u - vertex in G
+///       color[u] := WHITE                           # color all as undiscovered
+///     end for
+///     time := 0
+///     let S be a stack
+///     PUSH(S, (s, iterator of OutEdges(G, s)))      # S - stack of vertices and edge iterators
+///     color[s] := GRAY                              # event: discover_vertex(s, time)
+///     while (S is not empty)
+///       let (u, iterator) := LAST(S)
+///       flag := False                               # whether edge to undiscovered vertex found
+///       for each v, w in iterator                   # v - target vertex, w - edge weight
+///         if (WHITE = color[v])                     # event: tree_edge((u, v, w))
+///           time := time + 1
+///           color[v] := GRAY                        # event: discover_vertex(v, time)
+///           flag := True
+///           break
+///         elif (GRAY = color[v])                    # event: back_edge((u, v, w))
 ///           ...
-///           else if (color[v] = BLACK)        (u,v) is a cross or forward edge
+///         elif (BLACK = color[v])                   # event: forward_or_cross_edge((u, v, w))
 ///           ...
 ///       end for
-///       color[u] := BLACK                     finish vertex u
+///       if (flag is True)
+///         PUSH(S, (v, iterator of OutEdges(G, v)))
+///       elif (flag is False)
+///         time := time + 1
+///         color[u] := BLACK                         # event: finish_vertex(u, time)
+///         POP(S)
+///     end while
 ///
-/// If an exception is raised inside the callback function, the graph traversal
+/// For several source nodes, the DFS algorithm is applied on source nodes by the given order.
+///
+/// If an exception is raised inside the callback method of the
+/// :class:`~rustworkx.visit.DFSVisitor` instance, the graph traversal
 /// will be stopped immediately. You can exploit this to exit early by raising a
 /// :class:`~rustworkx.visit.StopSearch` exception. You can also prune part of the
 /// search tree by raising :class:`~rustworkx.visit.PruneSearch`.
@@ -481,21 +600,28 @@ pub fn graph_bfs_search(
 ///            def tree_edge(self, edge):
 ///                self.edges.append(edge)
 ///
-///        graph = rx.PyGraph()
+///        graph = rx.PyDiGraph()
 ///        graph.extend_from_edge_list([(1, 3), (0, 1), (2, 1), (0, 2)])
 ///        vis = TreeEdgesRecorder()
-///        rx.dfs_search(graph, [0], vis)
+///        rx.digraph_dfs_search(graph, [0], vis)
 ///        print('Tree edges:', vis.edges)
 ///
 /// .. note::
 ///
 ///     Graph can *not* be mutated while traversing.
+///     Trying to do so raises an exception.
+///
+///
+/// .. note::
+///     An exception is raised if the :class:`~rustworkx.visit.PruneSearch` is
+///     raised in the :class:`~rustworkx.visit.DFSVisitor.finish_vertex` event.
 ///
 /// :param PyDiGraph graph: The graph to be used.
-/// :param List[int] source: An optional list of node indices to use as the starting nodes
-///     for the depth-first search. If this is not specified then a source
+/// :param source: An optional list of node indices to use as the starting nodes
+///     for the depth-first search. If ``None`` or not specified then a source
 ///     will be chosen arbitrarily and repeated until all components of the
 ///     graph are searched.
+///     This can be a ``Sequence[int]`` or ``None``.
 /// :param visitor: A visitor object that is invoked at the event points inside the
 ///     algorithm. This should be a subclass of :class:`~rustworkx.visit.DFSVisitor`.
 ///     This has a default value of ``None`` as a backwards compatibility artifact (to
@@ -525,34 +651,50 @@ pub fn digraph_dfs_search(
     Ok(())
 }
 
-/// Depth-first traversal of an undirected graph.
+/// Depth-first traversal of an undirected graph with several source vertices.
 ///
-/// The pseudo-code for the DFS algorithm is listed below, with the annotated
-/// event points, for which the given visitor object will be called with the
-/// appropriate method.
+/// Pseudo-code for the depth-first search algorithm with a single source vertex is
+/// listed below with annotated event points at which a method of the given
+/// :class:`~rustworkx.visit.DFSVisitor` is called.
 ///
 /// ::
 ///
-///     DFS(G)
-///       for each vertex u in V
-///           color[u] := WHITE                 initialize vertex u
-///       end for
-///       time := 0
-///       call DFS-VISIT(G, source)             start vertex s
-///
-///     DFS-VISIT(G, u)
-///       color[u] := GRAY                      discover vertex u
-///       for each v in Adj[u]                  examine edge (u,v)
-///           if (color[v] = WHITE)             (u,v) is a tree edge
-///               all DFS-VISIT(G, v)
-///           else if (color[v] = GRAY)         (u,v) is a back edge
+///   # G - graph, s - single source node
+///   DFS(G, s)
+///     let color be a mapping                        # color[u] - vertex u color WHITE/GRAY/BLACK
+///     for each u in G                               # u - vertex in G
+///       color[u] := WHITE                           # color all as undiscovered
+///     end for
+///     time := 0
+///     let S be a stack
+///     PUSH(S, (s, iterator of OutEdges(G, s)))      # S - stack of vertices and edge iterators
+///     color[s] := GRAY                              # event: discover_vertex(s, time)
+///     while (S is not empty)
+///       let (u, iterator) := LAST(S)
+///       flag := False                               # whether edge to undiscovered vertex found
+///       for each v, w in iterator                   # v - target vertex, w - edge weight
+///         if (WHITE = color[v])                     # event: tree_edge((u, v, w))
+///           time := time + 1
+///           color[v] := GRAY                        # event: discover_vertex(v, time)
+///           flag := True
+///           break
+///         elif (GRAY = color[v])                    # event: back_edge((u, v, w))
 ///           ...
-///           else if (color[v] = BLACK)        (u,v) is a cross or forward edge
+///         elif (BLACK = color[v])                   # event: forward_or_cross_edge((u, v, w))
 ///           ...
 ///       end for
-///       color[u] := BLACK                     finish vertex u
+///       if (flag is True)
+///         PUSH(S, (v, iterator of OutEdges(G, v)))
+///       elif (flag is False)
+///         time := time + 1
+///         color[u] := BLACK                         # event: finish_vertex(u, time)
+///         POP(S)
+///     end while
 ///
-/// If an exception is raised inside the callback function, the graph traversal
+/// For several source nodes, the DFS algorithm is applied on source nodes by the given order.
+///
+/// If an exception is raised inside the callback method of the
+/// :class:`~rustworkx.visit.DFSVisitor` instance, the graph traversal
 /// will be stopped immediately. You can exploit this to exit early by raising a
 /// :class:`~rustworkx.visit.StopSearch` exception. You can also prune part of the
 /// search tree by raising :class:`~rustworkx.visit.PruneSearch`.
@@ -575,18 +717,25 @@ pub fn digraph_dfs_search(
 ///        graph = rx.PyGraph()
 ///        graph.extend_from_edge_list([(1, 3), (0, 1), (2, 1), (0, 2)])
 ///        vis = TreeEdgesRecorder()
-///        rx.dfs_search(graph, [0], vis)
+///        rx.graph_dfs_search(graph, [0], vis)
 ///        print('Tree edges:', vis.edges)
 ///
 /// .. note::
 ///
 ///     Graph can *not* be mutated while traversing.
+///     Trying to do so raises an exception.
+///
+///
+/// .. note::
+///     An exception is raised if the :class:`~rustworkx.visit.PruneSearch` is
+///     raised in the :class:`~rustworkx.visit.DFSVisitor.finish_vertex` event.
 ///
 /// :param PyGraph graph: The graph to be used.
-/// :param List[int] source: An optional list of node indices to use as the starting nodes
-///     for the depth-first search. If this is not specified then a source
+/// :param source: An optional list of node indices to use as the starting nodes
+///     for the depth-first search. If ``None`` or not specified then a source
 ///     will be chosen arbitrarily and repeated until all components of the
 ///     graph are searched.
+///     This can be a ``Sequence[int]`` or ``None``.
 /// :param visitor: A visitor object that is invoked at the event points inside the
 ///     algorithm. This should be a subclass of :class:`~rustworkx.visit.DFSVisitor`.
 ///     This has a default value of ``None`` as a backwards compatibility artifact (to
@@ -616,50 +765,109 @@ pub fn graph_dfs_search(
     Ok(())
 }
 
-/// Dijkstra traversal of a directed graph.
+/// Dijkstra traversal of a directed graph with several source vertices.
 ///
-/// The pseudo-code for the Dijkstra algorithm is listed below, with the annotated
-/// event points, for which the given visitor object will be called with the
-/// appropriate method.
+/// Pseudo-code for the Dijkstra algorithm with a single source vertex is
+/// listed below with annotated event points at which a method of the given
+/// :class:`~rustworkx.visit.DijkstraVisitor` is called.
 ///
 /// ::
 ///
-///     DIJKSTRA(G, source, weight)
-///       for each vertex u in V
-///           d[u] := infinity
-///           p[u] := u
-///       end for
-///       d[source] := 0
-///       INSERT(Q, source)
-///       while (Q != Ø)
-///           u := EXTRACT-MIN(Q)                         discover vertex u
-///           for each vertex v in Adj[u]                 examine edge (u,v)
-///               if (weight[(u,v)] + d[u] < d[v])        edge (u,v) relaxed
-///                   d[v] := weight[(u,v)] + d[u]
-///                   p[v] := u
-///                   DECREASE-KEY(Q, v)
-///               else                                    edge (u,v) not relaxed
-///                   ...
-///               if (d[v] was originally infinity)
-///                   INSERT(Q, v)
-///           end for                                     finish vertex u
+///     # G - graph, s - single source node, weight - edge cost function
+///     DIJKSTRA(G, s, weight)
+///       let score be empty mapping
+///       let visited be empty set
+///       let Q be a priority queue
+///       score[s] := 0.0
+///       PUSH(Q, (score[s], s))                # only score determines the priority
+///       while Q is not empty
+///         cost, u := POP-MIN(Q)
+///         if u in visited
+///           continue
+///         PUT(visited, u)                     # event: discover_vertex(u, cost)
+///         for each _, v, w in OutEdges(G, u)  # v - target vertex, w - edge weight
+///           ...                               # event: examine_edge((u, v, w))
+///           if v in visited
+///             continue
+///           next_cost = cost + weight(w)
+///           if {(v is key in score)
+///               and (score[v] <= next_cost)}  # event: edge_not_relaxed((u, v, w))
+///             ...
+///           else:                             # v not scored or scored higher
+///             score[v] = next_cost            # event: edge_relaxed((u, v, w))
+///             PUSH(Q, (next_cost, v))
+///         end for                             # event: finish_vertex(u)
 ///       end while
 ///
-/// If an exception is raised inside the callback function, the graph traversal
+/// For several source nodes, the Dijkstra algorithm is applied on source nodes by the given order.
+///
+/// If an exception is raised inside the callback method of the
+/// :class:`~rustworkx.visit.DijkstraVisitor` instance, the graph traversal
 /// will be stopped immediately. You can exploit this to exit early by raising a
 /// :class:`~rustworkx.visit.StopSearch` exception, in which case the search function
 /// will return but without raising back the exception. You can also prune part of the
 /// search tree by raising :class:`~rustworkx.visit.PruneSearch`.
 ///
+/// In the following example we find the shortest path from vertex 0 to 5, and exit the visit as
+/// soon as we reach the goal vertex:
+///
+/// .. jupyter-execute::
+///
+///     import rustworkx as rx
+///     from rustworkx.visit import DijkstraVisitor, StopSearch
+///
+///     graph = rx.PyDiGraph()
+///     graph.extend_from_edge_list([
+///         (0, 1), (0, 2), (0, 3), (0, 4),
+///         (1, 3),
+///         (2, 3), (2, 4),
+///         (4, 5),
+///     ])
+///
+///     class PathFinder(DijkstraVisitor):
+///
+///         def __init__(self, start, goal):
+///             self.start = start
+///             self.goal = goal
+///             self.predecessors = {}
+///
+///         def get_path(self):
+///             n = self.goal
+///             rev_path = [n]
+///             while n != self.start:
+///                 n = self.predecessors[n]
+///                 rev_path.append(n)
+///             return list(reversed(rev_path))
+///
+///         def discover_vertex(self, vertex, cost):
+///             if vertex == self.goal:
+///                 raise StopSearch
+///
+///         def edge_relaxed(self, edge):
+///             self.predecessors[edge[1]] = edge[0]
+///
+///     start = 0
+///     vis = PathFinder(start=start, goal=5)
+///     rx.digraph_dijkstra_search(graph, [start], weight_fn=None, visitor=vis)
+///     print('Path:', vis.get_path())
+///
 /// .. note::
 ///
 ///     Graph can **not** be mutated while traversing.
+///     Trying to do so raises an exception.
+///
+///
+/// .. note::
+///
+///    An exception is raised if the :class:`~rustworkx.visit.PruneSearch` is
+///    raised in the :class:`~rustworkx.visit.DijkstraVisitor.finish_vertex` event.
 ///
 /// :param PyDiGraph graph: The graph to be used.
-/// :param List[int] source: An optional list of node indices to use as the starting nodes
-///     for the dijkstra search. If this is not specified then a source
+/// :param source: An optional list of node indices to use as the starting nodes
+///     for the dijkstra search. If ``None`` or not specified then a source
 ///     will be chosen arbitrarily and repeated until all components of the
 ///     graph are searched.
+///     This can be a ``Sequence[int]`` or ``None``.
 /// :param weight_fn: An optional weight function for an edge. It will accept
 ///     a single argument, the edge's weight object and will return a float which
 ///     will be used to represent the weight/cost of the edge. If not specified,
@@ -698,50 +906,109 @@ pub fn digraph_dijkstra_search(
     Ok(())
 }
 
-/// Dijkstra traversal of an undirected graph.
+/// Dijkstra traversal of an undirected graph with several source vertices.
 ///
-/// The pseudo-code for the Dijkstra algorithm is listed below, with the annotated
-/// event points, for which the given visitor object will be called with the
-/// appropriate method.
+/// Pseudo-code for the Dijkstra algorithm with a single source vertex is
+/// listed below with annotated event points at which a method of the given
+/// :class:`~rustworkx.visit.DijkstraVisitor` is called.
 ///
 /// ::
 ///
-///     DIJKSTRA(G, source, weight)
-///       for each vertex u in V
-///           d[u] := infinity
-///           p[u] := u
-///       end for
-///       d[source] := 0
-///       INSERT(Q, source)
-///       while (Q != Ø)
-///           u := EXTRACT-MIN(Q)                         discover vertex u
-///           for each vertex v in Adj[u]                 examine edge (u,v)
-///               if (weight[(u,v)] + d[u] < d[v])        edge (u,v) relaxed
-///                   d[v] := weight[(u,v)] + d[u]
-///                   p[v] := u
-///                   DECREASE-KEY(Q, v)
-///               else                                    edge (u,v) not relaxed
-///                   ...
-///               if (d[v] was originally infinity)
-///                   INSERT(Q, v)
-///           end for                                     finish vertex u
+///     # G - graph, s - single source node, weight - edge cost function
+///     DIJKSTRA(G, s, weight)
+///       let score be empty mapping
+///       let visited be empty set
+///       let Q be a priority queue
+///       score[s] := 0.0
+///       PUSH(Q, (score[s], s))                # only score determines the priority
+///       while Q is not empty
+///         cost, u := POP-MIN(Q)
+///         if u in visited
+///           continue
+///         PUT(visited, u)                     # event: discover_vertex(u, cost)
+///         for each _, v, w in OutEdges(G, u)  # v - target vertex, w - edge weight
+///           ...                               # event: examine_edge((u, v, w))
+///           if v in visited
+///             continue
+///           next_cost = cost + weight(w)
+///           if {(v is key in score)
+///               and (score[v] <= next_cost)}  # event: edge_not_relaxed((u, v, w))
+///             ...
+///           else:                             # v not scored or scored higher
+///             score[v] = next_cost            # event: edge_relaxed((u, v, w))
+///             PUSH(Q, (next_cost, v))
+///         end for                             # event: finish_vertex(u)
 ///       end while
 ///
-/// If an exception is raised inside the callback function, the graph traversal
+/// For several source nodes, the Dijkstra algorithm is applied on source nodes by the given order.
+///
+/// If an exception is raised inside the callback method of the
+/// :class:`~rustworkx.visit.DijkstraVisitor` instance, the graph traversal
 /// will be stopped immediately. You can exploit this to exit early by raising a
 /// :class:`~rustworkx.visit.StopSearch` exception, in which case the search function
 /// will return but without raising back the exception. You can also prune part of the
 /// search tree by raising :class:`~rustworkx.visit.PruneSearch`.
 ///
+/// In the following example we find the shortest path from vertex 0 to 5, and exit the visit as
+/// soon as we reach the goal vertex:
+///
+/// .. jupyter-execute::
+///
+///     import rustworkx as rx
+///     from rustworkx.visit import DijkstraVisitor, StopSearch
+///
+///     graph = rx.PyGraph()
+///     graph.extend_from_edge_list([
+///         (0, 1), (0, 2), (0, 3), (0, 4),
+///         (1, 3),
+///         (2, 3), (2, 4),
+///         (4, 5),
+///     ])
+///
+///     class PathFinder(DijkstraVisitor):
+///
+///         def __init__(self, start, goal):
+///             self.start = start
+///             self.goal = goal
+///             self.predecessors = {}
+///
+///         def get_path(self):
+///             n = self.goal
+///             rev_path = [n]
+///             while n != self.start:
+///                 n = self.predecessors[n]
+///                 rev_path.append(n)
+///             return list(reversed(rev_path))
+///
+///         def discover_vertex(self, vertex, cost):
+///             if vertex == self.goal:
+///                 raise StopSearch
+///
+///         def edge_relaxed(self, edge):
+///             self.predecessors[edge[1]] = edge[0]
+///
+///     start = 0
+///     vis = PathFinder(start=start, goal=5)
+///     rx.graph_dijkstra_search(graph, [start], weight_fn=None, visitor=vis)
+///     print('Path:', vis.get_path())
+///
 /// .. note::
 ///
 ///     Graph can **not** be mutated while traversing.
+///     Trying to do so raises an exception.
+///
+///
+/// .. note::
+///
+///    An exception is raised if the :class:`~rustworkx.visit.PruneSearch` is
+///    raised in the :class:`~rustworkx.visit.DijkstraVisitor.finish_vertex` event.
 ///
 /// :param PyGraph graph: The graph to be used.
-/// :param List[int] source: An optional list of node indices to use as the starting nodes
-///     for the dijkstra search. If this is not specified then a source
+/// :param source: An optional list of node indices to use as the starting nodes
+///     for the dijkstra search. If ``None`` or not specified then a source
 ///     will be chosen arbitrarily and repeated until all components of the
 ///     graph are searched.
+///     This can be a ``Sequence[int]`` or ``None``.
 /// :param weight_fn: An optional weight function for an edge. It will accept
 ///     a single argument, the edge's weight object and will return a float which
 ///     will be used to represent the weight/cost of the edge. If not specified,
