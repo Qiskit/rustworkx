@@ -591,7 +591,7 @@ def dfs_search(
 def dijkstra_search(
     graph: PyGraph | PyDiGraph,
     source: Sequence[int] | None,
-    weight_fn: Callable[[Any], float],
+    weight_fn: Callable[[Any], float] | None,
     visitor: _DijkstraVisitor,
 ) -> None: ...
 def bellman_ford_shortest_paths(
