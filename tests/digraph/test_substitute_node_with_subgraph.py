@@ -129,7 +129,7 @@ class TestSubstitute(unittest.TestCase):
         with self.assertRaises(IndexError):
             self.graph.substitute_node_with_subgraph(16, in_graph, lambda *args: None)
 
-    def test_bidrectional(self):
+    def test_bidirectional(self):
         graph = rustworkx.generators.directed_path_graph(5, bidirectional=True)
         in_graph = rustworkx.generators.directed_star_graph(5, bidirectional=True)
 

@@ -318,7 +318,7 @@ impl SimpleCycleIter {
 /// # Returns
 ///
 /// This function returns a `SimpleCycleIter` iterator which returns a `Vec` of `NodeIndex`.
-/// Note the `NodeIndex` type is not neccesarily the same as the input graph, as it's built
+/// Note the `NodeIndex` type is not necessarily the same as the input graph, as it's built
 /// using an internal `StableGraph` used by the algorithm. If your input `graph` uses a
 /// different node index type that differs from the default `NodeIndex<u32>`/`NodeIndex<DefaultIx>`
 /// you will want to convert these objects to your native `NodeIndex` type.
