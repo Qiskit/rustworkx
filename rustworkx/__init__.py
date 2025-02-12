@@ -1185,6 +1185,58 @@ def closeness_centrality(graph, wf_improved=True):
 
 
 @_rustworkx_dispatch
+def newman_weighted_closeness_centrality(graph, weight_fn, wf_improved=True, default_weight=0.0):
+    r"""Compute the weighted closeness centrality of each node in the graph.
+
+    The weighted closeness centrality is an extension of the standard closeness
+    centrality measure where edge weights represent connection strength rather
+    than distance. To properly compute shortest paths, weights are inverted
+    so that stronger connections correspond to shorter effective distances.
+    The algorithm follows the method described by Newman (2001) in analyzing
+    weighted graphs.[Newman]
+
+    The edges originally represent connection strength between nodes.
+    The idea is that if two nodes have a strong connection, the computed
+    distance between them should be small (shorter), and vice versa.
+    Note that this assume that the graph is modelling a measure of
+    connection strength (e.g. trust, collaboration, or similarity).
+    If the graph is not modelling a measure of connection strength,
+    the function `weight_fn` should invert the weights before calling this
+    function, if not it is considered as a logical error.
+
+    In the case of a graphs with more than one connected component there is
+    an alternative improved formula that calculates the closeness centrality
+    as "a ratio of the fraction of actors in the group who are reachable, to
+    the average distance".[WF]
+    You can enable this by setting `wf_improved` to `true`.
+
+    :param PyGraph graph: The input graph. Can either be a
+        :class:`~rustworkx.PyGraph` or :class:`~rustworkx.PyDiGraph`.
+    :param weight_fn: An optional input callable that will be passed the edge's
+       payload object and is expected to return a `float` weight for that edge.
+       If this is not specified ``default_weight`` will be used as the weight
+       for every edge in ``graph``
+    :param bool wf_improved: This is optional; the default is True. If True,
+      scale by the fraction of nodes reachable.
+    :param float default_weight: If ``weight_fn`` is not set the default weight
+        value to use for the weight of all edges
+
+    :returns: A dictionary mapping each node index to its closeness centrality.
+    :rtype: CentralityMapping
+
+    .. [Newman]: Newman, M. E. J. (2001). Scientific collaboration networks.
+        II. Shortest paths, weighted networks, and centrality.
+        Physical Review E, 64(1), 016132.
+
+    .. [WF]: Wasserman, S., & Faust, K. (1994). Social Network Analysis:
+        Methods and Applications (Structural Analysis in the Social Sciences).
+        Cambridge: Cambridge University Press.
+        <https://doi.org/10.1017/CBO9780511815478>
+    """
+    raise TypeError("Invalid input type %s for graph" % type(graph))
+
+
+@_rustworkx_dispatch
 def degree_centrality(graph):
     r"""Compute the degree centrality of each node in a graph object.
 

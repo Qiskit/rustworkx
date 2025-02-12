@@ -360,6 +360,142 @@ pub fn digraph_closeness_centrality(
     }
 }
 
+/// Compute the weighted closeness centrality of each node in the graph.
+///
+/// The weighted closeness centrality is an extension of the standard closeness
+/// centrality measure where edge weights represent connection strength rather
+/// than distance. To properly compute shortest paths, weights are inverted
+/// so that stronger connections correspond to shorter effective distances.
+/// The algorithm follows the method described by Newman (2001) in analyzing
+/// weighted graphs.[Newman]
+///
+/// The edges originally represent connection strength between nodes.
+/// The idea is that if two nodes have a strong connection, the computed
+/// distance between them should be small (shorter), and vice versa.
+/// Note that this assume that the graph is modelling a measure of
+/// connection strength (e.g. trust, collaboration, or similarity).
+/// If the graph is not modelling a measure of connection strength,
+/// the function `weight_fn` should invert the weights before calling this
+/// function, if not it is considered as a logical error.
+///
+/// In the case of a graphs with more than one connected component there is
+/// an alternative improved formula that calculates the closeness centrality
+/// as "a ratio of the fraction of actors in the group who are reachable, to
+/// the average distance".[WF]
+/// You can enable this by setting `wf_improved` to `true`.
+///
+/// :param PyGraph graph: The input graph. Can either be a
+///     :class:`~rustworkx.PyGraph` or :class:`~rustworkx.PyDiGraph`.
+/// :param weight_fn: An optional input callable that will be passed the edge's
+///    payload object and is expected to return a `float` weight for that edge.
+///    If this is not specified ``default_weight`` will be used as the weight
+///    for every edge in ``graph``
+/// :param bool wf_improved: This is optional; the default is True. If True,
+///   scale by the fraction of nodes reachable.
+/// :param float default_weight: If ``weight_fn`` is not set the default weight
+///     value to use for the weight of all edges
+///
+/// :returns: A dictionary mapping each node index to its closeness centrality.
+/// :rtype: CentralityMapping
+#[pyfunction(signature = (graph, weight_fn=None, wf_improved=true, default_weight = 1.0))]
+pub fn graph_newman_weighted_closeness_centrality(
+    py: Python,
+    graph: &graph::PyGraph,
+    weight_fn: Option<PyObject>,
+    wf_improved: bool,
+    default_weight: f64,
+) -> PyResult<CentralityMapping> {
+    let mut edge_weights = vec![default_weight; graph.graph.edge_bound()];
+    if weight_fn.is_some() {
+        let cost_fn = CostFn::try_from((weight_fn, default_weight))?;
+        for edge in graph.graph.edge_indices() {
+            edge_weights[edge.index()] =
+                cost_fn.call(py, graph.graph.edge_weight(edge).unwrap())?;
+        }
+    }
+
+    let closeness =
+        centrality::newman_weighted_closeness_centrality(&graph.graph, wf_improved, |e| {
+            edge_weights[e.id().index()]
+        });
+
+    Ok(CentralityMapping {
+        centralities: closeness
+            .into_iter()
+            .enumerate()
+            .filter_map(|(i, v)| v.map(|x| (i, x)))
+            .collect(),
+    })
+}
+
+/// Compute the weighted closeness centrality of each node in the graph.
+///
+/// The weighted closeness centrality is an extension of the standard closeness
+/// centrality measure where edge weights represent connection strength rather
+/// than distance. To properly compute shortest paths, weights are inverted
+/// so that stronger connections correspond to shorter effective distances.
+/// The algorithm follows the method described by Newman (2001) in analyzing
+/// weighted graphs.[Newman]
+///
+/// The edges originally represent connection strength between nodes.
+/// The idea is that if two nodes have a strong connection, the computed
+/// distance between them should be small (shorter), and vice versa.
+/// Note that this assume that the graph is modelling a measure of
+/// connection strength (e.g. trust, collaboration, or similarity).
+/// If the graph is not modelling a measure of connection strength,
+/// the function `weight_fn` should invert the weights before calling this
+/// function, if not it is considered as a logical error.
+///
+/// In the case of a graphs with more than one connected component there is
+/// an alternative improved formula that calculates the closeness centrality
+/// as "a ratio of the fraction of actors in the group who are reachable, to
+/// the average distance".[WF]
+/// You can enable this by setting `wf_improved` to `true`.
+///
+/// :param PyDiGraph graph: The input graph. Can either be a
+///     :class:`~rustworkx.PyGraph` or :class:`~rustworkx.PyDiGraph`.
+/// :param weight_fn: An optional input callable that will be passed the edge's
+///    payload object and is expected to return a `float` weight for that edge.
+///    If this is not specified ``default_weight`` will be used as the weight
+///    for every edge in ``graph``
+/// :param bool wf_improved: This is optional; the default is True. If True,
+///   scale by the fraction of nodes reachable.
+/// :param float default_weight: If ``weight_fn`` is not set the default weight
+///     value to use for the weight of all edges
+///
+/// :returns: A dictionary mapping each node index to its closeness centrality.
+/// :rtype: CentralityMapping
+#[pyfunction(signature = (graph, weight_fn=None, wf_improved=true, default_weight = 1.0))]
+pub fn digraph_newman_weighted_closeness_centrality(
+    py: Python,
+    graph: &digraph::PyDiGraph,
+    weight_fn: Option<PyObject>,
+    wf_improved: bool,
+    default_weight: f64,
+) -> PyResult<CentralityMapping> {
+    let mut edge_weights = vec![default_weight; graph.graph.edge_bound()];
+    if weight_fn.is_some() {
+        let cost_fn = CostFn::try_from((weight_fn, default_weight))?;
+        for edge in graph.graph.edge_indices() {
+            edge_weights[edge.index()] =
+                cost_fn.call(py, graph.graph.edge_weight(edge).unwrap())?;
+        }
+    }
+
+    let closeness =
+        centrality::newman_weighted_closeness_centrality(&graph.graph, wf_improved, |e| {
+            edge_weights[e.id().index()]
+        });
+
+    Ok(CentralityMapping {
+        centralities: closeness
+            .into_iter()
+            .enumerate()
+            .filter_map(|(i, v)| v.map(|x| (i, x)))
+            .collect(),
+    })
+}
+
 /// Compute the edge betweenness centrality of all edges in a :class:`~PyGraph`.
 ///
 /// Edge betweenness centrality of an edge :math:`e` is the sum of the

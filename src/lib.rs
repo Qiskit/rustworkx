@@ -530,6 +530,10 @@ fn rustworkx(py: Python<'_>, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(digraph_betweenness_centrality))?;
     m.add_wrapped(wrap_pyfunction!(graph_closeness_centrality))?;
     m.add_wrapped(wrap_pyfunction!(digraph_closeness_centrality))?;
+    m.add_wrapped(wrap_pyfunction!(graph_newman_weighted_closeness_centrality))?;
+    m.add_wrapped(wrap_pyfunction!(
+        digraph_newman_weighted_closeness_centrality
+    ))?;
     m.add_wrapped(wrap_pyfunction!(graph_edge_betweenness_centrality))?;
     m.add_wrapped(wrap_pyfunction!(digraph_edge_betweenness_centrality))?;
     m.add_wrapped(wrap_pyfunction!(graph_eigenvector_centrality))?;
