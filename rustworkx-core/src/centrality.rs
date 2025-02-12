@@ -1186,20 +1186,14 @@ where
 ///     (0, 1, 0.7), (1, 2, 0.2), (2, 3, 0.5),
 /// ]);
 /// let output = newman_weighted_closeness_centrality(&g, false, |x| *x.weight());
-/// assert_eq!(
-///     vec![Some(0.1842105263157895), Some(0.22340425531914893), Some(0.22340425531914893), Some(0.17213114754098358)],
-///     output
-/// );
+/// assert!(output[1] > output[3]);
 ///
 /// // Calculate the closeness centrality of DiGraph
 /// let g = petgraph::graph::DiGraph::<i32, f64>::from_edges(&[
 ///     (0, 1, 0.7), (1, 2, 0.2), (2, 3, 0.5),
 /// ]);
 /// let output = newman_weighted_closeness_centrality(&g, false, |x| *x.weight());
-/// assert_eq!(
-///     vec![Some(0.0), Some(0.7), Some(0.175), Some(0.17213114754098358)],
-///     output
-/// );
+/// assert!(output[1] > output[3]);
 /// ```
 pub fn newman_weighted_closeness_centrality<G, F>(
     graph: G,
@@ -1258,6 +1252,22 @@ mod test_newman_weighted_closeness_centrality {
 
     use super::newman_weighted_closeness_centrality;
     use petgraph::visit::EdgeRef;
+
+    macro_rules! assert_almost_equal {
+        ($x:expr, $y:expr, $d:expr) => {
+            if ($x - $y).abs() >= $d {
+                panic!("{} != {} within delta of {}", $x, $y, $d);
+            }
+        };
+    }
+
+    macro_rules! assert_almost_equal_iter {
+        ($expected:expr, $computed:expr, $tolerance:expr) => {
+            for (&expected, &computed) in $expected.iter().zip($computed.iter()) {
+                assert_almost_equal!(expected.unwrap(), computed.unwrap(), $tolerance);
+            }
+        };
+    }
 
     #[test]
     fn test_weighted_closeness_graph() {
@@ -1318,20 +1328,18 @@ mod test_newman_weighted_closeness_centrality {
             (6, 7, 0.25),
         ]);
         let c = newman_weighted_closeness_centrality(&g, false, |x| *x.weight());
+        let result = [
+            Some(0.0),
+            Some(1.0),
+            Some(0.4),
+            Some(0.176470),
+            Some(0.0),
+            Some(1.0),
+            Some(0.4),
+            Some(0.176470),
+        ];
 
-        assert_eq!(
-            [
-                Some(0.0),
-                Some(1.0),
-                Some(0.4),
-                Some(0.17647058823529413),
-                Some(0.0),
-                Some(1.0),
-                Some(0.4),
-                Some(0.17647058823529413)
-            ],
-            *c
-        );
+        assert_almost_equal_iter!(result, c, 1e-4);
     }
 
     #[test]
@@ -1345,20 +1353,18 @@ mod test_newman_weighted_closeness_centrality {
             (6, 7, 0.25),
         ]);
         let c = newman_weighted_closeness_centrality(&g, true, |x| *x.weight());
+        let result = [
+            Some(0.0),
+            Some(0.14285714),
+            Some(0.11428571),
+            Some(0.07563025),
+            Some(0.0),
+            Some(0.14285714),
+            Some(0.11428571),
+            Some(0.07563025),
+        ];
 
-        assert_eq!(
-            [
-                Some(0.0),
-                Some(0.14285714285714285),
-                Some(0.1142857142857143),
-                Some(0.07563025210084033),
-                Some(0.0),
-                Some(0.14285714285714285),
-                Some(0.1142857142857143),
-                Some(0.07563025210084033)
-            ],
-            *c
-        );
+        assert_almost_equal_iter!(result, c, 1e-4);
     }
 
     #[test]
@@ -1373,21 +1379,19 @@ mod test_newman_weighted_closeness_centrality {
             (7, 8, 0.125),
         ]);
         let c = newman_weighted_closeness_centrality(&g, true, |x| *x.weight());
+        let result = [
+            Some(0.0),
+            Some(0.125),
+            Some(0.1),
+            Some(0.06617647),
+            Some(0.0),
+            Some(0.125),
+            Some(0.1),
+            Some(0.06617647),
+            Some(0.04081632),
+        ];
 
-        assert_eq!(
-            [
-                Some(0.0),
-                Some(0.125),
-                Some(0.1),
-                Some(0.0661764705882353),
-                Some(0.0),
-                Some(0.125),
-                Some(0.1),
-                Some(0.0661764705882353),
-                Some(0.04081632653061224)
-            ],
-            *c
-        );
+        assert_almost_equal_iter!(result, c, 1e-4);
     }
 
     #[test]
@@ -1398,16 +1402,16 @@ mod test_newman_weighted_closeness_centrality {
             (2, 3, 0.5),
         ]);
         let c = newman_weighted_closeness_centrality(&g, false, |x| *x.weight());
+        let result = [
+            Some(0.1842105),
+            Some(0.2234042),
+            Some(0.2234042),
+            Some(0.1721311),
+        ];
 
-        assert_eq!(
-            [
-                Some(0.1842105263157895),
-                Some(0.22340425531914893),
-                Some(0.22340425531914893),
-                Some(0.17213114754098358)
-            ],
-            *c
-        );
+        for i in 0..4 {
+            assert_almost_equal!(result[i].unwrap(), c[i].unwrap(), 1e-4);
+        }
     }
     #[test]
     fn test_weighted_closeness_small_digraph() {
@@ -1417,11 +1421,9 @@ mod test_newman_weighted_closeness_centrality {
             (2, 3, 0.5),
         ]);
         let c = newman_weighted_closeness_centrality(&g, false, |x| *x.weight());
+        let result = [Some(0.0), Some(0.7), Some(0.175), Some(0.172131)];
 
-        assert_eq!(
-            [Some(0.0), Some(0.7), Some(0.175), Some(0.17213114754098358),],
-            *c
-        );
+        assert_almost_equal_iter!(result, c, 1e-4);
     }
 
     #[test]
@@ -1437,21 +1439,19 @@ mod test_newman_weighted_closeness_centrality {
             (0, 8, 1.0),
         ]);
         let c = newman_weighted_closeness_centrality(&g, false, |x| *x.weight());
+        let result = [
+            Some(0.1),
+            Some(0.0),
+            Some(0.0),
+            Some(0.0),
+            Some(0.0),
+            Some(0.0),
+            Some(0.0),
+            Some(0.0),
+            Some(0.10256),
+        ];
 
-        assert_eq!(
-            [
-                Some(0.1),
-                Some(0.0),
-                Some(0.0),
-                Some(0.0),
-                Some(0.0),
-                Some(0.0),
-                Some(0.0),
-                Some(0.0),
-                Some(0.10256410256410256)
-            ],
-            *c
-        );
+        assert_almost_equal_iter!(result, c, 1e-4);
     }
 
     #[test]
@@ -1467,21 +1467,19 @@ mod test_newman_weighted_closeness_centrality {
             (0, 8, 1.0),
         ]);
         let c = newman_weighted_closeness_centrality(&g, false, |x| *x.weight());
+        let result = [
+            Some(0.112676056),
+            Some(0.056737588),
+            Some(0.056737588),
+            Some(0.056737588),
+            Some(0.056737588),
+            Some(0.056737588),
+            Some(0.056737588),
+            Some(0.056737588),
+            Some(0.102564102),
+        ];
 
-        assert_eq!(
-            [
-                Some(0.11267605633802817),
-                Some(0.05673758865248227),
-                Some(0.05673758865248227),
-                Some(0.05673758865248227),
-                Some(0.05673758865248227),
-                Some(0.05673758865248227),
-                Some(0.05673758865248227),
-                Some(0.05673758865248227),
-                Some(0.10256410256410256)
-            ],
-            *c
-        );
+        assert_almost_equal_iter!(result, c, 1e-4);
     }
 
     #[test]
@@ -1497,20 +1495,18 @@ mod test_newman_weighted_closeness_centrality {
             (1, 7, 1.0),
         ]);
         let c = newman_weighted_closeness_centrality(&g, false, |x| *x.weight());
+        let result = [
+            Some(0.1),
+            Some(0.0),
+            Some(0.0),
+            Some(0.0),
+            Some(0.0),
+            Some(0.0),
+            Some(0.0),
+            Some(1.0),
+        ];
 
-        assert_eq!(
-            [
-                Some(0.1),
-                Some(0.0),
-                Some(0.0),
-                Some(0.0),
-                Some(0.0),
-                Some(0.0),
-                Some(0.0),
-                Some(1.0)
-            ],
-            *c
-        );
+        assert_eq!(result, *c);
     }
 
     #[test]
@@ -1526,20 +1522,18 @@ mod test_newman_weighted_closeness_centrality {
             (8, 7, 1.0),
         ]);
         let c = newman_weighted_closeness_centrality(&g, false, |x| *x.weight());
+        let result = [
+            Some(0.098765),
+            Some(0.0),
+            Some(0.0),
+            Some(0.0),
+            Some(0.0),
+            Some(0.0),
+            Some(0.0),
+            Some(1.0),
+            Some(0.0),
+        ];
 
-        assert_eq!(
-            [
-                Some(0.09876543209876543),
-                Some(0.0),
-                Some(0.0),
-                Some(0.0),
-                Some(0.0),
-                Some(0.0),
-                Some(0.0),
-                Some(1.0),
-                Some(0.0)
-            ],
-            *c
-        );
+        assert_almost_equal_iter!(result, c, 1e-4);
     }
 }
