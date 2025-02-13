@@ -526,6 +526,40 @@ class TestEdges(unittest.TestCase):
         res = graph.incident_edges(42)
         self.assertEqual([], res)
 
+    def test_in_edge_indices(self):
+        graph = rustworkx.PyGraph()
+        node_a = graph.add_node(0)
+        node_b = graph.add_node(1)
+        node_c = graph.add_node("c")
+        node_d = graph.add_node("d")
+        graph.add_edge(node_a, node_c, "edge a")
+        graph.add_edge(node_b, node_d, "edge_b")
+        graph.add_edge(node_c, node_d, "edge c")
+        res = graph.in_edge_indices(node_d)
+        self.assertEqual({1, 2}, set(res))
+
+    def test_in_edge_indices_invalid_node(self):
+        graph = rustworkx.PyGraph()
+        res = graph.in_edge_indices(0)
+        self.assertEqual([], res)
+
+    def test_out_edge_indices(self):
+        graph = rustworkx.PyGraph()
+        node_a = graph.add_node(0)
+        node_b = graph.add_node(1)
+        node_c = graph.add_node("c")
+        node_d = graph.add_node("d")
+        graph.add_edge(node_a, node_c, "edge a")
+        graph.add_edge(node_b, node_d, "edge_b")
+        graph.add_edge(node_c, node_d, "edge c")
+        res = graph.out_edge_indices(node_d)
+        self.assertEqual({1, 2}, set(res))
+
+    def test_out_edge_indices_invalid_node(self):
+        graph = rustworkx.PyGraph()
+        res = graph.out_edge_indices(0)
+        self.assertEqual([], res)
+
     def test_incident_edge_index_map(self):
         graph = rustworkx.PyGraph()
         node_a = graph.add_node(0)
