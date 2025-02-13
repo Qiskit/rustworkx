@@ -12,5 +12,6 @@ Centrality
    rustworkx.eigenvector_centrality
    rustworkx.katz_centrality
    rustworkx.closeness_centrality
+   rustworkx.newman_weighted_closeness_centrality
    rustworkx.in_degree_centrality
    rustworkx.out_degree_centrality
