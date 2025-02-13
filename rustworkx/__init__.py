@@ -1185,7 +1185,9 @@ def closeness_centrality(graph, wf_improved=True):
 
 
 @_rustworkx_dispatch
-def newman_weighted_closeness_centrality(graph, weight_fn=None, wf_improved=True, default_weight=1.0):
+def newman_weighted_closeness_centrality(
+    graph, weight_fn=None, wf_improved=True, default_weight=1.0
+):
     r"""Compute the weighted closeness centrality of each node in the graph.
 
     The weighted closeness centrality is an extension of the standard closeness

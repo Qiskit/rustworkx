@@ -1,0 +1,19 @@
+---
+features:
+  - |
+    Added a new function, :func:`~.newman_weighted_closeness_centrality` to compute the
+    closeness centrality of all nodes in a weighted :class:`~.PyGraph` or
+    :class:`~.PyDiGraph` object.
+
+    The weighted closeness centrality is an extension of the standard closeness
+    centrality measure where edge weights represent connection strength rather
+    than distance. To properly compute shortest paths, weights are inverted
+    so that stronger connections correspond to shorter effective distances.
+    The algorithm follows the method described by Newman (2001) in analyzing
+    weighted graphs.
+
+    The edges originally represent connection strength between nodes.
+    The idea is that if two nodes have a strong connection, the computed
+    distance between them should be small (shorter), and vice versa.
+    Note that this assume that the graph is modelling a measure of
+    connection strength (e.g. trust, collaboration, or similarity).
