@@ -552,6 +552,52 @@ impl PyGraph {
         }
     }
 
+    /// Return the list of edge indices incident to a provided node.
+    ///
+    /// This method returns the indices of all edges connected to the provided
+    /// ``node``. In undirected graphs, all edges connected to the node are
+    /// returned as there is no distinction between incoming and outgoing edges.
+    ///
+    /// :param int node: The node index to get incident edges from. If
+    ///     this node index is not present in the graph this method will
+    ///     return an empty list and not error.
+    ///
+    /// :returns: A list of the edge indices incident to the node
+    /// :rtype: EdgeIndices
+    #[pyo3(text_signature = "(self, node, /)")]
+    pub fn in_edge_indices(&self, node: usize) -> EdgeIndices {
+        EdgeIndices {
+            edges: self
+                .graph
+                .edges(NodeIndex::new(node))
+                .map(|e| e.id().index())
+                .collect(),
+        }
+    }
+
+    /// Return the list of edge indices incident to a provided node.
+    ///
+    /// This method returns the indices of all edges connected to the provided
+    /// ``node``. In undirected graphs, all edges connected to the node are
+    /// returned as there is no distinction between incoming and outgoing edges.
+    ///
+    /// :param int node: The node index to get incident edges from. If
+    ///     this node index is not present in the graph this method will
+    ///     return an empty list and not error.
+    ///
+    /// :returns: A list of the edge indices incident to the node
+    /// :rtype: EdgeIndices
+    #[pyo3(text_signature = "(self, node, /)")]
+    pub fn out_edge_indices(&self, node: usize) -> EdgeIndices {
+        EdgeIndices {
+            edges: self
+                .graph
+                .edges(NodeIndex::new(node))
+                .map(|e| e.id().index())
+                .collect(),
+        }
+    }
+
     /// Return the index map of edges incident to a provided node
     ///
     /// :param int node: The node index to get incident edges from. If

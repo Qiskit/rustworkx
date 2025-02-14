@@ -1,0 +1,7 @@
+features:
+  - |
+    Added two new functions, :func:`~rustworkx.in_edge_indices` and
+    :func:`~rustworkx.out_edge_indices`, to the ``rustworkx.PyDiGraph`` class. These functions return the indices of all incoming and outgoing edges for a given node in a directed graph, respectively.
+  - |
+    Added two new functions, :func:`~rustworkx.in_edge_indices` and
+    :func:`~rustworkx.out_edge_indices`, to the ``rustworkx.PyGraph`` class. As ``PyGraph`` is an undirected graph, both functions return the indices of all edges connected to the given node. This maintains API consistency with the directed graph implementation.
