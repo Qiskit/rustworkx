@@ -1409,9 +1409,7 @@ mod test_newman_weighted_closeness_centrality {
             Some(0.1721311),
         ];
 
-        for i in 0..4 {
-            assert_almost_equal!(result[i].unwrap(), c[i].unwrap(), 1e-4);
-        }
+        assert_almost_equal_iter!(result, c, 1e-4);
     }
     #[test]
     fn test_weighted_closeness_small_digraph() {
