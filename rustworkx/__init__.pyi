@@ -55,6 +55,12 @@ from .rustworkx import digraph_edge_betweenness_centrality as digraph_edge_betwe
 from .rustworkx import graph_edge_betweenness_centrality as graph_edge_betweenness_centrality
 from .rustworkx import digraph_closeness_centrality as digraph_closeness_centrality
 from .rustworkx import graph_closeness_centrality as graph_closeness_centrality
+from .rustworkx import (
+    digraph_newman_weighted_closeness_centrality as digraph_newman_weighted_closeness_centrality,
+)
+from .rustworkx import (
+    graph_newman_weighted_closeness_centrality as graph_newman_weighted_closeness_centrality,
+)
 from .rustworkx import digraph_katz_centrality as digraph_katz_centrality
 from .rustworkx import graph_katz_centrality as graph_katz_centrality
 from .rustworkx import digraph_degree_centrality as digraph_degree_centrality
@@ -436,7 +442,7 @@ def is_subgraph_isomorphic(
 def transitivity(graph: PyGraph[_S, _T] | PyDiGraph[_S, _T]) -> float: ...
 def core_number(graph: PyGraph[_S, _T] | PyDiGraph[_S, _T]) -> int: ...
 def complement(
-    graph: PyGraph[_S, _T] | PyDiGraph[_S, _T]
+    graph: PyGraph[_S, _T] | PyDiGraph[_S, _T],
 ) -> PyGraph[_S, _T | None] | PyDiGraph[_S, _T | None]: ...
 def random_layout(
     graph: PyGraph[_S, _T] | PyDiGraph[_S, _T],
@@ -497,6 +503,12 @@ def betweenness_centrality(
 ) -> CentralityMapping: ...
 def closeness_centrality(
     graph: PyGraph[_S, _T] | PyDiGraph[_S, _T], wf_improved: bool = ...
+) -> CentralityMapping: ...
+def newman_weighted_closeness_centrality(
+    graph: PyGraph[_S, _T],
+    weight_fn: Callable[[_T], float] | None = ...,
+    wf_improved: bool = ...,
+    default_weight: float = ...,
 ) -> CentralityMapping: ...
 def degree_centrality(
     graph: PyGraph[_S, _T] | PyDiGraph[_S, _T],

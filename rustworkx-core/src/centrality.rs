@@ -17,20 +17,9 @@ use std::sync::RwLock;
 use hashbrown::HashMap;
 use petgraph::algo::dijkstra;
 use petgraph::visit::{
-    EdgeCount,
-    EdgeIndexable,
-    EdgeRef,
-    GraphBase,
-    GraphProp, // allows is_directed
-    IntoEdges,
-    IntoEdgesDirected,
-    IntoNeighbors,
-    IntoNeighborsDirected,
-    IntoNodeIdentifiers,
-    NodeCount,
-    NodeIndexable,
-    Reversed,
-    Visitable,
+    EdgeCount, EdgeIndexable, EdgeRef, GraphBase, GraphProp, IntoEdgeReferences, IntoEdges,
+    IntoEdgesDirected, IntoNeighbors, IntoNeighborsDirected, IntoNodeIdentifiers, NodeCount,
+    NodeIndexable, Reversed, ReversedEdgeReference, Visitable,
 };
 use rayon_cond::CondIterator;
 
@@ -1142,4 +1131,407 @@ where
         }
     }
     closeness
+}
+
+/// Compute the weighted closeness centrality of each node in the graph.
+///
+/// The weighted closeness centrality is an extension of the standard closeness
+/// centrality measure where edge weights represent connection strength rather
+/// than distance. To properly compute shortest paths, weights are inverted
+/// so that stronger connections correspond to shorter effective distances.
+/// The algorithm follows the method described by Newman (2001) in analyzing
+/// weighted graphs.[^Newman]
+///
+/// The edges originally represent connection strength between nodes.
+/// The idea is that if two nodes have a strong connection, the computed
+/// distance between them should be small (shorter), and vice versa.
+/// Note that this assume that the graph is modelling a measure of
+/// connection strength (e.g. trust, collaboration, or similarity).
+/// If the graph is not modelling a measure of connection strength,
+/// the function `weight_fn` should invert the weights before calling this
+/// function, if not it is considered as a logical error.
+///
+/// In the case of a graphs with more than one connected component there is
+/// an alternative improved formula that calculates the closeness centrality
+/// as "a ratio of the fraction of actors in the group who are reachable, to
+/// the average distance".[^WF]
+/// You can enable this by setting `wf_improved` to `true`.
+///
+/// [^Newman]: Newman, M. E. J. (2001). Scientific collaboration networks.
+///     II. Shortest paths, weighted networks, and centrality.
+///     Physical Review E, 64(1), 016132.
+///
+/// [^WF]: Wasserman, S., & Faust, K. (1994). Social Network Analysis:
+///     Methods and Applications (Structural Analysis in the Social Sciences).
+///     Cambridge: Cambridge University Press.
+///     <https://doi.org/10.1017/CBO9780511815478>
+///
+/// # Arguments
+/// * `graph` - The graph object to run the algorithm on
+/// * `wf_improved` - If `true`, scale by the fraction of nodes reachable.
+/// * `weight_fn` - An input callable that will be passed the
+///     `ReversedEdgeReference<<G as IntoEdgeReferences>::EdgeRef>` for
+///     an edge in the graph and is expected to return a `f64` of
+///     the weight of that edge.
+///
+/// # Example
+///
+/// ```rust
+/// use rustworkx_core::petgraph;
+/// use rustworkx_core::centrality::newman_weighted_closeness_centrality;
+/// use crate::rustworkx_core::petgraph::visit::EdgeRef;
+///
+/// // Calculate the closeness centrality of Graph
+/// let g = petgraph::graph::UnGraph::<i32, f64>::from_edges(&[
+///     (0, 1, 0.7), (1, 2, 0.2), (2, 3, 0.5),
+/// ]);
+/// let output = newman_weighted_closeness_centrality(&g, false, |x| *x.weight());
+/// assert!(output[1] > output[3]);
+///
+/// // Calculate the closeness centrality of DiGraph
+/// let g = petgraph::graph::DiGraph::<i32, f64>::from_edges(&[
+///     (0, 1, 0.7), (1, 2, 0.2), (2, 3, 0.5),
+/// ]);
+/// let output = newman_weighted_closeness_centrality(&g, false, |x| *x.weight());
+/// assert!(output[1] > output[3]);
+/// ```
+pub fn newman_weighted_closeness_centrality<G, F>(
+    graph: G,
+    wf_improved: bool,
+    weight_fn: F,
+) -> Vec<Option<f64>>
+where
+    G: NodeIndexable
+        + IntoNodeIdentifiers
+        + GraphBase
+        + IntoEdges
+        + Visitable
+        + NodeCount
+        + IntoEdgesDirected,
+    G::NodeId: std::hash::Hash + Eq,
+    F: Fn(ReversedEdgeReference<<G as IntoEdgeReferences>::EdgeRef>) -> f64,
+{
+    // The edges originally represent `connection strength` between nodes.
+    // As shown in the paper, the weight of the edges should be inverted to
+    // ensure that stronger ties correspond to shorter effective distances.
+    // The idea is that if two nodes have a strong connection, the computed
+    // distance between them should be small (shorter), and vice versa.
+    //
+    // Note that this assume that the graph is modelling a measure of
+    // connection strength (e.g. trust, collaboration, or similarity).
+    // If the graph is not modelling a measure of connection strength,
+    // the user should invert the weights before calling this function,
+    // if not it is considered as a logical error.
+    let inverted_weight_fn =
+        |x: ReversedEdgeReference<<G as IntoEdgeReferences>::EdgeRef>| 1.0 / weight_fn(x);
+
+    let max_index = graph.node_bound();
+    let mut closeness: Vec<Option<f64>> = vec![None; max_index];
+    for node_s in graph.node_identifiers() {
+        let is = graph.to_index(node_s);
+        let map = dijkstra(Reversed(&graph), node_s, None, &inverted_weight_fn);
+        let reachable_nodes_count = map.len();
+        let dists_sum: f64 = map.into_values().sum();
+        if reachable_nodes_count == 1 {
+            closeness[is] = Some(0.0);
+            continue;
+        }
+        closeness[is] = Some((reachable_nodes_count - 1) as f64 / dists_sum as f64);
+        if wf_improved {
+            let node_count = graph.node_count();
+            closeness[is] = closeness[is]
+                .map(|c| c * (reachable_nodes_count - 1) as f64 / (node_count - 1) as f64);
+        }
+    }
+    closeness
+}
+
+#[cfg(test)]
+mod test_newman_weighted_closeness_centrality {
+    use crate::centrality::closeness_centrality;
+
+    use super::newman_weighted_closeness_centrality;
+    use petgraph::visit::EdgeRef;
+
+    macro_rules! assert_almost_equal {
+        ($x:expr, $y:expr, $d:expr) => {
+            if ($x - $y).abs() >= $d {
+                panic!("{} != {} within delta of {}", $x, $y, $d);
+            }
+        };
+    }
+
+    macro_rules! assert_almost_equal_iter {
+        ($expected:expr, $computed:expr, $tolerance:expr) => {
+            for (&expected, &computed) in $expected.iter().zip($computed.iter()) {
+                assert_almost_equal!(expected.unwrap(), computed.unwrap(), $tolerance);
+            }
+        };
+    }
+
+    #[test]
+    fn test_weighted_closeness_graph() {
+        let g = petgraph::graph::UnGraph::<u32, f64>::from_edges([
+            (0, 1, 1.0),
+            (1, 2, 1.0),
+            (2, 3, 1.0),
+            (3, 4, 1.0),
+            (4, 5, 1.0),
+            (5, 6, 1.0),
+        ]);
+        let classic_closeness = closeness_centrality(&g, false);
+        let weighted_closeness = newman_weighted_closeness_centrality(&g, false, |x| *x.weight());
+
+        assert_eq!(classic_closeness, weighted_closeness);
+    }
+
+    #[test]
+    fn test_the_same_as_closeness_centrality_when_weights_are_1_not_improved_digraph() {
+        let g = petgraph::graph::DiGraph::<u32, f64>::from_edges([
+            (0, 1, 1.0),
+            (1, 2, 1.0),
+            (2, 3, 1.0),
+            (3, 4, 1.0),
+            (4, 5, 1.0),
+            (5, 6, 1.0),
+        ]);
+        let classic_closeness = closeness_centrality(&g, false);
+        let weighted_closeness = newman_weighted_closeness_centrality(&g, false, |x| *x.weight());
+
+        assert_eq!(classic_closeness, weighted_closeness);
+    }
+
+    #[test]
+    fn test_the_same_as_closeness_centrality_when_weights_are_1_improved_digraph() {
+        let g = petgraph::graph::DiGraph::<u32, f64>::from_edges([
+            (0, 1, 1.0),
+            (1, 2, 1.0),
+            (2, 3, 1.0),
+            (3, 4, 1.0),
+            (4, 5, 1.0),
+            (5, 6, 1.0),
+        ]);
+        let classic_closeness = closeness_centrality(&g, true);
+        let weighted_closeness = newman_weighted_closeness_centrality(&g, true, |x| *x.weight());
+
+        assert_eq!(classic_closeness, weighted_closeness);
+    }
+
+    #[test]
+    fn test_weighted_closeness_two_connected_components_not_improved_digraph() {
+        let g = petgraph::graph::DiGraph::<u32, f64>::from_edges([
+            (0, 1, 1.0),
+            (1, 2, 0.5),
+            (2, 3, 0.25),
+            (4, 5, 1.0),
+            (5, 6, 0.5),
+            (6, 7, 0.25),
+        ]);
+        let c = newman_weighted_closeness_centrality(&g, false, |x| *x.weight());
+        let result = [
+            Some(0.0),
+            Some(1.0),
+            Some(0.4),
+            Some(0.176470),
+            Some(0.0),
+            Some(1.0),
+            Some(0.4),
+            Some(0.176470),
+        ];
+
+        assert_almost_equal_iter!(result, c, 1e-4);
+    }
+
+    #[test]
+    fn test_weighted_closeness_two_connected_components_improved_digraph() {
+        let g = petgraph::graph::DiGraph::<u32, f64>::from_edges([
+            (0, 1, 1.0),
+            (1, 2, 0.5),
+            (2, 3, 0.25),
+            (4, 5, 1.0),
+            (5, 6, 0.5),
+            (6, 7, 0.25),
+        ]);
+        let c = newman_weighted_closeness_centrality(&g, true, |x| *x.weight());
+        let result = [
+            Some(0.0),
+            Some(0.14285714),
+            Some(0.11428571),
+            Some(0.07563025),
+            Some(0.0),
+            Some(0.14285714),
+            Some(0.11428571),
+            Some(0.07563025),
+        ];
+
+        assert_almost_equal_iter!(result, c, 1e-4);
+    }
+
+    #[test]
+    fn test_weighted_closeness_two_connected_components_improved_different_cardinality_digraph() {
+        let g = petgraph::graph::DiGraph::<u32, f64>::from_edges([
+            (0, 1, 1.0),
+            (1, 2, 0.5),
+            (2, 3, 0.25),
+            (4, 5, 1.0),
+            (5, 6, 0.5),
+            (6, 7, 0.25),
+            (7, 8, 0.125),
+        ]);
+        let c = newman_weighted_closeness_centrality(&g, true, |x| *x.weight());
+        let result = [
+            Some(0.0),
+            Some(0.125),
+            Some(0.1),
+            Some(0.06617647),
+            Some(0.0),
+            Some(0.125),
+            Some(0.1),
+            Some(0.06617647),
+            Some(0.04081632),
+        ];
+
+        assert_almost_equal_iter!(result, c, 1e-4);
+    }
+
+    #[test]
+    fn test_weighted_closeness_small_ungraph() {
+        let g = petgraph::graph::UnGraph::<u32, f64>::from_edges([
+            (0, 1, 0.7),
+            (1, 2, 0.2),
+            (2, 3, 0.5),
+        ]);
+        let c = newman_weighted_closeness_centrality(&g, false, |x| *x.weight());
+        let result = [
+            Some(0.1842105),
+            Some(0.2234042),
+            Some(0.2234042),
+            Some(0.1721311),
+        ];
+
+        assert_almost_equal_iter!(result, c, 1e-4);
+    }
+    #[test]
+    fn test_weighted_closeness_small_digraph() {
+        let g = petgraph::graph::DiGraph::<u32, f64>::from_edges([
+            (0, 1, 0.7),
+            (1, 2, 0.2),
+            (2, 3, 0.5),
+        ]);
+        let c = newman_weighted_closeness_centrality(&g, false, |x| *x.weight());
+        let result = [Some(0.0), Some(0.7), Some(0.175), Some(0.172131)];
+
+        assert_almost_equal_iter!(result, c, 1e-4);
+    }
+
+    #[test]
+    fn test_weighted_closeness_many_to_one_connected_digraph() {
+        let g = petgraph::graph::DiGraph::<u32, f64>::from_edges([
+            (1, 0, 0.1),
+            (2, 0, 0.1),
+            (3, 0, 0.1),
+            (4, 0, 0.1),
+            (5, 0, 0.1),
+            (6, 0, 0.1),
+            (7, 0, 0.1),
+            (0, 8, 1.0),
+        ]);
+        let c = newman_weighted_closeness_centrality(&g, false, |x| *x.weight());
+        let result = [
+            Some(0.1),
+            Some(0.0),
+            Some(0.0),
+            Some(0.0),
+            Some(0.0),
+            Some(0.0),
+            Some(0.0),
+            Some(0.0),
+            Some(0.10256),
+        ];
+
+        assert_almost_equal_iter!(result, c, 1e-4);
+    }
+
+    #[test]
+    fn test_weighted_closeness_many_to_one_connected_ungraph() {
+        let g = petgraph::graph::UnGraph::<u32, f64>::from_edges([
+            (1, 0, 0.1),
+            (2, 0, 0.1),
+            (3, 0, 0.1),
+            (4, 0, 0.1),
+            (5, 0, 0.1),
+            (6, 0, 0.1),
+            (7, 0, 0.1),
+            (0, 8, 1.0),
+        ]);
+        let c = newman_weighted_closeness_centrality(&g, false, |x| *x.weight());
+        let result = [
+            Some(0.112676056),
+            Some(0.056737588),
+            Some(0.056737588),
+            Some(0.056737588),
+            Some(0.056737588),
+            Some(0.056737588),
+            Some(0.056737588),
+            Some(0.056737588),
+            Some(0.102564102),
+        ];
+
+        assert_almost_equal_iter!(result, c, 1e-4);
+    }
+
+    #[test]
+    fn test_weighted_closeness_many_to_one_not_connected_2_digraph() {
+        let g = petgraph::graph::DiGraph::<u32, f64>::from_edges([
+            (1, 0, 0.1),
+            (2, 0, 0.1),
+            (3, 0, 0.1),
+            (4, 0, 0.1),
+            (5, 0, 0.1),
+            (6, 0, 0.1),
+            (7, 0, 0.1),
+            (1, 7, 1.0),
+        ]);
+        let c = newman_weighted_closeness_centrality(&g, false, |x| *x.weight());
+        let result = [
+            Some(0.1),
+            Some(0.0),
+            Some(0.0),
+            Some(0.0),
+            Some(0.0),
+            Some(0.0),
+            Some(0.0),
+            Some(1.0),
+        ];
+
+        assert_eq!(result, *c);
+    }
+
+    #[test]
+    fn test_weighted_closeness_many_to_one_not_connected_1_digraph() {
+        let g = petgraph::graph::DiGraph::<u32, f64>::from_edges([
+            (1, 0, 0.1),
+            (2, 0, 0.1),
+            (3, 0, 0.1),
+            (4, 0, 0.1),
+            (5, 0, 0.1),
+            (6, 0, 0.1),
+            (7, 0, 0.1),
+            (8, 7, 1.0),
+        ]);
+        let c = newman_weighted_closeness_centrality(&g, false, |x| *x.weight());
+        let result = [
+            Some(0.098765),
+            Some(0.0),
+            Some(0.0),
+            Some(0.0),
+            Some(0.0),
+            Some(0.0),
+            Some(0.0),
+            Some(1.0),
+            Some(0.0),
+        ];
+
+        assert_almost_equal_iter!(result, c, 1e-4);
+    }
 }

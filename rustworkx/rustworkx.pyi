@@ -133,6 +133,18 @@ def graph_closeness_centrality(
     graph: PyGraph[_S, _T],
     wf_improved: bool = ...,
 ) -> CentralityMapping: ...
+def digraph_newman_weighted_closeness_centrality(
+    graph: PyDiGraph[_S, _T],
+    weight_fn: Callable[[_T], float] | None = ...,
+    wf_improved: bool = ...,
+    default_weight: float = ...,
+) -> CentralityMapping: ...
+def graph_newman_weighted_closeness_centrality(
+    graph: PyGraph[_S, _T],
+    weight_fn: Callable[[_T], float] | None = ...,
+    wf_improved: bool = ...,
+    default_weight: float = ...,
+) -> CentralityMapping: ...
 def digraph_degree_centrality(
     graph: PyDiGraph[_S, _T],
     /,
