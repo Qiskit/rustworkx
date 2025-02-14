@@ -1,0 +1,6 @@
+﻿rustworkx.NullGraph
+===================
+
+.. currentmodule:: rustworkx
+
+.. autoexception:: NullGraph

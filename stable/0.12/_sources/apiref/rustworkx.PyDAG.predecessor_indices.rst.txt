@@ -1,0 +1,6 @@
+rustworkx.PyDAG.predecessor\_indices
+====================================
+
+.. currentmodule:: rustworkx
+
+.. automethod:: PyDAG.predecessor_indices

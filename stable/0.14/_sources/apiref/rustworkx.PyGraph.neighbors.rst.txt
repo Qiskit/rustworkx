@@ -1,0 +1,6 @@
+rustworkx.PyGraph.neighbors
+===========================
+
+.. currentmodule:: rustworkx
+
+.. automethod:: PyGraph.neighbors
