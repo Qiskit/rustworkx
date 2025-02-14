@@ -59,3 +59,4 @@ the functions from the explicitly typed based on the data type.
    rustworkx.digraph_dijkstra_search
    rustworkx.digraph_node_link_json
    rustworkx.digraph_longest_simple_path
+   rustworkx.graph_descendants_at_distance
