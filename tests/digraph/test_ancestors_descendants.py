@@ -38,7 +38,7 @@ class TestAncestors(unittest.TestCase):
         dag.add_child(node_b, "c", {"b": 1})
         res = rustworkx.ancestors(dag, node_b)
         self.assertEqual({node_a}, res)
-    
+
     def test_invalid_source(self):
         graph = rustworkx.generators.directed_path_graph(5)
         with self.assertRaises(IndexError):
@@ -67,7 +67,7 @@ class TestDescendants(unittest.TestCase):
         node_c = dag.add_child(node_b, "c", {"b": 1})
         res = rustworkx.descendants(dag, node_b)
         self.assertEqual({node_c}, res)
-    
+
     def test_invalid_source(self):
         graph = rustworkx.generators.directed_path_graph(5)
         with self.assertRaises(IndexError):
