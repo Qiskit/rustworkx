@@ -160,7 +160,7 @@ class TestBfsSearch(unittest.TestCase):
 
         vis = PruneGrayTargetEdge()
         rustworkx.digraph_bfs_search(self.graph, [0], vis)
-    
+
     def test_invalid_source(self):
         graph = rustworkx.PyDiGraph()
         with self.assertRaises(IndexError):
