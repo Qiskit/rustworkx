@@ -187,3 +187,8 @@ class TestDijkstraSearch(unittest.TestCase):
 
         vis = PruneEdgeNotRelaxed()
         rustworkx.digraph_dijkstra_search(self.graph, [0], float, vis)
+
+    def test_invalid_source(self):
+        graph = rustworkx.PyDiGraph()
+        with self.assertRaises(IndexError):
+            rustworkx.dijkstra_search(graph, [1], float, rustworkx.visit.DijkstraVisitor())

@@ -104,3 +104,8 @@ class TestDfsSearch(unittest.TestCase):
         except rustworkx.visit.StopSearch:
             pass
         self.assertEqual(vis.reconstruct_path(), [0, 2, 5, 3])
+    
+    def test_invalid_source(self):
+        graph = rustworkx.PyDiGraph()
+        with self.assertRaises(IndexError):
+            rustworkx.dfs_search(graph, [1], rustworkx.visit.DFSVisitor())
