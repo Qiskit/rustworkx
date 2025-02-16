@@ -1,0 +1,5 @@
+fixes:
+  - |
+    Fixed a panic when passing an invalid source node to
+    :func:`~rustworkx.ancenstors` and :func:`~rustworkx.descendants`. See
+    `#1381 <https://github.com/Qiskit/rustworkx/issues/1381>`__ for more information.
