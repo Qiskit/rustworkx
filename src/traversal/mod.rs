@@ -42,7 +42,7 @@ use crate::StablePyGraph;
 
 fn validate_source_nodes<Ty: EdgeType>(
     graph: &StablePyGraph<Ty>,
-    starts: &Vec<NodeIndex>,
+    starts: &[NodeIndex],
 ) -> PyResult<()> {
     for index in starts.iter() {
         if !graph.contains_node(*index) {
