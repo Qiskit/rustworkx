@@ -12,7 +12,7 @@
 
 use std::collections::VecDeque;
 use std::hash::Hash;
-use std::sync::RwLock;
+use std::sync::{Mutex, RwLock};
 
 use hashbrown::HashMap;
 use petgraph::algo::dijkstra;
@@ -1109,28 +1109,32 @@ where
         + IntoEdges
         + Visitable
         + NodeCount
-        + IntoEdgesDirected,
-    G::NodeId: std::hash::Hash + Eq,
+        + IntoEdgesDirected
+        + std::marker::Sync,
+    G::NodeId: Eq + Hash + Send,
+    G::EdgeId: Eq + Hash + Send,
 {
     let max_index = graph.node_bound();
-    let mut closeness: Vec<Option<f64>> = vec![None; max_index];
-    for node_s in graph.node_identifiers() {
+    let node_indices: Vec<G::NodeId> = graph.node_identifiers().collect();
+    let closeness: Mutex<Vec<Option<f64>>> = Mutex::new(vec![None; max_index]);
+    CondIterator::new(node_indices, graph.node_count() >= 1).for_each(|node_s| {
         let is = graph.to_index(node_s);
         let map = dijkstra(Reversed(&graph), node_s, None, |_| 1);
         let reachable_nodes_count = map.len();
         let dists_sum: usize = map.into_values().sum();
         if reachable_nodes_count == 1 {
-            closeness[is] = Some(0.0);
-            continue;
+            closeness.lock().unwrap()[is] = Some(0.0);
+            return;
         }
-        closeness[is] = Some((reachable_nodes_count - 1) as f64 / dists_sum as f64);
+        let mut centrality_s = Some((reachable_nodes_count - 1) as f64 / dists_sum as f64);
         if wf_improved {
             let node_count = graph.node_count();
-            closeness[is] = closeness[is]
+            centrality_s = centrality_s
                 .map(|c| c * (reachable_nodes_count - 1) as f64 / (node_count - 1) as f64);
         }
-    }
-    closeness
+        closeness.lock().unwrap()[is] = centrality_s;
+    });
+    closeness.into_inner().unwrap()
 }
 
 /// Compute the weighted closeness centrality of each node in the graph.
@@ -1207,9 +1211,11 @@ where
         + IntoEdges
         + Visitable
         + NodeCount
-        + IntoEdgesDirected,
-    G::NodeId: std::hash::Hash + Eq,
-    F: Fn(ReversedEdgeReference<<G as IntoEdgeReferences>::EdgeRef>) -> f64,
+        + IntoEdgesDirected
+        + std::marker::Sync,
+    G::NodeId: Eq + Hash + Send,
+    G::EdgeId: Eq + Hash + Send,
+    F: Fn(ReversedEdgeReference<<G as IntoEdgeReferences>::EdgeRef>) -> f64 + Sync,
 {
     // The edges originally represent `connection strength` between nodes.
     // As shown in the paper, the weight of the edges should be inverted to
@@ -1226,24 +1232,26 @@ where
         |x: ReversedEdgeReference<<G as IntoEdgeReferences>::EdgeRef>| 1.0 / weight_fn(x);
 
     let max_index = graph.node_bound();
-    let mut closeness: Vec<Option<f64>> = vec![None; max_index];
-    for node_s in graph.node_identifiers() {
+    let node_indices: Vec<G::NodeId> = graph.node_identifiers().collect();
+    let closeness: Mutex<Vec<Option<f64>>> = Mutex::new(vec![None; max_index]);
+    CondIterator::new(node_indices, graph.node_count() >= 1).for_each(|node_s| {
         let is = graph.to_index(node_s);
         let map = dijkstra(Reversed(&graph), node_s, None, &inverted_weight_fn);
         let reachable_nodes_count = map.len();
         let dists_sum: f64 = map.into_values().sum();
         if reachable_nodes_count == 1 {
-            closeness[is] = Some(0.0);
-            continue;
+            closeness.lock().unwrap()[is] = Some(0.0);
+            return;
         }
-        closeness[is] = Some((reachable_nodes_count - 1) as f64 / dists_sum as f64);
+        let mut centrality_s = Some((reachable_nodes_count - 1) as f64 / dists_sum as f64);
         if wf_improved {
             let node_count = graph.node_count();
-            closeness[is] = closeness[is]
+            centrality_s = centrality_s
                 .map(|c| c * (reachable_nodes_count - 1) as f64 / (node_count - 1) as f64);
         }
-    }
-    closeness
+        closeness.lock().unwrap()[is] = centrality_s;
+    });
+    closeness.into_inner().unwrap()
 }
 
 #[cfg(test)]
