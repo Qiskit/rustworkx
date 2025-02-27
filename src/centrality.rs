@@ -407,6 +407,10 @@ pub fn digraph_closeness_centrality(
 ///   scale by the fraction of nodes reachable.
 /// :param float default_weight: If ``weight_fn`` is not set the default weight
 ///     value to use for the weight of all edges
+/// :param int parallel_threshold: The number of nodes to calculate the
+///     the betweenness centrality in parallel at if the number of nodes in
+///     the graph is less than this value it will run in a single thread. The
+///     default value is 50
 ///
 /// :returns: A dictionary mapping each node index to its closeness centrality.
 /// :rtype: CentralityMapping
@@ -478,6 +482,10 @@ pub fn graph_newman_weighted_closeness_centrality(
 ///   scale by the fraction of nodes reachable.
 /// :param float default_weight: If ``weight_fn`` is not set the default weight
 ///     value to use for the weight of all edges
+/// :param int parallel_threshold: The number of nodes to calculate the
+///     the betweenness centrality in parallel at if the number of nodes in
+///     the graph is less than this value it will run in a single thread. The
+///     default value is 50
 ///
 /// :returns: A dictionary mapping each node index to its closeness centrality.
 /// :rtype: CentralityMapping
