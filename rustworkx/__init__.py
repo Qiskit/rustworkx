@@ -1139,7 +1139,7 @@ def betweenness_centrality(graph, normalized=True, endpoints=False, parallel_thr
 
 
 @_rustworkx_dispatch
-def closeness_centrality(graph, wf_improved=True):
+def closeness_centrality(graph, wf_improved=True, parallel_threshold=50):
     r"""Compute the closeness centrality of each node in a graph object.
 
     The closeness centrality of a node :math:`u` is defined as the
@@ -1173,6 +1173,10 @@ def closeness_centrality(graph, wf_improved=True):
         :class:`~rustworkx.PyGraph` or :class:`~rustworkx.PyDiGraph`.
     :param bool wf_improved: This is optional; the default is True. If True,
         scale by the fraction of nodes reachable.
+    :param int parallel_threshold: The number of nodes to calculate the
+        the closeness centrality in parallel at if the number of nodes in
+        the graph is less than this value it will run in a single thread. The
+        default value is 50.
 
     :returns: A dictionary mapping each node index to its closeness centrality.
     :rtype: dict

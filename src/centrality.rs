@@ -294,12 +294,20 @@ pub fn out_degree_centrality(graph: &digraph::PyDiGraph) -> PyResult<CentralityM
 ///     :class:`~rustworkx.PyGraph` or :class:`~rustworkx.PyDiGraph`.
 /// :param bool wf_improved: This is optional; the default is True. If True,
 ///     scale by the fraction of nodes reachable.
+/// :param int parallel_threshold: The number of nodes to calculate the
+///     the betweenness centrality in parallel at if the number of nodes in
+///     the graph is less than this value it will run in a single thread. The
+///     default value is 50
 ///
 /// :returns: A dictionary mapping each node index to its closeness centrality.
 /// :rtype: CentralityMapping
-#[pyfunction(signature = (graph, wf_improved=true))]
-pub fn graph_closeness_centrality(graph: &graph::PyGraph, wf_improved: bool) -> CentralityMapping {
-    let closeness = centrality::closeness_centrality(&graph.graph, wf_improved);
+#[pyfunction(signature = (graph, wf_improved=true, parallel_threshold=50))]
+pub fn graph_closeness_centrality(
+    graph: &graph::PyGraph,
+    wf_improved: bool,
+    parallel_threshold: usize,
+) -> CentralityMapping {
+    let closeness = centrality::closeness_centrality(&graph.graph, wf_improved, parallel_threshold);
     CentralityMapping {
         centralities: closeness
             .into_iter()
@@ -342,15 +350,20 @@ pub fn graph_closeness_centrality(graph: &graph::PyGraph, wf_improved: bool) -> 
 ///     :class:`~rustworkx.PyGraph` or :class:`~rustworkx.PyDiGraph`.
 /// :param bool wf_improved: This is optional; the default is True. If True,
 ///     scale by the fraction of nodes reachable.
+/// :param int parallel_threshold: The number of nodes to calculate the
+///     the betweenness centrality in parallel at if the number of nodes in
+///     the graph is less than this value it will run in a single thread. The
+///     default value is 50
 ///
 /// :returns: A dictionary mapping each node index to its closeness centrality.
 /// :rtype: CentralityMapping
-#[pyfunction(signature = (graph, wf_improved=true))]
+#[pyfunction(signature = (graph, wf_improved=true, parallel_threshold=50))]
 pub fn digraph_closeness_centrality(
     graph: &digraph::PyDiGraph,
     wf_improved: bool,
+    parallel_threshold: usize,
 ) -> CentralityMapping {
-    let closeness = centrality::closeness_centrality(&graph.graph, wf_improved);
+    let closeness = centrality::closeness_centrality(&graph.graph, wf_improved, parallel_threshold);
     CentralityMapping {
         centralities: closeness
             .into_iter()
