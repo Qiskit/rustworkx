@@ -1190,7 +1190,7 @@ def closeness_centrality(graph, wf_improved=True, parallel_threshold=50):
 
 @_rustworkx_dispatch
 def newman_weighted_closeness_centrality(
-    graph, weight_fn=None, wf_improved=True, default_weight=1.0
+    graph, weight_fn=None, wf_improved=True, default_weight=1.0, parallel_threshold=50
 ):
     r"""Compute the weighted closeness centrality of each node in the graph.
 
@@ -1226,6 +1226,10 @@ def newman_weighted_closeness_centrality(
       scale by the fraction of nodes reachable.
     :param float default_weight: If ``weight_fn`` is not set the default weight
         value to use for the weight of all edges
+    :param int parallel_threshold: The number of nodes to calculate the
+        the closeness centrality in parallel at if the number of nodes in
+        the graph is less than this value it will run in a single thread. The
+        default value is 50.
 
     :returns: A dictionary mapping each node index to its closeness centrality.
     :rtype: CentralityMapping

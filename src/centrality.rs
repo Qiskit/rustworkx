@@ -410,13 +410,14 @@ pub fn digraph_closeness_centrality(
 ///
 /// :returns: A dictionary mapping each node index to its closeness centrality.
 /// :rtype: CentralityMapping
-#[pyfunction(signature = (graph, weight_fn=None, wf_improved=true, default_weight = 1.0))]
+#[pyfunction(signature = (graph, weight_fn=None, wf_improved=true, default_weight = 1.0, parallel_threshold=50))]
 pub fn graph_newman_weighted_closeness_centrality(
     py: Python,
     graph: &graph::PyGraph,
     weight_fn: Option<PyObject>,
     wf_improved: bool,
     default_weight: f64,
+    parallel_threshold: usize,
 ) -> PyResult<CentralityMapping> {
     let mut edge_weights = vec![default_weight; graph.graph.edge_bound()];
     if weight_fn.is_some() {
@@ -427,10 +428,12 @@ pub fn graph_newman_weighted_closeness_centrality(
         }
     }
 
-    let closeness =
-        centrality::newman_weighted_closeness_centrality(&graph.graph, wf_improved, |e| {
-            edge_weights[e.id().index()]
-        });
+    let closeness = centrality::newman_weighted_closeness_centrality(
+        &graph.graph,
+        wf_improved,
+        |e| edge_weights[e.id().index()],
+        parallel_threshold,
+    );
 
     Ok(CentralityMapping {
         centralities: closeness
@@ -478,13 +481,14 @@ pub fn graph_newman_weighted_closeness_centrality(
 ///
 /// :returns: A dictionary mapping each node index to its closeness centrality.
 /// :rtype: CentralityMapping
-#[pyfunction(signature = (graph, weight_fn=None, wf_improved=true, default_weight = 1.0))]
+#[pyfunction(signature = (graph, weight_fn=None, wf_improved=true, default_weight = 1.0, parallel_threshold=50))]
 pub fn digraph_newman_weighted_closeness_centrality(
     py: Python,
     graph: &digraph::PyDiGraph,
     weight_fn: Option<PyObject>,
     wf_improved: bool,
     default_weight: f64,
+    parallel_threshold: usize,
 ) -> PyResult<CentralityMapping> {
     let mut edge_weights = vec![default_weight; graph.graph.edge_bound()];
     if weight_fn.is_some() {
@@ -495,10 +499,12 @@ pub fn digraph_newman_weighted_closeness_centrality(
         }
     }
 
-    let closeness =
-        centrality::newman_weighted_closeness_centrality(&graph.graph, wf_improved, |e| {
-            edge_weights[e.id().index()]
-        });
+    let closeness = centrality::newman_weighted_closeness_centrality(
+        &graph.graph,
+        wf_improved,
+        |e| edge_weights[e.id().index()],
+        parallel_threshold,
+    );
 
     Ok(CentralityMapping {
         centralities: closeness
