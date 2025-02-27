@@ -1085,7 +1085,7 @@ mod test_katz_centrality {
 /// let g = petgraph::graph::UnGraph::<i32, ()>::from_edges(&[
 ///     (0, 4), (1, 2), (2, 3), (3, 4), (1, 4)
 /// ]);
-/// let output = closeness_centrality(&g, true);
+/// let output = closeness_centrality(&g, true, 200);
 /// assert_eq!(
 ///     vec![Some(1./2.), Some(2./3.), Some(4./7.), Some(2./3.), Some(4./5.)],
 ///     output
@@ -1095,13 +1095,17 @@ mod test_katz_centrality {
 /// let dg = petgraph::graph::DiGraph::<i32, ()>::from_edges(&[
 ///     (0, 4), (1, 2), (2, 3), (3, 4), (1, 4)
 /// ]);
-/// let output = closeness_centrality(&dg, true);
+/// let output = closeness_centrality(&dg, true, 200);
 /// assert_eq!(
 ///     vec![Some(0.), Some(0.), Some(1./4.), Some(1./3.), Some(4./5.)],
 ///     output
 /// );
 /// ```
-pub fn closeness_centrality<G>(graph: G, wf_improved: bool) -> Vec<Option<f64>>
+pub fn closeness_centrality<G>(
+    graph: G,
+    wf_improved: bool,
+    parallel_threshold: usize,
+) -> Vec<Option<f64>>
 where
     G: NodeIndexable
         + IntoNodeIdentifiers
@@ -1117,7 +1121,7 @@ where
     let max_index = graph.node_bound();
     let node_indices: Vec<G::NodeId> = graph.node_identifiers().collect();
     let closeness: Mutex<Vec<Option<f64>>> = Mutex::new(vec![None; max_index]);
-    CondIterator::new(node_indices, graph.node_count() >= 1).for_each(|node_s| {
+    CondIterator::new(node_indices, graph.node_count() >= parallel_threshold).for_each(|node_s| {
         let is = graph.to_index(node_s);
         let map = dijkstra(Reversed(&graph), node_s, None, |_| 1);
         let reachable_nodes_count = map.len();
@@ -1279,50 +1283,65 @@ mod test_newman_weighted_closeness_centrality {
 
     #[test]
     fn test_weighted_closeness_graph() {
-        let g = petgraph::graph::UnGraph::<u32, f64>::from_edges([
-            (0, 1, 1.0),
-            (1, 2, 1.0),
-            (2, 3, 1.0),
-            (3, 4, 1.0),
-            (4, 5, 1.0),
-            (5, 6, 1.0),
-        ]);
-        let classic_closeness = closeness_centrality(&g, false);
-        let weighted_closeness = newman_weighted_closeness_centrality(&g, false, |x| *x.weight());
+        let test_case = |parallel_threshold: usize| {
+            let g = petgraph::graph::UnGraph::<u32, f64>::from_edges([
+                (0, 1, 1.0),
+                (1, 2, 1.0),
+                (2, 3, 1.0),
+                (3, 4, 1.0),
+                (4, 5, 1.0),
+                (5, 6, 1.0),
+            ]);
+            let classic_closeness = closeness_centrality(&g, false, parallel_threshold);
+            let weighted_closeness =
+                newman_weighted_closeness_centrality(&g, false, |x| *x.weight());
 
-        assert_eq!(classic_closeness, weighted_closeness);
+            assert_eq!(classic_closeness, weighted_closeness);
+        };
+        test_case(200); // sequential
+        test_case(1); // parallel
     }
 
     #[test]
     fn test_the_same_as_closeness_centrality_when_weights_are_1_not_improved_digraph() {
-        let g = petgraph::graph::DiGraph::<u32, f64>::from_edges([
-            (0, 1, 1.0),
-            (1, 2, 1.0),
-            (2, 3, 1.0),
-            (3, 4, 1.0),
-            (4, 5, 1.0),
-            (5, 6, 1.0),
-        ]);
-        let classic_closeness = closeness_centrality(&g, false);
-        let weighted_closeness = newman_weighted_closeness_centrality(&g, false, |x| *x.weight());
+        let test_case = |parallel_threshold: usize| {
+            let g = petgraph::graph::DiGraph::<u32, f64>::from_edges([
+                (0, 1, 1.0),
+                (1, 2, 1.0),
+                (2, 3, 1.0),
+                (3, 4, 1.0),
+                (4, 5, 1.0),
+                (5, 6, 1.0),
+            ]);
+            let classic_closeness = closeness_centrality(&g, false, parallel_threshold);
+            let weighted_closeness =
+                newman_weighted_closeness_centrality(&g, false, |x| *x.weight());
 
-        assert_eq!(classic_closeness, weighted_closeness);
+            assert_eq!(classic_closeness, weighted_closeness);
+        };
+        test_case(200); // sequential
+        test_case(1); // parallel
     }
 
     #[test]
     fn test_the_same_as_closeness_centrality_when_weights_are_1_improved_digraph() {
-        let g = petgraph::graph::DiGraph::<u32, f64>::from_edges([
-            (0, 1, 1.0),
-            (1, 2, 1.0),
-            (2, 3, 1.0),
-            (3, 4, 1.0),
-            (4, 5, 1.0),
-            (5, 6, 1.0),
-        ]);
-        let classic_closeness = closeness_centrality(&g, true);
-        let weighted_closeness = newman_weighted_closeness_centrality(&g, true, |x| *x.weight());
+        let test_case = |parallel_threshold: usize| {
+            let g = petgraph::graph::DiGraph::<u32, f64>::from_edges([
+                (0, 1, 1.0),
+                (1, 2, 1.0),
+                (2, 3, 1.0),
+                (3, 4, 1.0),
+                (4, 5, 1.0),
+                (5, 6, 1.0),
+            ]);
+            let classic_closeness = closeness_centrality(&g, true, parallel_threshold);
+            let weighted_closeness =
+                newman_weighted_closeness_centrality(&g, true, |x| *x.weight());
 
-        assert_eq!(classic_closeness, weighted_closeness);
+            assert_eq!(classic_closeness, weighted_closeness);
+        };
+        test_case(200); // sequential
+        test_case(1); // parallel
     }
 
     #[test]
