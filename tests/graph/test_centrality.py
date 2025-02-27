@@ -107,6 +107,13 @@ class TestCentralityGraphDeletedNode(unittest.TestCase):
         expected = {0: 0.5, 1: 0.75, 2: 0.75, 4: 0.5}
         self.assertEqual(expected, closeness)
 
+    def test_closeness_centrality_parallel(self):
+        closeness = rustworkx.graph_closeness_centrality(
+            self.graph, parallel_threshold=1
+        )  # force parallelism
+        expected = {0: 0.5, 1: 0.75, 2: 0.75, 4: 0.5}
+        self.assertEqual(expected, closeness)
+
     def test_closeness_centrality_wf_improved(self):
         closeness = rustworkx.graph_closeness_centrality(self.graph, wf_improved=False)
         expected = {0: 0.5, 1: 0.75, 2: 0.75, 4: 0.5}
