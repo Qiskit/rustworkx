@@ -119,7 +119,7 @@ are no changes made to the rust code. To avoid this you can use the
 `--no-install` package if you'd like to rerun tests without recompiling.
 Note, you only want to use this flag if you recently ran Nox and there are no
 rust code (or packaged python code) changes to the repo since then. Otherwise
-the rustworkx package Nox installs in it's virtualenv will be out of date (or
+the rustworkx package Nox installs in its virtualenv will be out of date (or
 missing).
 
 Note, if you run tests outside of Nox that you can **not** run the tests from
@@ -194,8 +194,8 @@ the run finishes so you can inspect the output.
 
 #### rustworkx-core tests
 
-As rustworkx-core is a standalone rust crate with it's own public interface it
-needs it's own testing. These tests can be a combination of doc tests (embedded
+As rustworkx-core is a standalone rust crate with its own public interface it
+needs its own testing. These tests can be a combination of doc tests (embedded
 code examples in the docstrings in the rust code) or standalone tests. You
 can refer to the rust book on how to add tests:
 

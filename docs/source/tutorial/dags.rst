@@ -205,7 +205,7 @@ performed is:
 
     # Equivalency matrix
     translation_matrix = {"h": ["rz(pi/2)", "sx", "rz(pi/2)"]}
-    # Insructions natively supported on target QPU
+    # Instructions natively supported on target QPU
     hardware_instructions = {"measure", "cx", "sx", "rz", "x"}
 
     # Iterate over instructions in order and replace gates outside of native

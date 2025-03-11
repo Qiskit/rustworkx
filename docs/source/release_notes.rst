@@ -185,7 +185,7 @@ New Features
   :meth:`~rustworkx.PyDiGraph.insert_node_on_in_edges_multiple`, and
   :meth:`~rustworkx.PyDiGraph.insert_node_on_out_edges_multiple` were added to
   :class:`~rustworkx.PyDiGraph`. These functions are used to insert an existing
-  node in between an reference node(s) and all it's predecessors or successors.
+  node in between an reference node(s) and all its predecessors or successors.
 - Two new functions, :func:`~rustworkx.graph_dfs_edges` and
   :func:`~rustworkx.digraph_dfs_edges`, were added to get an edge list in depth
   first order from a :class:`~rustworkx.PyGraph` and
@@ -356,7 +356,7 @@ Upgrade Notes
 -------------
 
 - The :class:`~rustworkx.PyDAG` class was renamed :class:`~rustworkx.PyDiGraph`
-  to better reflect it's functionality. For backwards compatibility
+  to better reflect its functionality. For backwards compatibility
   :class:`~rustworkx.PyDAG` still exists as a Python subclass of
   :class:`~rustworkx.PyDiGraph`. No changes should be required for existing
   users.

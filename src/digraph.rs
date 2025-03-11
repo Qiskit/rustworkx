@@ -171,7 +171,7 @@ use super::dag_algo::is_directed_acyclic_graph;
 ///     ``PyDiGraph`` has runtime cycle detection enabled.
 /// :param bool multigraph: When this is set to ``False`` the created
 ///     ``PyDiGraph`` object will not be a multigraph. When ``False`` if a
-///     method call is made that would add parallel edges the the weight/weight
+///     method call is made that would add parallel edges the weight/weight
 ///     from that method call will be used to update the existing edge in place.
 /// :param attrs: An optional attributes payload to assign to the
 ///     :attr:`~.PyDiGraph.attrs` attribute. This can be any Python object. If
@@ -2540,7 +2540,7 @@ impl PyDiGraph {
             DictMap::with_capacity(other.node_count());
 
         // TODO: Reimplement this without looping over the graphs
-        // Loop over other nodes add add to self graph
+        // Loop over other nodes add to self graph
         for node in other.graph.node_indices() {
             let new_index = self.graph.add_node(weight_transform_callable(
                 py,

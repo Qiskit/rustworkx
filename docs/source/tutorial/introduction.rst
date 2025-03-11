@@ -97,7 +97,7 @@ In the above cases, we were adding nodes with a data payload of type integer (e.
 However, rustworkx doesn't place constraints on what the node data payload can
 be, so you can use more involved objects including types which are not
 `hashable <https://docs.python.org/3/glossary.html#term-hashable>`__. For
-example, we can add a node with a data payload that's a a
+example, we can add a node with a data payload that's a
 `dict <https://docs.python.org/3/library/stdtypes.html#dict>`__:
 
 .. jupyter-execute::
@@ -219,7 +219,7 @@ Modifying elements of a graph
 
 The graph classes in rustworkx also allow for in place mutation of the payloads
 for elements in the graph. For nodes you can simply use the mapping protocol to
-change the payload via it's node index. For example:
+change the payload via its node index. For example:
 
 .. jupyter-execute::
 

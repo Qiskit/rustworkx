@@ -30,7 +30,7 @@ class TestMaxWeightMatching(unittest.TestCase):
         for u, v in rx_match:
             if (u, v) not in expected_match and (v, u) not in expected_match:
                 self.fail(
-                    f"Element {(u, v)} and it's reverse {(v, u)} not found in "
+                    f"Element {(u, v)} and its reverse {(v, u)} not found in "
                     f"expected output.\nrustworkx output: {rx_match}\nexpected "
                     f"output: {expected_match}"
                 )
