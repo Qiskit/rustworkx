@@ -327,7 +327,7 @@ graph and matrices in other libraries. This includes ``to_numpy_matrix()``,
 adjacency matrix).
 
 However, in rustworkx there is **only** a :meth:`~rustworkx.adjacency_matrix`
-function (and it's per type variants :meth:`~rustworkx.digraph_adjacency_matrix`
+function (and its per type variants :meth:`~rustworkx.digraph_adjacency_matrix`
 and :meth:`~rustworkx.graph_adjacency_matrix`) which will return a numpy array
 of the adjacency matrix (**not** a scipy csr sparse matrix like networkx's
 function). This function is equivalent to networkx's ``to_numpy_array()``

@@ -25,7 +25,7 @@ Installing on a platform without precompiled binaries
 -----------------------------------------------------
 
 If there are no precompiled binaries published for your system you'll have to
-build the package from source. However, to be able able to build the package from
+build the package from source. However, to be able to build the package from
 the published source package you need to have Rust >= 1.64 installed (and also
 cargo which is normally included with rust) You can use
 `rustup <https://rustup.rs/>`_ (a cross platform installer for rust) to make this

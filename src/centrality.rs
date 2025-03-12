@@ -265,7 +265,7 @@ pub fn out_degree_centrality(graph: &digraph::PyDiGraph) -> PyResult<CentralityM
 ///
 /// The closeness centrality of a node :math:`u` is defined as the
 /// reciprocal of the average shortest path distance to :math:`u` over all
-/// :math:`n-1` reachable nodes in the graph. In it's general form this can
+/// :math:`n-1` reachable nodes in the graph. In its general form this can
 /// be expressed as:
 ///
 /// .. math::
@@ -313,7 +313,7 @@ pub fn graph_closeness_centrality(graph: &graph::PyGraph, wf_improved: bool) -> 
 ///
 /// The closeness centrality of a node :math:`u` is defined as the
 /// reciprocal of the average shortest path distance to :math:`u` over all
-/// :math:`n-1` reachable nodes in the graph. In it's general form this can
+/// :math:`n-1` reachable nodes in the graph. In its general form this can
 /// be expressed as:
 ///
 /// .. math::

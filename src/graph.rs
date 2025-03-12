@@ -135,7 +135,7 @@ use petgraph::visit::{
 ///
 /// :param bool multigraph: When this is set to ``False`` the created PyGraph
 ///     object will not be a multigraph. When ``False`` if a method call is
-///     made that would add parallel edges the the weight/weight from that
+///     made that would add parallel edges the weight/weight from that
 ///     method call will be used to update the existing edge in place.
 /// :param attrs: An optional attributes payload to assign to the
 ///     :attr:`~.PyGraph.attrs` attribute. This can be any Python object. If
@@ -1665,7 +1665,7 @@ impl PyGraph {
             DictMap::with_capacity(other.node_count());
 
         // TODO: Reimplement this without looping over the graphs
-        // Loop over other nodes add add to self graph
+        // Loop over other nodes add to self graph
         for node in other.graph.node_indices() {
             let new_index = self.graph.add_node(weight_transform_callable(
                 py,

@@ -805,7 +805,7 @@ pub fn connected_subgraphs(graph: &PyGraph, k: usize) -> PyResult<Vec<Vec<usize>
 ///     of paths. By default includes all paths regardless of depth, setting to
 ///     0 will behave like default.
 ///
-/// :returns: A mapping of node indices to to a mapping of target node
+/// :returns: A mapping of node indices to a mapping of target node
 ///     indices to a list of paths between the source and target nodes.
 /// :rtype: AllPairsMultiplePathMapping
 ///
@@ -990,7 +990,7 @@ pub fn digraph_core_number(py: Python, graph: &digraph::PyDiGraph) -> PyResult<P
 /// :param PyGraph: The graph to be used
 /// :param Callable weight_fn:  An optional callable object (function, lambda, etc) which
 ///     will be passed the edge object and expected to return a ``float``.
-///     Edges with ``NaN`` weights will be ignored, i.e it's conidered to have zero weight.
+///     Edges with ``NaN`` weights will be ignored, i.e it's considered to have zero weight.
 ///     If ``weight_fn`` is not specified a default value of ``1.0`` will be used for all edges.
 ///
 /// :returns: A tuple with the minimum cut value and a list of all

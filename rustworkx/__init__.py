@@ -125,7 +125,7 @@ class PyDAG(PyDiGraph):
         ``PyDAG`` has runtime cycle detection enabled.
     :param bool multgraph: When this is set to ``False`` the created
         ``PyDAG`` object will not be a multigraph. When ``False`` if a method
-        call is made that would add parallel edges the the weight/weight from
+        call is made that would add parallel edges the weight/weight from
         that method call will be used to update the existing edge in place.
     """
 
@@ -596,7 +596,7 @@ def k_shortest_path_lengths(graph, start, k, edge_cost, goal=None):
     :param int start: The node index to find the shortest paths from
     :param int k: The kth shortest path to find the lengths of
     :param edge_cost: A python callable that will receive an edge payload and
-        return a float for the cost of that eedge
+        return a float for the cost of that edge
     :param int goal: An optional goal node index, if specified the output
         dictionary
 
@@ -732,7 +732,7 @@ def is_isomorphic_node_match(first, second, matcher, id_order=True):
         It should be the same type as the first graph.
     :param callable matcher: A python callable object that takes 2 positional
         one for each node data object. If the return of this
-        function evaluates to True then the nodes passed to it are vieded
+        function evaluates to True then the nodes passed to it are viewed
         as matching.
     :param bool id_order: If set to ``False`` this function will use a
         heuristic matching order based on [VF2]_ paper. Otherwise it will
@@ -1144,7 +1144,7 @@ def closeness_centrality(graph, wf_improved=True):
 
     The closeness centrality of a node :math:`u` is defined as the
     reciprocal of the average shortest path distance to :math:`u` over all
-    :math:`n-1` reachable nodes in the graph. In it's general form this can
+    :math:`n-1` reachable nodes in the graph. In its general form this can
     be expressed as:
 
     .. math::
