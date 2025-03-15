@@ -1262,7 +1262,7 @@ impl PyDiGraph {
     ///
     /// :param int parent: The index of the parent node
     /// :param int child: The index of the child node
-    /// :param T edge: The python object to attach to the edge.
+    /// :param T edge: The Python object to attach to the edge.
     ///
     /// :returns: The index of the newly created edge
     /// :rtype: int
@@ -1531,7 +1531,7 @@ impl PyDiGraph {
 
     /// Add a new node to the graph.
     ///
-    /// :param S obj: The python object to attach to the node
+    /// :param S obj: The Python object to attach to the node
     ///
     /// :returns: The index of the newly created node
     /// :rtype: int
@@ -1616,7 +1616,7 @@ impl PyDiGraph {
     /// from an existing parent to that new node.
     ///
     /// :param int parent: The index of the parent node
-    /// :param S obj: The python object to attach to the new node
+    /// :param S obj: The Python object to attach to the new node
     /// :param edge: The python object to attach to the edge
     ///
     /// :returns: The index of the newly created child node
@@ -1635,7 +1635,7 @@ impl PyDiGraph {
     /// from that new node to an existing child.
     ///
     /// :param int child: The index of the child node
-    /// :param obj: The python object to attach to the new node
+    /// :param obj: The Python object to attach to the new node
     /// :param edge: The python object to attach to the edge
     ///
     /// :returns index: The index of the newly created parent node
@@ -2006,7 +2006,7 @@ impl PyDiGraph {
 
     /// Add new nodes to the graph.
     ///
-    /// :param iterable[S] obj_list: An iterable of python objects to attach to the new nodes
+    /// :param iterable[S] obj_list: An iterable of Python objects to attach to the new nodes
     ///
     /// :returns: A list of indices of the newly created nodes
     /// :rtype: NodeIndices
@@ -2070,7 +2070,7 @@ impl PyDiGraph {
     /// node as a successor given an edge condition.
     ///
     /// :param int node: The index of the node to use as the source of the search
-    /// :param Callable predicate: A python callable that will take a single
+    /// :param Callable predicate: A Python callable that will take a single
     ///     parameter, the edge object, and will return a boolean if the
     ///     edge matches or not
     ///
@@ -2107,7 +2107,7 @@ impl PyDiGraph {
     /// a given node given an edge condition.
     ///
     /// :param int node: The node to use as the source of the search
-    /// :param Callable predicate: A python callable that will take a single
+    /// :param Callable predicate: A Python callable that will take a single
     ///     parameter, the edge object, and will return a boolean if the
     ///     edge matches or not
     ///
@@ -2489,11 +2489,11 @@ impl PyDiGraph {
     ///             2: (4, "weight2")
     ///         }
     ///
-    /// :param Callable node_map_func: An optional python callable that will take in a
+    /// :param Callable node_map_func: An optional Python callable that will take in a
     ///     single node weight/data object and return a new node weight/data
     ///     object that will be used when adding an node from other onto this
     ///     graph.
-    /// :param Callable edge_map_func: An optional python callable that will take in a
+    /// :param Callable edge_map_func: An optional Python callable that will take in a
     ///     single edge weight/data object and return a new edge weight/data
     ///     object that will be used when adding an edge from other onto this
     ///     graph.
@@ -2741,7 +2741,7 @@ impl PyDiGraph {
     ///     skipped. If not provided, inherits the value
     ///     of ``check_cycle`` from this instance of
     ///     :class:`~rustworkx.PyDiGraph`.
-    /// :param Callable weight_combo_fn: An optional python callable that, when
+    /// :param Callable weight_combo_fn: An optional Python callable that, when
     ///     specified, is used to merge parallel edges introduced by the
     ///     contraction, which will occur when multiple nodes in
     ///     ``nodes`` have an incoming edge
