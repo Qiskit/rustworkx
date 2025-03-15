@@ -236,11 +236,18 @@ pub fn bfs_predecessors(
 /// :rtype: set
 #[pyfunction]
 #[pyo3(text_signature = "(graph, node, /)")]
-pub fn ancestors(graph: &digraph::PyDiGraph, node: usize) -> HashSet<usize> {
-    core_ancestors(&graph.graph, NodeIndex::new(node))
+pub fn ancestors(graph: &digraph::PyDiGraph, node: usize) -> PyResult<HashSet<usize>> {
+    let index = NodeIndex::new(node);
+    if !graph.graph.contains_node(index) {
+        return Err(PyIndexError::new_err(format!(
+            "Node source index \"{}\" out of graph bound",
+            node
+        )));
+    }
+    Ok(core_ancestors(&graph.graph, index)
         .map(|x| x.index())
         .filter(|x| *x != node)
-        .collect()
+        .collect())
 }
 
 /// Return the descendants of a node in a graph.
@@ -257,12 +264,18 @@ pub fn ancestors(graph: &digraph::PyDiGraph, node: usize) -> HashSet<usize> {
 /// :rtype: set
 #[pyfunction]
 #[pyo3(text_signature = "(graph, node, /)")]
-pub fn descendants(graph: &digraph::PyDiGraph, node: usize) -> HashSet<usize> {
+pub fn descendants(graph: &digraph::PyDiGraph, node: usize) -> PyResult<HashSet<usize>> {
     let index = NodeIndex::new(node);
-    core_descendants(&graph.graph, index)
+    if !graph.graph.contains_node(index) {
+        return Err(PyIndexError::new_err(format!(
+            "Node source index \"{}\" out of graph bound",
+            node
+        )));
+    }
+    Ok(core_descendants(&graph.graph, index)
         .map(|x| x.index())
         .filter(|x| *x != node)
-        .collect()
+        .collect())
 }
 
 /// Breadth-first traversal of a directed graph with several source vertices.
