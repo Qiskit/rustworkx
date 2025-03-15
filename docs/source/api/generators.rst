@@ -33,3 +33,4 @@ Generators
     rustworkx.generators.complete_graph
     rustworkx.generators.directed_complete_graph
     rustworkx.generators.dorogovtsev_goltsev_mendes_graph
+    rustworkx.generators.karate_club_graph
