@@ -502,13 +502,16 @@ def betweenness_centrality(
     parallel_threshold: int = ...,
 ) -> CentralityMapping: ...
 def closeness_centrality(
-    graph: PyGraph[_S, _T] | PyDiGraph[_S, _T], wf_improved: bool = ...
+    graph: PyGraph[_S, _T] | PyDiGraph[_S, _T],
+    wf_improved: bool = ...,
+    parallel_threshold: int = ...,
 ) -> CentralityMapping: ...
 def newman_weighted_closeness_centrality(
     graph: PyGraph[_S, _T],
     weight_fn: Callable[[_T], float] | None = ...,
     wf_improved: bool = ...,
     default_weight: float = ...,
+    parallel_threshold: int = ...,
 ) -> CentralityMapping: ...
 def degree_centrality(
     graph: PyGraph[_S, _T] | PyDiGraph[_S, _T],
