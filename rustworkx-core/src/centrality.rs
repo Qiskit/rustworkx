@@ -1074,6 +1074,10 @@ mod test_katz_centrality {
 ///
 /// * `graph` - The graph object to run the algorithm on
 /// * `wf_improved` - If `true`, scale by the fraction of nodes reachable.
+/// * `parallel_threshold` - The number of nodes to calculate the betweenness
+///     centrality in parallel at, if the number of nodes in `graph` is less
+///     than this value it will run in a single thread. The suggested default to use
+///     here is `50`.
 ///
 /// # Example
 ///
@@ -1186,6 +1190,10 @@ where
 ///     `ReversedEdgeReference<<G as IntoEdgeReferences>::EdgeRef>` for
 ///     an edge in the graph and is expected to return a `f64` of
 ///     the weight of that edge.
+/// * `parallel_threshold` - The number of nodes to calculate the betweenness
+///     centrality in parallel at, if the number of nodes in `graph` is less
+///     than this value it will run in a single thread. The suggested default to use
+///     here is `50`.
 ///
 /// # Example
 ///
