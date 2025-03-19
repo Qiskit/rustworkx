@@ -279,7 +279,7 @@ pub fn is_directed_acyclic_graph(graph: &digraph::PyDiGraph) -> bool {
 /// :param PyDiGraph graph: The DAG to get the layers from
 /// :param list first_layer: A list of node ids for the first layer. This
 ///     will be the first layer in the output
-/// :param bool index_output: When set to to ``True`` the output layers will be
+/// :param bool index_output: When set to ``True`` the output layers will be
 ///     a list of integer node indices.
 ///
 /// :returns: A list of layers, each layer is a list of node data, or if

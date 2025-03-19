@@ -73,7 +73,7 @@ class TestSteinerTree(unittest.TestCase):
                     found = True
             if not found:
                 self.fail(
-                    f"edge: {edge} nor it's reverse not found in metric "
+                    f"edge: {edge} nor its reverse not found in metric "
                     f"closure output:\n{pprint.pformat(edges)}"
                 )
 

@@ -1,0 +1,6 @@
+---
+fixes:
+  - |
+    Fixed a panic when passing invalid source nodes to search methods
+    such as :func:`~rustworkx.bfs_search`. See
+    `#1386 <https://github.com/Qiskit/rustworkx/issues/1386>`__ for more details.

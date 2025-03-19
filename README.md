@@ -58,7 +58,7 @@ environment.
 ### Installing on a platform without precompiled binaries
 
 If there are no precompiled binaries published for your system you'll have to
-build the package from source. However, to be able able to build the package
+build the package from source. However, to be able to build the package
 from the published source package you need to have Rust >= 1.70 installed (and
 also [cargo](https://doc.rust-lang.org/cargo/) which is normally included with
 rust) You can use [rustup](https://rustup.rs/) (a cross platform installer for
@@ -177,6 +177,6 @@ NetworkX usage (hence the original name).  The project was originally started
 to build a faster directed graph to use as the underlying data structure for
 the DAG at the center of
 [qiskit](https://github.com/Qiskit/qiskit/)'s transpiler. However,
-since it's initial introduction the project has grown substantially and now
+since its initial introduction the project has grown substantially and now
 covers all applications that need to work with graphs which includes
 Qiskit.

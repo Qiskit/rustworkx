@@ -30,13 +30,30 @@ use std::convert::TryFrom;
 
 use hashbrown::HashSet;
 
-use pyo3::exceptions::PyTypeError;
+use pyo3::exceptions::{PyIndexError, PyTypeError};
 use pyo3::prelude::*;
 use pyo3::Python;
 
 use petgraph::graph::NodeIndex;
+use petgraph::EdgeType;
 
 use crate::iterators::EdgeList;
+use crate::StablePyGraph;
+
+fn validate_source_nodes<Ty: EdgeType>(
+    graph: &StablePyGraph<Ty>,
+    starts: &[NodeIndex],
+) -> PyResult<()> {
+    for index in starts.iter() {
+        if !graph.contains_node(*index) {
+            return Err(PyIndexError::new_err(format!(
+                "Node source index \"{}\" out of graph bound",
+                index.index()
+            )));
+        }
+    }
+    Ok(())
+}
 
 /// Get an edge list of the tree edges from a depth-first traversal
 ///
@@ -219,11 +236,18 @@ pub fn bfs_predecessors(
 /// :rtype: set
 #[pyfunction]
 #[pyo3(text_signature = "(graph, node, /)")]
-pub fn ancestors(graph: &digraph::PyDiGraph, node: usize) -> HashSet<usize> {
-    core_ancestors(&graph.graph, NodeIndex::new(node))
+pub fn ancestors(graph: &digraph::PyDiGraph, node: usize) -> PyResult<HashSet<usize>> {
+    let index = NodeIndex::new(node);
+    if !graph.graph.contains_node(index) {
+        return Err(PyIndexError::new_err(format!(
+            "Node source index \"{}\" out of graph bound",
+            node
+        )));
+    }
+    Ok(core_ancestors(&graph.graph, index)
         .map(|x| x.index())
         .filter(|x| *x != node)
-        .collect()
+        .collect())
 }
 
 /// Return the descendants of a node in a graph.
@@ -240,12 +264,18 @@ pub fn ancestors(graph: &digraph::PyDiGraph, node: usize) -> HashSet<usize> {
 /// :rtype: set
 #[pyfunction]
 #[pyo3(text_signature = "(graph, node, /)")]
-pub fn descendants(graph: &digraph::PyDiGraph, node: usize) -> HashSet<usize> {
+pub fn descendants(graph: &digraph::PyDiGraph, node: usize) -> PyResult<HashSet<usize>> {
     let index = NodeIndex::new(node);
-    core_descendants(&graph.graph, index)
+    if !graph.graph.contains_node(index) {
+        return Err(PyIndexError::new_err(format!(
+            "Node source index \"{}\" out of graph bound",
+            node
+        )));
+    }
+    Ok(core_descendants(&graph.graph, index)
         .map(|x| x.index())
         .filter(|x| *x != node)
-        .collect()
+        .collect())
 }
 
 /// Breadth-first traversal of a directed graph with several source vertices.
@@ -385,6 +415,8 @@ pub fn digraph_bfs_search(
         Some(nx) => nx.into_iter().map(NodeIndex::new).collect(),
         None => graph.graph.node_indices().collect(),
     };
+
+    validate_source_nodes(&graph.graph, &starts)?;
 
     breadth_first_search(&graph.graph, starts, |event| {
         bfs_handler(py, &visitor, event)
@@ -530,6 +562,8 @@ pub fn graph_bfs_search(
         None => graph.graph.node_indices().collect(),
     };
 
+    validate_source_nodes(&graph.graph, &starts)?;
+
     breadth_first_search(&graph.graph, starts, |event| {
         bfs_handler(py, &visitor, event)
     })?;
@@ -644,6 +678,8 @@ pub fn digraph_dfs_search(
         None => graph.graph.node_indices().collect(),
     };
 
+    validate_source_nodes(&graph.graph, &starts)?;
+
     depth_first_search(&graph.graph, starts, |event| {
         dfs_handler(py, &visitor, event)
     })?;
@@ -757,6 +793,8 @@ pub fn graph_dfs_search(
         Some(nx) => nx.into_iter().map(NodeIndex::new).collect(),
         None => graph.graph.node_indices().collect(),
     };
+
+    validate_source_nodes(&graph.graph, &starts)?;
 
     depth_first_search(&graph.graph, starts, |event| {
         dfs_handler(py, &visitor, event)
@@ -894,6 +932,8 @@ pub fn digraph_dijkstra_search(
         Some(nx) => nx.into_iter().map(NodeIndex::new).collect(),
         None => graph.graph.node_indices().collect(),
     };
+
+    validate_source_nodes(&graph.graph, &starts)?;
 
     let edge_cost_fn = CostFn::try_from((weight_fn, 1.0))?;
     dijkstra_search(
@@ -1035,6 +1075,8 @@ pub fn graph_dijkstra_search(
         Some(nx) => nx.into_iter().map(NodeIndex::new).collect(),
         None => graph.graph.node_indices().collect(),
     };
+
+    validate_source_nodes(&graph.graph, &starts)?;
 
     let edge_cost_fn = CostFn::try_from((weight_fn, 1.0))?;
     dijkstra_search(

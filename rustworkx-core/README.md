@@ -18,7 +18,7 @@ that offers a general purpose high performance graph library written in Rust,
 rustworkx-core is a pure rust library that offers a stable rust API for any
 downstream crate that need it.
 
-At it's core rustworkx is built on top of the
+At its core rustworkx is built on top of the
 [petgraph](https://github.com/petgraph/petgraph) library and wraps it in a
 Python layer. However, many of the algorithms (and to a lesser extent data
 structures) needed for rustworkx are not available in petgraph. For places
