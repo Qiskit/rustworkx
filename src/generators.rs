@@ -1757,8 +1757,8 @@ pub fn dorogovtsev_goltsev_mendes_graph(py: Python, n: usize) -> PyResult<graph:
 ///   mpl_draw(graph, pos=layout)
 ///   
 /// .. [1] Zachary, Wayne W.
-///    "An information flow model for conflict and fission in small groups"
-///    Journal of Anthropological Research, 33, 452-473.
+///     "An information flow model for conflict and fission in small groups"
+///     Journal of Anthropological Research, 33, 452-473.
 ///     https://doi.org/10.1086/jar.33.4.3629752
 #[pyfunction]
 #[pyo3(
