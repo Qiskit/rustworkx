@@ -289,7 +289,7 @@ class TestMisraGriesColoring(unittest.TestCase):
         self.assertEqual({0: 0, 1: 1, 2: 2, 3: 3}, edge_colors)
 
     def test_cycle_graph(self):
-        """Test on a small cycle graph with an odd number of virtices."""
+        """Test on a small cycle graph with an odd number of vertices."""
         graph = rustworkx.generators.cycle_graph(7)
         edge_colors = rustworkx.graph_misra_gries_edge_color(graph)
         assert edge_colors == {0: 0, 1: 1, 2: 2, 3: 0, 4: 1, 5: 0, 6: 2}

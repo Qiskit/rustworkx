@@ -243,7 +243,7 @@ class TestNodes(unittest.TestCase):
             (nodes["d"], nodes["f"], weights[1]),
         }
 
-        # 2:2 broadacst
+        # 2:2 broadcast
         dag.add_edge(nodes["g"], mid, weights[2])
         dag.add_edge(nodes["h"], mid, weights[2])
         dag.add_edge(mid, nodes["i"], weights[2])
@@ -316,7 +316,7 @@ class TestNodes(unittest.TestCase):
         expected_edges[nodes["d"], nodes["e"]] = allowed_weights
         expected_edges[nodes["d"], nodes["f"]] = allowed_weights
 
-        # 2:2 broadacst
+        # 2:2 broadcast
         dag.add_edge(nodes["g"], mid, 12)
         dag.add_edge(nodes["h"], mid, 22)
         dag.add_edge(mid, nodes["i"], 32)

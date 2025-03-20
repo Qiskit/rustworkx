@@ -36,7 +36,7 @@ class TestStronglyConnected(unittest.TestCase):
             [[node_c], [node_b], [node_a]],
         )
 
-    def test_stongly_connected_no_linear(self):
+    def test_strongly_connected_no_linear(self):
         G = rustworkx.PyDiGraph()
         G.add_nodes_from(list(range(8)))
         G.add_edges_from_no_data(

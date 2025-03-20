@@ -1610,7 +1610,7 @@ impl PyGraph {
     ///     single node weight/data object and return a new node weight/data
     ///     object that will be used when adding an node from other onto this
     ///     graph.
-    /// :param Callable edge_map_func: An optional python callabble that will take in a
+    /// :param Callable edge_map_func: An optional python callable that will take in a
     ///     single edge weight/data object and return a new edge weight/data
     ///     object that will be used when adding an edge from other onto this
     ///     graph.
