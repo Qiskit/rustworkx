@@ -21,7 +21,7 @@ use dijkstra_visit::{dijkstra_handler, PyDijkstraVisitor};
 use rustworkx_core::traversal::{
     ancestors as core_ancestors, bfs_predecessors as core_bfs_predecessors,
     bfs_successors as core_bfs_successors, breadth_first_search, depth_first_search,
-    descendants as core_descendants, dfs_edges, dijkstra_search,
+    descendants as core_descendants, descendants_at_distance, dfs_edges, dijkstra_search,
 };
 
 use super::{digraph, graph, iterators, CostFn};
@@ -1087,4 +1087,68 @@ pub fn graph_dijkstra_search(
     )??;
 
     Ok(())
+}
+
+/// Returns all nodes at a fixed distance from ``source`` in ``graph``
+///
+/// :param PyGraph graph: The graph to find the descendants in
+/// :param int source: The node index to find the descendants from
+/// :param int distance: The distance from ``source``
+///
+/// :returns: The node indices of the nodes ``distance`` from ``source`` in ``graph``.
+/// :rtype: NodeIndices
+/// For example::
+///
+///     import rustworkx as rx
+///
+///     graph = rx.generators.path_graph(5)
+///     res = rx.descendants_at_distance(graph, 2, 2)
+///     print(res)
+///
+/// will return: ``[0, 4]``
+#[pyfunction]
+pub fn graph_descendants_at_distance(
+    graph: graph::PyGraph,
+    source: usize,
+    distance: usize,
+) -> iterators::NodeIndices {
+    let source = NodeIndex::new(source);
+    iterators::NodeIndices {
+        nodes: descendants_at_distance(&graph.graph, source, distance)
+            .into_iter()
+            .map(|x| x.index())
+            .collect(),
+    }
+}
+
+/// Returns all nodes at a fixed distance from ``source`` in ``graph``
+///
+/// :param PyDiGraph graph: The graph to find the descendants in
+/// :param int source: The node index to find the descendants from
+/// :param int distance: The distance from ``source``
+///
+/// :returns: The node indices of the nodes ``distance`` from ``source`` in ``graph``.
+/// :rtype: NodeIndices
+/// For example::
+///
+///     import rustworkx as rx
+///
+///     graph = rx.generators.directed_path_graph(5)
+///     res = rx.descendants_at_distance(graph, 2, 2)
+///     print(res)
+///
+/// will return: ``[4]``
+#[pyfunction]
+pub fn digraph_descendants_at_distance(
+    graph: digraph::PyDiGraph,
+    source: usize,
+    distance: usize,
+) -> iterators::NodeIndices {
+    let source = NodeIndex::new(source);
+    iterators::NodeIndices {
+        nodes: descendants_at_distance(&graph.graph, source, distance)
+            .into_iter()
+            .map(|x| x.index())
+            .collect(),
+    }
 }

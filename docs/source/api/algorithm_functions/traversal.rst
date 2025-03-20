@@ -22,3 +22,4 @@ Traversal
    rustworkx.visit.BFSVisitor
    rustworkx.visit.DijkstraVisitor
    rustworkx.TopologicalSorter
+   rustworkx.descendants_at_distance

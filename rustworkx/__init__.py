@@ -2079,6 +2079,30 @@ def longest_simple_path(graph):
 
 
 @_rustworkx_dispatch
+def descendants_at_distance(graph, source, distance):
+    """Returns all nodes at a fixed distance from ``source`` in ``graph``
+
+    :param graph: The graph to find the descendants in
+    :param int source: The node index to find the descendants from
+    :param int distance: The distance from ``source``
+
+    :returns: The node indices of the nodes ``distance`` from ``source`` in ``graph``.
+    :rtype: NodeIndices
+
+    For example::
+
+        import rustworkx as rx
+
+        graph = rx.generators.path_graph(5)
+        res = rx.descendants_at_distance(graph, 2, 2)
+        print(res)
+
+    will return: ``[0, 4]``
+    """
+    raise TypeError("Invalid Input Type %s for graph" % type(graph))
+
+
+@_rustworkx_dispatch
 def isolates(graph):
     """Return a list of isolates in a graph object
 
@@ -2209,3 +2233,4 @@ def all_shortest_paths(
 
     """
     raise TypeError("Invalid Input Type %s for graph" % type(graph))
+>>>>>>> origin/main

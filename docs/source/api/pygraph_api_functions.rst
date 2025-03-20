@@ -60,3 +60,4 @@ typed API based on the data type.
    rustworkx.graph_dijkstra_search
    rustworkx.graph_node_link_json
    rustworkx.graph_longest_simple_path
+   rustworkx.digraph_descendants_at_distance

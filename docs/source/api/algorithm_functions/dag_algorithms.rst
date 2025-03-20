@@ -14,3 +14,4 @@ DAG Algorithms
    rustworkx.layers
    rustworkx.transitive_reduction
    rustworkx.topological_generations
+   rustworkx.transitive_closure_dag
