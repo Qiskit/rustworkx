@@ -792,7 +792,7 @@ pub fn graph_astar_shortest_path(
 /// :param int start: The node index to find the shortest paths from
 /// :param int k: The kth shortest path to find the lengths of
 /// :param edge_cost: A python callable that will receive an edge payload and
-///     return a float for the cost of that eedge
+///     return a float for the cost of that edge
 /// :param int goal: An optional goal node index, if specified the output
 ///     dictionary
 ///
@@ -852,7 +852,7 @@ pub fn digraph_k_shortest_path_lengths(
 /// :param int start: The node index to find the shortest paths from
 /// :param int k: The kth shortest path to find the lengths of
 /// :param edge_cost: A python callable that will receive an edge payload and
-///     return a float for the cost of that eedge
+///     return a float for the cost of that edge
 /// :param int goal: An optional goal node index, if specified the output
 ///     dictionary
 ///

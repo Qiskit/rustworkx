@@ -359,7 +359,7 @@ class TopologicalSorter:
     def get_ready(self) -> list[int]: ...
     def done(self, nodes: int | Sequence[int]) -> None: ...
 
-# isomorpism
+# isomorphism
 
 def digraph_is_isomorphic(
     first: PyDiGraph[_S, _T],
