@@ -78,9 +78,11 @@ from .rustworkx import graph_misra_gries_edge_color as graph_misra_gries_edge_co
 from .rustworkx import graph_bipartite_edge_color as graph_bipartite_edge_color
 from .rustworkx import connected_components as connected_components
 from .rustworkx import is_connected as is_connected
+from .rustworkx import is_strongly_connected as is_strongly_connected
 from .rustworkx import is_weakly_connected as is_weakly_connected
 from .rustworkx import is_semi_connected as is_semi_connected
 from .rustworkx import number_connected_components as number_connected_components
+from .rustworkx import number_strongly_connected_components as number_strongly_connected_components
 from .rustworkx import number_weakly_connected_components as number_weakly_connected_components
 from .rustworkx import node_connected_component as node_connected_component
 from .rustworkx import strongly_connected_components as strongly_connected_components

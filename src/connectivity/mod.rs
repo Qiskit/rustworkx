@@ -100,6 +100,35 @@ pub fn simple_cycles(
     johnson_simple_cycles::PySimpleCycleIter::new(py, graph)
 }
 
+/// Find the number of strongly connected components in a directed graph
+///
+/// A strongly connected component (SCC) is a maximal subset of vertices
+/// such that every vertex is reachable from every other vertex
+/// within that subset.
+///
+///     >>> G = rx.PyDiGraph()
+///     >>> G.extend_from_edge_list([(0, 1), (1, 2), (3, 4)])
+///     >>> rx.number_strongly_connected_components(G)
+///     2
+///
+/// To get these components, see [strongly_connected_components].
+///
+/// If ``rx.number_strongly_connected_components(G) == 1``,
+/// then  ``rx.is_strongly_connected(G) is True``.
+///
+/// For undirected graphs, see [number_connected_components].
+///
+/// :param PyDiGraph graph: The directed graph to find the number
+///     of strongly connected components in
+///
+/// :returns: The number of strongly connected components in the graph
+/// :rtype: int
+#[pyfunction]
+#[pyo3(text_signature = "(graph, /)")]
+pub fn number_strongly_connected_components(graph: &digraph::PyDiGraph) -> usize {
+    algo::kosaraju_scc(&graph.graph).len()
+}
+
 /// Find the strongly connected components in a directed graph
 ///
 /// A strongly connected component (SCC) is a maximal subset of vertices
@@ -129,6 +158,38 @@ pub fn strongly_connected_components(graph: &digraph::PyDiGraph) -> Vec<Vec<usiz
         .iter()
         .map(|x| x.iter().map(|id| id.index()).collect())
         .collect()
+}
+
+/// Check if a directed graph is strongly connected
+///
+/// A strongly connected component (SCC) is a maximal subset of vertices
+/// such that every vertex is reachable from every other vertex
+/// within that subset.
+///
+///     >>> G = rx.PyDiGraph()
+///     >>> G.extend_from_edge_list([(0, 1), (1, 2), (3, 4)])
+///     >>> rx.is_strongly_connected(G)
+///     False
+///
+/// See also [is_weakly_connected] and [is_semi_connected].
+///
+/// If ``rx.is_strongly_connected(G) is True`` then `rx.number_strongly_connected_components(G) == 1``.
+///
+/// For undirected graphs see [is_connected].
+///
+/// :param PyGraph graph: An undirected graph to check for strong connectivity
+///
+/// :returns: Whether the graph is strongly connected or not
+/// :rtype: bool
+///
+/// :raises NullGraph: If an empty graph is passed in
+#[pyfunction]
+#[pyo3(text_signature = "(graph, /)")]
+pub fn is_strongly_connected(graph: &digraph::PyDiGraph) -> PyResult<bool> {
+    if graph.graph.node_count() == 0 {
+        return Err(NullGraph::new_err("Invalid operation on a NullGraph"));
+    }
+    Ok(algo::kosaraju_scc(&graph.graph).len() == 1)
 }
 
 /// Return the first cycle encountered during DFS of a given PyDiGraph,
@@ -250,7 +311,8 @@ pub fn node_connected_component(graph: &graph::PyGraph, node: usize) -> PyResult
 ///
 /// If ``rx.is_connected(G) is True`` then `rx.number_connected_components(G) == 1``.
 ///
-/// For directed graphs see [is_weakly_connected].
+/// For directed graphs see [is_weakly_connected], [is_semi_connected],
+/// and [is_strongly_connected].
 ///
 /// :param PyGraph graph: An undirected graph to check for connectivity
 ///
@@ -364,7 +426,7 @@ pub fn weakly_connected_components(graph: &digraph::PyDiGraph) -> Vec<HashSet<us
 ///
 /// :param PyGraph graph: An undirected graph to check for weak connectivity
 ///
-/// :returns: Whether the graph is connected or not
+/// :returns: Whether the graph is weakly connected or not
 /// :rtype: bool
 ///
 /// :raises NullGraph: If an empty graph is passed in
@@ -389,7 +451,7 @@ pub fn is_weakly_connected(graph: &digraph::PyDiGraph) -> PyResult<bool> {
 ///     >>> rx.is_semi_connected(G)
 ///     False
 ///
-/// See also [is_weakly_connected].
+/// See also [is_weakly_connected] and [is_strongly_connected].
 ///
 /// For undirected graphs see [is_connected].
 ///

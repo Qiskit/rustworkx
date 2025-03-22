@@ -143,6 +143,7 @@ rustworkx.is_isomorphic.html
 rustworkx.is_isomorphic_node_match.html
 rustworkx.is_matching.html
 rustworkx.is_maximal_matching.html
+rustworkx.is_strongly_connected.html
 rustworkx.is_subgraph_isomorphic.html
 rustworkx.is_weakly_connected.html
 rustworkx.k_shortest_path_lengths.html
@@ -164,6 +165,7 @@ rustworkx.NoPathFound.html
 rustworkx.NoSuitableNeighbors.html
 rustworkx.NullGraph.html
 rustworkx.number_connected_components.html
+rustworkx.number_strongly_connected_components.html
 rustworkx.number_weakly_connected_components.html
 rustworkx.num_shortest_paths_unweighted.html
 rustworkx.PathLengthMapping.html
