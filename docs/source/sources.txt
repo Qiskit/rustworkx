@@ -143,6 +143,7 @@ rustworkx.is_isomorphic.html
 rustworkx.is_isomorphic_node_match.html
 rustworkx.is_matching.html
 rustworkx.is_maximal_matching.html
+rustworkx.is_strongly_connected.html
 rustworkx.is_subgraph_isomorphic.html
 rustworkx.is_weakly_connected.html
 rustworkx.k_shortest_path_lengths.html

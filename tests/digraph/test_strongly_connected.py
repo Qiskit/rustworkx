@@ -65,3 +65,43 @@ class TestStronglyConnected(unittest.TestCase):
             node = G.add_node(i)
             G.add_child(node, str(i), {})
         self.assertEqual(len(rustworkx.strongly_connected_components(G)), 200000)
+
+    def test_is_strongly_connected_false(self):
+        graph = rustworkx.PyDiGraph()
+        graph.extend_from_edge_list(
+            [
+                (0, 1),
+                (1, 2),
+                (2, 3),
+                (3, 0),
+                (2, 4),
+                (4, 5),
+                (5, 6),
+                (6, 7),
+                (7, 4),
+            ]
+        )
+        self.assertFalse(rustworkx.is_strongly_connected(graph))
+
+    def test_is_strongly_connected_true(self):
+        graph = rustworkx.PyDiGraph()
+        graph.extend_from_edge_list(
+            [
+                (0, 1),
+                (1, 2),
+                (2, 3),
+                (3, 0),
+                (2, 4),
+                (4, 2),  # <- missing in the test_is_strongly_connected_false
+                (4, 5),
+                (5, 6),
+                (6, 7),
+                (7, 4),
+            ]
+        )
+        self.assertTrue(rustworkx.is_strongly_connected(graph))
+
+    def test_is_strongly_connected_null_graph(self):
+        graph = rustworkx.PyDiGraph()
+        with self.assertRaises(rustworkx.NullGraph):
+            rustworkx.is_strongly_connected(graph)

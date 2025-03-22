@@ -11,6 +11,7 @@ Connectivity and Cycles
    rustworkx.node_connected_component
    rustworkx.is_connected
    rustworkx.strongly_connected_components
+   rustworkx.is_strongly_connected
    rustworkx.number_weakly_connected_components
    rustworkx.weakly_connected_components
    rustworkx.is_weakly_connected
