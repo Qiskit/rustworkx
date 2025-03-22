@@ -165,6 +165,7 @@ rustworkx.NoPathFound.html
 rustworkx.NoSuitableNeighbors.html
 rustworkx.NullGraph.html
 rustworkx.number_connected_components.html
+rustworkx.number_strongly_connected_components.html
 rustworkx.number_weakly_connected_components.html
 rustworkx.num_shortest_paths_unweighted.html
 rustworkx.PathLengthMapping.html

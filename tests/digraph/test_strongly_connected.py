@@ -20,21 +20,16 @@ class TestStronglyConnected(unittest.TestCase):
         G = rustworkx.PyDiGraph()
         node_a = G.add_node(1)
         node_b = G.add_child(node_a, 2, {})
-        node_c = G.add_child(node_b, 3, {})
-        self.assertEqual(
-            rustworkx.strongly_connected_components(G),
-            [[node_c], [node_b], [node_a]],
-        )
+        G.add_child(node_b, 3, {})
+        self.assertEqual(rustworkx.number_strongly_connected_components(G), 3)
 
     def test_number_strongly_connected(self):
         G = rustworkx.PyDiGraph()
         node_a = G.add_node(1)
         node_b = G.add_child(node_a, 2, {})
-        node_c = G.add_node(3)
-        self.assertEqual(
-            rustworkx.strongly_connected_components(G),
-            [[node_c], [node_b], [node_a]],
-        )
+        G.add_edge(node_b, node_a, {})
+        G.add_node(3)
+        self.assertEqual(rustworkx.number_strongly_connected_components(G), 2)
 
     def test_strongly_connected_no_linear(self):
         G = rustworkx.PyDiGraph()
