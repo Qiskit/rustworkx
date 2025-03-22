@@ -100,6 +100,35 @@ pub fn simple_cycles(
     johnson_simple_cycles::PySimpleCycleIter::new(py, graph)
 }
 
+/// Find the number of strongly connected components in a directed graph
+///
+/// A strongly connected component (SCC) is a maximal subset of vertices
+/// such that every vertex is reachable from every other vertex
+/// within that subset.
+///
+///     >>> G = rx.PyDiGraph()
+///     >>> G.extend_from_edge_list([(0, 1), (1, 2), (3, 4)])
+///     >>> rx.number_strongly_connected_components(G)
+///     2
+///
+/// To get these components, see [strongly_connected_components].
+///
+/// If ``rx.number_strongly_connected_components(G) == 1``,
+/// then  ``rx.is_strongly_connected(G) is True``.
+///
+/// For undirected graphs, see [number_connected_components].
+///
+/// :param PyDiGraph graph: The directed graph to find the number
+///     of strongly connected components in
+///
+/// :returns: The number of strongly connected components in the graph
+/// :rtype: int
+#[pyfunction]
+#[pyo3(text_signature = "(graph, /)")]
+pub fn number_strongly_connected_components(graph: &digraph::PyDiGraph) -> usize {
+    algo::kosaraju_scc(&graph.graph).len()
+}
+
 /// Find the strongly connected components in a directed graph
 ///
 /// A strongly connected component (SCC) is a maximal subset of vertices
