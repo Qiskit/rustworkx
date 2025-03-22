@@ -1,0 +1,6 @@
+﻿rustworkx.longest\_simple\_path
+===============================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: longest_simple_path
