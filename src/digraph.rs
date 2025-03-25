@@ -632,11 +632,29 @@ impl PyDiGraph {
         self.graph.find_edge(index_a, index_b).is_some()
     }
 
-    /// Return a list of data of all node successors.
+    /// Return a list of data of all node successors in a directed graph
     ///
-    /// :param int node: The index of the node to get the successors for
+    /// A successor is defined as a node that has a directed edge pointing
+    /// from the specified node. In a multigraph, where two nodes can be connected
+    /// by multiple edges, each successor node is returned only once.
     ///
-    /// :returns: A list of the node data of all node's successors
+    ///     >>> G = rx.PyDiGraph()
+    ///     >>> G.add_nodes_from(["A", "B", "C", "D", "E"])
+    ///     NodeIndices[0, 1, 2, 3, 4]
+    ///     >>> G.extend_from_edge_list([(0, 1), (1, 2), (1, 3), (1, 4)])
+    ///     >>> G.successors(1)  # successors of the 'B' node
+    ///     ['E', 'D', 'C']
+    ///
+    /// To filter the successors by the attributes of the connecting edge,
+    /// see :func:`~find_successors_by_edge`.
+    ///
+    /// See also :func:`~predecessors` and :func:`~neighbors`.
+    ///
+    /// For undirected graphs, see :func:`~PyGraph.neighbors`.
+    ///
+    /// :param int node: The index of the node to get the predecessors for
+    ///
+    /// :returns: A list of the node data of all node's predecessors
     /// :rtype: list[S]
     #[pyo3(text_signature = "(self, node, /)")]
     pub fn successors(&self, node: usize) -> Vec<&PyObject> {
@@ -647,15 +665,32 @@ impl PyDiGraph {
         let mut successors: Vec<&PyObject> = Vec::new();
         let mut used_indices: HashSet<NodeIndex> = HashSet::new();
         for succ in children {
-            if !used_indices.contains(&succ) {
+            if used_indices.insert(succ) {
                 successors.push(self.graph.node_weight(succ).unwrap());
-                used_indices.insert(succ);
             }
         }
         successors
     }
 
-    /// Return a list of data of all node predecessors.
+    /// Return a list of data of all node predecessors in a directed graph
+    ///
+    /// A predecessor is defined as a node that has a directed edge pointing
+    /// to the specified node. In a multigraph, where two nodes can be connected
+    /// by multiple edges, each predecessor node is returned only once.
+    ///
+    ///     >>> G = rx.PyDiGraph()
+    ///     >>> G.add_nodes_from(["A", "B", "C", "D", "E"])
+    ///     NodeIndices[0, 1, 2, 3, 4]
+    ///     >>> G.extend_from_edge_list([(0, 3), (1, 3), (2, 3), (3, 4)])
+    ///     >>> G.predecessors(3)  # predecessors of the 'D' node
+    ///     ['C', 'B', 'A']
+    ///
+    /// To filter the predecessors by the attributes of the connecting edge,
+    /// see :func:`~find_predecessors_by_edge`.
+    ///
+    /// See also :func:`~successors`.
+    ///
+    /// For undirected graphs, see :func:`~PyGraph.neighbors`.
     ///
     /// :param int node: The index of the node to get the predecessors for
     ///
@@ -681,6 +716,19 @@ impl PyDiGraph {
     /// Return a list of data associated with the successors of the given node,
     /// where the edges connecting to those nodes satisfy the provided
     /// filter function.
+    ///
+    /// A predecessor is defined as a node that has a directed edge pointing
+    /// to the specified node. This method returns all nodes where the edges
+    /// match the condition.
+    ///
+    ///     >>> G = rx.PyDiGraph()
+    ///     >>> G.add_nodes_from(["A", "B", "C", "D", "E"])
+    ///     NodeIndices[0, 1, 2, 3, 4]
+    ///     >>> G.extend_from_weighted_edge_list([(0, 1, 10), (1, 2, 10), (1, 3, 20), (1, 4, 30)])
+    ///     >>> G.find_successors_by_edge(1, lambda x: x < 25)
+    ///     ['D', 'C']
+    ///
+    /// See also :func:`~find_predecessors_by_edge`.
     ///
     /// :param int node: The index of the node to get the successors for
     ///
@@ -729,9 +777,21 @@ impl PyDiGraph {
     /// where the edges connecting from those nodes satisfy the provided
     /// filter function.
     ///
-    /// :param int node: The index of the node to get the predecessors for
+    /// A predecessor is defined as a node that has a directed edge pointing
+    /// to the specified node. This method returns all nodes where the edges
+    /// match the condition.
     ///
-    /// :param filter_fn: The filter function to apply on edges. It takes
+    ///     >>> G = rx.PyDiGraph()
+    ///     >>> G.add_nodes_from(["A", "B", "C", "D", "E"])
+    ///     NodeIndices[0, 1, 2, 3, 4]
+    ///     >>> G.extend_from_weighted_edge_list([(0, 3, 10), (1, 3, 20), (2, 3, 30), (3, 4, 10)])
+    ///     >>> G.find_predecessors_by_edge(3, lambda x: x < 25)
+    ///     ['B', 'A']
+    ///
+    /// To get one node only, see :func:`~find_predecessor_node_by_edge`.
+    ///
+    /// :param int node: The index of the node to get the predecessors for
+    /// :param Callable filter_fn: The filter function to apply on edges. It takes
     ///     in one argument, the edge data payload/weight object, and returns a
     ///     boolean whether the edge matches the conditions or not.
     ///     If any edge returns ``True``, the node will be included.
@@ -1656,6 +1716,15 @@ impl PyDiGraph {
     /// the case of a multigraph only one edge will be used, not all of the
     /// edges between two node.
     ///
+    ///     >>> G = rx.PyDiGraph()
+    ///     >>> G.add_nodes_from(["A", "B", "C", "D", "E"])
+    ///     >>> NodeIndices[0, 1, 2, 3, 4]
+    ///     >>> G.extend_from_weighted_edge_list([(0, 2, "A->C"), (1, 2, "B->C"), (2, 3, "C->D"), (3, 4, "D->E")])
+    ///     >>> G.adj(2)  # neighbors of the node "C"
+    ///     {1: 'B->C', 0: 'A->C', 3: 'C->D'}
+    ///
+    /// For direction-aware neighbors, see :func:`~adj_direction`.
+    ///
     /// :param int node: The index of the node to get the neighbors of
     ///
     /// :returns: A dictionary where the keys are the node indices and the values
@@ -1684,6 +1753,17 @@ impl PyDiGraph {
     /// and the provided node. Note in the case of a multigraph only one edge
     /// one edge will be used, not all of the edges between two node.
     ///
+    ///     >>> G = rx.PyDiGraph()
+    ///     >>> G.add_nodes_from(["A", "B", "C", "D", "E"])
+    ///     >>> NodeIndices[0, 1, 2, 3, 4]
+    ///     >>> G.extend_from_weighted_edge_list([(0, 2, "A->C"), (1, 2, "B->C"), (2, 3, "C->D"), (3, 4, "D->E")])
+    ///     >>> G.adj_direction(2, True)
+    ///     {1: 'B->C', 0: 'A->C'}
+    ///     >>> G.adj_direction(2, False)
+    ///     {3: 'C->D'}
+    ///
+    /// For direction-naive neighbors, see :func:`~adj`.
+    ///
     /// :param int node: The index of the node to get the neighbors of
     /// :param bool direction: The direction to use for finding nodes,
     ///     ``True`` means inbound edges and ``False`` means outbound edges.
@@ -1708,10 +1788,29 @@ impl PyDiGraph {
         }
     }
 
-    /// Get the neighbors (i.e. successors) of a node.
+    /// Return a list of node indices of neighbors (i.e. successors) in a directed graph
     ///
-    /// This will return a list of neighboring node indices. This function
-    /// is equivalent to :meth:`successor_indices`.
+    /// A successor is defined as a node that has a directed edge pointing
+    /// from the specified node. In a multigraph, where two nodes can be connected
+    /// by multiple edges, each successor node index is returned only once.
+    ///
+    /// This function is equivalent to :meth:`successor_indices`.
+    ///
+    ///     >>> G = rx.PyDiGraph()
+    ///     >>> G.add_nodes_from(["A", "B", "C", "D", "E"])
+    ///     NodeIndices[0, 1, 2, 3, 4]
+    ///     >>> G.extend_from_edge_list([(0, 1), (1, 2), (1, 3), (1, 4)])
+    ///     >>> G.neighbors(1)  # neighbors of the 'B' node
+    ///     NodeIndices[4, 3, 2]
+    ///
+    /// To get the data of these nodes, see :func:`~successors`.
+    ///
+    /// To filter the successors by the attributes of the connecting edge,
+    /// see :func:`~find_successors_by_edge`.
+    ///
+    /// See also :func:`~predecessor_indices`.
+    ///
+    /// For undirected graphs, see :func:`~PyGraph.neighbors`.
     ///
     /// :param int node: The index of the node to get the neighbors of
     ///
@@ -1733,17 +1832,17 @@ impl PyDiGraph {
     /// Get the direction-agnostic neighbors (i.e. successors and predecessors) of a node.
     ///
     /// This is functionally equivalent to converting the directed graph to an undirected
-    /// graph, and calling ``neighbors`` thereon. For example::
+    /// graph, and calling ``neighbors`` thereon.
     ///
-    ///     import rustworkx
+    ///     >>> G = rx.PyDiGraph()
+    ///     >>> G.extend_from_edge_list([(0, 1), (1, 2), (2, 3), (3, 4)])
+    ///     >>> node = 2
+    ///     >>> G.neighbors_undirected(node)
+    ///     NodeIndices[3, 1]
+    ///     >>> G.to_undirected().neighbors(node)
+    ///     NodeIndices[1, 3]
     ///
-    ///     dag = rustworkx.generators.directed_cycle_graph(num_nodes=10, bidirectional=False)
-    ///
-    ///     node = 3
-    ///     neighbors = dag.neighbors_undirected(node)
-    ///     same_neighbors = dag.to_undirected().neighbors(node)
-    ///
-    ///     assert sorted(neighbors) == sorted(same_neighbors)
+    /// For direction-aware neighbors, see :func:`~predecessors` and :func:`~successors`.
     ///
     /// :param int node: The index of the node to get the neighbors of
     ///
@@ -1762,14 +1861,31 @@ impl PyDiGraph {
         }
     }
 
-    /// Get the successor indices of a node.
+    /// Return a list of successor node indices in a directed graph
     ///
-    /// This will return a list of the node indices for the successors of
-    /// a node
+    /// A successor is defined as a node that has a directed edge pointing
+    /// from the specified node. In a multigraph, where two nodes can be connected
+    /// by multiple edges, each successor node index is returned only once.
     ///
-    /// :param int node: The index of the node to get the successors of
+    ///     >>> G = rx.PyDiGraph()
+    ///     >>> G.add_nodes_from(["A", "B", "C", "D", "E"])
+    ///     NodeIndices[0, 1, 2, 3, 4]
+    ///     >>> G.extend_from_edge_list([(0, 1), (1, 2), (1, 3), (1, 4)])
+    ///     >>> G.successor_indices(1)  # successors of the 'B' node
+    ///     NodeIndices[4, 3, 2]
     ///
-    /// :returns: A list of the neighbor node indices
+    /// To get the data of these nodes, see :func:`~successors`.`
+    ///
+    /// To filter the successors by the attributes of the connecting edge,
+    /// see :func:`~find_successors_by_edge`.
+    ///
+    /// See also :func:`~predecessor_indices` and :func:`~neighbors`.
+    ///
+    /// For undirected graphs, see :func:`~PyGraph.neighbors`.
+    ///
+    /// :param int node: The index of the node to get the successors for
+    ///
+    /// :returns: A list of the node indices of all node's successors
     /// :rtype: NodeIndices
     #[pyo3(text_signature = "(self, node, /)")]
     pub fn successor_indices(&self, node: usize) -> NodeIndices {
@@ -1782,14 +1898,31 @@ impl PyDiGraph {
         }
     }
 
-    /// Get the predecessor indices of a node.
+    /// Return a list of predecessor node indices in a directed graph
     ///
-    /// This will return a list of the node indices for the predecessors of
-    /// a node
+    /// A predecessor is defined as a node that has a directed edge pointing
+    /// to the specified node. In a multigraph, where two nodes can be connected
+    /// by multiple edges, each predecessor node index is returned only once.
     ///
-    /// :param int node: The index of the node to get the predecessors of
+    ///     >>> G = rx.PyDiGraph()
+    ///     >>> G.add_nodes_from(["A", "B", "C", "D", "E"])
+    ///     NodeIndices[0, 1, 2, 3, 4]
+    ///     >>> G.extend_from_edge_list([(0, 3), (1, 3), (2, 3), (3, 4)])
+    ///     >>> G.predecessor_indices(3)  # predecessors of the 'D' node
+    ///     NodeIndices[2, 1, 0]
     ///
-    /// :returns: A list of the neighbor node indices
+    /// To get the data of these nodes, see [predecessors]
+    ///
+    /// To filter the predecessors by the attributes of the connecting edge,
+    /// see :func:`~find_predecessors_by_edge`.
+    ///
+    /// See also :func:`~successor_indices`.
+    ///
+    /// For undirected graphs, see :func:`~PyGraph.neighbors`.
+    ///
+    /// :param int node: The index of the node to get the predecessors for
+    ///
+    /// :returns: A list of the node indices of all node's predecessors
     /// :rtype: NodeIndices
     #[pyo3(text_signature = "(self, node, /)")]
     pub fn predecessor_indices(&self, node: usize) -> NodeIndices {
@@ -2064,10 +2197,18 @@ impl PyDiGraph {
         neighbors.count()
     }
 
-    /// Find a target node with a specific edge
+    /// Find any adjacent (successor) node connected with an edge that matches the condition
     ///
     /// This method is used to find a target node that is a adjacent to a given
-    /// node as a successor given an edge condition.
+    /// node as a successor given an edge condition. This method returns one
+    /// arbitrary node where the edge matches the condition.
+    ///
+    ///     >>> G = rx.PyDiGraph()
+    ///     >>> G.add_nodes_from(["A", "B", "C", "D", "E"])
+    ///     NodeIndices[0, 1, 2, 3, 4]
+    ///     >>> G.extend_from_weighted_edge_list([(0, 1, 10), (1, 2, 10), (1, 3, 20), (1, 4, 30)])
+    ///     >>> G.find_adjacent_node_by_edge(1, lambda x: x < 25)
+    ///     'D'
     ///
     /// :param int node: The index of the node to use as the source of the search
     /// :param Callable predicate: A Python callable that will take a single
@@ -2077,6 +2218,7 @@ impl PyDiGraph {
     /// :returns: The node object that is connected by an edge to the given node
     ///     as a successor which matches the provided condition
     /// :rtype: S
+    /// :raises: NoSuitableNeighbors: If there are no suitable nodes
     #[pyo3(text_signature = "(self, node, predicate, /)")]
     pub fn find_adjacent_node_by_edge(
         &self,
@@ -2101,10 +2243,20 @@ impl PyDiGraph {
         Err(NoSuitableNeighbors::new_err("No suitable neighbor"))
     }
 
-    /// Find a source node with a specific edge
+    /// Find any predecessor node connected with an edge that matches the condition
     ///
-    /// This method is used to find a predecessor of
-    /// a given node given an edge condition.
+    /// A predecessor is defined as a node that has a directed edge pointing
+    /// to the specified node. This method returns one arbitrary node where the edge
+    /// matches the condition.
+    ///
+    ///     >>> G = rx.PyDiGraph()
+    ///     >>> G.add_nodes_from(["A", "B", "C", "D", "E"])
+    ///     NodeIndices[0, 1, 2, 3, 4]
+    ///     >>> G.extend_from_weighted_edge_list([(0, 3, 10), (1, 3, 20), (2, 3, 30), (3, 4, 10)])
+    ///     >>> G.find_predecessor_node_by_edge(3, lambda x: x < 25)
+    ///     'B'
+    ///
+    /// To get all such nodes, see :func:`~find_predecessors_by_edge`.
     ///
     /// :param int node: The node to use as the source of the search
     /// :param Callable predicate: A Python callable that will take a single
@@ -2114,6 +2266,7 @@ impl PyDiGraph {
     /// :returns: The node object that is connected as a predecessor
     ///     by an edge to the given node which matches the provided condition
     /// :rtype: S
+    /// :raises: NoSuitableNeighbors: If there are no suitable nodes
     #[pyo3(text_signature = "(self, node, predicate, /)")]
     pub fn find_predecessor_node_by_edge(
         &self,
