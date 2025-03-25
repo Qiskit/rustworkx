@@ -728,6 +728,8 @@ impl PyDiGraph {
     ///     >>> G.find_successors_by_edge(1, lambda x: x < 25)
     ///     ['D', 'C']
     ///
+    /// To get one node only, see :func:`~find_successor_node_by_edge`.
+    ///
     /// See also :func:`~find_predecessors_by_edge`.
     ///
     /// :param int node: The index of the node to get the successors for
@@ -2280,6 +2282,54 @@ impl PyDiGraph {
         };
         let index = NodeIndex::new(node);
         let dir = petgraph::Direction::Incoming;
+        let edges = self.graph.edges_directed(index, dir);
+        for edge in edges {
+            let edge_predicate_raw = predicate_callable(edge.weight())?;
+            let edge_predicate: bool = edge_predicate_raw.extract(py)?;
+            if edge_predicate {
+                return Ok(self.graph.node_weight(edge.source()).unwrap());
+            }
+        }
+        Err(NoSuitableNeighbors::new_err("No suitable neighbor"))
+    }
+
+    /// Find any successor node connected with an edge that matches the condition
+    ///
+    /// A successor is defined as a node that has a directed edge pointing
+    /// from the specified node. This method returns one arbitrary node where the edge
+    /// matches the condition.
+    ///
+    ///     >>> G = rx.PyDiGraph()
+    ///     >>> G.add_nodes_from(["A", "B", "C", "D", "E"])
+    ///     NodeIndices[0, 1, 2, 3, 4]
+    ///     >>> G.extend_from_weighted_edge_list([(0, 1, 10), (1, 2, 10), (1, 3, 20), (1, 4, 30)])
+    ///     >>> G.find_successor_node_by_edge(1, lambda x: x < 25)
+    ///     'D'
+    ///
+    /// To get all such nodes, see :func:`~find_successors_by_edge`.
+    ///
+    /// :param int node: The node to use as the source of the search
+    /// :param Callable predicate: A Python callable that will take a single
+    ///     parameter, the edge object, and will return a boolean if the
+    ///     edge matches or not
+    ///
+    /// :returns: The node object that is connected as a successor
+    ///     by an edge to the given node which matches the provided condition
+    /// :rtype: S
+    /// :raises: NoSuitableNeighbors: If there are no suitable nodes
+    #[pyo3(text_signature = "(self, node, predicate, /)")]
+    pub fn find_successor_node_by_edge(
+        &self,
+        py: Python,
+        node: usize,
+        predicate: PyObject,
+    ) -> PyResult<&PyObject> {
+        let predicate_callable = |a: &PyObject| -> PyResult<PyObject> {
+            let res = predicate.call1(py, (a,))?;
+            res.into_py_any(py)
+        };
+        let index = NodeIndex::new(node);
+        let dir = petgraph::Direction::Outgoing;
         let edges = self.graph.edges_directed(index, dir);
         for edge in edges {
             let edge_predicate_raw = predicate_callable(edge.weight())?;
