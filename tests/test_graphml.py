@@ -106,7 +106,7 @@ class TestGraphML(unittest.TestCase):
         ## Test reading a graphmlz
         with tempfile.NamedTemporaryFile("w+b") as fd:
             fd.flush()
-            newname = fd.name + ".gz"
+            newname = f"{fd.name}.gz"
             with gzip.open(newname, "wt") as wf:
                 wf.write(graph_xml)
 
@@ -130,7 +130,7 @@ class TestGraphML(unittest.TestCase):
         with tempfile.NamedTemporaryFile("w+b") as fd:
             # close the file
             fd.flush()
-            newname = fd.name + ".ext"
+            newname = f"{fd.name}.ext"
             with gzip.open(newname, "wt") as wf:
                 wf.write(graph_xml)
 
