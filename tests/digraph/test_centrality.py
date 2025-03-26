@@ -136,10 +136,26 @@ class TestCentralityDiGraphDeletedNode(unittest.TestCase):
         expected = {0: 0.0, 1: 1.0 / 3.0, 2: 4.0 / 9.0, 4: 0.5}
         self.assertEqual(expected, closeness)
 
+    def test_closeness_centrality_parallel(self):
+        closeness = rustworkx.digraph_closeness_centrality(
+            self.graph, parallel_threshold=1
+        )  # force parallelism
+        expected = {0: 0.0, 1: 1.0 / 3.0, 2: 4.0 / 9.0, 4: 0.5}
+        self.assertEqual(expected, closeness)
+
     def test_closeness_centrality_wf_improved(self):
         closeness = rustworkx.digraph_closeness_centrality(self.graph, wf_improved=False)
         expected = {0: 0.0, 1: 1.0, 2: 2.0 / 3.0, 4: 0.5}
         self.assertEqual(expected, closeness)
+
+    def test_closeness_weighted_with_default_weight(self):
+        for parallel_threshold in [1, 200]:
+            with self.subTest(parallel_threshold=parallel_threshold):
+                closeness = rustworkx.closeness_centrality(self.graph, parallel_threshold=1)
+                weighted_closeness = rustworkx.newman_weighted_closeness_centrality(
+                    self.graph, default_weight=1.0, parallel_threshold=1
+                )
+                self.assertEqual(closeness, weighted_closeness)
 
 
 class TestEigenvectorCentrality(unittest.TestCase):
