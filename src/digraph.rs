@@ -3003,7 +3003,9 @@ impl PyDiGraph {
     ///     It is worth noting that node and edge weight/data payloads are
     ///     passed by reference so if you update (not replace) an object used
     ///     as the weight in graph or the subgraph it will also be updated in
-    ///     the other.
+    ///     the other. Because the indexes will be recreated, the subgraph will
+    ///     have different indexes, meaning you cannot access nodes using the
+    ///     original graph's indexes.
     /// :rtype: PyGraph
     ///
     #[pyo3(signature=(nodes, preserve_attrs=false),text_signature = "(self, nodes, /, preserve_attrs=False)")]
