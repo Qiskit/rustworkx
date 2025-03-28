@@ -222,18 +222,33 @@ pub fn bfs_predecessors(
     }
 }
 
-/// Return the ancestors of a node in a graph.
+/// Retrieve all ancestors of a specified node in a directed graph.
 ///
-/// This differs from :meth:`PyDiGraph.predecessors` method  in that
-/// ``predecessors`` returns only nodes with a direct edge into the provided
-/// node. While this function returns all nodes that have a path into the
-/// provided node.
+/// This function differs from the :meth:`PyDiGraph.predecessors` method,
+/// which only returns nodes that have a direct edge leading to the specified
+/// node. In contrast, this function returns all nodes that have a path
+/// leading to the specified node, regardless of the number of edges in
+/// between.
 ///
-/// :param PyDiGraph graph: The graph to get the ancestors from.
-/// :param int node: The index of the graph node to get the ancestors for
+///     >>> G = rx.PyDiGraph()
+///     >>> G.add_nodes_from(range(5))
+///     NodeIndices[0, 1, 2, 3, 4]
+///     >>> G.add_edges_from_no_data([(0, 2), (1, 2), (2, 3), (3, 4)])
+///     [0, 1, 2, 3]
+///     >>> rx.ancestors(G, 3)
+///     {0, 1, 2}
 ///
-/// :returns: A set of node indices of ancestors of provided node.
-/// :rtype: set
+/// .. seealso ::
+///   See also :func:`~predecessors`.
+///
+/// :param PyDiGraph graph: The directed graph from which to retrieve ancestors.
+/// :param int node: The index of the node for which to find ancestors.
+///
+/// :returns: A set containing the indices of all ancestor nodes of the
+///          specified node.
+/// :rtype: set[int]
+///
+/// :raises IndexError: If the specified node is not present in the directed graph.
 #[pyfunction]
 #[pyo3(text_signature = "(graph, node, /)")]
 pub fn ancestors(graph: &digraph::PyDiGraph, node: usize) -> PyResult<HashSet<usize>> {
@@ -250,18 +265,33 @@ pub fn ancestors(graph: &digraph::PyDiGraph, node: usize) -> PyResult<HashSet<us
         .collect())
 }
 
-/// Return the descendants of a node in a graph.
+/// Retrieve all descendants of a specified node in a directed graph.
 ///
-/// This differs from :meth:`PyDiGraph.successors` method in that
-/// ``successors``` returns only nodes with a direct edge out of the provided
-/// node. While this function returns all nodes that have a path from the
-/// provided node.
+/// This function differs from the :meth:`PyDiGraph.successors` method,
+/// which only returns nodes that have a direct edge leading from the specified
+/// node. In contrast, this function returns all nodes that have a path
+/// leading from the specified node, regardless of the number of edges in
+/// between.
 ///
-/// :param PyDiGraph graph: The graph to get the descendants from
-/// :param int node: The index of the graph node to get the descendants for
+///     >>> G = rx.PyDiGraph()
+///     >>> G.add_nodes_from(range(5))
+///     NodeIndices[0, 1, 2, 3, 4]
+///     >>> G.add_edges_from_no_data([(0, 1), (1, 2), (2, 3), (2, 4)])
+///     [0, 1, 2, 3]
+///     >>> rx.descendants(G, 1)
+///     {2, 3, 4}
 ///
-/// :returns: A set of node indices of descendants of provided node.
-/// :rtype: set
+/// .. seealso ::
+///   See also :func:`~ancestors`.
+///
+/// :param PyDiGraph graph: The directed graph from which to retrieve descendants.
+/// :param int node: The index of the node for which to find descendants.
+///
+/// :returns: A set containing the indices of all descendant nodes of the
+///          specified node.
+/// :rtype: set[int]
+///
+/// :raises IndexError: If the specified node is not present in the directed graph.
 #[pyfunction]
 #[pyo3(text_signature = "(graph, node, /)")]
 pub fn descendants(graph: &digraph::PyDiGraph, node: usize) -> PyResult<HashSet<usize>> {

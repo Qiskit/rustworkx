@@ -644,13 +644,18 @@ impl PyDiGraph {
     ///     >>> G.extend_from_edge_list([(0, 1), (1, 2), (1, 3), (1, 4)])
     ///     >>> G.successors(1)  # successors of the 'B' node
     ///     ['E', 'D', 'C']
+    ///     >>> G.successors(10) # successors of an non-existing node
+    ///     []
     ///
-    /// To filter the successors by the attributes of the connecting edge,
-    /// see :func:`~find_successors_by_edge`.
+    /// .. seealso ::
+    ///   To filter the successors by the attributes of the connecting edge,
+    ///   see :func:`~find_successors_by_edge`.
     ///
-    /// See also :func:`~predecessors` and :func:`~neighbors`.
+    ///   See also :func:`~predecessors` and :func:`~neighbors`.
     ///
-    /// For undirected graphs, see :func:`~PyGraph.neighbors`.
+    ///   For undirected graphs, see :func:`~PyGraph.neighbors`.
+    ///
+    ///   To go beyond the nearest successors, see :func:`~rustworkx.descendants`.
     ///
     /// :param int node: The index of the node to get the predecessors for
     ///
@@ -684,13 +689,18 @@ impl PyDiGraph {
     ///     >>> G.extend_from_edge_list([(0, 3), (1, 3), (2, 3), (3, 4)])
     ///     >>> G.predecessors(3)  # predecessors of the 'D' node
     ///     ['C', 'B', 'A']
+    ///     >>> G.predecessors(10) # predecessors of an non-existing node
+    ///     []
     ///
-    /// To filter the predecessors by the attributes of the connecting edge,
-    /// see :func:`~find_predecessors_by_edge`.
+    /// .. seealso ::
+    ///   To filter the predecessors by the attributes of the connecting edge,
+    ///   see :func:`~find_predecessors_by_edge`.
     ///
-    /// See also :func:`~successors`.
+    ///   See also :func:`~successors`.
     ///
-    /// For undirected graphs, see :func:`~PyGraph.neighbors`.
+    ///   For undirected graphs, see :func:`~PyGraph.neighbors`.
+    ///
+    ///   To get beyond the nearest predecessors, see :func:`~rustworkx.ancestors`.
     ///
     /// :param int node: The index of the node to get the predecessors for
     ///
@@ -705,9 +715,8 @@ impl PyDiGraph {
         let mut predec: Vec<&PyObject> = Vec::new();
         let mut used_indices: HashSet<NodeIndex> = HashSet::new();
         for pred in parents {
-            if !used_indices.contains(&pred) {
+            if used_indices.insert(pred) {
                 predec.push(self.graph.node_weight(pred).unwrap());
-                used_indices.insert(pred);
             }
         }
         predec
