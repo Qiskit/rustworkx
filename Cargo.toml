@@ -13,6 +13,7 @@ license.workspace = true
 [workspace]
 members = [
     "rustworkx-core",
+    "rustworkx-core/fuzz"
 ]
 
 [workspace.package]

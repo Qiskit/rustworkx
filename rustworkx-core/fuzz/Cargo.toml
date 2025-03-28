@@ -1,0 +1,22 @@
+[package]
+name = "rustworkx-core-fuzz"
+version = "0.0.0"
+publish = false
+edition = "2021"
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+arbitrary = { version = "1", features = ["derive"] }
+libfuzzer-sys = "0.4"
+
+[dependencies.rustworkx-core]
+path = ".."
+
+[[bin]]
+name = "is_connected_fuzz"
+path = "fuzz_targets/is_connected_fuzz.rs"
+test = false
+doc = false
+bench = false
