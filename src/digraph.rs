@@ -21,6 +21,7 @@ use std::io::prelude::*;
 use std::io::{BufReader, BufWriter};
 use std::str;
 
+use hashbrown::hash_set::Entry;
 use hashbrown::{HashMap, HashSet};
 
 use rustworkx_core::dictmap::*;
@@ -670,8 +671,12 @@ impl PyDiGraph {
         let mut successors: Vec<&PyObject> = Vec::new();
         let mut used_indices: HashSet<NodeIndex> = HashSet::new();
         for succ in children {
-            if used_indices.insert(succ) {
-                successors.push(self.graph.node_weight(succ).unwrap());
+            match used_indices.entry(succ) {
+                Entry::Vacant(used_indices_entry) => {
+                    used_indices_entry.insert();
+                    successors.push(self.graph.node_weight(succ).unwrap());
+                }
+                Entry::Occupied(_) => {}
             }
         }
         successors
@@ -715,8 +720,12 @@ impl PyDiGraph {
         let mut predec: Vec<&PyObject> = Vec::new();
         let mut used_indices: HashSet<NodeIndex> = HashSet::new();
         for pred in parents {
-            if used_indices.insert(pred) {
-                predec.push(self.graph.node_weight(pred).unwrap());
+            match used_indices.entry(pred) {
+                Entry::Vacant(used_indices_entry) => {
+                    used_indices_entry.insert();
+                    predec.push(self.graph.node_weight(pred).unwrap());
+                }
+                Entry::Occupied(_) => {}
             }
         }
         predec
