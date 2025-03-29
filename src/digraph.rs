@@ -782,12 +782,15 @@ impl PyDiGraph {
 
         for edge in raw_edges {
             let succ = edge.target();
-            if !used_indices.contains(&succ) {
-                let edge_weight = edge.weight();
-                if filter_edge(edge_weight)? {
-                    used_indices.insert(succ);
-                    successors.push(self.graph.node_weight(succ).unwrap());
+            match used_indices.entry(succ) {
+                Entry::Vacant(used_indices_entry) => {
+                    let edge_weight = edge.weight();
+                    if filter_edge(edge_weight)? {
+                        used_indices_entry.insert();
+                        successors.push(self.graph.node_weight(succ).unwrap());
+                    }
                 }
+                Entry::Occupied(_) => {}
             }
         }
         Ok(successors)
@@ -841,12 +844,15 @@ impl PyDiGraph {
 
         for edge in raw_edges {
             let pred = edge.source();
-            if !used_indices.contains(&pred) {
-                let edge_weight = edge.weight();
-                if filter_edge(edge_weight)? {
-                    used_indices.insert(pred);
-                    predec.push(self.graph.node_weight(pred).unwrap());
+            match used_indices.entry(pred) {
+                Entry::Vacant(used_indices_entry) => {
+                    let edge_weight = edge.weight();
+                    if filter_edge(edge_weight)? {
+                        used_indices_entry.insert();
+                        predec.push(self.graph.node_weight(pred).unwrap());
+                    }
                 }
+                Entry::Occupied(_) => {}
             }
         }
         Ok(predec)

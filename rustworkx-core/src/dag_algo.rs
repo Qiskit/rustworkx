@@ -16,6 +16,7 @@ use std::error::Error;
 use std::fmt::{Display, Formatter};
 use std::hash::Hash;
 
+use hashbrown::hash_set::Entry;
 use hashbrown::{HashMap, HashSet};
 use std::fmt::Debug;
 use std::mem::swap;
@@ -442,11 +443,15 @@ where
                     .neighbors_directed(*node, petgraph::Direction::Outgoing);
                 let mut used_indices: HashSet<G::NodeId> = HashSet::new();
                 for succ in children {
-                    // Skip duplicate successors
-                    if used_indices.contains(&succ) {
-                        continue;
+                    match used_indices.entry(succ) {
+                        Entry::Occupied(_) => {
+                            // Skip duplicate successors
+                            continue;
+                        }
+                        Entry::Vacant(used_indices_entry) => {
+                            used_indices_entry.insert();
+                        }
                     }
-                    used_indices.insert(succ);
                     let mut multiplicity: usize = 0;
                     let raw_edges: G::EdgesDirected = self
                         .graph
