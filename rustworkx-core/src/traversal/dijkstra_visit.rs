@@ -20,7 +20,7 @@
 use std::collections::BinaryHeap;
 use std::hash::Hash;
 
-use hashbrown::hash_map::Entry::{Occupied, Vacant};
+use hashbrown::hash_map::Entry;
 use hashbrown::HashMap;
 
 use petgraph::algo::Measure;
@@ -252,7 +252,7 @@ where
             let cost = edge_cost(edge)?;
             let next_score = node_score + cost;
             match scores.entry(next) {
-                Occupied(ent) => {
+                Entry::Occupied(ent) => {
                     if next_score < *ent.get() {
                         try_control_with_result!(
                             visitor(DijkstraEvent::EdgeRelaxed(node, next, edge.weight())),
@@ -267,7 +267,7 @@ where
                         );
                     }
                 }
-                Vacant(ent) => {
+                Entry::Vacant(ent) => {
                     try_control_with_result!(
                         visitor(DijkstraEvent::EdgeRelaxed(node, next, edge.weight())),
                         continue
