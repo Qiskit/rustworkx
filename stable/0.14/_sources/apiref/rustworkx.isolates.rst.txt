@@ -1,0 +1,6 @@
+﻿rustworkx.isolates
+==================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: isolates
