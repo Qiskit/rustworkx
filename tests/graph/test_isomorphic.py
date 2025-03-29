@@ -10,6 +10,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import operator as op
 import unittest
 
 import rustworkx
@@ -35,9 +36,7 @@ class TestIsomorphic(unittest.TestCase):
         g_b = rustworkx.PyGraph()
         for id_order in [False, True]:
             with self.subTest(id_order=id_order):
-                self.assertTrue(
-                    rustworkx.is_isomorphic(g_a, g_b, lambda x, y: x == y, id_order=id_order)
-                )
+                self.assertTrue(rustworkx.is_isomorphic(g_a, g_b, op.eq, id_order=id_order))
 
     def test_isomorphic_identical(self):
         g_a = rustworkx.PyGraph()
@@ -76,9 +75,7 @@ class TestIsomorphic(unittest.TestCase):
         g_b.add_edges_from([(nodes[0], nodes[1], "b_1"), (nodes[1], nodes[2], "b_2")])
         for id_order in [False, True]:
             with self.subTest(id_order=id_order):
-                self.assertFalse(
-                    rustworkx.is_isomorphic(g_a, g_b, lambda x, y: x == y, id_order=id_order)
-                )
+                self.assertFalse(rustworkx.is_isomorphic(g_a, g_b, op.eq, id_order=id_order))
 
     def test_is_isomorphic_nodes_compare_raises(self):
         g_a = rustworkx.PyGraph()
@@ -106,9 +103,7 @@ class TestIsomorphic(unittest.TestCase):
         g_b.add_edges_from([(nodes[0], nodes[1], "a_1"), (nodes[1], nodes[2], "a_2")])
         for id_order in [False, True]:
             with self.subTest(id_order=id_order):
-                self.assertTrue(
-                    rustworkx.is_isomorphic(g_a, g_b, lambda x, y: x == y, id_order=id_order)
-                )
+                self.assertTrue(rustworkx.is_isomorphic(g_a, g_b, op.eq, id_order=id_order))
 
     def test_isomorphic_compare_edges_identical(self):
         g_a = rustworkx.PyGraph()
@@ -125,7 +120,7 @@ class TestIsomorphic(unittest.TestCase):
                     rustworkx.is_isomorphic(
                         g_a,
                         g_b,
-                        edge_matcher=lambda x, y: x == y,
+                        edge_matcher=op.eq,
                         id_order=id_order,
                     )
                 )
@@ -149,9 +144,7 @@ class TestIsomorphic(unittest.TestCase):
         g_b.remove_node(nodes[0])
         for id_order in [False, True]:
             with self.subTest(id_order=id_order):
-                self.assertTrue(
-                    rustworkx.is_isomorphic(g_a, g_b, lambda x, y: x == y, id_order=id_order)
-                )
+                self.assertTrue(rustworkx.is_isomorphic(g_a, g_b, op.eq, id_order=id_order))
 
     def test_isomorphic_node_count_not_equal(self):
         g_a = rustworkx.PyGraph()
@@ -243,7 +236,7 @@ class TestIsomorphic(unittest.TestCase):
     def test_isomorphic_parallel_edges_with_edge_matcher(self):
         graph = rustworkx.PyGraph()
         graph.extend_from_weighted_edge_list([(0, 1, "a"), (0, 1, "b"), (1, 2, "c")])
-        self.assertTrue(rustworkx.is_isomorphic(graph, graph, edge_matcher=lambda x, y: x == y))
+        self.assertTrue(rustworkx.is_isomorphic(graph, graph, edge_matcher=op.eq))
 
     def test_graph_isomorphic_insufficient_call_limit(self):
         graph = rustworkx.generators.path_graph(5)

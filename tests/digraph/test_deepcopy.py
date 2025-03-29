@@ -11,6 +11,7 @@
 # under the License.
 
 import copy
+import operator as op
 import unittest
 
 import rustworkx
@@ -23,7 +24,7 @@ class TestDeepcopy(unittest.TestCase):
         dag_a.add_child(node_a, "a_2", "a_1")
         dag_a.add_child(node_a, "a_3", "a_2")
         dag_b = copy.deepcopy(dag_a)
-        self.assertTrue(rustworkx.is_isomorphic_node_match(dag_a, dag_b, lambda x, y: x == y))
+        self.assertTrue(rustworkx.is_isomorphic_node_match(dag_a, dag_b, op.eq))
 
     def test_deepcopy_with_holes(self):
         dag_a = rustworkx.PyDAG()

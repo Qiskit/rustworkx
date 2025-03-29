@@ -10,6 +10,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import operator as op
 import unittest
 
 import rustworkx
@@ -35,9 +36,7 @@ class TestSubgraphIsomorphic(unittest.TestCase):
         for id_order in [False, True]:
             with self.subTest(id_order=id_order):
                 self.assertTrue(
-                    rustworkx.is_subgraph_isomorphic(
-                        g_a, g_b, lambda x, y: x == y, id_order=id_order
-                    )
+                    rustworkx.is_subgraph_isomorphic(g_a, g_b, op.eq, id_order=id_order)
                 )
 
     def test_subgraph_isomorphic_identical(self):
@@ -85,9 +84,7 @@ class TestSubgraphIsomorphic(unittest.TestCase):
         for id_order in [False, True]:
             with self.subTest(id_order=id_order):
                 self.assertFalse(
-                    rustworkx.is_subgraph_isomorphic(
-                        g_a, g_b, lambda x, y: x == y, id_order=id_order
-                    )
+                    rustworkx.is_subgraph_isomorphic(g_a, g_b, op.eq, id_order=id_order)
                 )
 
     def test_subgraph_isomorphic_compare_nodes_identical(self):
@@ -108,9 +105,7 @@ class TestSubgraphIsomorphic(unittest.TestCase):
         for id_order in [False, True]:
             with self.subTest(id_order=id_order):
                 self.assertTrue(
-                    rustworkx.is_subgraph_isomorphic(
-                        g_a, g_b, lambda x, y: x == y, id_order=id_order
-                    )
+                    rustworkx.is_subgraph_isomorphic(g_a, g_b, op.eq, id_order=id_order)
                 )
 
     def test_is_subgraph_isomorphic_nodes_compare_raises(self):
@@ -148,7 +143,7 @@ class TestSubgraphIsomorphic(unittest.TestCase):
                     rustworkx.is_subgraph_isomorphic(
                         g_a,
                         g_b,
-                        edge_matcher=lambda x, y: x == y,
+                        edge_matcher=op.eq,
                         id_order=id_order,
                     )
                 )
@@ -198,9 +193,7 @@ class TestSubgraphIsomorphic(unittest.TestCase):
         second.extend_from_weighted_edge_list([(0, 1, "a"), (1, 2, "b")])
 
         self.assertTrue(
-            rustworkx.is_subgraph_isomorphic(
-                first, second, induced=False, edge_matcher=lambda x, y: x == y
-            )
+            rustworkx.is_subgraph_isomorphic(first, second, induced=False, edge_matcher=op.eq)
         )
 
     def test_subgraph_isomorphic_mismatch_edge_data_parallel_edges(self):
@@ -210,9 +203,7 @@ class TestSubgraphIsomorphic(unittest.TestCase):
         second.extend_from_weighted_edge_list([(0, 1, "a"), (0, 1, "a"), (1, 2, "b")])
 
         self.assertFalse(
-            rustworkx.is_subgraph_isomorphic(
-                first, second, id_order=True, edge_matcher=lambda x, y: x == y
-            )
+            rustworkx.is_subgraph_isomorphic(first, second, id_order=True, edge_matcher=op.eq)
         )
 
     def test_subgraph_isomorphic_parallel_edges(self):

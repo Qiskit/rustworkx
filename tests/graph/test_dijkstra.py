@@ -35,15 +35,13 @@ class TestDijkstraGraph(unittest.TestCase):
         self.graph.add_edge(self.e, self.f, 6)
 
     def test_dijkstra(self):
-        path = rustworkx.graph_dijkstra_shortest_path_lengths(
-            self.graph, self.a, lambda x: float(x), self.e
-        )
+        path = rustworkx.graph_dijkstra_shortest_path_lengths(self.graph, self.a, float, self.e)
         expected = {4: 20.0}
         self.assertEqual(expected, path)
 
     def test_dijkstra_path(self):
         path = rustworkx.graph_dijkstra_shortest_paths(
-            self.graph, self.a, weight_fn=lambda x: float(x), target=self.e
+            self.graph, self.a, weight_fn=float, target=self.e
         )
         # a -> d -> e = 23
         # a -> c -> d -> e = 20
@@ -95,7 +93,7 @@ class TestDijkstraGraph(unittest.TestCase):
         g = rustworkx.PyGraph()
         a = g.add_node("A")
         g.add_node("B")
-        path = rustworkx.graph_dijkstra_shortest_path_lengths(g, a, lambda x: float(x))
+        path = rustworkx.graph_dijkstra_shortest_path_lengths(g, a, float)
         expected = {}
         self.assertEqual(expected, path)
 
@@ -103,7 +101,7 @@ class TestDijkstraGraph(unittest.TestCase):
         g = rustworkx.PyGraph()
         a = g.add_node("A")
         g.add_node("B")
-        path = rustworkx.graph_dijkstra_shortest_paths(g, a, weight_fn=lambda x: float(x))
+        path = rustworkx.graph_dijkstra_shortest_paths(g, a, weight_fn=float)
         expected = {}
         self.assertEqual(expected, path)
 

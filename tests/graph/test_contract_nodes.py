@@ -10,6 +10,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import operator as op
 import unittest
 
 import rustworkx
@@ -227,7 +228,7 @@ class TestContractNodesSimpleGraph(unittest.TestCase):
         self.dag.contract_nodes(
             [self.node_b, self.node_c, self.node_d],
             "m",
-            weight_combo_fn=lambda w1, w2: w1 + w2,
+            weight_combo_fn=op.add,
         )
 
         self.assertEqual(set(self.dag.nodes()), {"a", "e", "m"})

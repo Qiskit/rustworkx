@@ -35,23 +35,15 @@ class TestBellmanFordGraph(unittest.TestCase):
         self.graph.add_edge(self.e, self.f, 6)
 
     def test_bellman_ford(self):
-        path = rustworkx.graph_bellman_ford_shortest_path_lengths(
-            self.graph, self.a, lambda x: float(x)
-        )
-        path_dijkstra = rustworkx.graph_dijkstra_shortest_path_lengths(
-            self.graph, self.a, lambda x: float(x)
-        )
+        path = rustworkx.graph_bellman_ford_shortest_path_lengths(self.graph, self.a, float)
+        path_dijkstra = rustworkx.graph_dijkstra_shortest_path_lengths(self.graph, self.a, float)
         self.assertEqual(path_dijkstra, path)
 
     def test_bellman_ford_path(self):
-        path = rustworkx.graph_bellman_ford_shortest_paths(
-            self.graph, self.a, weight_fn=lambda x: float(x)
-        )
+        path = rustworkx.graph_bellman_ford_shortest_paths(self.graph, self.a, weight_fn=float)
         # a -> d -> e = 23
         # a -> c -> d -> e = 20
-        expected = rustworkx.graph_dijkstra_shortest_paths(
-            self.graph, self.a, weight_fn=lambda x: float(x)
-        )
+        expected = rustworkx.graph_dijkstra_shortest_paths(self.graph, self.a, weight_fn=float)
         self.assertEqual(expected, path)
 
     def test_bellman_ford_with_no_goal_set(self):
@@ -61,19 +53,19 @@ class TestBellmanFordGraph(unittest.TestCase):
 
     def test_bellman_path(self):
         path = rustworkx.graph_bellman_ford_shortest_paths(
-            self.graph, self.a, weight_fn=lambda x: float(x), target=self.e
+            self.graph, self.a, weight_fn=float, target=self.e
         )
         expected = rustworkx.graph_dijkstra_shortest_paths(
-            self.graph, self.a, weight_fn=lambda x: float(x), target=self.e
+            self.graph, self.a, weight_fn=float, target=self.e
         )
         self.assertEqual(expected, path)
 
     def test_bellman_path_lengths(self):
         path = rustworkx.graph_bellman_ford_shortest_path_lengths(
-            self.graph, self.a, lambda x: float(x), goal=self.e
+            self.graph, self.a, float, goal=self.e
         )
         expected = rustworkx.graph_dijkstra_shortest_path_lengths(
-            self.graph, self.a, lambda x: float(x), goal=self.e
+            self.graph, self.a, float, goal=self.e
         )
         self.assertEqual(expected, path)
 
@@ -110,7 +102,7 @@ class TestBellmanFordGraph(unittest.TestCase):
         g = rustworkx.PyGraph()
         a = g.add_node("A")
         g.add_node("B")
-        path = rustworkx.graph_bellman_ford_shortest_path_lengths(g, a, lambda x: float(x))
+        path = rustworkx.graph_bellman_ford_shortest_path_lengths(g, a, float)
         expected = {}
         self.assertEqual(expected, path)
 
@@ -118,7 +110,7 @@ class TestBellmanFordGraph(unittest.TestCase):
         g = rustworkx.PyGraph()
         a = g.add_node("A")
         g.add_node("B")
-        path = rustworkx.graph_bellman_ford_shortest_paths(g, a, weight_fn=lambda x: float(x))
+        path = rustworkx.graph_bellman_ford_shortest_paths(g, a, weight_fn=float)
         expected = {}
         self.assertEqual(expected, path)
 
@@ -310,11 +302,11 @@ class TestBellmanFordGraph(unittest.TestCase):
     def test_raises_index_error_bellman_ford_paths(self):
         with self.assertRaises(IndexError):
             rustworkx.graph_bellman_ford_shortest_paths(
-                self.graph, len(self.graph.node_indices()) + 1, weight_fn=lambda x: float(x)
+                self.graph, len(self.graph.node_indices()) + 1, weight_fn=float
             )
 
     def test_raises_index_error_bellman_ford_path_lengths(self):
         with self.assertRaises(IndexError):
             rustworkx.graph_bellman_ford_shortest_path_lengths(
-                self.graph, len(self.graph.node_indices()) + 1, edge_cost_fn=lambda x: float(x)
+                self.graph, len(self.graph.node_indices()) + 1, edge_cost_fn=float
             )

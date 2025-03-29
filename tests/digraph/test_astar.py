@@ -34,7 +34,7 @@ class TestAstarDigraph(unittest.TestCase):
         g.add_edge(c, f, 11)
         g.add_edge(e, f, 6)
         path = rustworkx.digraph_astar_shortest_path(
-            g, a, lambda goal: goal == "E", lambda x: float(x), lambda y: 0
+            g, a, lambda goal: goal == "E", float, lambda y: 0
         )
         expected = [a, d, e]
         self.assertEqual(expected, path)
@@ -77,7 +77,7 @@ class TestAstarDigraph(unittest.TestCase):
                 g,
                 a,
                 lambda finish: finish_func(end, finish),
-                lambda x: float(x),
+                float,
                 heuristic_func,
             )
             self.assertEqual(expected[index], path)
@@ -87,7 +87,7 @@ class TestAstarDigraph(unittest.TestCase):
                 g,
                 a,
                 lambda finish: finish_func(no_path, finish),
-                lambda x: float(x),
+                float,
                 heuristic_func,
             )
 
@@ -123,6 +123,6 @@ class TestAstarDigraph(unittest.TestCase):
                 g,
                 len(g.node_indices()) + 1,
                 goal_fn=lambda goal: goal == "B",
-                edge_cost_fn=lambda x: float(x),
+                edge_cost_fn=float,
                 estimate_cost_fn=lambda _: 0,
             )

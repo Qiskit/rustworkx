@@ -72,7 +72,7 @@ class TestDAGAdjacencyMatrix(unittest.TestCase):
         dag = rustworkx.PyDAG()
         node_a = dag.add_node("a")
         dag.add_child(node_a, "b", 7.0)
-        res = rustworkx.digraph_adjacency_matrix(dag, lambda x: float(x))
+        res = rustworkx.digraph_adjacency_matrix(dag, float)
         self.assertIsInstance(res, np.ndarray)
         self.assertTrue(np.array_equal(np.array([[0.0, 7.0], [0.0, 0.0]]), res))
 
@@ -81,7 +81,7 @@ class TestDAGAdjacencyMatrix(unittest.TestCase):
         node_a = dag.add_node("a")
         node_b = dag.add_child(node_a, "b", 7.0)
         dag.add_edge(node_a, node_b, 0.5)
-        res = rustworkx.digraph_adjacency_matrix(dag, lambda x: float(x))
+        res = rustworkx.digraph_adjacency_matrix(dag, float)
         self.assertIsInstance(res, np.ndarray)
         self.assertTrue(np.array_equal(np.array([[0.0, 7.5], [0.0, 0.0]]), res))
 
@@ -91,7 +91,7 @@ class TestDAGAdjacencyMatrix(unittest.TestCase):
         node_b = graph.add_node("b")
         graph.add_edge(node_a, node_b, 7.0)
         graph.add_edge(node_a, node_b, 0.5)
-        res = rustworkx.adjacency_matrix(graph, lambda x: float(x), null_value=np.inf)
+        res = rustworkx.adjacency_matrix(graph, float, null_value=np.inf)
         self.assertIsInstance(res, np.ndarray)
         self.assertTrue(np.array_equal(np.array([[np.inf, 7.5], [np.inf, np.inf]]), res))
 
@@ -281,35 +281,25 @@ class TestFromComplexAdjacencyMatrix(unittest.TestCase):
             ]
         )
 
-        min_matrix = rustworkx.digraph_adjacency_matrix(
-            graph, weight_fn=lambda x: float(x), parallel_edge="min"
-        )
+        min_matrix = rustworkx.digraph_adjacency_matrix(graph, weight_fn=float, parallel_edge="min")
         np.testing.assert_array_equal(
             [[0.0, 1.0, 2.0], [0.0, 0.0, 2.0], [1.0, 0.0, 0.0]], min_matrix
         )
 
-        max_matrix = rustworkx.digraph_adjacency_matrix(
-            graph, weight_fn=lambda x: float(x), parallel_edge="max"
-        )
+        max_matrix = rustworkx.digraph_adjacency_matrix(graph, weight_fn=float, parallel_edge="max")
         np.testing.assert_array_equal(
             [[0.0, 4.0, 2.0], [0.0, 0.0, 7.0], [1.0, 0.0, 0.0]], max_matrix
         )
 
-        avg_matrix = rustworkx.digraph_adjacency_matrix(
-            graph, weight_fn=lambda x: float(x), parallel_edge="avg"
-        )
+        avg_matrix = rustworkx.digraph_adjacency_matrix(graph, weight_fn=float, parallel_edge="avg")
         np.testing.assert_array_equal(
             [[0.0, 8 / 3.0, 2.0], [0.0, 0.0, 4.5], [1.0, 0.0, 0.0]], avg_matrix
         )
 
-        sum_matrix = rustworkx.digraph_adjacency_matrix(
-            graph, weight_fn=lambda x: float(x), parallel_edge="sum"
-        )
+        sum_matrix = rustworkx.digraph_adjacency_matrix(graph, weight_fn=float, parallel_edge="sum")
         np.testing.assert_array_equal(
             [[0.0, 8.0, 2.0], [0.0, 0.0, 9.0], [1.0, 0.0, 0.0]], sum_matrix
         )
 
         with self.assertRaises(ValueError):
-            rustworkx.digraph_adjacency_matrix(
-                graph, weight_fn=lambda x: float(x), parallel_edge="error"
-            )
+            rustworkx.digraph_adjacency_matrix(graph, weight_fn=float, parallel_edge="error")

@@ -10,6 +10,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import operator as op
 import unittest
 
 import rustworkx
@@ -44,7 +45,7 @@ class TestToUndirected(unittest.TestCase):
         digraph = rustworkx.PyDiGraph()
         digraph.add_nodes_from([0, 1])
         digraph.add_edges_from([(0, 1, "a"), (0, 1, "b")])
-        graph = digraph.to_undirected(multigraph=False, weight_combo_fn=lambda x, y: x + y)
+        graph = digraph.to_undirected(multigraph=False, weight_combo_fn=op.add)
         self.assertEqual(graph.weighted_edge_list(), [(0, 1, "ab")])
 
     def test_shared_ref(self):

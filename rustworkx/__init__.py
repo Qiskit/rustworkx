@@ -236,7 +236,7 @@ def adjacency_matrix(graph, weight_fn=None, default_weight=1.0, null_value=0.0):
 
         to return a weight of 1 for all edges. Also::
 
-            adjacency_matrix(graph, weight_fn: lambda x: float(x))
+            adjacency_matrix(graph, weight_fn: float)
 
         to cast the edge object as a float as the weight. If this is not
         specified a default value (either ``default_weight`` or 1) will be used
@@ -363,7 +363,7 @@ def floyd_warshall_numpy(
 
         to return a weight of 1 for all edges. Also::
 
-            floyd_warshall_numpy(graph, weight_fn: lambda x: float(x))
+            floyd_warshall_numpy(graph, weight_fn: float)
 
         to cast the edge object as a float as the weight. If this is not
         specified a default value (either ``default_weight`` or 1) will be used
@@ -2053,7 +2053,7 @@ def longest_simple_path(graph):
 
         from rustworkx import all_pairs_all_simple_paths
 
-        max((y.values for y in all_pairs_all_simple_paths(graph).values()), key=lambda x: len(x))
+        max((y.values for y in all_pairs_all_simple_paths(graph).values()), key=len)
 
     but this function will be more efficient than using ``max()`` as the search
     is evaluated in parallel before returning to Python. In the case of multiple

@@ -11,6 +11,7 @@
 # under the License.
 
 import copy
+import operator as op
 import unittest
 
 import rustworkx
@@ -31,9 +32,7 @@ class TestIsomorphic(unittest.TestCase):
 
         for id_order in [False, True]:
             with self.subTest(id_order=id_order):
-                self.assertTrue(
-                    rustworkx.is_isomorphic(dag_a, dag_b, lambda x, y: x == y, id_order=id_order)
-                )
+                self.assertTrue(rustworkx.is_isomorphic(dag_a, dag_b, op.eq, id_order=id_order))
 
     def test_isomorphic_identical(self):
         dag_a = rustworkx.PyDAG()
@@ -78,9 +77,7 @@ class TestIsomorphic(unittest.TestCase):
         dag_b.add_child(node_b, "b_3", "b_2")
         for id_order in [False, True]:
             with self.subTest(id_order=id_order):
-                self.assertFalse(
-                    rustworkx.is_isomorphic(dag_a, dag_b, lambda x, y: x == y, id_order=id_order)
-                )
+                self.assertFalse(rustworkx.is_isomorphic(dag_a, dag_b, op.eq, id_order=id_order))
 
     def test_is_isomorphic_nodes_compare_raises(self):
         dag_a = rustworkx.PyDAG()
@@ -112,9 +109,7 @@ class TestIsomorphic(unittest.TestCase):
         dag_b.add_child(node_b, "a_3", "a_2")
         for id_order in [False, True]:
             with self.subTest(id_order=id_order):
-                self.assertTrue(
-                    rustworkx.is_isomorphic(dag_a, dag_b, lambda x, y: x == y, id_order=id_order)
-                )
+                self.assertTrue(rustworkx.is_isomorphic(dag_a, dag_b, op.eq, id_order=id_order))
 
     def test_isomorphic_compare_edges_identical(self):
         dag_a = rustworkx.PyDAG()
@@ -133,7 +128,7 @@ class TestIsomorphic(unittest.TestCase):
                     rustworkx.is_isomorphic(
                         dag_a,
                         dag_b,
-                        edge_matcher=lambda x, y: x == y,
+                        edge_matcher=op.eq,
                         id_order=id_order,
                     )
                 )
@@ -177,9 +172,7 @@ class TestIsomorphic(unittest.TestCase):
 
         for id_order in [False, True]:
             with self.subTest(id_order=id_order):
-                self.assertTrue(
-                    rustworkx.is_isomorphic(dag_a, dag_b, lambda x, y: x == y, id_order=id_order)
-                )
+                self.assertTrue(rustworkx.is_isomorphic(dag_a, dag_b, op.eq, id_order=id_order))
 
     def test_isomorphic_compare_nodes_with_removals_deepcopy(self):
         dag_a = rustworkx.PyDAG()
@@ -224,7 +217,7 @@ class TestIsomorphic(unittest.TestCase):
                     rustworkx.is_isomorphic(
                         copy.deepcopy(dag_a),
                         copy.deepcopy(dag_b),
-                        lambda x, y: x == y,
+                        op.eq,
                         id_order=id_order,
                     )
                 )
@@ -232,7 +225,7 @@ class TestIsomorphic(unittest.TestCase):
     def test_digraph_isomorphic_parallel_edges_with_edge_matcher(self):
         graph = rustworkx.PyDiGraph()
         graph.extend_from_weighted_edge_list([(0, 1, "a"), (0, 1, "b"), (1, 2, "c")])
-        self.assertTrue(rustworkx.is_isomorphic(graph, graph, edge_matcher=lambda x, y: x == y))
+        self.assertTrue(rustworkx.is_isomorphic(graph, graph, edge_matcher=op.eq))
 
     def test_digraph_isomorphic_self_loop(self):
         graph = rustworkx.PyDiGraph()
@@ -247,9 +240,7 @@ class TestIsomorphic(unittest.TestCase):
         second_graph = rustworkx.PyDiGraph()
         second_graph.add_nodes_from([0])
         second_graph.add_edges_from([(0, 0, "b")])
-        self.assertFalse(
-            rustworkx.is_isomorphic(graph, second_graph, edge_matcher=lambda x, y: x == y)
-        )
+        self.assertFalse(rustworkx.is_isomorphic(graph, second_graph, edge_matcher=op.eq))
 
     def test_digraph_non_isomorphic_rule_out_incoming(self):
         graph = rustworkx.PyDiGraph()
