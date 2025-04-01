@@ -208,6 +208,44 @@ cargo test
 
 from the `rustworkx-core` directory.
 
+### Fuzz Testing in rustworkx
+
+We use cargo-fuzz to test rustworkx for unexpected crashes or undefined behavior. Follow these steps to run fuzzing locally.
+
+#### Building Fuzz Targets
+To build the fuzzing targets, first install cargo-fuzz:
+```sh
+cargo install cargo-fuzz
+```
+then run the following command:
+
+```sh
+cargo fuzz build
+```
+#### To run a fuzz test (e.g., is_connected_fuzz):
+
+```sh
+cargo fuzz run is_connected_fuzz
+```
+For nightly toolchain:
+```sh
+cargo +nightly fuzz run is_connected_fuzz
+```
+Limit fuzz testing to a specific time (e.g., 60 seconds):
+```sh
+cargo fuzz run is_connected_fuzz -max_total_time=60
+```
+#### Interpreting Failures
+Failures are stored in the fuzz/artifacts/ directory.
+
+#### Contributing to Fuzzing
+
+Add Fuzz Targets: Create new targets in the fuzz directory.
+Fix Failures: Investigate and fix bugs found by fuzz tests.
+
+Fuzz tests can be resource-heavy. Run them locally to save resources.
+Submit fuzz tests with detailed documentation and commit messages.
+
 ### Style
 
 #### Rust

@@ -5,7 +5,6 @@ use libfuzzer_sys::fuzz_target;
 use arbitrary::{Arbitrary, Unstructured};
 use std::collections::HashSet;
 use rustworkx_core::petgraph::graph::Graph;
-use rustworkx_core::petgraph::graph::NodeIndex;
 use rustworkx_core::petgraph::visit::Visitable;
 use rustworkx_core::petgraph::Undirected;
 
