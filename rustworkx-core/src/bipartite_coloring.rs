@@ -178,7 +178,7 @@ fn euler_cycles(input_graph: &EdgedGraph) -> Vec<Vec<EdgeIndex>> {
 }
 
 /// Splits a regular bipartite multigraph g of even degree 2k into two regular
-/// bipartte multigraphs h0 and h1 of degree k.
+/// bipartite multigraphs h0 and h1 of degree k.
 fn rbmg_split_into_two(
     g: &RegularBipartiteMultiGraph,
 ) -> (RegularBipartiteMultiGraph, RegularBipartiteMultiGraph) {
@@ -904,7 +904,7 @@ mod test_bipartite_coloring {
             match bipartite_edge_color(&graph) {
                 Ok(edge_coloring) => {
                     check_edge_coloring_undirected(&graph, &edge_coloring, Some(3));
-                    // check_bipatite_edge_coloring_is_valid(&graph, &edge_coloring, Some(3));
+                    // check_bipartite_edge_coloring_is_valid(&graph, &edge_coloring, Some(3));
                 }
                 Err(_) => panic!("This should error"),
             }

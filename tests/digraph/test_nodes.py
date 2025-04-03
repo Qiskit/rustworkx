@@ -243,7 +243,7 @@ class TestNodes(unittest.TestCase):
             (nodes["d"], nodes["f"], weights[1]),
         }
 
-        # 2:2 broadacst
+        # 2:2 broadcast
         dag.add_edge(nodes["g"], mid, weights[2])
         dag.add_edge(nodes["h"], mid, weights[2])
         dag.add_edge(mid, nodes["i"], weights[2])
@@ -316,7 +316,7 @@ class TestNodes(unittest.TestCase):
         expected_edges[nodes["d"], nodes["e"]] = allowed_weights
         expected_edges[nodes["d"], nodes["f"]] = allowed_weights
 
-        # 2:2 broadacst
+        # 2:2 broadcast
         dag.add_edge(nodes["g"], mid, 12)
         dag.add_edge(nodes["h"], mid, 22)
         dag.add_edge(mid, nodes["i"], 32)
@@ -412,7 +412,7 @@ class TestNodes(unittest.TestCase):
         for i in range(5):
             dag.add_child(node_a, i, None)
         dag.add_parent(3, "A parent", None)
-        res = rustworkx.lexicographical_topological_sort(dag, lambda x: str(x))
+        res = rustworkx.lexicographical_topological_sort(dag, str)
         # Node values for nodes [6, 0, 5, 4, 3, 2, 1]
         expected = ["A parent", "a", 0, 1, 2, 3, 4]
         self.assertEqual(expected, res)
@@ -588,7 +588,7 @@ class TestNodes(unittest.TestCase):
         cr_1_out = dag.add_node("cr[1]_out")
         dag.add_edge(cr_1, cr_1_out, "cr[1]")
 
-        res = list(rustworkx.lexicographical_topological_sort(dag, lambda x: str(x)))
+        res = list(rustworkx.lexicographical_topological_sort(dag, str))
         expected = [
             "cr[0]",
             "cr[0]_out",

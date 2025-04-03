@@ -61,7 +61,7 @@ class PyDAG(PyDiGraph):
         graph = rx.PyDAG()
         data_payload = "An arbitrary Python object"
         node_index = graph.add_node(data_payload)
-        print("Node Index: %s" % node_index)
+        print(f"Node Index: {node_index}")
         print(graph[node_index])
 
     The PyDAG class implements the Python mapping protocol for nodes so in
@@ -75,7 +75,7 @@ class PyDAG(PyDiGraph):
         data_payload = "An arbitrary Python object"
         node_index = graph.add_node(data_payload)
         graph[node_index] = "New Payload"
-        print("Node Index: %s" % node_index)
+        print(f"Node Index: {node_index}")
         print(graph[node_index])
 
     The PyDAG class has an option for real time cycle checking which can
@@ -123,7 +123,7 @@ class PyDAG(PyDiGraph):
 
     :param bool check_cycle: When this is set to ``True`` the created
         ``PyDAG`` has runtime cycle detection enabled.
-    :param bool multgraph: When this is set to ``False`` the created
+    :param bool multigraph: When this is set to ``False`` the created
         ``PyDAG`` object will not be a multigraph. When ``False`` if a method
         call is made that would add parallel edges the weight/weight from
         that method call will be used to update the existing edge in place.
@@ -173,7 +173,7 @@ def distance_matrix(graph, parallel_threshold=300, as_undirected=False, null_val
     :returns: The distance matrix
     :rtype: numpy.ndarray
     """
-    raise TypeError("Invalid Input Type %s for graph" % type(graph))
+    raise TypeError(f"Invalid Input Type {type(graph)} for graph")
 
 
 @_rustworkx_dispatch
@@ -215,7 +215,7 @@ def unweighted_average_shortest_path_length(graph, parallel_threshold=300, disco
 
     :rtype: float
     """
-    raise TypeError("Invalid Input Type %s for graph" % type(graph))
+    raise TypeError(f"Invalid Input Type {type(graph)} for graph")
 
 
 @_rustworkx_dispatch
@@ -251,7 +251,7 @@ def adjacency_matrix(graph, weight_fn=None, default_weight=1.0, null_value=0.0):
      :return: The adjacency matrix for the input dag as a numpy array
      :rtype: numpy.ndarray
     """
-    raise TypeError("Invalid Input Type %s for graph" % type(graph))
+    raise TypeError(f"Invalid Input Type {type(graph)} for graph")
 
 
 @_rustworkx_dispatch
@@ -274,7 +274,7 @@ def all_simple_paths(graph, from_, to, min_depth=None, cutoff=None):
     :returns: A list of lists where each inner list is a path of node indices
     :rtype: list
     """
-    raise TypeError("Invalid Input Type %s for graph" % type(graph))
+    raise TypeError(f"Invalid Input Type {type(graph)} for graph")
 
 
 @_rustworkx_dispatch
@@ -330,7 +330,7 @@ def floyd_warshall(
 
     :rtype: AllPairsPathLengthMapping
     """
-    raise TypeError("Invalid Input Type %s for graph" % type(graph))
+    raise TypeError(f"Invalid Input Type {type(graph)} for graph")
 
 
 @_rustworkx_dispatch
@@ -379,7 +379,7 @@ def floyd_warshall_numpy(
         ``np.inf``.
     :rtype: numpy.ndarray
     """
-    raise TypeError("Invalid Input Type %s for graph" % type(graph))
+    raise TypeError(f"Invalid Input Type {type(graph)} for graph")
 
 
 @_rustworkx_dispatch
@@ -406,7 +406,7 @@ def astar_shortest_path(graph, node, goal_fn, edge_cost_fn, estimate_cost_fn):
         of node indices.
     :rtype: NodeIndices
     """
-    raise TypeError("Invalid Input Type %s for graph" % type(graph))
+    raise TypeError(f"Invalid Input Type {type(graph)} for graph")
 
 
 @_rustworkx_dispatch
@@ -440,7 +440,7 @@ def dijkstra_shortest_paths(
         the dict values are lists of node indices making the path.
     :rtype: dict
     """
-    raise TypeError("Invalid Input Type %s for graph" % type(graph))
+    raise TypeError(f"Invalid Input Type {type(graph)} for graph")
 
 
 @_rustworkx_dispatch
@@ -463,7 +463,7 @@ def has_path(
     :return: True if a path exists, False if not
     :rtype: bool
     """
-    raise TypeError("Invalid Input Type %s for graph" % type(graph))
+    raise TypeError(f"Invalid Input Type {type(graph)} for graph")
 
 
 @_rustworkx_dispatch
@@ -496,7 +496,7 @@ def all_pairs_dijkstra_shortest_paths(graph, edge_cost_fn):
 
     :rtype: AllPairsPathMapping
     """
-    raise TypeError("Invalid Input Type %s for graph" % type(graph))
+    raise TypeError(f"Invalid Input Type {type(graph)} for graph")
 
 
 @_rustworkx_dispatch
@@ -521,7 +521,7 @@ def all_pairs_all_simple_paths(graph, min_depth=None, cutoff=None):
         indices to a list of paths between the source and target nodes.
     :rtype: AllPairsMultiplePathMapping
     """
-    raise TypeError("Invalid Input Type %s for graph" % type(graph))
+    raise TypeError(f"Invalid Input Type {type(graph)} for graph")
 
 
 @_rustworkx_dispatch
@@ -554,7 +554,7 @@ def all_pairs_dijkstra_path_lengths(graph, edge_cost_fn):
 
     :rtype: AllPairsPathLengthMapping
     """
-    raise TypeError("Invalid Input Type %s for graph" % type(graph))
+    raise TypeError(f"Invalid Input Type {type(graph)} for graph")
 
 
 @_rustworkx_dispatch
@@ -579,7 +579,7 @@ def dijkstra_shortest_path_lengths(graph, node, edge_cost_fn, goal=None):
         cost/sum of the weights of path
     :rtype: dict
     """
-    raise TypeError("Invalid Input Type %s for graph" % type(graph))
+    raise TypeError(f"Invalid Input Type {type(graph)} for graph")
 
 
 @_rustworkx_dispatch
@@ -604,7 +604,7 @@ def k_shortest_path_lengths(graph, start, k, edge_cost, goal=None):
         the value is the length of the path.
     :rtype: dict
     """
-    raise TypeError("Invalid Input Type %s for graph" % type(graph))
+    raise TypeError(f"Invalid Input Type {type(graph)} for graph")
 
 
 @_rustworkx_dispatch
@@ -648,7 +648,7 @@ def dfs_edges(graph, source=None):
         depth-first order
     :rtype: EdgeList
     """
-    raise TypeError("Invalid Input Type %s for graph" % type(graph))
+    raise TypeError(f"Invalid Input Type {type(graph)} for graph")
 
 
 @_rustworkx_dispatch
@@ -704,7 +704,7 @@ def is_isomorphic(
     .. [VF2] VF2++  An Improved Subgraph Isomorphism Algorithm
         by Alpár Jüttner and Péter Madarasi
     """
-    raise TypeError("Invalid Input Type %s for graph" % type(first))
+    raise TypeError(f"Invalid Input Type {type(first)} for graph")
 
 
 def is_isomorphic_node_match(first, second, matcher, id_order=True):
@@ -799,7 +799,7 @@ def is_subgraph_isomorphic(
         , ``False`` if there is not.
     :rtype: bool
     """
-    raise TypeError("Invalid Input Type %s for graph" % type(first))
+    raise TypeError(f"Invalid Input Type {type(first)} for graph")
 
 
 @_rustworkx_dispatch
@@ -823,9 +823,8 @@ def transitivity(graph):
 
     :returns: Transitivity of the graph.
     :rtype: float
-        raise TypeError("Invalid Input Type %s for graph" % type(graph))
     """
-    raise TypeError("Invalid Input Type %s for graph" % type(graph))
+    raise TypeError(f"Invalid Input Type {type(graph)} for graph")
 
 
 @_rustworkx_dispatch
@@ -845,9 +844,8 @@ def core_number(graph):
 
     :returns: A dictionary keyed by node index to the core number
     :rtype: dict
-        raise TypeError("Invalid Input Type %s for graph" % type(graph))
     """
-    raise TypeError("Invalid Input Type %s for graph" % type(graph))
+    raise TypeError(f"Invalid Input Type {type(graph)} for graph")
 
 
 @_rustworkx_dispatch
@@ -864,7 +862,7 @@ def complement(graph):
         Parallel edges and self-loops are never created,
         even if the ``multigraph`` is set to ``True``
     """
-    raise TypeError("Invalid Input Type %s for graph" % type(graph))
+    raise TypeError(f"Invalid Input Type {type(graph)} for graph")
 
 
 @_rustworkx_dispatch
@@ -879,7 +877,7 @@ def random_layout(graph, center=None, seed=None):
     :returns: The random layout of the graph.
     :rtype: Pos2DMapping
     """
-    raise TypeError("Invalid Input Type %s for graph" % type(graph))
+    raise TypeError(f"Invalid Input Type {type(graph)} for graph")
 
 
 @_rustworkx_dispatch
@@ -944,7 +942,7 @@ def spring_layout(
     :returns: A dictionary of positions keyed by node id.
     :rtype: dict
     """
-    raise TypeError("Invalid Input Type %s for graph" % type(graph))
+    raise TypeError(f"Invalid Input Type {type(graph)} for graph")
 
 
 def networkx_converter(graph, keep_attributes: bool = False):
@@ -1015,7 +1013,7 @@ def bipartite_layout(
     :returns: The bipartite layout of the graph.
     :rtype: Pos2DMapping
     """
-    raise TypeError("Invalid Input Type %s for graph" % type(graph))
+    raise TypeError(f"Invalid Input Type {type(graph)} for graph")
 
 
 @_rustworkx_dispatch
@@ -1031,7 +1029,7 @@ def circular_layout(graph, scale=1, center=None):
     :returns: The circular layout of the graph.
     :rtype: Pos2DMapping
     """
-    raise TypeError("Invalid Input Type %s for graph" % type(graph))
+    raise TypeError(f"Invalid Input Type {type(graph)} for graph")
 
 
 @_rustworkx_dispatch
@@ -1052,7 +1050,7 @@ def shell_layout(graph, nlist=None, rotate=None, scale=1, center=None):
     :returns: The shell layout of the graph.
     :rtype: Pos2DMapping
     """
-    raise TypeError("Invalid Input Type %s for graph" % type(graph))
+    raise TypeError(f"Invalid Input Type {type(graph)} for graph")
 
 
 @_rustworkx_dispatch
@@ -1073,7 +1071,7 @@ def spiral_layout(graph, scale=1, center=None, resolution=0.35, equidistant=Fals
     :returns: The spiral layout of the graph.
     :rtype: Pos2DMapping
     """
-    raise TypeError("Invalid Input Type %s for graph" % type(graph))
+    raise TypeError(f"Invalid Input Type {type(graph)} for graph")
 
 
 @_rustworkx_dispatch
@@ -1088,7 +1086,7 @@ def num_shortest_paths_unweighted(graph, source):
         a node in the graph that node will not be preset in the output mapping.
     :rtype: NodesCountMapping
     """
-    raise TypeError("Invalid input type %s for graph" % type(graph))
+    raise TypeError(f"Invalid Input Type {type(graph)} for graph")
 
 
 @_rustworkx_dispatch
@@ -1135,7 +1133,7 @@ def betweenness_centrality(graph, normalized=True, endpoints=False, parallel_thr
     :returns: A dictionary mapping each node index to its betweenness centrality.
     :rtype: dict
     """
-    raise TypeError("Invalid input type %s for graph" % type(graph))
+    raise TypeError(f"Invalid Input Type {type(graph)} for graph")
 
 
 @_rustworkx_dispatch
@@ -1185,7 +1183,7 @@ def closeness_centrality(graph, wf_improved=True, parallel_threshold=50):
       Methods and Applications (Structural Analysis in the Social Sciences).
       Cambridge: Cambridge University Press. doi:10.1017/CBO9780511815478
     """
-    raise TypeError("Invalid input type %s for graph" % type(graph))
+    raise TypeError(f"Invalid Input Type {type(graph)} for graph")
 
 
 @_rustworkx_dispatch
@@ -1243,7 +1241,7 @@ def newman_weighted_closeness_centrality(
         Cambridge: Cambridge University Press.
         <https://doi.org/10.1017/CBO9780511815478>
     """
-    raise TypeError("Invalid input type %s for graph" % type(graph))
+    raise TypeError(f"Invalid Input Type {type(graph)} for graph")
 
 
 @_rustworkx_dispatch
@@ -1257,7 +1255,7 @@ def degree_centrality(graph):
         degree centrality score for each node.
     :rtype: CentralityMapping
     """
-    raise TypeError("Invalid input type %s for graph" % type(graph))
+    raise TypeError(f"Invalid Input Type {type(graph)} for graph")
 
 
 @_rustworkx_dispatch
@@ -1301,7 +1299,7 @@ def edge_betweenness_centrality(graph, normalized=True, parallel_threshold=50):
         betweenness score for each node.
     :rtype: EdgeCentralityMapping
     """
-    raise TypeError("Invalid input type %s for graph" % type(graph))
+    raise TypeError(f"Invalid Input Type {type(graph)} for graph")
 
 
 @_rustworkx_dispatch
@@ -1342,7 +1340,7 @@ def eigenvector_centrality(graph, weight_fn=None, default_weight=1.0, max_iter=1
          centrality score for that node.
     :rtype: CentralityMapping
     """
-    raise TypeError("Invalid input type %s for graph" % type(graph))
+    raise TypeError(f"Invalid Input Type {type(graph)} for graph")
 
 
 @_rustworkx_dispatch
@@ -1389,7 +1387,7 @@ def katz_centrality(
          centrality score for that node.
     :rtype: CentralityMapping
     """
-    raise TypeError("Invalid input type %s for graph" % type(graph))
+    raise TypeError(f"Invalid Input Type {type(graph)} for graph")
 
 
 @_rustworkx_dispatch
@@ -1447,7 +1445,7 @@ def vf2_mapping(
         indices in ``second`` representing the mapping found.
     :rtype: Iterable[NodeMap]
     """
-    raise TypeError("Invalid Input Type %s for graph" % type(first))
+    raise TypeError(f"Invalid Input Type {type(first)} for graph")
 
 
 @_rustworkx_dispatch
@@ -1488,7 +1486,7 @@ def union(
         passed by reference from ``first`` and ``second`` to this new object.
     :rtype: :class:`~rustworkx.PyGraph` or :class:`~rustworkx.PyDiGraph`
     """
-    raise TypeError("Invalid Input Type %s for graph" % type(first))
+    raise TypeError(f"Invalid Input Type {type(first)} for graph")
 
 
 @_rustworkx_dispatch
@@ -1518,7 +1516,7 @@ def tensor_product(
     :rtype: Tuple[:class:`~rustworkx.PyGraph` or :class:`~rustworkx.PyDiGraph`,
         :class:`~rustworkx.ProductNodeMap`]
     """
-    raise TypeError("Invalid Input Type %s for graph" % type(first))
+    raise TypeError(f"Invalid Input Type {type(first)} for graph")
 
 
 @_rustworkx_dispatch
@@ -1548,7 +1546,7 @@ def cartesian_product(
     :rtype: Tuple[:class:`~rustworkx.PyGraph` or :class:`~rustworkx.PyDiGraph`,
         :class:`~rustworkx.ProductNodeMap`]
     """
-    raise TypeError("Invalid Input Type %s for graph" % type(first))
+    raise TypeError(f"Invalid Input Type {type(first)} for graph")
 
 
 @_rustworkx_dispatch
@@ -1673,7 +1671,7 @@ def bfs_search(graph, source, visitor):
     :param visitor: A visitor object that is invoked at the event points inside the
         algorithm. This should be a subclass of :class:`~rustworkx.visit.BFSVisitor`.
     """
-    raise TypeError("Invalid Input Type %s for graph" % type(graph))
+    raise TypeError(f"Invalid Input Type {type(graph)} for graph")
 
 
 @_rustworkx_dispatch
@@ -1768,7 +1766,7 @@ def dfs_search(graph, source, visitor):
     :param visitor: A visitor object that is invoked at the event points inside the
         algorithm. This should be a subclass of :class:`~rustworkx.visit.DFSVisitor`.
     """
-    raise TypeError("Invalid Input Type %s for graph" % type(graph))
+    raise TypeError(f"Invalid Input Type {type(graph)} for graph")
 
 
 @_rustworkx_dispatch
@@ -1884,7 +1882,7 @@ def dijkstra_search(graph, source, weight_fn, visitor):
     :param visitor: A visitor object that is invoked at the event points inside the
         algorithm. This should be a subclass of :class:`~rustworkx.visit.DijkstraVisitor`.
     """
-    raise TypeError("Invalid Input Type %s for graph" % type(graph))
+    raise TypeError(f"Invalid Input Type {type(graph)} for graph")
 
 
 @_rustworkx_dispatch
@@ -1921,7 +1919,7 @@ def bellman_ford_shortest_paths(
     :raises: :class:`~rustworkx.NegativeCycle`: when there is a negative cycle and the shortest
         path is not defined
     """
-    raise TypeError("Invalid Input Type %s for graph" % type(graph))
+    raise TypeError(f"Invalid Input Type {type(graph)} for graph")
 
 
 @_rustworkx_dispatch
@@ -1948,7 +1946,7 @@ def bellman_ford_shortest_path_lengths(graph, node, edge_cost_fn, goal=None):
     :raises: :class:`~rustworkx.NegativeCycle`: when there is a negative cycle and the shortest
         path is not defined
     """
-    raise TypeError("Invalid Input Type %s for graph" % type(graph))
+    raise TypeError(f"Invalid Input Type {type(graph)} for graph")
 
 
 @_rustworkx_dispatch
@@ -1984,7 +1982,7 @@ def all_pairs_bellman_ford_path_lengths(graph, edge_cost_fn):
     :raises: :class:`~rustworkx.NegativeCycle`: when there is a negative cycle and the shortest
         path is not defined
     """
-    raise TypeError("Invalid Input Type %s for graph" % type(graph))
+    raise TypeError(f"Invalid Input Type {type(graph)} for graph")
 
 
 @_rustworkx_dispatch
@@ -2020,7 +2018,7 @@ def all_pairs_bellman_ford_shortest_paths(graph, edge_cost_fn):
     :raises: :class:`~rustworkx.NegativeCycle`: when there is a negative cycle and the shortest
         path is not defined
     """
-    raise TypeError("Invalid Input Type %s for graph" % type(graph))
+    raise TypeError(f"Invalid Input Type {type(graph)} for graph")
 
 
 @_rustworkx_dispatch
@@ -2050,7 +2048,7 @@ def node_link_json(graph, path=None, graph_attrs=None, node_attrs=None, edge_att
     :returns: Either the JSON string for the payload or ``None`` if ``path`` is specified
     :rtype: str
     """
-    raise TypeError("Invalid Input Type %s for graph" % type(graph))
+    raise TypeError(f"Invalid Input Type {type(graph)} for graph")
 
 
 @_rustworkx_dispatch
@@ -2182,7 +2180,7 @@ def floyd_warshall_successor_and_distance(
 
     :rtype: (numpy.ndarray, numpy.ndarray)
     """
-    raise TypeError("Invalid Input Type %s for graph" % type(graph))
+    raise TypeError(f"Invalid Input Type {type(graph)} for graph")
 
 
 @_rustworkx_dispatch
@@ -2214,6 +2212,5 @@ def all_shortest_paths(
     :rtype: list
     :raises ValueError: when an edge weight with NaN or negative value
         is provided.
-
     """
-    raise TypeError("Invalid Input Type %s for graph" % type(graph))
+    raise TypeError(f"Invalid Input Type {type(graph)} for graph")

@@ -728,7 +728,7 @@ impl GraphML {
 ///
 /// .. note::
 ///
-///     This implementation does not support mixed graphs (directed and unidirected edges together),
+///     This implementation does not support mixed graphs (directed and undirected edges together),
 ///     hyperedges, nested graphs, or ports.
 ///
 /// .. note::

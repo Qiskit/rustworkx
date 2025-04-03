@@ -34,11 +34,20 @@ enum NodeState {
 
 /// Provides functionality to topologically sort a directed graph.
 ///
+/// A topological sorter is used to arrange the nodes of a directed acyclic
+/// graph in a linear order such that for every directed edge from node `u` to
+/// node `v`, node `u`` appears before node `v` in the sequence. This ordering
+/// is particularly useful for resolving dependencies in scenarios such as task
+/// scheduling, where certain tasks must be completed before others, and in
+/// build systems, where files or modules depend on one another. The topological
+/// sorting process ensures that all dependencies are satisfied, allowing for
+/// efficient execution and processing of tasks or data.
+///
 /// The steps required to perform the sorting of a given graph are as follows:
 ///
-/// 1. Create an instance of the TopologicalSorter with an initial graph.
-/// 2. While `is_active()` is True, iterate over the nodes returned by `get_ready()` and process them.
-/// 3. Call `done()` on each node as it finishes processing.
+/// 1. Create an instance of the `TopologicalSorter` with an initial graph.
+/// 2. While :func:`~is_active()` is True, iterate over the nodes returned by :func:`~get_ready()` and process them.
+/// 3. Call :func:`~done()` on each node as it finishes processing.
 ///
 /// For example:
 ///
@@ -46,8 +55,10 @@ enum NodeState {
 ///
 ///   import rustworkx as rx
 ///
-///   graph = rx.generators.directed_path_graph(5)
-///   sorter = rx.TopologicalSorter(graph)
+///   G = rx.PyDiGraph()
+///   G.add_nodes_from(["A", "B", "C", "D", "E", "F"])
+///   G.add_edges_from_no_data([(0, 2),(1, 2), (2, 3), (3, 4), (3, 5)])
+///   sorter = rx.TopologicalSorter(G)
 ///   while sorter.is_active():
 ///       nodes = sorter.get_ready()
 ///       print(nodes)
@@ -57,27 +68,25 @@ enum NodeState {
 /// but it's not recommended doing it as it may result in a logical-error.
 ///
 /// :param PyDiGraph graph: The directed graph to be used.
-/// :param bool check_cycle: When this is set to ``True``, we search
+/// :param bool check_cycle: When this is set to ``True`` (the default), we search
 ///     for cycles in the graph during initialization of topological sorter
 ///     and raise :class:`~rustworkx.DAGHasCycle` if any cycle is detected. If
 ///     it's set to ``False``, topological sorter will output as many nodes
-///     as possible until cycles block more progress. By default is ``True``.
-/// :param bool reverse: If ``False`` (the default), perform a regular topological ordering.  If
-///     ``True``, the ordering will be a reversed topological ordering; that is, a topological
-///     order if all the edges had their directions flipped, such that the first nodes returned are
-///     the ones that have only incoming edges in the DAG.
-/// :param Iterable[int] initial: If given, the initial node indices to start the topological
-///     ordering from.  If not given, the topological ordering will certainly contain every node in
-///     the graph.  If given, only the ``initial`` nodes and nodes that are dominated by the
-///     ``initial`` set will be in the ordering.  Notably, the first return from :meth:`get_ready`
-///     will be the same set of values as ``initial``, and any node that has a natural in
-///     degree of zero will not be in the output ordering if ``initial`` is given and the
-///     zero-in-degree node is not in it.
-///
-///     It is a :exc:`ValueError` to give an `initial` set where the nodes have even a partial
-///     topological order between themselves, though this might not appear until some call
-///     to :meth:`done`.
-/// :param bool check_args: If ``True`` (the default), then all arguments to :meth:`done` are
+///     as possible until cycles block more progress.
+/// :param bool reverse: If ``False`` (the default), perform a regular
+///     topological ordering, i.e. for a directed edge ``A -> B`` the ``A`` appears
+///     before the ``B``.  If ``True``, the ordering will be a reversed topological
+///     ordering, i.e. for a directed edge ``A -> B``, the ``B`` appears before the ``A``.
+/// :param Iterable[int] initial: By default, the topological ordering will
+///     include all nodes in the graph. If ``initial`` node indices are provided, the
+///     ordering will only include those nodes and any nodes that are dominated by
+///     them. In this case, the first output from :meth:`get_ready()` will match
+///     the initial set, and any node with a natural in-degree of zero will be excluded
+///     from the output if it is not part of the initial set. Additionally, providing an
+///     initial set where the nodes have even a partial topological order among
+///     themselves will raise a :exc:`ValueError`, although this may not be detected until
+///     a call to :meth:`done()`.
+/// :param bool check_args: If ``True`` (the default), then all arguments to :meth:`done()` are
 ///     checked for validity, and a :exc:`ValueError` is raised if any were not ready, already
 ///     done, or not indices of the circuit.  If ``False``, the tracking for this is disabled,
 ///     which can provide a meaningful performance and memory improvement, but the results will
@@ -160,22 +169,26 @@ impl TopologicalSorter {
 
     /// Return ``True`` if more progress can be made and ``False`` otherwise.
     ///
-    /// Progress can be made if either there are still nodes ready that haven't yet
-    /// been returned by "get_ready" or the number of nodes marked "done" is less than the
-    /// number that have been returned by "get_ready".
+    /// Progress can be made if either there are still nodes that are ready and
+    /// haven't yet been returned by :meth:`get_ready()`, or if the number of
+    /// nodes marked :meth:`done()` is lower than the number of nodes that have
+    /// been returned by :meth:`get_ready()`.
+    ///
+    /// :returns: ``True`` if further progress is possible, ``False`` otherwise.
+    /// :rtype: `bool`
     fn is_active(&self) -> bool {
         self.num_finished < self.num_passed_out || !self.ready_nodes.is_empty()
     }
 
     /// Return a list of all the nodes that are ready.
     ///
-    /// Initially it returns all nodes with no predecessors; once those are marked
-    /// as processed by calling "done", further calls will return all new nodes that
-    /// have all their predecessors already processed. Once no more progress can be made,
-    /// empty lists are returned.
+    /// Initially it returns all nodes with no predecessors; once those are
+    /// marked as processed by calling :meth:`done()`, subsequent calls will
+    /// return any new nodes that have all their predecessors already processed.
+    /// Once no more progress can be made, an empty list is returned.
     ///
     /// :returns: A list of node indices of all the ready nodes.
-    /// :rtype: List
+    /// :rtype: `list[int]`
     fn get_ready<'py>(&mut self, py: Python<'py>) -> PyResult<Bound<'py, PyList>> {
         self.num_passed_out += self.ready_nodes.len();
         if let Some(node2state) = self.node2state.as_mut() {
@@ -191,21 +204,21 @@ impl TopologicalSorter {
         }
     }
 
-    /// Marks a set of nodes returned by "get_ready" as processed.
+    /// Marks a set of nodes returned by :meth:`get_ready()` as processed.
     ///
-    /// This method unblocks any successor of each node in *nodes* for being returned
-    /// in the future by a call to "get_ready".
+    /// This method unblocks any successor of each node in ``nodes`` for being
+    /// returned in the future by a call to :meth:`get_ready()`.
     ///
-    /// :param nodes: A node index or list of node indices to mark as done.
-    /// :type nodes: int | list[int]
+    /// :param int | list[int] nodes: A node index or list of node indices to be
+    ///     marked as done.
     ///
-    /// :raises `ValueError`: If any node in *nodes* has already been marked as
-    ///     processed by a previous call to this method or node has not yet been returned
-    ///     by "get_ready".
-    /// :raises `ValueError`: If one of the given ``initial`` nodes is a direct successor of one
-    ///     of the nodes given to :meth:`done`.  This can only happen if the ``initial`` nodes had
-    ///     even a partial topological ordering amongst themselves, which is not a valid
-    ///     starting input.
+    /// :raises `ValueError`: If any node in ``nodes`` has already been marked
+    ///     as processed by a previous call to this method or node has not yet been
+    ///     returned by :meth:`get_ready()``.
+    /// :raises `ValueError`: If one of the given ``initial`` nodes is a direct
+    ///     successor of one of the nodes given to :meth:`done()`.  This can only
+    ///     happen if the ``initial`` nodes had even a partial topological ordering
+    ///     amongst themselves, which is not a valid starting input.
     fn done(&mut self, nodes: &Bound<PyAny>) -> PyResult<()> {
         if let Ok(node) = nodes.extract::<usize>() {
             self.done_single(nodes.py(), NodeIndex::new(node))

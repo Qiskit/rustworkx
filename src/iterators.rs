@@ -1163,8 +1163,8 @@ custom_vec_iter_impl!(
         a_partition_block = partition[0]
         # Use as iterator
         partition_iter = iter(partition)
-        another_block = next(parititon_iter)
-        the_second_block = next(parititon_iter)
+        another_block = next(partition_iter)
+        the_second_block = next(partition_iter)
     "
 );
 impl PyGCProtocol for RelationalCoarsestPartition {}

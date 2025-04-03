@@ -15,7 +15,7 @@
 use crate::dictmap::{DictMap, InitWithHasher};
 use crate::err::{ContractError, ContractSimpleError};
 use crate::graph_ext::NodeRemovable;
-use indexmap::map::Entry::{Occupied, Vacant};
+use indexmap::map::Entry;
 use indexmap::IndexSet;
 use petgraph::data::Build;
 use petgraph::graphmap;
@@ -458,10 +458,10 @@ where
     let mut kvs = DictMap::with_capacity(xs.len());
     for (k, v) in xs {
         match kvs.entry(k) {
-            Occupied(entry) => {
+            Entry::Occupied(entry) => {
                 *entry.into_mut() = merge_fn(&v, entry.get())?;
             }
-            Vacant(entry) => {
+            Entry::Vacant(entry) => {
                 entry.insert(v);
             }
         }
