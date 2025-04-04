@@ -58,9 +58,9 @@ use super::InvalidInputError;
 /// * `probability` - The probability of creating an edge between two nodes as a float.
 /// * `seed` - An optional seed to use for the random number generator.
 /// * `default_node_weight` - A callable that will return the weight to use
-///     for newly created nodes.
+///   for newly created nodes.
 /// * `default_edge_weight` - A callable that will return the weight object
-///     to use for newly created edges.
+///   to use for newly created edges.
 ///
 /// # Example
 /// ```rust
@@ -211,9 +211,9 @@ where
 /// * `num_edges` - The number of edges to create in the graph.
 /// * `seed` - An optional seed to use for the random number generator.
 /// * `default_node_weight` - A callable that will return the weight to use
-///     for newly created nodes.
+///   for newly created nodes.
 /// * `default_edge_weight` - A callable that will return the weight object
-///     to use for newly created edges.
+///   to use for newly created edges.
 ///
 /// # Example
 /// ```rust
