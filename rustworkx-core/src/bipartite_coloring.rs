@@ -411,7 +411,7 @@ fn rbmg_edge_color(g0: &RegularBipartiteMultiGraph) -> Vec<Matching> {
 /// Arguments:
 ///
 /// * `graph` - The graph object to run the algorithm on. The graph is
-///     assumed to be bipartite.
+///   assumed to be bipartite.
 /// * `l_nodes` - The vector containing the "left" nodes of the graph.
 /// * `r_nodes` - The vector containing the "right" nodes of the graph.
 ///
