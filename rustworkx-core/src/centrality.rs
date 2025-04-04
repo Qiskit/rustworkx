@@ -39,14 +39,14 @@ use rayon_cond::CondIterator;
 ///
 /// * `graph` - The graph object to run the algorithm on
 /// * `include_endpoints` - Whether to include the endpoints of paths in the path
-///     lengths used to compute the betweenness
+///   lengths used to compute the betweenness
 /// * `normalized` - Whether to normalize the betweenness scores by the number
-///     of distinct paths between all pairs of nodes
+///   of distinct paths between all pairs of nodes
 /// * `parallel_threshold` - The number of nodes to calculate the betweenness
-///     centrality in parallel at, if the number of nodes in `graph` is less
-///     than this value it will run in a single thread. A good default to use
-///     here if you're not sure is `50` as that was found to be roughly the
-///     number of nodes where parallelism improves performance
+///   centrality in parallel at, if the number of nodes in `graph` is less
+///   than this value it will run in a single thread. A good default to use
+///   here if you're not sure is `50` as that was found to be roughly the
+///   number of nodes where parallelism improves performance
 ///
 /// # Example
 /// ```rust
@@ -147,12 +147,12 @@ where
 ///
 /// * `graph` - The graph object to run the algorithm on
 /// * `normalized` - Whether to normalize the betweenness scores by the number
-///     of distinct paths between all pairs of nodes
+///   of distinct paths between all pairs of nodes
 /// * `parallel_threshold` - The number of nodes to calculate the betweenness
-///     centrality in parallel at, if the number of nodes in `graph` is less
-///     than this value it will run in a single thread. A good default to use
-///     here if you're not sure is `50` as that was found to be roughly the
-///     number of nodes where parallelism improves performance
+///   centrality in parallel at, if the number of nodes in `graph` is less
+///   than this value it will run in a single thread. A good default to use
+///   here if you're not sure is `50` as that was found to be roughly the
+///   number of nodes where parallelism improves performance
 ///
 /// # Example
 /// ```rust
@@ -666,12 +666,12 @@ mod test_edge_betweenness_centrality {
 ///
 /// * `graph` - The graph object to run the algorithm on
 /// * `weight_fn` - An input callable that will be passed the `EdgeRef` for
-///     an edge in the graph and is expected to return a `Result<f64>` of
-///     the weight of that edge.
+///   an edge in the graph and is expected to return a `Result<f64>` of
+///   the weight of that edge.
 /// * `max_iter` - The maximum number of iterations in the power method. If
-///     set to `None` a default value of 100 is used.
+///   set to `None` a default value of 100 is used.
 /// * `tol` - The error tolerance used when checking for convergence in the
-///     power method. If set to `None` a default value of 1e-6 is used.
+///   power method. If set to `None` a default value of 1e-6 is used.
 ///
 /// # Example
 /// ```rust
@@ -752,16 +752,16 @@ where
 ///
 /// * `graph` - The graph object to run the algorithm on
 /// * `weight_fn` - An input callable that will be passed the `EdgeRef` for
-///     an edge in the graph and is expected to return a `Result<f64>` of
-///     the weight of that edge.
+///   an edge in the graph and is expected to return a `Result<f64>` of
+///   the weight of that edge.
 /// * `alpha` - Attenuation factor. If set to `None`, a default value of 0.1 is used.
 /// * `beta_map` - Immediate neighbourhood weights. Must contain all node indices or be `None`.
 /// * `beta_scalar` - Immediate neighbourhood scalar that replaces `beta_map` in case `beta_map` is None.
-///     Defaults to 1.0 in case `None` is provided.
+///   Defaults to 1.0 in case `None` is provided.
 /// * `max_iter` - The maximum number of iterations in the power method. If
-///     set to `None` a default value of 100 is used.
+///   set to `None` a default value of 100 is used.
 /// * `tol` - The error tolerance used when checking for convergence in the
-///     power method. If set to `None` a default value of 1e-6 is used.
+///   power method. If set to `None` a default value of 1e-6 is used.
 ///
 /// # Example
 /// ```rust
@@ -1170,9 +1170,9 @@ where
 /// * `graph` - The graph object to run the algorithm on
 /// * `wf_improved` - If `true`, scale by the fraction of nodes reachable.
 /// * `weight_fn` - An input callable that will be passed the
-///     `ReversedEdgeReference<<G as IntoEdgeReferences>::EdgeRef>` for
-///     an edge in the graph and is expected to return a `f64` of
-///     the weight of that edge.
+///   `ReversedEdgeReference<<G as IntoEdgeReferences>::EdgeRef>` for
+///   an edge in the graph and is expected to return a `f64` of
+///   the weight of that edge.
 ///
 /// # Example
 ///

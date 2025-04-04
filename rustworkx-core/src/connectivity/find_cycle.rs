@@ -25,7 +25,7 @@ use std::hash::Hash;
 ///
 /// * `graph` - The directed graph in which to find the first cycle.
 /// * `source` - Optional node index for starting the search. If not specified,
-///     an arbitrary node is chosen to start the search.
+///   an arbitrary node is chosen to start the search.
 ///
 /// # Example
 /// ```rust

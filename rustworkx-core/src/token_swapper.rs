@@ -407,8 +407,8 @@ where
 /// * `trials` - Optional number of trials. If None, defaults to 4.
 /// * `seed` - Optional integer seed. If None, the internal rng will be initialized from system entropy.
 /// * `parallel_threshold` - Optional integer for the number of nodes in the graph that will
-///     trigger the use of parallel threads. If the number of nodes in the graph is less than this value
-///     it will run in a single thread. The default value is 50.
+///   trigger the use of parallel threads. If the number of nodes in the graph is less than this value
+///   it will run in a single thread. The default value is 50.
 ///
 /// It returns a list of tuples representing the swaps to perform. The result will be an
 /// `Err(MapNotPossible)` if the `token_swapper()` function can't find a mapping.

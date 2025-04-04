@@ -58,9 +58,9 @@ use super::InvalidInputError;
 /// * `probability` - The probability of creating an edge between two nodes as a float.
 /// * `seed` - An optional seed to use for the random number generator.
 /// * `default_node_weight` - A callable that will return the weight to use
-///     for newly created nodes.
+///   for newly created nodes.
 /// * `default_edge_weight` - A callable that will return the weight object
-///     to use for newly created edges.
+///   to use for newly created edges.
 ///
 /// # Example
 /// ```rust
@@ -211,9 +211,9 @@ where
 /// * `num_edges` - The number of edges to create in the graph.
 /// * `seed` - An optional seed to use for the random number generator.
 /// * `default_node_weight` - A callable that will return the weight to use
-///     for newly created nodes.
+///   for newly created nodes.
 /// * `default_edge_weight` - A callable that will return the weight object
-///     to use for newly created edges.
+///   to use for newly created edges.
 ///
 /// # Example
 /// ```rust
@@ -319,13 +319,13 @@ where
 ///
 /// * `sizes` - Number of nodes in each block.
 /// * `probabilities` - B x B array that contains the connection probability between
-///     nodes of different blocks. Must be symmetric for undirected graphs.
+///   nodes of different blocks. Must be symmetric for undirected graphs.
 /// * `loops` - Determines whether the graph can have loops or not.
 /// * `seed` - An optional seed to use for the random number generator.
 /// * `default_node_weight` - A callable that will return the weight to use
-///     for newly created nodes.
+///   for newly created nodes.
 /// * `default_edge_weight` - A callable that will return the weight object
-///     to use for newly created edges.
+///   to use for newly created edges.
 ///
 /// # Example
 /// ```rust
@@ -470,12 +470,12 @@ fn distance(x: &[f64], y: &[f64], p: f64) -> f64 {
 /// * `dim` - Dimension of node positions. Default: 2
 /// * `pos` - Optional list with node positions as values.
 /// * `p` - Which Minkowski distance metric to use.  `p` has to meet the condition
-///     ``1 <= p <= infinity``.
-///     If this argument is not specified, the L<sup>2</sup> metric
-///     (the Euclidean distance metric), `p = 2` is used.
+///   ``1 <= p <= infinity``.
+///   If this argument is not specified, the L<sup>2</sup> metric
+///   (the Euclidean distance metric), `p = 2` is used.
 /// * `seed` - An optional seed to use for the random number generator.
 /// * `default_edge_weight` - A callable that will return the weight object
-///     to use for newly created edges.
+///   to use for newly created edges.
 ///
 /// # Example
 /// ```rust
@@ -563,13 +563,13 @@ where
 /// * `m` - The number of edges to attach from a new node to existing nodes.
 /// * `seed` - An optional seed to use for the random number generator.
 /// * `initial_graph` - An optional starting graph to expand, if not specified
-///     a star graph of `m` nodes is generated and used. If specified the input
-///     graph is mutated by this function and is expected to be moved into this
-///     function.
+///   a star graph of `m` nodes is generated and used. If specified the input
+///   graph is mutated by this function and is expected to be moved into this
+///   function.
 /// * `default_node_weight` - A callable that will return the weight to use
-///     for newly created nodes.
+///   for newly created nodes.
 /// * `default_edge_weight` - A callable that will return the weight object
-///     to use for newly created edges.
+///   to use for newly created edges.
 ///
 /// An `InvalidInput` error is returned under the following conditions. If `m < 1`
 /// or `m >= n` and if an `initial_graph` is specified and the number of nodes in
@@ -678,9 +678,9 @@ where
 /// * `probability` - The probability of creating an edge between two nodes as a float.
 /// * `seed` - An optional seed to use for the random number generator.
 /// * `default_node_weight` - A callable that will return the weight to use
-///     for newly created nodes.
+///   for newly created nodes.
 /// * `default_edge_weight` - A callable that will return the weight object
-///     to use for newly created edges.
+///   to use for newly created edges.
 ///
 /// # Example
 /// ```rust
@@ -758,15 +758,15 @@ where
 /// Arguments:
 ///
 /// * `pos` - Hyperboloid model coordinates of the nodes `[p_1, p_2, ...]` where `p_i` is the
-///     position of node i. The "time" coordinates are inferred.
+///   position of node i. The "time" coordinates are inferred.
 /// * `beta` - Sigmoid sharpness (nonnegative) of the connection probability.
 /// * `r` - Distance at which the connection probability is 0.5 for the probabilistic model.
-///     Threshold when `beta` is `None`.
+///   Threshold when `beta` is `None`.
 /// * `seed` - An optional seed to use for the random number generator.
 /// * `default_node_weight` - A callable that will return the weight to use
-///     for newly created nodes.
+///   for newly created nodes.
 /// * `default_edge_weight` - A callable that will return the weight object
-///     to use for newly created edges.
+///   to use for newly created edges.
 ///
 /// # Example
 /// ```rust
