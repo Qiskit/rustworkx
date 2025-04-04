@@ -222,18 +222,23 @@ then run the following command:
 ```sh
 cargo fuzz build
 ```
-#### To run a fuzz test (e.g., is_connected_fuzz):
+#### To run a fuzz test (e.g., test_traversal_node_coverage):
 
+List all the targets:
 ```sh
-cargo fuzz run is_connected_fuzz
+cargo fuzz list
+```
+Run the tests from the list
+```sh
+cargo fuzz run test_traversal_node_coverage
 ```
 For nightly toolchain:
 ```sh
-cargo +nightly fuzz run is_connected_fuzz
+cargo +nightly fuzz run test_traversal_node_coverage
 ```
 Limit fuzz testing to a specific time (e.g., 60 seconds):
 ```sh
-cargo fuzz run is_connected_fuzz -max_total_time=60
+cargo +nightly fuzz run test_traversal_node_coverage -- -max_total_time=60
 ```
 #### Interpreting Failures
 Failures are stored in the fuzz/artifacts/ directory.
