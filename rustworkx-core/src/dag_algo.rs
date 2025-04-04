@@ -80,19 +80,19 @@ impl<E: Error> Error for TopologicalSortError<E> {}
 ///
 /// * `dag`: The DAG to get the topological sorted nodes from
 /// * `key`: A function that gets passed a single argument, the node id from
-///     `dag` and is expected to return a key which will be used for
-///     resolving ties in the sorting order.
+///   `dag` and is expected to return a key which will be used for
+///   resolving ties in the sorting order.
 /// * `reverse`: If `false`, perform a regular topological ordering.  If `true`,
-///     return the lexicographical topological order that would have been found
-///     if all the edges in the graph were reversed.  This does not affect the
-///     comparisons from the `key`.
+///   return the lexicographical topological order that would have been found
+///   if all the edges in the graph were reversed.  This does not affect the
+///   comparisons from the `key`.
 /// * `initial`: If given, the initial node indices to start the topological
-///     ordering from.  If not given, the topological ordering will certainly contain every node in
-///     the graph.  If given, only the `initial` nodes and nodes that are dominated by the
-///     `initial` set will be in the ordering.  Notably, any node that has a natural in degree of
-///     zero will not be in the output ordering if `initial` is given and the zero-in-degree node
-///     is not in it.  It is not supported to give an `initial` set where the nodes have even
-///     a partial topological order between themselves and `None` will be returned in this case
+///   ordering from.  If not given, the topological ordering will certainly contain every node in
+///   the graph.  If given, only the `initial` nodes and nodes that are dominated by the
+///   `initial` set will be in the ordering.  Notably, any node that has a natural in degree of
+///   zero will not be in the output ordering if `initial` is given and the zero-in-degree node
+///   is not in it.  It is not supported to give an `initial` set where the nodes have even
+///   a partial topological order between themselves and `None` will be returned in this case
 ///
 /// # Returns
 ///
@@ -348,7 +348,7 @@ where
 ///
 /// * `graph` - The graph to get the layers from
 /// * `first_layer` - A list of node ids for the first layer. This
-///     will be the first layer in the output
+///   will be the first layer in the output
 ///
 /// Will `panic!` if a provided node is not in the graph.
 /// ```
@@ -503,20 +503,20 @@ where
 ///
 /// * `graph`: The DAG to find bicolor runs in
 /// * `filter_fn`: The filter function to use for matching nodes. It takes
-///     in one argument, the node data payload/weight object, and will return a
-///     boolean whether the node matches the conditions or not.
-///     If it returns ``true``, it will continue the bicolor chain.
-///     If it returns ``false``, it will stop the bicolor chain.
-///     If it returns ``None`` it will skip that node.
+///   in one argument, the node data payload/weight object, and will return a
+///   boolean whether the node matches the conditions or not.
+///   If it returns ``true``, it will continue the bicolor chain.
+///   If it returns ``false``, it will stop the bicolor chain.
+///   If it returns ``None`` it will skip that node.
 /// * `color_fn`: The function that gives the color of the edge. It takes
-///     in one argument, the edge data payload/weight object, and will
-///     return a non-negative integer, the edge color. If the color is None,
-///     the edge is ignored.
+///   in one argument, the edge data payload/weight object, and will
+///   return a non-negative integer, the edge color. If the color is None,
+///   the edge is ignored.
 ///
 /// # Returns:
 ///
 /// * `Vec<Vec<G::NodeId>>`: a list of groups with exactly two edge colors, where each group
-///     is a list of node data payload/weight for the nodes in the bicolor run
+///   is a list of node data payload/weight for the nodes in the bicolor run
 /// * `None` if a cycle is found in the graph
 /// * Raises an error if found computing the bicolor runs
 ///
@@ -665,9 +665,9 @@ where
 ///
 /// * `graph`: The DAG to collect runs from
 /// * `include_node_fn`: A filter function used for matching nodes. It takes
-///     in one argument, the node data payload/weight object, and returns a
-///     boolean whether the node matches the conditions or not.
-///     If it returns ``false``, the node will be skipped, cutting the run it's part of.
+///   in one argument, the node data payload/weight object, and returns a
+///   boolean whether the node matches the conditions or not.
+///   If it returns ``false``, the node will be skipped, cutting the run it's part of.
 ///
 /// # Returns:
 ///

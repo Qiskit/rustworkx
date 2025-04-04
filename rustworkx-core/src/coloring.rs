@@ -402,9 +402,9 @@ where
 ///
 /// * `graph` - The graph object to run the algorithm on
 /// * `preset_color_fn` - A callback function that will receive the node identifier
-///     for each node in the graph and is expected to return an `Option<usize>`
-///     (wrapped in a `Result`) that is `None` if the node has no preset and
-///     the usize represents the preset color.
+///   for each node in the graph and is expected to return an `Option<usize>`
+///   (wrapped in a `Result`) that is `None` if the node has no preset and
+///   the usize represents the preset color.
 ///
 /// # Example
 /// ```rust
@@ -468,9 +468,9 @@ where
 ///
 /// * `graph` - The graph object to run the algorithm on.
 /// * `preset_color_fn` - A callback function that will receive the node identifier
-///     for each node in the graph and is expected to return an `Option<usize>`
-///     (wrapped in a `Result`) that is `None` if the node has no preset and
-///     the usize represents the preset color.
+///   for each node in the graph and is expected to return an `Option<usize>`
+///   (wrapped in a `Result`) that is `None` if the node has no preset and
+///   the usize represents the preset color.
 /// * `strategy` - The greedy strategy used by the algorithm.
 ///
 /// # Example
@@ -581,9 +581,9 @@ where
 ///
 /// * `graph` - The graph object to run the algorithm on.
 /// * `preset_color_fn` - A callback function that will receive the edge identifier
-///     for each edge in the graph and is expected to return an `Option<usize>`
-///     (wrapped in a `Result`) that is `None` if the edge has no preset and
-///     the usize represents the preset color.
+///   for each edge in the graph and is expected to return an `Option<usize>`
+///   (wrapped in a `Result`) that is `None` if the edge has no preset and
+///   the usize represents the preset color.
 /// * `strategy` - The greedy strategy used by the algorithm.
 ///
 /// # Example
