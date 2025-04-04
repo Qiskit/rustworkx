@@ -206,15 +206,15 @@ impl HexagonalLatticeBuilder {
 /// * `rows` - The number of rows to generate the graph with.
 /// * `cols` - The number of columns to generate the graph with.
 /// * `default_node_weight` - A callable that will return the weight to use
-///     for newly created nodes.
+///   for newly created nodes.
 /// * `default_edge_weight` - A callable that will return the weight object
-///     to use for newly created edges.
+///   to use for newly created edges.
 /// * `bidirectional` - Whether edges are added bidirectionally. If set to
-///     `true` then for any edge `(u, v)` an edge `(v, u)` will also be added.
-///     If the graph is undirected this will result in a parallel edge.
+///   `true` then for any edge `(u, v)` an edge `(v, u)` will also be added.
+///   If the graph is undirected this will result in a parallel edge.
 /// * `periodic` - If set to `true`, the boundaries of the lattice will be
-///     joined to form a periodic grid. Requires `cols` to be even,
-///     `rows > 1`, and `cols > 1`.
+///   joined to form a periodic grid. Requires `cols` to be even,
+///   `rows > 1`, and `cols > 1`.
 ///
 /// # Example
 /// ```rust
@@ -292,17 +292,17 @@ where
 /// * `rows` - The number of rows to generate the graph with.
 /// * `cols` - The number of columns to generate the graph with.
 /// * `node_weight` - A callable that will return the weight to use
-///     for newly created nodes. Must take two arguments `i` and `j` of
-///     type `usize`, where `(i, j)` gives the position of the node
-///     in the lattice.
+///   for newly created nodes. Must take two arguments `i` and `j` of
+///   type `usize`, where `(i, j)` gives the position of the node
+///   in the lattice.
 /// * `default_edge_weight` - A callable that will return the weight object
-///     to use for newly created edges.
+///   to use for newly created edges.
 /// * `bidirectional` - Whether edges are added bidirectionally. If set to
-///     `true` then for any edge `(u, v)` an edge `(v, u)` will also be added.
-///     If the graph is undirected this will result in a parallel edge.
+///   `true` then for any edge `(u, v)` an edge `(v, u)` will also be added.
+///   If the graph is undirected this will result in a parallel edge.
 /// * `periodic` - If set to `true`, the boundaries of the lattice will be
-///     joined to form a periodic grid. Requires `cols` to be even,
-///     `rows > 1`, and `cols > 1`.
+///   joined to form a periodic grid. Requires `cols` to be even,
+///   `rows > 1`, and `cols > 1`.
 ///
 /// # Example
 /// ```rust

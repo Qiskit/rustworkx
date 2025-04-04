@@ -44,10 +44,10 @@ use petgraph::visit::{
 ///
 /// * `graph` - the graph to run on
 /// * `source` - the optional node index to use as the starting node for the
-///     depth-first search. If specified the edge list will only return edges
-///     in the components reachable from this index. If this is not specified
-///     then a source will be chosen arbitrarily and repeated until all
-///     components of the graph are searched
+///   depth-first search. If specified the edge list will only return edges
+///   in the components reachable from this index. If this is not specified
+///   then a source will be chosen arbitrarily and repeated until all
+///   components of the graph are searched
 ///
 /// # Example
 /// ```rust
