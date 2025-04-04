@@ -15,8 +15,8 @@ libfuzzer-sys = "0.4"
 path = ".."
 
 [[bin]]
-name = "is_connected_fuzz"
-path = "fuzz_targets/is_connected_fuzz.rs"
+name = "test_traversal_node_coverage"
+path = "fuzz_targets/test_traversal_node_coverage.rs"
 test = false
 doc = false
 bench = false
