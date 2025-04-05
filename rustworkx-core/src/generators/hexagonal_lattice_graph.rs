@@ -388,7 +388,7 @@ mod tests {
             .edge_references()
             .map(|edge| (edge.source().index(), edge.target().index()))
             .collect();
-        let expected_set: HashSet<(usize, usize)> = expected_edges.iter().map(|&e| e).collect();
+        let expected_set: HashSet<(usize, usize)> = expected_edges.iter().copied().collect();
         assert_eq!(edge_set, expected_set);
     }
 
@@ -411,11 +411,8 @@ mod tests {
             .map(|edge| (edge.source().index(), edge.target().index()))
             .map(&sorted_pair)
             .collect();
-        let expected_set: HashSet<(usize, usize)> = expected_edges
-            .iter()
-            .copied()
-            .map(&sorted_pair)
-            .collect();
+        let expected_set: HashSet<(usize, usize)> =
+            expected_edges.iter().copied().map(&sorted_pair).collect();
         assert_eq!(edge_set, expected_set);
     }
 

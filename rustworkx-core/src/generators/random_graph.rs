@@ -1029,10 +1029,10 @@ mod tests {
         assert_eq!(g.node_count(), 3);
         assert_eq!(g.edge_count(), 6);
         for (u, v) in [(1, 1), (1, 2), (2, 1), (2, 2), (0, 1), (0, 2)] {
-            assert_eq!(g.contains_edge(u.into(), v.into()), true);
+            assert!(g.contains_edge(u.into(), v.into()));
         }
-        assert_eq!(g.contains_edge(1.into(), 0.into()), false);
-        assert_eq!(g.contains_edge(2.into(), 0.into()), false);
+        assert!(!g.contains_edge(1.into(), 0.into()));
+        assert!(!g.contains_edge(2.into(), 0.into()));
     }
 
     #[test]
@@ -1049,9 +1049,9 @@ mod tests {
         assert_eq!(g.node_count(), 3);
         assert_eq!(g.edge_count(), 5);
         for (u, v) in [(1, 1), (1, 2), (2, 2), (0, 1), (0, 2)] {
-            assert_eq!(g.contains_edge(u.into(), v.into()), true);
+            assert!(g.contains_edge(u.into(), v.into()));
         }
-        assert_eq!(g.contains_edge(0.into(), 0.into()), false);
+        assert!(!g.contains_edge(0.into(), 0.into()));
     }
 
     #[test]
@@ -1068,12 +1068,12 @@ mod tests {
         assert_eq!(g.node_count(), 3);
         assert_eq!(g.edge_count(), 4);
         for (u, v) in [(1, 2), (2, 1), (0, 1), (0, 2)] {
-            assert_eq!(g.contains_edge(u.into(), v.into()), true);
+            assert!(g.contains_edge(u.into(), v.into()));
         }
-        assert_eq!(g.contains_edge(1.into(), 0.into()), false);
-        assert_eq!(g.contains_edge(2.into(), 0.into()), false);
+        assert!(!g.contains_edge(1.into(), 0.into()));
+        assert!(!g.contains_edge(2.into(), 0.into()));
         for u in 0..2 {
-            assert_eq!(g.contains_edge(u.into(), u.into()), false);
+            assert!(!g.contains_edge(u.into(), u.into()));
         }
     }
 
@@ -1091,10 +1091,10 @@ mod tests {
         assert_eq!(g.node_count(), 3);
         assert_eq!(g.edge_count(), 3);
         for (u, v) in [(1, 2), (0, 1), (0, 2)] {
-            assert_eq!(g.contains_edge(u.into(), v.into()), true);
+            assert!(g.contains_edge(u.into(), v.into()));
         }
         for u in 0..2 {
-            assert_eq!(g.contains_edge(u.into(), u.into()), false);
+            assert!(!g.contains_edge(u.into(), u.into()));
         }
     }
 
