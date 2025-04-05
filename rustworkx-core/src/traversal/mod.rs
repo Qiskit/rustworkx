@@ -267,7 +267,7 @@ mod test_bfs_ancestry {
     #[test]
     fn test_bfs_predecessors_digraph() {
         let graph: DiGraph<(), ()> =
-            DiGraph::from_edges(&[(0, 1), (1, 2), (1, 3), (2, 4), (3, 4), (4, 5)]);
+            DiGraph::from_edges([(0, 1), (1, 2), (1, 3), (2, 4), (3, 4), (4, 5)]);
         let predecessors: Vec<(usize, Vec<usize>)> = bfs_predecessors(&graph, NodeIndex::new(3))
             .map(|(x, succ)| (x.index(), succ.iter().map(|y| y.index()).collect()))
             .collect();
@@ -280,7 +280,7 @@ mod test_bfs_ancestry {
     #[test]
     fn test_bfs_successors() {
         let graph: DiGraph<(), ()> =
-            DiGraph::from_edges(&[(0, 1), (1, 2), (1, 3), (2, 4), (3, 4), (4, 5)]);
+            DiGraph::from_edges([(0, 1), (1, 2), (1, 3), (2, 4), (3, 4), (4, 5)]);
         let successors: Vec<(usize, Vec<usize>)> = bfs_successors(&graph, NodeIndex::new(3))
             .map(|(x, succ)| (x.index(), succ.iter().map(|y| y.index()).collect()))
             .collect();
@@ -293,7 +293,7 @@ mod test_bfs_ancestry {
     #[test]
     fn test_no_predecessors() {
         let graph: StableDiGraph<(), ()> =
-            StableDiGraph::from_edges(&[(0, 1), (1, 2), (1, 3), (2, 4), (3, 4), (4, 5)]);
+            StableDiGraph::from_edges([(0, 1), (1, 2), (1, 3), (2, 4), (3, 4), (4, 5)]);
         let predecessors: Vec<(usize, Vec<usize>)> = bfs_predecessors(&graph, NodeIndex::new(0))
             .map(|(x, succ)| (x.index(), succ.iter().map(|y| y.index()).collect()))
             .collect();
@@ -303,7 +303,7 @@ mod test_bfs_ancestry {
     #[test]
     fn test_no_successors() {
         let graph: StableDiGraph<(), ()> =
-            StableDiGraph::from_edges(&[(0, 1), (1, 2), (1, 3), (2, 4), (3, 4), (4, 5)]);
+            StableDiGraph::from_edges([(0, 1), (1, 2), (1, 3), (2, 4), (3, 4), (4, 5)]);
         let successors: Vec<(usize, Vec<usize>)> = bfs_successors(&graph, NodeIndex::new(5))
             .map(|(x, succ)| (x.index(), succ.iter().map(|y| y.index()).collect()))
             .collect();
@@ -320,7 +320,7 @@ mod test_ancestry {
     #[test]
     fn test_ancestors_digraph() {
         let graph: DiGraph<(), ()> =
-            DiGraph::from_edges(&[(0, 1), (1, 2), (1, 3), (2, 4), (3, 4), (4, 5)]);
+            DiGraph::from_edges([(0, 1), (1, 2), (1, 3), (2, 4), (3, 4), (4, 5)]);
         let ancestors: Vec<usize> = ancestors(&graph, NodeIndex::new(3))
             .map(|x| x.index())
             .collect();
@@ -330,7 +330,7 @@ mod test_ancestry {
     #[test]
     fn test_descendants() {
         let graph: DiGraph<(), ()> =
-            DiGraph::from_edges(&[(0, 1), (1, 2), (1, 3), (2, 4), (3, 4), (4, 5)]);
+            DiGraph::from_edges([(0, 1), (1, 2), (1, 3), (2, 4), (3, 4), (4, 5)]);
         let descendants: Vec<usize> = descendants(&graph, NodeIndex::new(3))
             .map(|x| x.index())
             .collect();

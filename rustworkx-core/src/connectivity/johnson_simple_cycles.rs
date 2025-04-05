@@ -489,7 +489,7 @@ mod test_longest_path {
             );
             let mut cycles_iter = johnson_simple_cycles(&graph, None);
             let mut res = 0;
-            while let Some(_) = cycles_iter.next(&graph) {
+            while cycles_iter.next(&graph).is_some() {
                 res += 1;
             }
             assert_eq!(res, 3 * k);
@@ -523,7 +523,7 @@ mod test_longest_path {
             );
             let mut cycles_iter = johnson_simple_cycles(&graph, None);
             let mut res = 0;
-            while let Some(_) = cycles_iter.next(&graph) {
+            while cycles_iter.next(&graph).is_some() {
                 res += 1;
             }
             assert_eq!(res, 3 * k);

@@ -104,7 +104,6 @@ where
 }
 
 #[cfg(test)]
-
 mod test_line_graph {
     use crate::line_graph::line_graph;
     use crate::petgraph::visit::EdgeRef;

@@ -1418,7 +1418,7 @@ mod test_collect_runs {
         let mut runs = collect_runs(&graph, |_| -> Result<bool, ()> { Ok(true) }).expect("Some");
 
         let run = runs.next();
-        assert!(run == None);
+        assert!(run.is_none());
 
         let runs = collect_runs(&graph, |_| -> Result<bool, ()> { Ok(true) }).expect("Some");
 

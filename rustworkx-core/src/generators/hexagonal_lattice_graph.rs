@@ -380,7 +380,7 @@ mod tests {
 
     fn check_expected_edges_directed<T>(
         graph: &petgraph::graph::DiGraph<T, ()>,
-        expected_edges: &Vec<(usize, usize)>,
+        expected_edges: &[(usize, usize)],
     ) {
         assert_eq!(graph.edge_count(), expected_edges.len());
 
@@ -388,13 +388,13 @@ mod tests {
             .edge_references()
             .map(|edge| (edge.source().index(), edge.target().index()))
             .collect();
-        let expected_set: HashSet<(usize, usize)> = expected_edges.iter().map(|&e| e).collect();
+        let expected_set: HashSet<(usize, usize)> = expected_edges.iter().copied().collect();
         assert_eq!(edge_set, expected_set);
     }
 
     fn check_expected_edges_undirected(
         graph: &petgraph::graph::UnGraph<(), ()>,
-        expected_edges: &Vec<(usize, usize)>,
+        expected_edges: &[(usize, usize)],
     ) {
         assert_eq!(graph.edge_count(), expected_edges.len());
 
@@ -409,13 +409,10 @@ mod tests {
         let edge_set: HashSet<(usize, usize)> = graph
             .edge_references()
             .map(|edge| (edge.source().index(), edge.target().index()))
-            .map(|e| sorted_pair(e))
+            .map(&sorted_pair)
             .collect();
-        let expected_set: HashSet<(usize, usize)> = expected_edges
-            .iter()
-            .map(|&e| e)
-            .map(|e| sorted_pair(e))
-            .collect();
+        let expected_set: HashSet<(usize, usize)> =
+            expected_edges.iter().copied().map(&sorted_pair).collect();
         assert_eq!(edge_set, expected_set);
     }
 

@@ -1017,7 +1017,7 @@ mod test_node_coloring {
         let graph = Graph::<(), (), Undirected>::new_undirected();
         let preset_color_fn = |_| Ok::<Option<usize>, Infallible>(None);
 
-        for strategy in vec![
+        for strategy in [
             ColoringStrategy::Degree,
             ColoringStrategy::Saturation,
             ColoringStrategy::IndependentSet,
@@ -1308,7 +1308,7 @@ mod test_node_coloring {
             path_graph(Some(7), None, || (), || (), false).unwrap();
         let preset_color_fn = |_| Ok::<Option<usize>, Infallible>(None);
 
-        for strategy in vec![
+        for strategy in [
             ColoringStrategy::Degree,
             ColoringStrategy::Saturation,
             ColoringStrategy::IndependentSet,
@@ -1326,7 +1326,7 @@ mod test_node_coloring {
             cycle_graph(Some(15), None, || (), || (), false).unwrap();
         let preset_color_fn = |_| Ok::<Option<usize>, Infallible>(None);
 
-        for strategy in vec![
+        for strategy in [
             ColoringStrategy::Degree,
             ColoringStrategy::Saturation,
             ColoringStrategy::IndependentSet,
@@ -1344,7 +1344,7 @@ mod test_node_coloring {
             heavy_hex_graph(7, || (), || (), false).unwrap();
         let preset_color_fn = |_| Ok::<Option<usize>, Infallible>(None);
 
-        for strategy in vec![
+        for strategy in [
             ColoringStrategy::Degree,
             ColoringStrategy::Saturation,
             ColoringStrategy::IndependentSet,
@@ -1362,7 +1362,7 @@ mod test_node_coloring {
             complete_graph(Some(10), None, || (), || ()).unwrap();
         let preset_color_fn = |_| Ok::<Option<usize>, Infallible>(None);
 
-        for strategy in vec![
+        for strategy in [
             ColoringStrategy::Degree,
             ColoringStrategy::Saturation,
             ColoringStrategy::IndependentSet,
