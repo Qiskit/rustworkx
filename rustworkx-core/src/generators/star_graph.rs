@@ -21,19 +21,19 @@ use super::InvalidInputError;
 /// Arguments:
 ///
 /// * `num_nodes` - The number of nodes to create a star graph for. Either this or
-///     `weights` must be specified. If both this and `weights` are specified, weights
-///     will take priority and this argument will be ignored
+///   `weights` must be specified. If both this and `weights` are specified, weights
+///   will take priority and this argument will be ignored
 /// * `weights` - A `Vec` of node weight objects.
 /// * `default_node_weight` - A callable that will return the weight to use
-///     for newly created nodes. This is ignored if `weights` is specified.
+///   for newly created nodes. This is ignored if `weights` is specified.
 /// * `default_edge_weight` - A callable that will return the weight object
-///     to use for newly created edges.
+///   to use for newly created edges.
 /// * `inward` - If set `true` the nodes will be directed towards the
-///     center node. This parameter is ignored if `bidirectional` is set to
-///     `true`.
+///   center node. This parameter is ignored if `bidirectional` is set to
+///   `true`.
 /// * `bidirectional` - Whether edges are added bidirectionally. If set to
-///     `true` then for any edge `(u, v)` an edge `(v, u)` will also be added.
-///     If the graph is undirected this will result in a parallel edge.
+///   `true` then for any edge `(u, v)` an edge `(v, u)` will also be added.
+///   If the graph is undirected this will result in a parallel edge.
 ///
 /// # Example
 /// ```rust

@@ -20,24 +20,24 @@ use super::InvalidInputError;
 /// Arguments:
 ///
 /// * `rows` - The number of rows to generate the graph with.
-///     If specified, cols also need to be specified.
+///   If specified, cols also need to be specified.
 /// * `cols`: The number of columns to generate the graph with.
-///     If specified, rows also need to be specified. rows*cols
-///     defines the number of nodes in the graph.
+///   If specified, rows also need to be specified. rows*cols
+///   defines the number of nodes in the graph.
 /// * `weights`: A `Vec` of node weights. Nodes are filled row wise.
-///     If rows and cols are not specified, then a linear graph containing
-///     all the values in weights list is created.
-///     If number of nodes(rows*cols) is less than length of
-///     weights list, the trailing weights are ignored.
-///     If number of nodes(rows*cols) is greater than length of
-///     weights list, extra nodes with None weight are appended.
+///   If rows and cols are not specified, then a linear graph containing
+///   all the values in weights list is created.
+///   If number of nodes(rows*cols) is less than length of
+///   weights list, the trailing weights are ignored.
+///   If number of nodes(rows*cols) is greater than length of
+///   weights list, extra nodes with None weight are appended.
 /// * `default_node_weight` - A callable that will return the weight to use
-///     for newly created nodes. This is ignored if `weights` is specified.
+///   for newly created nodes. This is ignored if `weights` is specified.
 /// * `default_edge_weight` - A callable that will return the weight object
-///     to use for newly created edges.
+///   to use for newly created edges.
 /// * `bidirectional` - Whether edges are added bidirectionally. If set to
-///     `true` then for any edge `(u, v)` an edge `(v, u)` will also be added.
-///     If the graph is undirected this will result in a parallel edge.
+///   `true` then for any edge `(u, v)` an edge `(v, u)` will also be added.
+///   If the graph is undirected this will result in a parallel edge.
 ///
 /// # Example
 /// ```rust
