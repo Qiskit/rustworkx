@@ -206,6 +206,49 @@ The rustworkx-core tests can be run with:
 cargo test --workspace
 ```
 
+### Fuzz Testing in rustworkx
+
+We use cargo-fuzz to test rustworkx for unexpected crashes or undefined behavior. Follow these steps to run fuzzing locally.
+
+#### Building Fuzz Targets
+To build the fuzzing targets, first install cargo-fuzz:
+```sh
+cargo install cargo-fuzz
+```
+then run the following command:
+
+```sh
+cargo fuzz build
+```
+#### To run a fuzz test (e.g., test_traversal_node_coverage):
+
+List all the targets:
+```sh
+cargo fuzz list
+```
+Run the tests from the list
+```sh
+cargo fuzz run test_traversal_node_coverage
+```
+For nightly toolchain:
+```sh
+cargo +nightly fuzz run test_traversal_node_coverage
+```
+Limit fuzz testing to a specific time (e.g., 60 seconds):
+```sh
+cargo +nightly fuzz run test_traversal_node_coverage -- -max_total_time=60
+```
+#### Interpreting Failures
+Failures are stored in the fuzz/artifacts/ directory.
+
+#### Contributing to Fuzzing
+
+Add Fuzz Targets: Create new targets in the fuzz directory.
+Fix Failures: Investigate and fix bugs found by fuzz tests.
+
+Fuzz tests can be resource-heavy. Run them locally to save resources.
+Submit fuzz tests with detailed documentation and commit messages.
+
 ### Style
 
 #### Rust
