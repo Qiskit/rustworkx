@@ -203,10 +203,8 @@ https://doc.rust-lang.org/book/ch11-01-writing-tests.html
 
 The rustworkx-core tests can be run with:
 ```
-cargo test
+cargo test --workspace
 ```
-
-from the `rustworkx-core` directory.
 
 ### Style
 
@@ -273,10 +271,9 @@ you can view locally in a web browser.
 To build the rustworkx-core documentation you will use rust-doc. You can do this
 by running:
 ```
-cargo doc
+cargo doc -p rustworkx-core
 ```
-from the `rustworkx-core` directory (which is the root of the `rustworkx-core`
-crate. After it's built the compiled documentation will be located in
+After it's built the compiled documentation will be located in
 `target/doc/rustworkx_core` (which is off the repo root not the `rustworkx-core`
 dir)
 
@@ -284,7 +281,7 @@ You can build and open the documentation directly in your configured default
 web browser by running:
 
 ```
-cargo doc --open
+cargo doc -p rustworkx-core --open
 ```
 
 ### Type Annotations

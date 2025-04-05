@@ -334,7 +334,7 @@ where
 /// use rustworkx_core::generators::sbm_random_graph;
 ///
 /// let g = sbm_random_graph::<petgraph::graph::DiGraph<(), ()>, (), _, _, ()>(
-///     &vec![1, 2],
+///     &[1, 2],
 ///     &ndarray::arr2(&[[0., 1.], [0., 1.]]).view(),
 ///     true,
 ///     Some(10),
@@ -1018,7 +1018,7 @@ mod tests {
     #[test]
     fn test_sbm_directed_complete_blocks_loops() {
         let g = sbm_random_graph::<petgraph::graph::DiGraph<(), ()>, (), _, _, ()>(
-            &vec![1, 2],
+            &[1, 2],
             &ndarray::arr2(&[[0., 1.], [0., 1.]]).view(),
             true,
             Some(10),
@@ -1038,7 +1038,7 @@ mod tests {
     #[test]
     fn test_sbm_undirected_complete_blocks_loops() {
         let g = sbm_random_graph::<petgraph::graph::UnGraph<(), ()>, (), _, _, ()>(
-            &vec![1, 2],
+            &[1, 2],
             &ndarray::arr2(&[[0., 1.], [1., 1.]]).view(),
             true,
             Some(10),
@@ -1057,7 +1057,7 @@ mod tests {
     #[test]
     fn test_sbm_directed_complete_blocks_noloops() {
         let g = sbm_random_graph::<petgraph::graph::DiGraph<(), ()>, (), _, _, ()>(
-            &vec![1, 2],
+            &[1, 2],
             &ndarray::arr2(&[[0., 1.], [0., 1.]]).view(),
             false,
             Some(10),
@@ -1080,7 +1080,7 @@ mod tests {
     #[test]
     fn test_sbm_undirected_complete_blocks_noloops() {
         let g = sbm_random_graph::<petgraph::graph::UnGraph<(), ()>, (), _, _, ()>(
-            &vec![1, 2],
+            &[1, 2],
             &ndarray::arr2(&[[0., 1.], [1., 1.]]).view(),
             false,
             Some(10),
@@ -1101,7 +1101,7 @@ mod tests {
     #[test]
     fn test_sbm_bad_array_rows_error() {
         match sbm_random_graph::<petgraph::graph::DiGraph<(), ()>, (), _, _, ()>(
-            &vec![1, 2],
+            &[1, 2],
             &ndarray::arr2(&[[0., 1.], [1., 1.], [1., 1.]]).view(),
             true,
             Some(10),
@@ -1116,7 +1116,7 @@ mod tests {
 
     fn test_sbm_bad_array_cols_error() {
         match sbm_random_graph::<petgraph::graph::DiGraph<(), ()>, (), _, _, ()>(
-            &vec![1, 2],
+            &[1, 2],
             &ndarray::arr2(&[[0., 1., 1.], [1., 1., 1.]]).view(),
             true,
             Some(10),
@@ -1131,7 +1131,7 @@ mod tests {
     #[test]
     fn test_sbm_asymmetric_array_error() {
         match sbm_random_graph::<petgraph::graph::UnGraph<(), ()>, (), _, _, ()>(
-            &vec![1, 2],
+            &[1, 2],
             &ndarray::arr2(&[[0., 1.], [0., 1.]]).view(),
             true,
             Some(10),
@@ -1146,7 +1146,7 @@ mod tests {
     #[test]
     fn test_sbm_invalid_probability_error() {
         match sbm_random_graph::<petgraph::graph::UnGraph<(), ()>, (), _, _, ()>(
-            &vec![1, 2],
+            &[1, 2],
             &ndarray::arr2(&[[0., 1.], [0., -1.]]).view(),
             true,
             Some(10),
@@ -1161,7 +1161,7 @@ mod tests {
     #[test]
     fn test_sbm_empty_error() {
         match sbm_random_graph::<petgraph::graph::DiGraph<(), ()>, (), _, _, ()>(
-            &vec![],
+            &[],
             &ndarray::arr2(&[[]]).view(),
             true,
             Some(10),

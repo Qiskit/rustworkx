@@ -43,9 +43,9 @@ jobs:
       - name: Check stray release notes
         run: python tools/find_stray_release_notes.py
       - name: rustworkx-core Rust Tests
-        run: pushd rustworkx-core && cargo test && popd
+        run: cargo test --workspace
       - name: rustworkx-core Docs
-        run: pushd rustworkx-core && cargo doc && popd
+        run: cargo doc -p rustworkx-core
         env:
           RUSTDOCFLAGS: '-D warnings'
       - uses: actions/upload-artifact@v4
