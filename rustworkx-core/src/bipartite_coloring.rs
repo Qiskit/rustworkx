@@ -979,9 +979,9 @@ mod test_bipartite_coloring {
 
     #[test]
     fn test_bipartite_random_graphs_undirected() {
-        for num_l_nodes in vec![5, 10, 15, 20] {
-            for num_r_nodes in vec![5, 10, 15, 20] {
-                for probability in vec![0.1, 0.3, 0.5, 0.7, 0.9] {
+        for num_l_nodes in [5, 10, 15, 20] {
+            for num_r_nodes in [5, 10, 15, 20] {
+                for probability in [0.1, 0.3, 0.5, 0.7, 0.9] {
                     let graph: petgraph::graph::UnGraph<(), ()> = random_bipartite_graph(
                         num_l_nodes,
                         num_r_nodes,
@@ -1013,9 +1013,9 @@ mod test_bipartite_coloring {
 
     #[test]
     fn test_bipartite_random_graphs_directed() {
-        for num_l_nodes in vec![5, 10, 15, 20] {
-            for num_r_nodes in vec![5, 10, 15, 20] {
-                for probability in vec![0.1, 0.3, 0.5, 0.7, 0.9] {
+        for num_l_nodes in [5, 10, 15, 20] {
+            for num_r_nodes in [5, 10, 15, 20] {
+                for probability in [0.1, 0.3, 0.5, 0.7, 0.9] {
                     let graph: petgraph::graph::DiGraph<(), ()> = random_bipartite_graph(
                         num_l_nodes,
                         num_r_nodes,
