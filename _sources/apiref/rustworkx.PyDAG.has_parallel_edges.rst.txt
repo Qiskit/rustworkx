@@ -1,0 +1,6 @@
+rustworkx.PyDAG.has\_parallel\_edges
+====================================
+
+.. currentmodule:: rustworkx
+
+.. automethod:: PyDAG.has_parallel_edges

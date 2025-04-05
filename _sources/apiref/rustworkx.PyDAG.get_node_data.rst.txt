@@ -1,0 +1,6 @@
+rustworkx.PyDAG.get\_node\_data
+===============================
+
+.. currentmodule:: rustworkx
+
+.. automethod:: PyDAG.get_node_data
