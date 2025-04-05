@@ -269,11 +269,10 @@ fn _accumulate_vertices<G>(
     let mut delta = vec![0.0; max_index];
     for w in &path_calc.verts_sorted_by_distance {
         let iw = graph.to_index(*w);
-        let coeff = (1.0 + delta[iw]) / path_calc.sigma[w];
-        let p_w = path_calc.predecessors.get(w).unwrap();
-        for v in p_w {
-            let iv = graph.to_index(*v);
-            delta[iv] += path_calc.sigma[v] * coeff;
+        let coeff = (1.0 + delta[iw]) / path_calc.sigma[iw];
+        let p_w = path_calc.predecessors.get(iw).unwrap();
+        for iv in p_w {
+            delta[*iv] += path_calc.sigma[*iv] * coeff;
         }
     }
     let mut betweenness = locked_betweenness.write().unwrap();
@@ -399,43 +398,39 @@ where
     <G as GraphBase>::NodeId: std::cmp::Eq + Hash,
 {
     verts_sorted_by_distance: Vec<G::NodeId>,
-    predecessors: HashMap<G::NodeId, Vec<G::NodeId>>,
-    sigma: HashMap<G::NodeId, f64>,
+    predecessors: Vec<Vec<usize>>,
+    sigma: Vec<f64>,
 }
-
 fn shortest_path_for_centrality<G>(graph: G, node_s: &G::NodeId) -> ShortestPathData<G>
 where
     G: NodeIndexable + IntoNodeIdentifiers + IntoNeighborsDirected + NodeCount + GraphBase,
     <G as GraphBase>::NodeId: std::cmp::Eq + Hash,
 {
-    let mut verts_sorted_by_distance: Vec<G::NodeId> = Vec::new(); // a stack
     let c = graph.node_count();
-    let mut predecessors = HashMap::<G::NodeId, Vec<G::NodeId>>::with_capacity(c);
-    let mut sigma = HashMap::<G::NodeId, f64>::with_capacity(c);
-    let mut distance = HashMap::<G::NodeId, i64>::with_capacity(c);
+    let max_index = graph.node_bound();
+    let mut verts_sorted_by_distance: Vec<G::NodeId> = Vec::with_capacity(c); // a stack
+    let mut predecessors: Vec<Vec<usize>> = vec![Vec::new(); max_index];
+    let mut sigma: Vec<f64> = vec![0.; max_index];
+    let mut distance: Vec<i64> = vec![-1; max_index];
     #[allow(non_snake_case)]
     let mut Q: VecDeque<G::NodeId> = VecDeque::with_capacity(c);
-
-    for node in graph.node_identifiers() {
-        predecessors.insert(node, Vec::new());
-        sigma.insert(node, 0.0);
-        distance.insert(node, -1);
-    }
-    sigma.insert(*node_s, 1.0);
-    distance.insert(*node_s, 0);
+    let node_s_index = graph.to_index(*node_s);
+    sigma[node_s_index] = 1.0;
+    distance[node_s_index] = 0;
     Q.push_back(*node_s);
     while let Some(v) = Q.pop_front() {
         verts_sorted_by_distance.push(v);
-        let distance_v = distance[&v];
+        let v_idx = graph.to_index(v);
+        let distance_v = distance[v_idx];
         for w in graph.neighbors(v) {
-            if distance[&w] < 0 {
+            let w_idx = graph.to_index(w);
+            if distance[w_idx] < 0 {
                 Q.push_back(w);
-                distance.insert(w, distance_v + 1);
+                distance[w_idx] = distance_v + 1;
             }
-            if distance[&w] == distance_v + 1 {
-                sigma.insert(w, sigma[&w] + sigma[&v]);
-                let e_p = predecessors.get_mut(&w).unwrap();
-                e_p.push(v);
+            if distance[w_idx] == distance_v + 1 {
+                sigma[w_idx] += sigma[v_idx];
+                predecessors[w_idx].push(v_idx);
             }
         }
     }
