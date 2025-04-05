@@ -1,0 +1,22 @@
+[package]
+name = "rustworkx-core-fuzz"
+version = "0.0.0"
+publish = false
+edition = "2021"
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+arbitrary = { version = "1", features = ["derive"] }
+libfuzzer-sys = "0.4"
+
+[dependencies.rustworkx-core]
+path = ".."
+
+[[bin]]
+name = "test_traversal_node_coverage"
+path = "fuzz_targets/test_traversal_node_coverage.rs"
+test = false
+doc = false
+bench = false
