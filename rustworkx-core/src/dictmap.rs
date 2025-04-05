@@ -25,7 +25,7 @@ use indexmap::IndexMap;
 /// for [`HashMap`], another hashmap we use.
 ///
 /// [`HashMap`]: https://docs.rs/hashbrown/0.11.2/hashbrown/hash_map/struct.HashMap.html
-pub type DictMap<K, V> = IndexMap<K, V, ahash::RandomState>;
+pub type DictMap<K, V> = IndexMap<K, V, foldhash::fast::RandomState>;
 
 pub trait InitWithHasher {
     fn new() -> Self
@@ -40,11 +40,11 @@ pub trait InitWithHasher {
 impl<K, V> InitWithHasher for DictMap<K, V> {
     #[inline]
     fn new() -> Self {
-        indexmap::IndexMap::with_capacity_and_hasher(0, ahash::RandomState::default())
+        indexmap::IndexMap::with_capacity_and_hasher(0, foldhash::fast::RandomState::default())
     }
 
     #[inline]
     fn with_capacity(n: usize) -> Self {
-        indexmap::IndexMap::with_capacity_and_hasher(n, ahash::RandomState::default())
+        indexmap::IndexMap::with_capacity_and_hasher(n, foldhash::fast::RandomState::default())
     }
 }
