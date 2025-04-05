@@ -228,10 +228,16 @@ what CI is checking.
 ##### Lint
 
 An additional step is to run [clippy](https://github.com/rust-lang/rust-clippy)
-on your changes. You can run it by running:
+on your changes. You can execute it by running:
 
 ```bash
 cargo clippy
+```
+
+If you want a more detailed feedback identical to CI, run instead:
+
+```bash
+cargo clippy --workspace --all-targets -- -D warnings
 ```
 
 #### Python
