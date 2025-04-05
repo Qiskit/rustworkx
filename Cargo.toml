@@ -29,9 +29,9 @@ fixedbitset = "0.5.7"
 indexmap = { version = ">=1.9, <3", features = ["rayon"] }
 ndarray = { version = "0.16.1", features = ["rayon"] }
 num-traits = "0.2"
-petgraph = "0.7.0"
+petgraph = "0.7"
 hashbrown = { version = ">=0.13, <0.16", features = ["rayon"] }
-numpy = "0.23"
+numpy = "0.24"
 rand = "0.8"
 rand_pcg = "0.3"
 rayon = "1.10"
@@ -63,7 +63,7 @@ rustworkx-core = { path = "rustworkx-core", version = "=0.17.0" }
 flate2 = "1.0.35"
 
 [dependencies.pyo3]
-version = "0.23"
+version = "0.24"
 features = ["abi3-py39", "extension-module", "hashbrown", "num-bigint", "num-complex", "indexmap", "py-clone"]
 
 [dependencies.sprs]
