@@ -23,4 +23,4 @@ priority-queue = "2.1"
 rand.workspace = true
 rand_pcg.workspace = true
 rayon.workspace = true
-rayon-cond = "0.3"
+rayon-cond = "0.4"
