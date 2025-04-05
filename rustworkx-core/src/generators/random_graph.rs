@@ -1355,10 +1355,7 @@ mod tests {
     }
     #[test]
     fn test_hyperbolic_dist_inf() {
-        assert_eq!(
-            hyperbolic_distance(&[f64::INFINITY, 0.], &[0., 0.]).is_nan(),
-            true
-        );
+        assert!(hyperbolic_distance(&[f64::INFINITY, 0.], &[0., 0.]).is_nan());
     }
 
     #[test]

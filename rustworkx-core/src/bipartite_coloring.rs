@@ -969,8 +969,8 @@ mod test_bipartite_coloring {
                 if n > 2 * k {
                     let graph: petgraph::graph::UnGraph<(), ()> =
                         petersen_graph(n, k, || (), || ()).unwrap();
-                        if let Ok(_) = bipartite_edge_color(&graph) {
-                            panic!("This should error")
+                    if bipartite_edge_color(&graph).is_ok() {
+                        panic!("This should error")
                     }
                 }
             }
