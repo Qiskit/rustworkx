@@ -56,8 +56,6 @@ def docs(session):
         "uv",
         "run",
         "sphinx-build",
-        "-j",
-        "auto",
         "-W",
         "-d",
         "build/.doctrees",
