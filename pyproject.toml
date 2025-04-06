@@ -54,11 +54,6 @@ email = "mtreinish@kortar.org"
 name = "Ivan Carvalho"
 email = "ivancarvalho@gatech.edu"
 
-[dependency-groups]
-test = []
-lint = []
-docs = []
-
 [build-system]
 requires = ["setuptools", "wheel", "setuptools-rust"]
 build-backend = "setuptools.build_meta"
