@@ -6,10 +6,9 @@ nox.options.stop_on_first_error = True
 pyproject = nox.project.load_toml("pyproject.toml")
 
 deps = nox.project.dependency_groups(pyproject, "test")
-
 lint_deps = nox.project.dependency_groups(pyproject, "lint")
-
 stubs_deps = nox.project.dependency_groups(pyproject, "stubs")
+docs_deps = nox.project.dependency_groups(pyproject, "docs")
 
 def install_rustworkx(session):
     session.install(*deps)
@@ -43,7 +42,7 @@ def lint(session):
 @nox.session(python=["3"])
 def docs(session):
     install_rustworkx(session)
-    session.install("-r", "docs/source/requirements.txt", "-c", "constraints.txt")
+    session.install(*docs_deps, "-c", "constraints.txt")
     session.run("python", "-m", "ipykernel", "install", "--user")
     session.run("jupyter", "kernelspec", "list")
     session.chdir("docs")
