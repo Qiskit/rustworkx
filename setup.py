@@ -15,15 +15,12 @@ from setuptools_rust import Binding, RustExtension
 # it's an editable installation.
 rustworkx_debug = True if os.getenv("RUSTWORKX_DEBUG") == "1" else None
 
-PKG_PACKAGES = ["rustworkx", "rustworkx.visualization"]
 RUST_EXTENSIONS = [RustExtension("rustworkx.rustworkx", "Cargo.toml",
                                  binding=Binding.PyO3, debug=rustworkx_debug)]
 RUST_OPTS ={"bdist_wheel": {"py_limited_api": "cp39"}}
 
 setup(
     rust_extensions=RUST_EXTENSIONS,
-    include_package_data=True,
-    packages=PKG_PACKAGES,
     zip_safe=False,
     options=RUST_OPTS,
 )
