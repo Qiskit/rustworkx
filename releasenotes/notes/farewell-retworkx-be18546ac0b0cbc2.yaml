@@ -1,0 +1,9 @@
+---
+deprecations:
+  - |
+    We are saying goodbye to the legacy ``retworkx`` package that operates as a
+    backwards compatibility alias for ``rustworkx``. It was originally marked as
+    deprecated and is now being removed. The ``rustworkx`` name has now existed
+    longer than the ``retworkx`` name and the ``retworkx`` package is no longer needed.
+    We encourage users to migrate to the new name. Thanks for all users that have
+    used ``retworkx`` since the early days of the project!
