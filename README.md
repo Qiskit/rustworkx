@@ -165,9 +165,11 @@ that installing rustworkx this way will be significantly slower then using
 
 > [!TIP]
 > It's worth noting that `pip install -e` does not work, as it will link the python
-packaging shim to your python environment but not build the rustworkx binary. If
-you want to build rustworkx in debug mode you have to use
-`python setup.py develop`.
+packaging shim to your python environment but not build the rustworkx binary.
+
+> [!TIP]
+> Set `SETUPTOOLS_RUST_CARGO_PROFILE="dev"` to install a debug build of rustworkx
+that builds faster. 
 
 ## Project history
 
