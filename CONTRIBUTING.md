@@ -334,7 +334,7 @@ cargo doc --open
 
 #### Updating documentation dependencies
 
-The documentation worfklow is currently our step with the most dependencies. Even
+The documentation workflow is currently our step with the most dependencies. Even
 though `rustworkx` currently has very few Python dependencies, our documentation depends
 on `sphinx` and many others. Therefore, `uv.lock` file contains a frozen list of what
 can be used for the workflow.
