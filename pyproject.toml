@@ -10,7 +10,6 @@ readme = {file = "README.md", content-type = "text/markdown"}
 license-files = ["LICENSE"]
 license = "Apache-2.0"
 classifiers=[
-    "License :: OSI Approved :: Apache Software License",
     "Intended Audience :: Developers",
     "Intended Audience :: Science/Research",
     "Programming Language :: Rust",
