@@ -5,7 +5,7 @@ API functions for PyDigraph
 
 These functions are algorithm functions that are type specific for
 :class:`~rustworkx.PyDiGraph` or :class:`~rustworkx.PyDAG` objects. Universal
-functions from Retworkx API that work for both graph types internally call
+functions from Rustworkx API that work for both graph types internally call
 the functions from the explicitly typed based on the data type.
 
 .. autosummary::

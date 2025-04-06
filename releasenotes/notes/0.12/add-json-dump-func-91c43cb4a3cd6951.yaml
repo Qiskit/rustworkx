@@ -1,14 +1,14 @@
 ---
 features:
   - |
-    Added a new function, :func:`~.retworkx.node_link_json`, which is used to
+    Added a new function, :func:`~.rustworkx.node_link_json`, which is used to
     generate JSON node-link data representation of an input :class:`~.PyGraph`
     or :class:`~.PyDiGraph` object. For example, running::
 
-      import retworkx
+      import rustworkx
 
-      graph = retworkx.generators.path_graph(weights=['a', 'b', 'c'])
-      print(retworkx.node_link_json(graph, node_attrs=lambda n: {'label': n}))
+      graph = rustworkx.generators.path_graph(weights=['a', 'b', 'c'])
+      print(rustworkx.node_link_json(graph, node_attrs=lambda n: {'label': n}))
 
     will output a JSON payload equivalent (identical except for whitespace) to:
 
