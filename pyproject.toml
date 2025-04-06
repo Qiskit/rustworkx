@@ -96,6 +96,7 @@ docs = [
     "sphinx-reredirects",
     "sphinxemoji",
     "ipykernel",
+    "lxml_html_clean",
 ]
 
 [tool.black]

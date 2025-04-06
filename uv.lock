@@ -1350,6 +1350,18 @@ wheels = [
 ]
 
 [[package]]
+name = "lxml-html-clean"
+version = "0.4.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "lxml" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/81/f2/fe319e3c5cb505a361b95d1e0d0d793fe28d4dcc2fc39d3cae9324dc4233/lxml_html_clean-0.4.1.tar.gz", hash = "sha256:40c838bbcf1fc72ba4ce811fbb3135913017b27820d7c16e8bc412ae1d8bc00b", size = 21378 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/f7/ba/2af7a60b45bf21375e111c1e2d5d721108d06c80e3d9a3cc1d767afe1731/lxml_html_clean-0.4.1-py3-none-any.whl", hash = "sha256:b704f2757e61d793b1c08bf5ad69e4c0b68d6696f4c3c1429982caf90050bcaf", size = 14114 },
+]
+
+[[package]]
 name = "m2r2"
 version = "0.3.3.post2"
 source = { registry = "https://pypi.org/simple" }
@@ -2507,6 +2519,7 @@ mpl = [
 docs = [
     { name = "ipykernel" },
     { name = "jupyter-sphinx" },
+    { name = "lxml-html-clean" },
     { name = "m2r2" },
     { name = "matplotlib", version = "3.9.4", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.10'" },
     { name = "matplotlib", version = "3.10.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
@@ -2551,6 +2564,7 @@ provides-extras = ["mpl", "graphviz", "all"]
 docs = [
     { name = "ipykernel" },
     { name = "jupyter-sphinx" },
+    { name = "lxml-html-clean" },
     { name = "m2r2" },
     { name = "matplotlib", specifier = ">=3.4" },
     { name = "pillow", specifier = ">=4.2.1" },
