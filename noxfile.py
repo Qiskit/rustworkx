@@ -8,7 +8,6 @@ pyproject = nox.project.load_toml("pyproject.toml")
 deps = nox.project.dependency_groups(pyproject, "test")
 lint_deps = nox.project.dependency_groups(pyproject, "lint")
 stubs_deps = nox.project.dependency_groups(pyproject, "stubs")
-docs_deps = nox.project.dependency_groups(pyproject, "docs")
 
 def install_rustworkx(session):
     session.install(*deps)
@@ -39,14 +38,16 @@ def lint(session):
     session.run("cargo", "fmt", "--all", "--", "--check", external=True)
     session.run("python", "tools/find_stray_release_notes.py")
 
-@nox.session(python=["3"])
+@nox.session(python=["3"], venv_backend="uv")
 def docs(session):
-    install_rustworkx(session)
-    session.install(*docs_deps, "-c", "constraints.txt")
+    session.run("uv", "sync", "--frozen", "--only-group", "docs")
     session.run("python", "-m", "ipykernel", "install", "--user")
-    session.run("jupyter", "kernelspec", "list")
+    session.run("uv", "run", "--frozen", "jupyter", "kernelspec", "list")
     session.chdir("docs")
-    session.run("sphinx-build", "-W", "-d", "build/.doctrees", "-b", "html", "source", "build/html", *session.posargs)
+    session.run(
+        "uv", "run", "--frozen", "sphinx-build", "-W", "-d", "build/.doctrees",
+        "-b", "html", "source", "build/html", *session.posargs
+    )
 
 @nox.session(python=["3"])
 def docs_clean(session):
