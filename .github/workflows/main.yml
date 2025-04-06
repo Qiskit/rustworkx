@@ -185,7 +185,7 @@ jobs:
       - name: Install binary deps
         run: sudo apt-get install -y graphviz
       - name: Install deps
-        run: pip install -U nox
+        run: pip install -U nox uv==0.6.12
       - name: Build Docs
         run: nox -e docs
       - uses: actions/upload-artifact@v4

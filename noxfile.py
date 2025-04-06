@@ -38,18 +38,33 @@ def lint(session):
     session.run("cargo", "fmt", "--all", "--", "--check", external=True)
     session.run("python", "tools/find_stray_release_notes.py")
 
-@nox.session(python=["3"], venv_backend="uv")
+# For uv environments, we keep the virtualenvs separate to avoid conflicts
+@nox.session(python=["3"], venv_backend="uv", reuse_venv=False, default=False)
 def docs(session):
+    env_for_uv = {"UV_PROJECT_ENVIRONMENT": session.virtualenv.location}
+    print(env_for_uv)
+    session.env["UV_PROJECT_ENVIRONMENT"] = session.virtualenv.location
+    print(session.env)
     session.run("uv", "sync", "--frozen", "--only-group", "docs")
-    session.run("python", "-m", "ipykernel", "install", "--user")
+    session.run("uv", "run", "--frozen", "--", "python", "-m", "ipykernel", "install", "--user")
     session.run("uv", "run", "--frozen", "jupyter", "kernelspec", "list")
     session.chdir("docs")
     session.run(
-        "uv", "run", "--frozen", "sphinx-build", "-W", "-d", "build/.doctrees",
-        "-b", "html", "source", "build/html", *session.posargs
+        "uv",
+        "run",
+        "--frozen",
+        "sphinx-build",
+        "-W",
+        "-d",
+        "build/.doctrees",
+        "-b",
+        "html",
+        "source",
+        "build/html",
+        *session.posargs,
     )
 
-@nox.session(python=["3"])
+@nox.session(python=["3"], default=False)
 def docs_clean(session):
     session.chdir("docs")
     session.run("rm", "-rf", "build", "source/apiref", external=True)
