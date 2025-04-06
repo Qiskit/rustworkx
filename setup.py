@@ -7,6 +7,4 @@
 # that they have been altered from the originals.
 from setuptools import setup
 
-setup(
-    options={"bdist_wheel": {"py_limited_api": "cp39"}},
-)
+setup()
