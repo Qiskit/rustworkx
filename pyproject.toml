@@ -30,6 +30,11 @@ keywords = ["Networks", "network", "graph", "Graph Theory", "DAG"]
 packages = ["rustworkx", "rustworkx.visualization"]
 include-package-data = true
 
+[[tool.setuptools-rust.ext-modules]]
+target = "rustworkx.rustworkx"
+path = "Cargo.toml"
+binding = "PyO3"
+
 [project.optional-dependencies]
 mpl = ["matplotlib>=3.0"]
 graphviz = ["pillow>=5.4"]
