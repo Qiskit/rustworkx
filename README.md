@@ -166,10 +166,6 @@ when running `pip install`. That can be handy for debugging.
 > It's worth noting that `pip install -e` does not work, as it will link the python
 packaging shim to your python environment but not build the rustworkx binary.
 
-> [!TIP]
-> Set `SETUPTOOLS_RUST_CARGO_PROFILE="dev"` to install a debug build of rustworkx
-that builds faster. 
-
 ## Project history
 
 Rustworkx was originally called retworkx and was created initially to be
