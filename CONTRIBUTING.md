@@ -310,6 +310,9 @@ nox -e docs
 which will output the html rendered documentation in `docs/build/html` which
 you can view locally in a web browser.
 
+> [!TIP]
+> If you run `nox -e docs -- -j auto`, the documentation uses all CPUs and builds faster.
+
 #### rustworkx-core documentation
 
 To build the rustworkx-core documentation you will use rust-doc. You can do this
