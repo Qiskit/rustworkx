@@ -157,11 +157,10 @@ changes reflected in your python environment.
 ### Develop Mode
 
 If you'd like to build rustworkx in debug mode and use an interactive debugger
-while working on a change you can use `python setup.py develop` to build
-and install rustworkx in develop mode. This will build rustworkx without
-optimizations and include debuginfo which can be handy for debugging. Do note
-that installing rustworkx this way will be significantly slower then using
-`pip install` and should only be used for debugging/development.
+while working on a change you can set `SETUPTOOLS_RUST_CARGO_PROFILE="dev"`
+as an environment variable to build and install rustworkx in develop mode.
+This will build rustworkx without optimizations and include debuginfo
+when running `pip install`. That can be handy for debugging.
 
 > [!TIP]
 > It's worth noting that `pip install -e` does not work, as it will link the python
