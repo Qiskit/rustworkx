@@ -1,3 +1,61 @@
+[project]
+name = "rustworkx"
+version = "0.17.0"
+description = "A python graph library implemented in Rust"
+requires-python = ">=3.9"
+dependencies = [
+    "numpy>=1.16.0,<3"
+]
+readme = {file = "README.md", content-type = "text/markdown"}
+license-files = ["LICENSE"]
+license = "Apache-2.0"
+classifiers=[
+    "License :: OSI Approved :: Apache Software License",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "Programming Language :: Rust",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Operating System :: MacOS :: MacOS X",
+    "Operating System :: Microsoft :: Windows",
+    "Operating System :: POSIX :: Linux",
+    "Development Status ::  5 - Production/Stable",
+]
+keywords = ["Networks", "network", "graph", "Graph Theory", "DAG"]
+
+[project.optional-dependencies]
+mpl = ["matplotlib>=3.0"]
+graphviz = ["pillow>=5.4"]
+# TODO: use self-referential rustworkx[mpl] and rustworkx[graphivz]
+# once it is better suported.
+all = [
+    "matplotlib>=3.0",
+    "pillow>=5.4",
+]
+
+[project.urls]
+issues = "https://github.com/Qiskit/rustworkx/issues"
+source = "https://github.com/Qiskit/rustworkx"
+documentation ="https://www.rustworkx.org/"
+releasenotes = "https://www.rustworkx.org/release_notes.html"
+
+[[project.authors]]
+name = "Matthew Treinish"
+email = "mtreinish@kortar.org"
+
+[[project.maintainers]]
+name = "Ivan Carvalho"
+email = "ivancarvalho@gatech.edu"
+
+[dependency-groups]
+test = []
+lint = []
+docs = []
+
 [build-system]
 requires = ["setuptools", "wheel", "setuptools-rust"]
 build-backend = "setuptools.build_meta"
