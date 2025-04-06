@@ -41,18 +41,17 @@ def lint(session):
 # For uv environments, we keep the virtualenvs separate to avoid conflicts
 @nox.session(python=["3"], venv_backend="uv", reuse_venv=False, default=False)
 def docs(session):
-    env_for_uv = {"UV_PROJECT_ENVIRONMENT": session.virtualenv.location}
-    print(env_for_uv)
     session.env["UV_PROJECT_ENVIRONMENT"] = session.virtualenv.location
-    print(session.env)
-    session.run("uv", "sync", "--frozen", "--only-group", "docs")
-    session.run("uv", "run", "--frozen", "--", "python", "-m", "ipykernel", "install", "--user")
+    session.env["UV_FROZEN"] = "1"
+    session.run("uv", "sync", "--only-group", "docs")
+    session.run(
+        "uv", "run", "--", "python", "-m", "ipykernel", "install", "--user"
+    )
     session.run("uv", "run", "--frozen", "jupyter", "kernelspec", "list")
     session.chdir("docs")
     session.run(
         "uv",
         "run",
-        "--frozen",
         "sphinx-build",
         "-W",
         "-d",
