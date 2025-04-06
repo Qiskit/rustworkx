@@ -3,25 +3,13 @@ import nox
 nox.options.reuse_existing_virtualenvs = True
 nox.options.stop_on_first_error = True
 
-deps = [
-  "setuptools-rust",
-  "fixtures",
-  "testtools>=2.5.0",
-  "networkx>=2.5",
-  "stestr>=4.1",
-]
+pyproject = nox.project.load_toml("pyproject.toml")
 
-lint_deps = [
-    "black~=24.8",
-    "ruff~=0.6",
-    "setuptools-rust",
-    "typos~=1.28",
-]
+deps = nox.project.dependency_groups(pyproject, "test")
 
-stubs_deps = [
-    "mypy==1.11.2",
-    "typing-extensions>=4.4",
-]
+lint_deps = nox.project.dependency_groups(pyproject, "lint")
+
+stubs_deps = nox.project.dependency_groups(pyproject, "stubs")
 
 def install_rustworkx(session):
     session.install(*deps)

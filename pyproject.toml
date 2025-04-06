@@ -66,6 +66,25 @@ email = "ivancarvalho@gatech.edu"
 requires = ["setuptools", "wheel", "setuptools-rust"]
 build-backend = "setuptools.build_meta"
 
+[dependency-groups]
+test = [
+  "setuptools-rust",
+  "fixtures",
+  "testtools>=2.5.0",
+  "networkx>=2.5",
+  "stestr>=4.1",
+]
+lint = [
+    "black~=24.8",
+    "ruff~=0.6",
+    "setuptools-rust",
+    "typos~=1.28",
+]
+stubs = [
+    "mypy==1.11.2",
+    "typing-extensions>=4.4",
+]
+
 [tool.black]
 line-length = 100
 target-version = ['py39', 'py310', 'py311', 'py312']
