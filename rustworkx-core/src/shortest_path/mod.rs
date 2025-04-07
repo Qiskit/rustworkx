@@ -20,6 +20,7 @@ mod astar;
 mod bellman_ford;
 mod dijkstra;
 mod k_shortest_path;
+mod simple_shortest_paths;
 
 pub use all_shortest_paths::all_shortest_paths;
 pub use astar::astar;
