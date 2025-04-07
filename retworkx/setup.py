@@ -26,7 +26,7 @@ with open(parent_dir/"pyproject.toml", "rb") as f:
 retworkx_readme_compat = f"""# retworkx
 
 `retworkx` is the **deprecated** package name for `rustworkx`. `retworkx` has been
-sunset and will no longer receive updates. We recommend using `rustworkx` instead,
+retired and will no longer receive updates. We recommend using `rustworkx` instead,
 it should be a drop-in replacement. Thanks to all users that have used `retworkx`
 since the early days of the project!
 
