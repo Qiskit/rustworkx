@@ -32,7 +32,7 @@ use smallvec::SmallVec;
 use pyo3::exceptions::PyIndexError;
 use pyo3::gc::PyVisit;
 use pyo3::prelude::*;
-use pyo3::types::{IntoPyDict, PyBool, PyDict, PyList, PyString, PyTuple, PyType};
+use pyo3::types::{IntoPyDict, PyBool, PyDict, PyGenericAlias, PyList, PyString, PyTuple, PyType};
 use pyo3::IntoPyObjectExt;
 use pyo3::PyTraverseError;
 use pyo3::Python;
@@ -57,8 +57,8 @@ use super::iterators::{
     EdgeIndexMap, EdgeIndices, EdgeList, NodeIndices, NodeMap, WeightedEdgeList,
 };
 use super::{
-    find_node_by_weight, generic_class_getitem, weight_callable, DAGHasCycle, DAGWouldCycle, IsNan,
-    NoEdgeBetweenNodes, NoSuitableNeighbors, NodesRemoved, StablePyGraph,
+    find_node_by_weight, weight_callable, DAGHasCycle, DAGWouldCycle, IsNan, NoEdgeBetweenNodes,
+    NoSuitableNeighbors, NodesRemoved, StablePyGraph,
 };
 
 use super::dag_algo::is_directed_acyclic_graph;
@@ -3440,7 +3440,8 @@ impl PyDiGraph {
         cls: &Bound<'_, PyType>,
         key: &Bound<'_, PyAny>,
     ) -> PyResult<PyObject> {
-        generic_class_getitem(cls, key)
+        let alias = PyGenericAlias::new(cls.py(), cls.as_any(), key)?;
+        Ok(alias.into())
     }
 
     // Functions to enable Python Garbage Collection
