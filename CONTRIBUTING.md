@@ -203,10 +203,8 @@ https://doc.rust-lang.org/book/ch11-01-writing-tests.html
 
 The rustworkx-core tests can be run with:
 ```
-cargo test
+cargo test --workspace
 ```
-
-from the `rustworkx-core` directory.
 
 ### Fuzz Testing in rustworkx
 
@@ -271,10 +269,16 @@ what CI is checking.
 ##### Lint
 
 An additional step is to run [clippy](https://github.com/rust-lang/rust-clippy)
-on your changes. You can run it by running:
+on your changes. You can execute it by running:
 
 ```bash
 cargo clippy
+```
+
+If you want a more detailed feedback identical to CI, run instead:
+
+```bash
+cargo clippy --workspace --all-targets -- -D warnings
 ```
 
 #### Python
@@ -318,10 +322,9 @@ you can view locally in a web browser.
 To build the rustworkx-core documentation you will use rust-doc. You can do this
 by running:
 ```
-cargo doc
+cargo doc -p rustworkx-core
 ```
-from the `rustworkx-core` directory (which is the root of the `rustworkx-core`
-crate. After it's built the compiled documentation will be located in
+After it's built the compiled documentation will be located in
 `target/doc/rustworkx_core` (which is off the repo root not the `rustworkx-core`
 dir)
 
@@ -329,7 +332,7 @@ You can build and open the documentation directly in your configured default
 web browser by running:
 
 ```
-cargo doc --open
+cargo doc -p rustworkx-core --open
 ```
 
 #### Updating documentation dependencies
