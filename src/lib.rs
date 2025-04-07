@@ -371,19 +371,6 @@ fn find_node_by_weight<Ty: EdgeType>(
     Ok(index)
 }
 
-fn generic_class_getitem(
-    cls: &Bound<'_, pyo3::types::PyType>,
-    key: &Bound<'_, PyAny>,
-) -> PyResult<PyObject> {
-    Python::with_gil(|py| -> PyResult<PyObject> {
-        let types_mod = py.import("types")?;
-        let types_generic_alias = types_mod.getattr("GenericAlias")?;
-        let args = (cls, key);
-        let generic_alias = types_generic_alias.call1(args)?;
-        Ok(generic_alias.into())
-    })
-}
-
 create_exception!(
     rustworkx,
     InvalidNode,
@@ -432,10 +419,12 @@ create_exception!(
     PyException,
     "No mapping was found for the request swapping"
 );
+
 // Prune part of the search tree while traversing a graph.
 import_exception!(rustworkx.visit, PruneSearch);
 // Stop graph traversal.
 import_exception!(rustworkx.visit, StopSearch);
+
 create_exception!(
     rustworkx,
     JSONSerializationError,
