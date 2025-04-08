@@ -290,6 +290,11 @@ pub fn out_degree_centrality(graph: &digraph::PyDiGraph) -> PyResult<CentralityM
 /// where :math:`N` is the number of nodes in the graph. This alternative
 /// formula can be used with the ``wf_improved`` argument.
 ///
+/// This function is multithreaded and will run in parallel if the number
+/// of nodes in the graph is above the value of ``parallel_threshold`` (it
+/// defaults to 50). If the function will be running in parallel the env var
+/// ``RAYON_NUM_THREADS`` can be used to adjust how many threads will be used.
+///
 /// :param PyGraph graph: The input graph. Can either be a
 ///     :class:`~rustworkx.PyGraph` or :class:`~rustworkx.PyDiGraph`.
 /// :param bool wf_improved: This is optional; the default is True. If True,
@@ -346,6 +351,11 @@ pub fn graph_closeness_centrality(
 /// where :math:`N` is the number of nodes in the graph. This alternative
 /// formula can be used with the ``wf_improved`` argument.
 ///
+/// This function is multithreaded and will run in parallel if the number
+/// of nodes in the graph is above the value of ``parallel_threshold`` (it
+/// defaults to 50). If the function will be running in parallel the env var
+///
+/// ``RAYON_NUM_THREADS`` can be used to adjust how many threads will be used.
 /// :param PyDiGraph graph: The input graph. Can either be a
 ///     :class:`~rustworkx.PyGraph` or :class:`~rustworkx.PyDiGraph`.
 /// :param bool wf_improved: This is optional; the default is True. If True,
@@ -395,7 +405,12 @@ pub fn digraph_closeness_centrality(
 /// an alternative improved formula that calculates the closeness centrality
 /// as "a ratio of the fraction of actors in the group who are reachable, to
 /// the average distance".[WF]
+///
 /// You can enable this by setting `wf_improved` to `true`.
+/// This function is multithreaded and will run in parallel if the number
+/// of nodes in the graph is above the value of ``parallel_threshold`` (it
+/// defaults to 50). If the function will be running in parallel the env var
+/// ``RAYON_NUM_THREADS`` can be used to adjust how many threads will be used.
 ///
 /// :param PyGraph graph: The input graph. Can either be a
 ///     :class:`~rustworkx.PyGraph` or :class:`~rustworkx.PyDiGraph`.
@@ -471,6 +486,11 @@ pub fn graph_newman_weighted_closeness_centrality(
 /// as "a ratio of the fraction of actors in the group who are reachable, to
 /// the average distance".[WF]
 /// You can enable this by setting `wf_improved` to `true`.
+///
+/// This function is multithreaded and will run in parallel if the number
+/// of nodes in the graph is above the value of ``parallel_threshold`` (it
+/// defaults to 50). If the function will be running in parallel the env var
+/// ``RAYON_NUM_THREADS`` can be used to adjust how many threads will be used.
 ///
 /// :param PyDiGraph graph: The input graph. Can either be a
 ///     :class:`~rustworkx.PyGraph` or :class:`~rustworkx.PyDiGraph`.
