@@ -64,6 +64,8 @@
 //! | EdgeRemovable                 | x     |  x          |          |             |       |       |
 //! | EdgeFindable                  | x     |  x          |          |             |       |       |
 
+use std::hash::BuildHasher;
+
 use petgraph::graph::IndexType;
 use petgraph::graphmap::{GraphMap, NodeTrait};
 use petgraph::matrix_graph::{MatrixGraph, Nullable};
@@ -119,8 +121,8 @@ where
     }
 }
 
-impl<N, E, Ty: EdgeType, Null: Nullable<Wrapped = E>, Ix: IndexType> NodeRemovable
-    for MatrixGraph<N, E, Ty, Null, Ix>
+impl<N, E, S: BuildHasher, Ty: EdgeType, Null: Nullable<Wrapped = E>, Ix: IndexType> NodeRemovable
+    for MatrixGraph<N, E, S, Ty, Null, Ix>
 {
     type Output = Option<Self::NodeWeight>;
     fn remove_node(&mut self, node: Self::NodeId) -> Self::Output {
