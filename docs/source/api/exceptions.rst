@@ -4,16 +4,18 @@ Exceptions
 .. autosummary::
    :toctree: ../apiref
 
-   rustworkx.InvalidNode
-   rustworkx.DAGWouldCycle
-   rustworkx.NoEdgeBetweenNodes
    rustworkx.DAGHasCycle
-   rustworkx.NegativeCycle
-   rustworkx.NoSuitableNeighbors
-   rustworkx.NoPathFound
-   rustworkx.NullGraph
-   rustworkx.visit.StopSearch
-   rustworkx.visit.PruneSearch
-   rustworkx.JSONSerializationError
-   rustworkx.InvalidMapping
+   rustworkx.DAGWouldCycle
+   rustworkx.FailedToConverge
    rustworkx.GraphNotBipartite
+   rustworkx.InvalidMapping
+   rustworkx.InvalidNode
+   rustworkx.JSONDeserializationError
+   rustworkx.JSONSerializationError
+   rustworkx.NegativeCycle
+   rustworkx.NoEdgeBetweenNodes
+   rustworkx.NoPathFound
+   rustworkx.NoSuitableNeighbors
+   rustworkx.NullGraph
+   rustworkx.visit.PruneSearch
+   rustworkx.visit.StopSearch
