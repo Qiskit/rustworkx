@@ -1069,7 +1069,12 @@ mod test_katz_centrality {
 ///     Methods and Applications (Structural Analysis in the Social Sciences).
 ///     Cambridge: Cambridge University Press.
 ///     <https://doi.org/10.1017/CBO9780511815478>
-///
+/// 
+/// This function is multithreaded and will run in parallel if the number
+/// of nodes in the graph is above the value of ``parallel_threshold``. If the
+/// function will be running in parallel the env var ``RAYON_NUM_THREADS`` can
+/// be used to adjust how many threads will be used.
+/// 
 /// # Arguments
 ///
 /// * `graph` - The graph object to run the algorithm on
@@ -1182,7 +1187,12 @@ where
 ///     Methods and Applications (Structural Analysis in the Social Sciences).
 ///     Cambridge: Cambridge University Press.
 ///     <https://doi.org/10.1017/CBO9780511815478>
-///
+/// 
+/// This function is multithreaded and will run in parallel if the number
+/// of nodes in the graph is above the value of ``parallel_threshold``. If the
+/// function will be running in parallel the env var ``RAYON_NUM_THREADS`` can
+/// be used to adjust how many threads will be used.
+/// 
 /// # Arguments
 /// * `graph` - The graph object to run the algorithm on
 /// * `wf_improved` - If `true`, scale by the fraction of nodes reachable.
