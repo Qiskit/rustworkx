@@ -50,7 +50,7 @@ def docs(session):
     session.run(
         "uv", "run", "--", "python", "-m", "ipykernel", "install", "--user"
     )
-    session.run("uv", "run", "--frozen", "jupyter", "kernelspec", "list")
+    session.run("uv", "run", "jupyter", "kernelspec", "list")
     session.chdir("docs")
     session.run(
         "uv",
