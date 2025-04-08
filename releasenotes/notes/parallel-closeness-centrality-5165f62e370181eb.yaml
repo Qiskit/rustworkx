@@ -3,7 +3,7 @@ features:
   - |
     The :func:`~.closeness_centrality` method is now parallel for better performance.
     The parallelism is toggled via the new `parallel_threshold` optional parameter.
-other:
+upgrade:
   - |
     The `closeness_centrality` function in `rustworkx-core`
     now requires `parallel_threshold` parameter which controls when the
