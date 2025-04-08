@@ -12,6 +12,7 @@
 
 #![allow(clippy::float_cmp)]
 
+use std::collections::HashMap;
 use std::hash::Hash;
 
 use ndarray::ArrayView2;
@@ -29,6 +30,168 @@ use rand_pcg::Pcg64;
 
 use super::star_graph;
 use super::InvalidInputError;
+
+/// Generates a random regular graph
+///
+/// A regular graph is one where each node has same number of neighbours. This function takes in 
+/// number of nodes and degrees as two functions which are used in order to generate a random regular graph.
+/// 
+/// This is only defined for un-directed graphs, which have no self-directed edges or parallel edges.
+/// 
+/// Raises an error if 
+///
+/// This algorithm is based on the implementation of networkx functon
+/// <https://github.com/networkx/networkx/blob/networkx-2.4/networkx/generators/random_graphs.py>
+///
+/// A. Steger and N. Wormald,
+/// Generating random regular graphs quickly,
+/// Probability and Computing 8 (1999), 377-396, 1999.
+/// https://doi.org/10.1017/S0963548399003867
+/// 
+/// Jeong Han Kim and Van H. Vu,
+/// Generating random regular graphs,
+/// Proceedings of the thirty-fifth ACM symposium on Theory of computing,
+/// San Diego, CA, USA, pp 213--222, 2003.
+/// http://portal.acm.org/citation.cfm?id=780542.780576
+/// 
+/// Arguments:
+///
+/// * `num_nodes` - The number of nodes for creating the random graph.
+/// * `degree` - The number of edges connected to each node.
+/// * `seed` - An optional seed to use for the random number generator.
+/// * `default_node_weight` - A callable that will return the weight to use
+///   for newly created nodes.
+/// * `default_edge_weight` - A callable that will return the weight object
+///   to use for newly created edges.
+/// # Example
+/// ```rust
+/// use rustworkx_core::petgraph;
+/// use rustworkx_core::generators::random_regular_graph;
+///
+/// let g: petgraph::graph::UnGraph<(), ()> = random_regular_graph(
+///     4,
+///     2,
+///     None,
+///     || {()},
+///     || {()},
+/// ).unwrap();
+/// assert_eq!(g.node_count(), 4);
+/// assert_eq!(g.edge_count(), 2);
+/// ```
+
+pub fn random_regular_graph<G, T, F, H, M>(
+    num_nodes: usize,
+    degree: usize,
+    seed: Option<u64>,
+    mut default_node_weight: F,
+    mut default_edge_weight: H,
+) -> Result<G, InvalidInputError>
+where
+    G: Build + Create + Data<NodeWeight = T, EdgeWeight = M> + NodeIndexable + GraphProp,
+    F: FnMut() -> T,
+    H: FnMut() -> M,
+    G::NodeId: Eq + Hash + Copy,
+{
+    if num_nodes == 0 {
+        return Err(InvalidInputError {});
+    }
+    let mut rng: Pcg64 = match seed {
+        Some(seed) => Pcg64::seed_from_u64(seed),
+        None => Pcg64::from_entropy(),
+    };
+
+    if (num_nodes * degree) % 2 != 0 {
+        return Err(InvalidInputError {});
+    }
+
+    if degree >= num_nodes {
+        return Err(InvalidInputError {});
+    }
+
+    let mut graph = G::with_capacity(num_nodes, num_nodes);
+    for _ in 0..num_nodes {
+        graph.add_node(default_node_weight());
+    }
+
+    if degree == 0 {
+        return Ok(graph);
+    }
+
+    let suitable = |edges: &HashSet<(G::NodeId, G::NodeId)>,
+                    potential_edges: &HashMap<G::NodeId, usize>|
+     -> bool {
+        if potential_edges.is_empty() {
+            return true;
+        }
+        for (s1, _) in potential_edges.iter() {
+            for (s2, _) in potential_edges.iter() {
+                if s1 == s2 {
+                    break;
+                }
+                let (u, v) = if graph.to_index(*s1) > graph.to_index(*s2) {
+                    (*s2, *s1)
+                } else {
+                    (*s1, *s2)
+                };
+                if !edges.contains(&(u, v)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    };
+
+    let mut try_creation = || -> Option<HashSet<(G::NodeId, G::NodeId)>> {
+        let mut edges: HashSet<(G::NodeId, G::NodeId)> = HashSet::with_capacity(num_nodes);
+        let mut stubs: Vec<G::NodeId> = (0..num_nodes)
+            .flat_map(|x| std::iter::repeat(graph.from_index(x)).take(degree))
+            .collect();
+        while !stubs.is_empty() {
+            let mut potential_edges: HashMap<G::NodeId, usize> = HashMap::new();
+            stubs.shuffle(&mut rng);
+
+            let mut i = 0;
+            while i + 1 < stubs.len() {
+                let s1 = stubs[i];
+                let s2 = stubs[i + 1];
+                let (u, v) = if graph.to_index(s1) > graph.to_index(s2) {
+                    (s2, s1)
+                } else {
+                    (s1, s2)
+                };
+                if u != v && !edges.contains(&(u, v)) {
+                    edges.insert((u, v));
+                } else {
+                    *potential_edges.entry(u).or_insert(0) += 1;
+                    *potential_edges.entry(v).or_insert(0) += 1;
+                }
+                i += 2;
+            }
+
+            if !suitable(&edges, &potential_edges) {
+                return None;
+            }
+            stubs = Vec::new();
+            for (key, value) in potential_edges.iter() {
+                for _ in 0..*value {
+                    stubs.push(*key)
+                }
+            }
+        }
+
+        return Some(edges);
+    };
+
+    let mut edges = try_creation();
+    while edges.is_none() {
+        edges = try_creation();
+    }
+    for (u, v) in edges.unwrap() {
+        graph.add_edge(u, v, default_edge_weight());
+    }
+
+    Ok(graph)
+}
 
 /// Generate a G<sub>np</sub> random graph, also known as an
 /// Erdős-Rényi graph or a binomial graph.
@@ -898,6 +1061,14 @@ mod tests {
             gnp_random_graph(20, 0.5, Some(10), || (), || ()).unwrap();
         assert_eq!(g.node_count(), 20);
         assert_eq!(g.edge_count(), 189);
+    }
+
+    #[test]
+    fn test_random_regular_graph(){
+        let g: petgraph::graph::UnGraph<(), ()> = 
+            random_regular_graph( 4, 2, Some(10), || {()}, || {()}).unwrap();
+            assert_eq!(g.node_count(), 4);
+            assert_eq!(g.edge_count(), 2);
     }
 
     #[test]
