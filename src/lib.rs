@@ -371,49 +371,90 @@ fn find_node_by_weight<Ty: EdgeType>(
     Ok(index)
 }
 
-fn generic_class_getitem(
-    cls: &Bound<'_, pyo3::types::PyType>,
-    key: &Bound<'_, PyAny>,
-) -> PyResult<PyObject> {
-    Python::with_gil(|py| -> PyResult<PyObject> {
-        let types_mod = py.import("types")?;
-        let types_generic_alias = types_mod.getattr("GenericAlias")?;
-        let args = (cls, key);
-        let generic_alias = types_generic_alias.call1(args)?;
-        Ok(generic_alias.into())
-    })
-}
+create_exception!(
+    rustworkx,
+    InvalidNode,
+    PyException,
+    "The provided node is invalid."
+);
+create_exception!(
+    rustworkx,
+    DAGWouldCycle,
+    PyException,
+    "Performing this operation would result in trying to add a cycle to a DAG."
+);
+create_exception!(
+    rustworkx,
+    NoEdgeBetweenNodes,
+    PyException,
+    "There is no edge present between the provided nodes."
+);
+create_exception!(
+    rustworkx,
+    DAGHasCycle,
+    PyException,
+    "The specified Directed Graph has a cycle and can't be treated as a DAG."
+);
+create_exception!(
+    rustworkx,
+    NoSuitableNeighbors,
+    PyException,
+    "No neighbors found matching the provided predicate."
+);
+create_exception!(
+    rustworkx,
+    NullGraph,
+    PyException,
+    "Invalid operation on a null graph"
+);
+create_exception!(
+    rustworkx,
+    NoPathFound,
+    PyException,
+    "No path was found between the specified nodes."
+);
+create_exception!(
+    rustworkx,
+    InvalidMapping,
+    PyException,
+    "No mapping was found for the request swapping"
+);
 
-// The provided node is invalid.
-create_exception!(rustworkx, InvalidNode, PyException);
-// Performing this operation would result in trying to add a cycle to a DAG.
-create_exception!(rustworkx, DAGWouldCycle, PyException);
-// There is no edge present between the provided nodes.
-create_exception!(rustworkx, NoEdgeBetweenNodes, PyException);
-// The specified Directed Graph has a cycle and can't be treated as a DAG.
-create_exception!(rustworkx, DAGHasCycle, PyException);
-// No neighbors found matching the provided predicate.
-create_exception!(rustworkx, NoSuitableNeighbors, PyException);
-// Invalid operation on a null graph
-create_exception!(rustworkx, NullGraph, PyException);
-// No path was found between the specified nodes.
-create_exception!(rustworkx, NoPathFound, PyException);
-// No mapping was found for the request swapping
-create_exception!(rustworkx, InvalidMapping, PyException);
 // Prune part of the search tree while traversing a graph.
 import_exception!(rustworkx.visit, PruneSearch);
 // Stop graph traversal.
 import_exception!(rustworkx.visit, StopSearch);
-// JSON Error
-create_exception!(rustworkx, JSONSerializationError, PyException);
-// JSON Error
-create_exception!(rustworkx, JSONDeserializationError, PyException);
-// Negative Cycle found on shortest-path algorithm
-create_exception!(rustworkx, NegativeCycle, PyException);
-// Failed to Converge on a solution
-create_exception!(rustworkx, FailedToConverge, PyException);
-// Graph is not bipartite
-create_exception!(rustworkx, GraphNotBipartite, PyException);
+
+create_exception!(
+    rustworkx,
+    JSONSerializationError,
+    PyException,
+    "JSON Serialization Error"
+);
+create_exception!(
+    rustworkx,
+    JSONDeserializationError,
+    PyException,
+    "JSON Deserialization Error"
+);
+create_exception!(
+    rustworkx,
+    NegativeCycle,
+    PyException,
+    "Negative Cycle found on shortest-path algorithm"
+);
+create_exception!(
+    rustworkx,
+    FailedToConverge,
+    PyException,
+    "Failed to Converge on a solution"
+);
+create_exception!(
+    rustworkx,
+    GraphNotBipartite,
+    PyException,
+    "Graph is not bipartite"
+);
 
 #[pymodule]
 fn rustworkx(py: Python<'_>, m: &Bound<PyModule>) -> PyResult<()> {

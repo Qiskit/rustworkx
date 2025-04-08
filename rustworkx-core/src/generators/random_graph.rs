@@ -497,7 +497,7 @@ where
 /// use rustworkx_core::generators::sbm_random_graph;
 ///
 /// let g = sbm_random_graph::<petgraph::graph::DiGraph<(), ()>, (), _, _, ()>(
-///     &vec![1, 2],
+///     &[1, 2],
 ///     &ndarray::arr2(&[[0., 1.], [0., 1.]]).view(),
 ///     true,
 ///     Some(10),
@@ -1189,7 +1189,7 @@ mod tests {
     #[test]
     fn test_sbm_directed_complete_blocks_loops() {
         let g = sbm_random_graph::<petgraph::graph::DiGraph<(), ()>, (), _, _, ()>(
-            &vec![1, 2],
+            &[1, 2],
             &ndarray::arr2(&[[0., 1.], [0., 1.]]).view(),
             true,
             Some(10),
@@ -1200,16 +1200,16 @@ mod tests {
         assert_eq!(g.node_count(), 3);
         assert_eq!(g.edge_count(), 6);
         for (u, v) in [(1, 1), (1, 2), (2, 1), (2, 2), (0, 1), (0, 2)] {
-            assert_eq!(g.contains_edge(u.into(), v.into()), true);
+            assert!(g.contains_edge(u.into(), v.into()));
         }
-        assert_eq!(g.contains_edge(1.into(), 0.into()), false);
-        assert_eq!(g.contains_edge(2.into(), 0.into()), false);
+        assert!(!g.contains_edge(1.into(), 0.into()));
+        assert!(!g.contains_edge(2.into(), 0.into()));
     }
 
     #[test]
     fn test_sbm_undirected_complete_blocks_loops() {
         let g = sbm_random_graph::<petgraph::graph::UnGraph<(), ()>, (), _, _, ()>(
-            &vec![1, 2],
+            &[1, 2],
             &ndarray::arr2(&[[0., 1.], [1., 1.]]).view(),
             true,
             Some(10),
@@ -1220,15 +1220,15 @@ mod tests {
         assert_eq!(g.node_count(), 3);
         assert_eq!(g.edge_count(), 5);
         for (u, v) in [(1, 1), (1, 2), (2, 2), (0, 1), (0, 2)] {
-            assert_eq!(g.contains_edge(u.into(), v.into()), true);
+            assert!(g.contains_edge(u.into(), v.into()));
         }
-        assert_eq!(g.contains_edge(0.into(), 0.into()), false);
+        assert!(!g.contains_edge(0.into(), 0.into()));
     }
 
     #[test]
     fn test_sbm_directed_complete_blocks_noloops() {
         let g = sbm_random_graph::<petgraph::graph::DiGraph<(), ()>, (), _, _, ()>(
-            &vec![1, 2],
+            &[1, 2],
             &ndarray::arr2(&[[0., 1.], [0., 1.]]).view(),
             false,
             Some(10),
@@ -1239,19 +1239,19 @@ mod tests {
         assert_eq!(g.node_count(), 3);
         assert_eq!(g.edge_count(), 4);
         for (u, v) in [(1, 2), (2, 1), (0, 1), (0, 2)] {
-            assert_eq!(g.contains_edge(u.into(), v.into()), true);
+            assert!(g.contains_edge(u.into(), v.into()));
         }
-        assert_eq!(g.contains_edge(1.into(), 0.into()), false);
-        assert_eq!(g.contains_edge(2.into(), 0.into()), false);
+        assert!(!g.contains_edge(1.into(), 0.into()));
+        assert!(!g.contains_edge(2.into(), 0.into()));
         for u in 0..2 {
-            assert_eq!(g.contains_edge(u.into(), u.into()), false);
+            assert!(!g.contains_edge(u.into(), u.into()));
         }
     }
 
     #[test]
     fn test_sbm_undirected_complete_blocks_noloops() {
         let g = sbm_random_graph::<petgraph::graph::UnGraph<(), ()>, (), _, _, ()>(
-            &vec![1, 2],
+            &[1, 2],
             &ndarray::arr2(&[[0., 1.], [1., 1.]]).view(),
             false,
             Some(10),
@@ -1262,17 +1262,17 @@ mod tests {
         assert_eq!(g.node_count(), 3);
         assert_eq!(g.edge_count(), 3);
         for (u, v) in [(1, 2), (0, 1), (0, 2)] {
-            assert_eq!(g.contains_edge(u.into(), v.into()), true);
+            assert!(g.contains_edge(u.into(), v.into()));
         }
         for u in 0..2 {
-            assert_eq!(g.contains_edge(u.into(), u.into()), false);
+            assert!(!g.contains_edge(u.into(), u.into()));
         }
     }
 
     #[test]
     fn test_sbm_bad_array_rows_error() {
         match sbm_random_graph::<petgraph::graph::DiGraph<(), ()>, (), _, _, ()>(
-            &vec![1, 2],
+            &[1, 2],
             &ndarray::arr2(&[[0., 1.], [1., 1.], [1., 1.]]).view(),
             true,
             Some(10),
@@ -1287,7 +1287,7 @@ mod tests {
 
     fn test_sbm_bad_array_cols_error() {
         match sbm_random_graph::<petgraph::graph::DiGraph<(), ()>, (), _, _, ()>(
-            &vec![1, 2],
+            &[1, 2],
             &ndarray::arr2(&[[0., 1., 1.], [1., 1., 1.]]).view(),
             true,
             Some(10),
@@ -1302,7 +1302,7 @@ mod tests {
     #[test]
     fn test_sbm_asymmetric_array_error() {
         match sbm_random_graph::<petgraph::graph::UnGraph<(), ()>, (), _, _, ()>(
-            &vec![1, 2],
+            &[1, 2],
             &ndarray::arr2(&[[0., 1.], [0., 1.]]).view(),
             true,
             Some(10),
@@ -1317,7 +1317,7 @@ mod tests {
     #[test]
     fn test_sbm_invalid_probability_error() {
         match sbm_random_graph::<petgraph::graph::UnGraph<(), ()>, (), _, _, ()>(
-            &vec![1, 2],
+            &[1, 2],
             &ndarray::arr2(&[[0., 1.], [0., -1.]]).view(),
             true,
             Some(10),
@@ -1332,7 +1332,7 @@ mod tests {
     #[test]
     fn test_sbm_empty_error() {
         match sbm_random_graph::<petgraph::graph::DiGraph<(), ()>, (), _, _, ()>(
-            &vec![],
+            &[],
             &ndarray::arr2(&[[]]).view(),
             true,
             Some(10),
@@ -1526,10 +1526,7 @@ mod tests {
     }
     #[test]
     fn test_hyperbolic_dist_inf() {
-        assert_eq!(
-            hyperbolic_distance(&[f64::INFINITY, 0.], &[0., 0.]).is_nan(),
-            true
-        );
+        assert!(hyperbolic_distance(&[f64::INFINITY, 0.], &[0., 0.]).is_nan());
     }
 
     #[test]
