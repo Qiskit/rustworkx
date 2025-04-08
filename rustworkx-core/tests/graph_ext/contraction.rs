@@ -10,7 +10,7 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-use ahash::HashSet;
+use foldhash::HashSet;
 use hashbrown::HashMap;
 use petgraph::data::Build;
 use petgraph::visit::{
