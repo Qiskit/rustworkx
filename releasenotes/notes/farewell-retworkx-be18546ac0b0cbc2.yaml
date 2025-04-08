@@ -11,5 +11,5 @@ deprecations:
     ``retworkx`` being an alias to the same ``rustworkx`` package. This will no longer
     be the case.
 
-    We encourage users to migrate to the new name. Thanks for all users that have
+    We encourage users to migrate to the new name. Thanks to all users that have
     used ``retworkx`` since the early days of the project!
