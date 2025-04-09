@@ -1,0 +1,8 @@
+---
+fixes:
+  - |
+    Fixed a bug introduced in version 0.15 where the edge colors specified as
+    a list in calls to :func:`~rustworkx.visualization.mpl_draw` were not
+    having their order respected. Instead, the order of the colors was
+    being shuffled. This has been restored and now the behavior should
+    match that of 0.14.

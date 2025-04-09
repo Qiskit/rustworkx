@@ -61,6 +61,10 @@
 //! | HasParallelEdgesDirected      | x     |  x          |    x     | x           | x     | x     |
 //! | HasParallelEdgesUndirected    | x     |  x          |    x     | x           | x     | x     |
 //! | NodeRemovable                 | x     |  x          |    x     | x           |       |       |
+//! | EdgeRemovable                 | x     |  x          |          |             |       |       |
+//! | EdgeFindable                  | x     |  x          |          |             |       |       |
+
+use std::hash::BuildHasher;
 
 use petgraph::graph::IndexType;
 use petgraph::graphmap::{GraphMap, NodeTrait};
@@ -117,8 +121,8 @@ where
     }
 }
 
-impl<N, E, Ty: EdgeType, Null: Nullable<Wrapped = E>, Ix: IndexType> NodeRemovable
-    for MatrixGraph<N, E, Ty, Null, Ix>
+impl<N, E, S: BuildHasher, Ty: EdgeType, Null: Nullable<Wrapped = E>, Ix: IndexType> NodeRemovable
+    for MatrixGraph<N, E, S, Ty, Null, Ix>
 {
     type Output = Option<Self::NodeWeight>;
     fn remove_node(&mut self, node: Self::NodeId) -> Self::Output {
@@ -128,5 +132,58 @@ impl<N, E, Ty: EdgeType, Null: Nullable<Wrapped = E>, Ix: IndexType> NodeRemovab
             }
         }
         None
+    }
+}
+
+/// A graph whose edge may be removed by an edge id.
+pub trait EdgeRemovable: Data {
+    type Output;
+    fn remove_edge(&mut self, edge: Self::EdgeId) -> Self::Output;
+}
+
+impl<N, E, Ty, Ix> EdgeRemovable for StableGraph<N, E, Ty, Ix>
+where
+    Ty: EdgeType,
+    Ix: IndexType,
+{
+    type Output = Option<Self::EdgeWeight>;
+    fn remove_edge(&mut self, edge: Self::EdgeId) -> Option<Self::EdgeWeight> {
+        self.remove_edge(edge)
+    }
+}
+
+impl<N, E, Ty, Ix> EdgeRemovable for Graph<N, E, Ty, Ix>
+where
+    Ty: EdgeType,
+    Ix: IndexType,
+{
+    type Output = Option<Self::EdgeWeight>;
+    fn remove_edge(&mut self, edge: Self::EdgeId) -> Option<Self::EdgeWeight> {
+        self.remove_edge(edge)
+    }
+}
+
+/// A graph that can find edges by a pair of node ids.
+pub trait EdgeFindable: Data {
+    fn edge_find(&self, a: Self::NodeId, b: Self::NodeId) -> Option<Self::EdgeId>;
+}
+
+impl<N, E, Ty, Ix> EdgeFindable for &StableGraph<N, E, Ty, Ix>
+where
+    Ty: EdgeType,
+    Ix: IndexType,
+{
+    fn edge_find(&self, a: Self::NodeId, b: Self::NodeId) -> Option<Self::EdgeId> {
+        self.find_edge(a, b)
+    }
+}
+
+impl<N, E, Ty, Ix> EdgeFindable for &Graph<N, E, Ty, Ix>
+where
+    Ty: EdgeType,
+    Ix: IndexType,
+{
+    fn edge_find(&self, a: Self::NodeId, b: Self::NodeId) -> Option<Self::EdgeId> {
+        self.find_edge(a, b)
     }
 }

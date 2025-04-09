@@ -31,4 +31,4 @@ upgrade:
           token_swapper(&g, mapping, Some(10), Some(4), Some(50));
 
     will now return ``Err(MapNotPossible)`` instead of panicking. If you were using this
-    funciton before you'll need to handle the result type.
+    function before you'll need to handle the result type.

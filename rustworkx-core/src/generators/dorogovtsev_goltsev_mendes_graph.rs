@@ -16,18 +16,19 @@ use super::InvalidInputError;
 
 /// Generate a Dorogovtsev-Goltsev-Mendes graph
 ///
-/// Generate a graph following the recursive procedure in [1].
+/// Generate a graph following the recursive procedure by Dorogovtsev, Goltsev,
+/// and Mendes[^DGM2002].
 /// Starting from the two-node, one-edge graph, iterating `n` times generates
-/// a graph with `(3**n + 3) // 2` nodes and `3**n` edges.
+/// a graph with `(3^n + 3) // 2` nodes and `3^n` edges.
 ///
+/// # Arguments
 ///
-/// Arguments:
-///
-/// * `n` - The number of iterations to perform. n=0 returns the two-node, one-edge graph.
+/// * `n` - The number of iterations to perform. `n = 0` returns the two-node, one-edge graph.
 /// * `default_node_weight` - A callable that will return the weight to use for newly created nodes.
 /// * `default_edge_weight` - A callable that will return the weight object to use for newly created edges.
 ///
 /// # Example
+///
 /// ```rust
 /// use rustworkx_core::petgraph;
 /// use rustworkx_core::generators::dorogovtsev_goltsev_mendes_graph;
@@ -43,10 +44,10 @@ use super::InvalidInputError;
 /// );
 /// ```
 ///
-/// .. [1] S. N. Dorogovtsev, A. V. Goltsev and J. F. F. Mendes
+/// [^DGM2002]: S. N. Dorogovtsev, A. V. Goltsev and J. F. F. Mendes
 ///    “Pseudofractal scale-free web”
-///    Physical Review E 65, 066122, 2002
-///    https://arxiv.org/abs/cond-mat/0112143
+///    Physical Review E 65, 066122 (2002)
+///    <https://arxiv.org/abs/cond-mat/0112143>
 ///
 pub fn dorogovtsev_goltsev_mendes_graph<G, T, F, H, M>(
     n: usize,

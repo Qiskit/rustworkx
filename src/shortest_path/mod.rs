@@ -31,7 +31,7 @@ use petgraph::visit::NodeCount;
 use pyo3::exceptions::PyIndexError;
 use pyo3::exceptions::PyValueError;
 
-use numpy::IntoPyArray;
+use numpy::{IntoPyArray, PyArray2};
 
 use rustworkx_core::dictmap::*;
 use rustworkx_core::shortest_path::{
@@ -375,7 +375,7 @@ pub fn digraph_has_path(
 /// :raises ValueError: when an edge weight with NaN or negative value
 ///     is provided.
 #[pyfunction]
-#[pyo3(text_signature = "(graph, node, edge_cost_fn, /, goal=None)")]
+#[pyo3(text_signature = "(graph, node, edge_cost_fn, /, goal=None)", signature = (graph, node, edge_cost_fn, goal=None))]
 pub fn graph_dijkstra_shortest_path_lengths(
     py: Python,
     graph: &graph::PyGraph,
@@ -450,7 +450,7 @@ pub fn graph_dijkstra_shortest_path_lengths(
 /// :raises ValueError: when an edge weight with NaN or negative value
 ///     is provided.
 #[pyfunction]
-#[pyo3(text_signature = "(graph, node, edge_cost_fn, /, goal=None)")]
+#[pyo3(text_signature = "(graph, node, edge_cost_fn, /, goal=None)", signature = (graph, node, edge_cost_fn, goal=None))]
 pub fn digraph_dijkstra_shortest_path_lengths(
     py: Python,
     graph: &digraph::PyDiGraph,
@@ -792,7 +792,7 @@ pub fn graph_astar_shortest_path(
 /// :param int start: The node index to find the shortest paths from
 /// :param int k: The kth shortest path to find the lengths of
 /// :param edge_cost: A python callable that will receive an edge payload and
-///     return a float for the cost of that eedge
+///     return a float for the cost of that edge
 /// :param int goal: An optional goal node index, if specified the output
 ///     dictionary
 ///
@@ -802,7 +802,7 @@ pub fn graph_astar_shortest_path(
 /// :raises ValueError: when an edge weight with NaN or negative value
 ///     is provided.
 #[pyfunction]
-#[pyo3(text_signature = "(graph, start, k, edge_cost, /, goal=None)")]
+#[pyo3(text_signature = "(graph, start, k, edge_cost, /, goal=None)", signature = (graph, start, k, edge_cost, goal=None))]
 pub fn digraph_k_shortest_path_lengths(
     py: Python,
     graph: &digraph::PyDiGraph,
@@ -852,7 +852,7 @@ pub fn digraph_k_shortest_path_lengths(
 /// :param int start: The node index to find the shortest paths from
 /// :param int k: The kth shortest path to find the lengths of
 /// :param edge_cost: A python callable that will receive an edge payload and
-///     return a float for the cost of that eedge
+///     return a float for the cost of that edge
 /// :param int goal: An optional goal node index, if specified the output
 ///     dictionary
 ///
@@ -862,7 +862,7 @@ pub fn digraph_k_shortest_path_lengths(
 /// :raises ValueError: when an edge weight with NaN or negative value
 ///     is provided.
 #[pyfunction]
-#[pyo3(text_signature = "(graph, start, k, edge_cost, /, goal=None)")]
+#[pyo3(text_signature = "(graph, start, k, edge_cost, /, goal=None)", signature = (graph, start, k, edge_cost, goal=None))]
 pub fn graph_k_shortest_path_lengths(
     py: Python,
     graph: &graph::PyGraph,
@@ -1067,13 +1067,13 @@ pub fn graph_floyd_warshall(
     signature=(graph, weight_fn=None, default_weight=1.0, parallel_threshold=300),
     text_signature = "(graph, /, weight_fn=None, default_weight=1.0, parallel_threshold=300)"
 )]
-pub fn graph_floyd_warshall_numpy(
-    py: Python,
+pub fn graph_floyd_warshall_numpy<'py>(
+    py: Python<'py>,
     graph: &graph::PyGraph,
     weight_fn: Option<PyObject>,
     default_weight: f64,
     parallel_threshold: usize,
-) -> PyResult<PyObject> {
+) -> PyResult<Bound<'py, PyArray2<f64>>> {
     let (matrix, _) = floyd_warshall::floyd_warshall_numpy(
         py,
         &graph.graph,
@@ -1083,8 +1083,10 @@ pub fn graph_floyd_warshall_numpy(
         false,
         parallel_threshold,
     )?;
-    Ok(matrix.into_pyarray_bound(py).into())
+    Ok(matrix.into_pyarray(py))
 }
+
+type FloydWarshallReturn<'py> = (Bound<'py, PyArray2<f64>>, Bound<'py, PyArray2<usize>>);
 
 /// Find all-pairs shortest path lengths using Floyd's algorithm
 ///
@@ -1140,13 +1142,13 @@ pub fn graph_floyd_warshall_numpy(
 signature=(graph, weight_fn=None, default_weight=1.0, parallel_threshold=300),
 text_signature = "(graph, /, weight_fn=None, default_weight=1.0, parallel_threshold=300)"
 )]
-pub fn graph_floyd_warshall_successor_and_distance(
-    py: Python,
+pub fn graph_floyd_warshall_successor_and_distance<'py>(
+    py: Python<'py>,
     graph: &graph::PyGraph,
     weight_fn: Option<PyObject>,
     default_weight: f64,
     parallel_threshold: usize,
-) -> PyResult<(PyObject, PyObject)> {
+) -> PyResult<FloydWarshallReturn<'py>> {
     let (matrix, next) = floyd_warshall::floyd_warshall_numpy(
         py,
         &graph.graph,
@@ -1156,10 +1158,7 @@ pub fn graph_floyd_warshall_successor_and_distance(
         true,
         parallel_threshold,
     )?;
-    Ok((
-        matrix.into_pyarray_bound(py).into(),
-        next.unwrap().into_pyarray_bound(py).into(),
-    ))
+    Ok((matrix.into_pyarray(py), next.unwrap().into_pyarray(py)))
 }
 
 /// Find all-pairs shortest path lengths using Floyd's algorithm
@@ -1202,14 +1201,14 @@ pub fn graph_floyd_warshall_successor_and_distance(
 signature=(graph, weight_fn=None, as_undirected=false, default_weight=1.0, parallel_threshold=300),
 text_signature = "(graph, /, weight_fn=None, as_undirected=False, default_weight=1.0, parallel_threshold=300)"
 )]
-pub fn digraph_floyd_warshall_numpy(
-    py: Python,
+pub fn digraph_floyd_warshall_numpy<'py>(
+    py: Python<'py>,
     graph: &digraph::PyDiGraph,
     weight_fn: Option<PyObject>,
     as_undirected: bool,
     default_weight: f64,
     parallel_threshold: usize,
-) -> PyResult<PyObject> {
+) -> PyResult<Bound<'py, PyArray2<f64>>> {
     let (matrix, _) = floyd_warshall::floyd_warshall_numpy(
         py,
         &graph.graph,
@@ -1219,7 +1218,7 @@ pub fn digraph_floyd_warshall_numpy(
         false,
         parallel_threshold,
     )?;
-    Ok(matrix.into_pyarray_bound(py).into())
+    Ok(matrix.into_pyarray(py))
 }
 
 /// Find all-pairs shortest path lengths using Floyd's algorithm
@@ -1278,14 +1277,14 @@ pub fn digraph_floyd_warshall_numpy(
 signature=(graph, weight_fn=None, as_undirected=false, default_weight=1.0, parallel_threshold=300),
 text_signature = "(graph, /, weight_fn=None, as_undirected=False, default_weight=1.0, parallel_threshold=300)"
 )]
-pub fn digraph_floyd_warshall_successor_and_distance(
-    py: Python,
+pub fn digraph_floyd_warshall_successor_and_distance<'py>(
+    py: Python<'py>,
     graph: &digraph::PyDiGraph,
     weight_fn: Option<PyObject>,
     as_undirected: bool,
     default_weight: f64,
     parallel_threshold: usize,
-) -> PyResult<(PyObject, PyObject)> {
+) -> PyResult<FloydWarshallReturn<'py>> {
     let (matrix, next) = floyd_warshall::floyd_warshall_numpy(
         py,
         &graph.graph,
@@ -1295,10 +1294,7 @@ pub fn digraph_floyd_warshall_successor_and_distance(
         true,
         parallel_threshold,
     )?;
-    Ok((
-        matrix.into_pyarray_bound(py).into(),
-        next.unwrap().into_pyarray_bound(py).into(),
-    ))
+    Ok((matrix.into_pyarray(py), next.unwrap().into_pyarray(py)))
 }
 
 /// Get the number of unweighted shortest paths from a source node
@@ -1361,7 +1357,7 @@ pub fn graph_num_shortest_paths_unweighted(
 ///     output distance matrix.
 /// :param float null_value: An optional float that will treated as a null
 ///     value. This element will be the default in the matrix and represents
-///     the absense of a path in the graph. By default this is ``0.0``.
+///     the absence of a path in the graph. By default this is ``0.0``.
 ///
 /// :returns: The distance matrix
 /// :rtype: numpy.ndarray
@@ -1370,20 +1366,20 @@ pub fn graph_num_shortest_paths_unweighted(
     signature=(graph, parallel_threshold=300, as_undirected=false, null_value=0.0),
     text_signature = "(graph, /, parallel_threshold=300, as_undirected=False, null_value=0.0)"
 )]
-pub fn digraph_distance_matrix(
-    py: Python,
+pub fn digraph_distance_matrix<'py>(
+    py: Python<'py>,
     graph: &digraph::PyDiGraph,
     parallel_threshold: usize,
     as_undirected: bool,
     null_value: f64,
-) -> PyObject {
+) -> Bound<'py, PyArray2<f64>> {
     let matrix = distance_matrix::compute_distance_matrix(
         &graph.graph,
         parallel_threshold,
         as_undirected,
         null_value,
     );
-    matrix.into_pyarray_bound(py).into()
+    matrix.into_pyarray(py)
 }
 
 /// Get the distance matrix for an undirected graph
@@ -1403,7 +1399,7 @@ pub fn digraph_distance_matrix(
 ///     be tuned
 /// :param float null_value: An optional float that will treated as a null
 ///     value. This element will be the default in the matrix and represents
-///     the absense of a path in the graph. By default this is ``0.0``.
+///     the absence of a path in the graph. By default this is ``0.0``.
 ///
 /// :returns: The distance matrix
 /// :rtype: numpy.ndarray
@@ -1412,19 +1408,19 @@ pub fn digraph_distance_matrix(
     signature=(graph, parallel_threshold=300, null_value=0.0),
     text_signature = "(graph, /, parallel_threshold=300, null_value=0.0)"
 )]
-pub fn graph_distance_matrix(
-    py: Python,
+pub fn graph_distance_matrix<'py>(
+    py: Python<'py>,
     graph: &graph::PyGraph,
     parallel_threshold: usize,
     null_value: f64,
-) -> PyObject {
+) -> Bound<'py, PyArray2<f64>> {
     let matrix = distance_matrix::compute_distance_matrix(
         &graph.graph,
         parallel_threshold,
         true,
         null_value,
     );
-    matrix.into_pyarray_bound(py).into()
+    matrix.into_pyarray(py)
 }
 
 /// Return the average shortest path length for a :class:`~rustworkx.PyDiGraph`
@@ -1578,7 +1574,7 @@ pub fn graph_unweighted_average_shortest_path_length(
 /// :raises: :class:`~rustworkx.NegativeCycle`: when there is a negative cycle and the shortest
 ///     path is not defined.
 #[pyfunction]
-#[pyo3(text_signature = "(graph, node, edge_cost_fn, /, goal=None)")]
+#[pyo3(text_signature = "(graph, node, edge_cost_fn, /, goal=None)", signature = (graph, node, edge_cost_fn, goal=None))]
 pub fn digraph_bellman_ford_shortest_path_lengths(
     py: Python,
     graph: &digraph::PyDiGraph,
@@ -1663,7 +1659,7 @@ pub fn digraph_bellman_ford_shortest_path_lengths(
 /// :raises: :class:`~rustworkx.NegativeCycle`: when there is a negative cycle and the shortest
 ///     path is not defined.
 #[pyfunction]
-#[pyo3(text_signature = "(graph, node, edge_cost_fn, /, goal=None)")]
+#[pyo3(text_signature = "(graph, node, edge_cost_fn, /, goal=None)", signature = (graph, node, edge_cost_fn, goal=None))]
 pub fn graph_bellman_ford_shortest_path_lengths(
     py: Python,
     graph: &graph::PyGraph,

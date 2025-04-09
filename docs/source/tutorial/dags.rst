@@ -113,7 +113,7 @@ jobs. For example:
 Above we define a DAG with 6 jobs and dependency relationship between these
 jobs. Now if we run the :func:`~rustworkx.topological_sort` function on the
 graph it will return a linear order to execute the jobs that will respect
-the dependency releationship.
+the dependency relationship.
 
 .. jupyter-execute::
 
@@ -151,7 +151,7 @@ computation. A quantum circuit is represented graphically like:
 
 The specifics of this circuit aren't important here beyond the fact that
 we have 2 qubits, ``q_0`` and ``q_1``, 2 classical bits, ``c_0`` and ``c_1``,
-and a series of operations on those qubits with a depedency ordering. The last
+and a series of operations on those qubits with a dependency ordering. The last
 operation on each qubit is a measurement on ``q_0`` that is stored in ``c_0``
 and ``q_1`` that is stored in ``c_1``.
 
@@ -205,7 +205,7 @@ performed is:
 
     # Equivalency matrix
     translation_matrix = {"h": ["rz(pi/2)", "sx", "rz(pi/2)"]}
-    # Insructions natively supported on target QPU
+    # Instructions natively supported on target QPU
     hardware_instructions = {"measure", "cx", "sx", "rz", "x"}
 
     # Iterate over instructions in order and replace gates outside of native

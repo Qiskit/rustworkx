@@ -58,9 +58,9 @@ use super::InvalidInputError;
 /// * `probability` - The probability of creating an edge between two nodes as a float.
 /// * `seed` - An optional seed to use for the random number generator.
 /// * `default_node_weight` - A callable that will return the weight to use
-///     for newly created nodes.
+///   for newly created nodes.
 /// * `default_edge_weight` - A callable that will return the weight object
-///     to use for newly created edges.
+///   to use for newly created edges.
 ///
 /// # Example
 /// ```rust
@@ -211,9 +211,9 @@ where
 /// * `num_edges` - The number of edges to create in the graph.
 /// * `seed` - An optional seed to use for the random number generator.
 /// * `default_node_weight` - A callable that will return the weight to use
-///     for newly created nodes.
+///   for newly created nodes.
 /// * `default_edge_weight` - A callable that will return the weight object
-///     to use for newly created edges.
+///   to use for newly created edges.
 ///
 /// # Example
 /// ```rust
@@ -319,13 +319,13 @@ where
 ///
 /// * `sizes` - Number of nodes in each block.
 /// * `probabilities` - B x B array that contains the connection probability between
-///     nodes of different blocks. Must be symmetric for undirected graphs.
+///   nodes of different blocks. Must be symmetric for undirected graphs.
 /// * `loops` - Determines whether the graph can have loops or not.
 /// * `seed` - An optional seed to use for the random number generator.
 /// * `default_node_weight` - A callable that will return the weight to use
-///     for newly created nodes.
+///   for newly created nodes.
 /// * `default_edge_weight` - A callable that will return the weight object
-///     to use for newly created edges.
+///   to use for newly created edges.
 ///
 /// # Example
 /// ```rust
@@ -334,7 +334,7 @@ where
 /// use rustworkx_core::generators::sbm_random_graph;
 ///
 /// let g = sbm_random_graph::<petgraph::graph::DiGraph<(), ()>, (), _, _, ()>(
-///     &vec![1, 2],
+///     &[1, 2],
 ///     &ndarray::arr2(&[[0., 1.], [0., 1.]]).view(),
 ///     true,
 ///     Some(10),
@@ -470,12 +470,12 @@ fn distance(x: &[f64], y: &[f64], p: f64) -> f64 {
 /// * `dim` - Dimension of node positions. Default: 2
 /// * `pos` - Optional list with node positions as values.
 /// * `p` - Which Minkowski distance metric to use.  `p` has to meet the condition
-///     ``1 <= p <= infinity``.
-///     If this argument is not specified, the L<sup>2</sup> metric
-///     (the Euclidean distance metric), `p = 2` is used.
+///   ``1 <= p <= infinity``.
+///   If this argument is not specified, the L<sup>2</sup> metric
+///   (the Euclidean distance metric), `p = 2` is used.
 /// * `seed` - An optional seed to use for the random number generator.
 /// * `default_edge_weight` - A callable that will return the weight object
-///     to use for newly created edges.
+///   to use for newly created edges.
 ///
 /// # Example
 /// ```rust
@@ -563,13 +563,13 @@ where
 /// * `m` - The number of edges to attach from a new node to existing nodes.
 /// * `seed` - An optional seed to use for the random number generator.
 /// * `initial_graph` - An optional starting graph to expand, if not specified
-///     a star graph of `m` nodes is generated and used. If specified the input
-///     graph is mutated by this function and is expected to be moved into this
-///     function.
+///   a star graph of `m` nodes is generated and used. If specified the input
+///   graph is mutated by this function and is expected to be moved into this
+///   function.
 /// * `default_node_weight` - A callable that will return the weight to use
-///     for newly created nodes.
+///   for newly created nodes.
 /// * `default_edge_weight` - A callable that will return the weight object
-///     to use for newly created edges.
+///   to use for newly created edges.
 ///
 /// An `InvalidInput` error is returned under the following conditions. If `m < 1`
 /// or `m >= n` and if an `initial_graph` is specified and the number of nodes in
@@ -678,9 +678,9 @@ where
 /// * `probability` - The probability of creating an edge between two nodes as a float.
 /// * `seed` - An optional seed to use for the random number generator.
 /// * `default_node_weight` - A callable that will return the weight to use
-///     for newly created nodes.
+///   for newly created nodes.
 /// * `default_edge_weight` - A callable that will return the weight object
-///     to use for newly created edges.
+///   to use for newly created edges.
 ///
 /// # Example
 /// ```rust
@@ -758,15 +758,15 @@ where
 /// Arguments:
 ///
 /// * `pos` - Hyperboloid model coordinates of the nodes `[p_1, p_2, ...]` where `p_i` is the
-///     position of node i. The "time" coordinates are inferred.
+///   position of node i. The "time" coordinates are inferred.
 /// * `beta` - Sigmoid sharpness (nonnegative) of the connection probability.
 /// * `r` - Distance at which the connection probability is 0.5 for the probabilistic model.
-///     Threshold when `beta` is `None`.
+///   Threshold when `beta` is `None`.
 /// * `seed` - An optional seed to use for the random number generator.
 /// * `default_node_weight` - A callable that will return the weight to use
-///     for newly created nodes.
+///   for newly created nodes.
 /// * `default_edge_weight` - A callable that will return the weight object
-///     to use for newly created edges.
+///   to use for newly created edges.
 ///
 /// # Example
 /// ```rust
@@ -1018,7 +1018,7 @@ mod tests {
     #[test]
     fn test_sbm_directed_complete_blocks_loops() {
         let g = sbm_random_graph::<petgraph::graph::DiGraph<(), ()>, (), _, _, ()>(
-            &vec![1, 2],
+            &[1, 2],
             &ndarray::arr2(&[[0., 1.], [0., 1.]]).view(),
             true,
             Some(10),
@@ -1029,16 +1029,16 @@ mod tests {
         assert_eq!(g.node_count(), 3);
         assert_eq!(g.edge_count(), 6);
         for (u, v) in [(1, 1), (1, 2), (2, 1), (2, 2), (0, 1), (0, 2)] {
-            assert_eq!(g.contains_edge(u.into(), v.into()), true);
+            assert!(g.contains_edge(u.into(), v.into()));
         }
-        assert_eq!(g.contains_edge(1.into(), 0.into()), false);
-        assert_eq!(g.contains_edge(2.into(), 0.into()), false);
+        assert!(!g.contains_edge(1.into(), 0.into()));
+        assert!(!g.contains_edge(2.into(), 0.into()));
     }
 
     #[test]
     fn test_sbm_undirected_complete_blocks_loops() {
         let g = sbm_random_graph::<petgraph::graph::UnGraph<(), ()>, (), _, _, ()>(
-            &vec![1, 2],
+            &[1, 2],
             &ndarray::arr2(&[[0., 1.], [1., 1.]]).view(),
             true,
             Some(10),
@@ -1049,15 +1049,15 @@ mod tests {
         assert_eq!(g.node_count(), 3);
         assert_eq!(g.edge_count(), 5);
         for (u, v) in [(1, 1), (1, 2), (2, 2), (0, 1), (0, 2)] {
-            assert_eq!(g.contains_edge(u.into(), v.into()), true);
+            assert!(g.contains_edge(u.into(), v.into()));
         }
-        assert_eq!(g.contains_edge(0.into(), 0.into()), false);
+        assert!(!g.contains_edge(0.into(), 0.into()));
     }
 
     #[test]
     fn test_sbm_directed_complete_blocks_noloops() {
         let g = sbm_random_graph::<petgraph::graph::DiGraph<(), ()>, (), _, _, ()>(
-            &vec![1, 2],
+            &[1, 2],
             &ndarray::arr2(&[[0., 1.], [0., 1.]]).view(),
             false,
             Some(10),
@@ -1068,19 +1068,19 @@ mod tests {
         assert_eq!(g.node_count(), 3);
         assert_eq!(g.edge_count(), 4);
         for (u, v) in [(1, 2), (2, 1), (0, 1), (0, 2)] {
-            assert_eq!(g.contains_edge(u.into(), v.into()), true);
+            assert!(g.contains_edge(u.into(), v.into()));
         }
-        assert_eq!(g.contains_edge(1.into(), 0.into()), false);
-        assert_eq!(g.contains_edge(2.into(), 0.into()), false);
+        assert!(!g.contains_edge(1.into(), 0.into()));
+        assert!(!g.contains_edge(2.into(), 0.into()));
         for u in 0..2 {
-            assert_eq!(g.contains_edge(u.into(), u.into()), false);
+            assert!(!g.contains_edge(u.into(), u.into()));
         }
     }
 
     #[test]
     fn test_sbm_undirected_complete_blocks_noloops() {
         let g = sbm_random_graph::<petgraph::graph::UnGraph<(), ()>, (), _, _, ()>(
-            &vec![1, 2],
+            &[1, 2],
             &ndarray::arr2(&[[0., 1.], [1., 1.]]).view(),
             false,
             Some(10),
@@ -1091,17 +1091,17 @@ mod tests {
         assert_eq!(g.node_count(), 3);
         assert_eq!(g.edge_count(), 3);
         for (u, v) in [(1, 2), (0, 1), (0, 2)] {
-            assert_eq!(g.contains_edge(u.into(), v.into()), true);
+            assert!(g.contains_edge(u.into(), v.into()));
         }
         for u in 0..2 {
-            assert_eq!(g.contains_edge(u.into(), u.into()), false);
+            assert!(!g.contains_edge(u.into(), u.into()));
         }
     }
 
     #[test]
     fn test_sbm_bad_array_rows_error() {
         match sbm_random_graph::<petgraph::graph::DiGraph<(), ()>, (), _, _, ()>(
-            &vec![1, 2],
+            &[1, 2],
             &ndarray::arr2(&[[0., 1.], [1., 1.], [1., 1.]]).view(),
             true,
             Some(10),
@@ -1116,7 +1116,7 @@ mod tests {
 
     fn test_sbm_bad_array_cols_error() {
         match sbm_random_graph::<petgraph::graph::DiGraph<(), ()>, (), _, _, ()>(
-            &vec![1, 2],
+            &[1, 2],
             &ndarray::arr2(&[[0., 1., 1.], [1., 1., 1.]]).view(),
             true,
             Some(10),
@@ -1131,7 +1131,7 @@ mod tests {
     #[test]
     fn test_sbm_asymmetric_array_error() {
         match sbm_random_graph::<petgraph::graph::UnGraph<(), ()>, (), _, _, ()>(
-            &vec![1, 2],
+            &[1, 2],
             &ndarray::arr2(&[[0., 1.], [0., 1.]]).view(),
             true,
             Some(10),
@@ -1146,7 +1146,7 @@ mod tests {
     #[test]
     fn test_sbm_invalid_probability_error() {
         match sbm_random_graph::<petgraph::graph::UnGraph<(), ()>, (), _, _, ()>(
-            &vec![1, 2],
+            &[1, 2],
             &ndarray::arr2(&[[0., 1.], [0., -1.]]).view(),
             true,
             Some(10),
@@ -1161,7 +1161,7 @@ mod tests {
     #[test]
     fn test_sbm_empty_error() {
         match sbm_random_graph::<petgraph::graph::DiGraph<(), ()>, (), _, _, ()>(
-            &vec![],
+            &[],
             &ndarray::arr2(&[[]]).view(),
             true,
             Some(10),
@@ -1355,10 +1355,7 @@ mod tests {
     }
     #[test]
     fn test_hyperbolic_dist_inf() {
-        assert_eq!(
-            hyperbolic_distance(&[f64::INFINITY, 0.], &[0., 0.]).is_nan(),
-            true
-        );
+        assert!(hyperbolic_distance(&[f64::INFINITY, 0.], &[0., 0.]).is_nan());
     }
 
     #[test]

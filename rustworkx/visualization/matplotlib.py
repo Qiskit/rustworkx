@@ -581,7 +581,7 @@ def draw_edges(
         Label for legend
 
     min_source_margin : int (default=0)
-        The minimum margin (gap) at the begining of the edge at the source.
+        The minimum margin (gap) at the beginning of the edge at the source.
 
     min_target_margin : int (default=0)
         The minimum margin (gap) at the end of the edge at the target.
@@ -636,9 +636,10 @@ def draw_edges(
         edge_color = "k"
 
     # set edge positions
-    edge_pos = set()
+    edge_pos_keys = dict()
     for e in edge_list:
-        edge_pos.add((tuple(pos[e[0]]), tuple(pos[e[1]])))
+        edge_pos_keys[(tuple(pos[e[0]]), tuple(pos[e[1]]))] = None
+    edge_pos = edge_pos_keys.keys()
 
     # Check if edge_color is an array of floats and map to edge_cmap.
     # This is the only case handled differently from matplotlib
@@ -730,7 +731,7 @@ def draw_edges(
             mutation_scale=mutation_scale,
             color=arrow_color,
             linewidth=line_width,
-            connectionstyle=connectionstyle + f", rad = {rad}",
+            connectionstyle=f"{connectionstyle}, rad = {rad}",
             linestyle=style,
             zorder=1,
         )  # arrows go behind nodes
@@ -977,7 +978,7 @@ def draw_edge_labels(
     ax : Matplotlib Axes object, optional
         Draw the graph in the specified Matplotlib axes.
 
-    rotate : bool (deafult=True)
+    rotate : bool (default=True)
         Rotate edge labels to lie parallel to edges
 
     clip_on : bool (default=True)

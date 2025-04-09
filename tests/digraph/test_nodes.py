@@ -66,6 +66,16 @@ class TestNodes(unittest.TestCase):
         self.assertEqual(["a"], res)
         self.assertEqual([0], dag.node_indexes())
 
+    def test_remove_nodes_from_gen(self):
+        graph = rustworkx.PyDiGraph()
+        node_a = graph.add_node("a")
+        node_b = graph.add_child(node_a, "b", "Edgy")
+        node_c = graph.add_child(node_b, "c", "Edgy_mk2")
+        graph.remove_nodes_from(n for n in [node_b, node_c])
+        res = graph.nodes()
+        self.assertEqual(["a"], res)
+        self.assertEqual([0], graph.node_indexes())
+
     def test_remove_nodes_from_with_invalid_index(self):
         dag = rustworkx.PyDAG()
         node_a = dag.add_node("a")
@@ -201,7 +211,7 @@ class TestNodes(unittest.TestCase):
         for weight in weights:
             dag.add_edge(nodes[0], nodes[1], weight)
             dag.add_edge(nodes[1], nodes[2], weight)
-        # The middle node has three precessor edges and three successor edges, where each set has
+        # The middle node has three predecessor edges and three successor edges, where each set has
         # one edge each of three weights. Edges should be paired up in bijection during the removal.
         dag.remove_node_retain_edges_by_id(nodes[1])
         self.assertEqual(set(dag.node_indices()), {nodes[0], nodes[2]})
@@ -233,7 +243,7 @@ class TestNodes(unittest.TestCase):
             (nodes["d"], nodes["f"], weights[1]),
         }
 
-        # 2:2 broadacst
+        # 2:2 broadcast
         dag.add_edge(nodes["g"], mid, weights[2])
         dag.add_edge(nodes["h"], mid, weights[2])
         dag.add_edge(mid, nodes["i"], weights[2])
@@ -306,7 +316,7 @@ class TestNodes(unittest.TestCase):
         expected_edges[nodes["d"], nodes["e"]] = allowed_weights
         expected_edges[nodes["d"], nodes["f"]] = allowed_weights
 
-        # 2:2 broadacst
+        # 2:2 broadcast
         dag.add_edge(nodes["g"], mid, 12)
         dag.add_edge(nodes["h"], mid, 22)
         dag.add_edge(mid, nodes["i"], 32)
@@ -402,7 +412,7 @@ class TestNodes(unittest.TestCase):
         for i in range(5):
             dag.add_child(node_a, i, None)
         dag.add_parent(3, "A parent", None)
-        res = rustworkx.lexicographical_topological_sort(dag, lambda x: str(x))
+        res = rustworkx.lexicographical_topological_sort(dag, str)
         # Node values for nodes [6, 0, 5, 4, 3, 2, 1]
         expected = ["A parent", "a", 0, 1, 2, 3, 4]
         self.assertEqual(expected, res)
@@ -578,7 +588,7 @@ class TestNodes(unittest.TestCase):
         cr_1_out = dag.add_node("cr[1]_out")
         dag.add_edge(cr_1, cr_1_out, "cr[1]")
 
-        res = list(rustworkx.lexicographical_topological_sort(dag, lambda x: str(x)))
+        res = list(rustworkx.lexicographical_topological_sort(dag, str))
         expected = [
             "cr[0]",
             "cr[0]_out",
@@ -635,6 +645,14 @@ class TestNodes(unittest.TestCase):
         dag = rustworkx.PyDAG()
         nodes = list(range(100))
         res = dag.add_nodes_from(nodes)
+        self.assertEqual(len(res), 100)
+        self.assertEqual(res, nodes)
+
+    def test_add_nodes_from_gen(self):
+        graph = rustworkx.PyDiGraph()
+        nodes = list(range(100))
+        node_gen = (i**2 for i in nodes)
+        res = graph.add_nodes_from(node_gen)
         self.assertEqual(len(res), 100)
         self.assertEqual(res, nodes)
 

@@ -112,7 +112,7 @@ where
                     }
                 // A cycle was found:
                 } else if !used.get(&z).unwrap().contains(&neighbor) {
-                    let pn = used.get(&neighbor).unwrap();
+                    let prev_n = used.get(&neighbor).unwrap();
                     let mut p = pred.get(&z).unwrap();
                     if edges {
                         let mut cycle: Vec<G::EdgeId> = Vec::new();
@@ -122,7 +122,7 @@ where
                         // Make last p_node == z
                         let mut prev_p: &G::NodeId = &z;
                         // While p is in the neighborhood of neighbor
-                        while !pn.contains(p) {
+                        while !prev_n.contains(p) {
                             // Retrieve all edges from prev_p to p and vice versa append to cycle
                             cycle.push(get_edge_between(graph, *prev_p, *p));
                             // Update prev_p to p
@@ -139,7 +139,7 @@ where
                     } else {
                         // Append neighbor and z to cycle.
                         let mut cycle: Vec<G::NodeId> = vec![neighbor, z];
-                        while !pn.contains(p) {
+                        while !prev_n.contains(p) {
                             cycle.push(*p);
                             p = pred.get(p).unwrap();
                         }
@@ -213,7 +213,7 @@ impl<N, E> EdgesOrNodes<N, E> {
 ///
 /// * `graph` - The graph in which to find the basis.
 /// * `root` - Optional node index for starting the basis search. If not
-///     specified, an arbitrary node is chosen.
+///   specified, an arbitrary node is chosen.
 ///
 /// # Example
 /// ```rust

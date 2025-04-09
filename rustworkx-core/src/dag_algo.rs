@@ -16,6 +16,7 @@ use std::error::Error;
 use std::fmt::{Display, Formatter};
 use std::hash::Hash;
 
+use hashbrown::hash_set::Entry;
 use hashbrown::{HashMap, HashSet};
 use std::fmt::Debug;
 use std::mem::swap;
@@ -33,7 +34,7 @@ use num_traits::{Num, Zero};
 use crate::err::LayersError;
 
 /// Return a pair of [`petgraph::Direction`] values corresponding to the "forwards" and "backwards"
-/// direction of graph traversal, based on whether the graph is being traved forwards (following
+/// direction of graph traversal, based on whether the graph is being traversed forwards (following
 /// the edges) or backward (reversing along edges).  The order of returns is (forwards, backwards).
 #[inline(always)]
 pub fn traversal_directions(reverse: bool) -> (petgraph::Direction, petgraph::Direction) {
@@ -79,19 +80,19 @@ impl<E: Error> Error for TopologicalSortError<E> {}
 ///
 /// * `dag`: The DAG to get the topological sorted nodes from
 /// * `key`: A function that gets passed a single argument, the node id from
-///     `dag` and is expected to return a key which will be used for
-///     resolving ties in the sorting order.
+///   `dag` and is expected to return a key which will be used for
+///   resolving ties in the sorting order.
 /// * `reverse`: If `false`, perform a regular topological ordering.  If `true`,
-///     return the lexicographical topological order that would have been found
-///     if all the edges in the graph were reversed.  This does not affect the
-///     comparisons from the `key`.
+///   return the lexicographical topological order that would have been found
+///   if all the edges in the graph were reversed.  This does not affect the
+///   comparisons from the `key`.
 /// * `initial`: If given, the initial node indices to start the topological
-///     ordering from.  If not given, the topological ordering will certainly contain every node in
-///     the graph.  If given, only the `initial` nodes and nodes that are dominated by the
-///     `initial` set will be in the ordering.  Notably, any node that has a natural in degree of
-///     zero will not be in the output ordering if `initial` is given and the zero-in-degree node
-///     is not in it.  It is not supported to give an `initial` set where the nodes have even
-///     a partial topological order between themselves and `None` will be returned in this case
+///   ordering from.  If not given, the topological ordering will certainly contain every node in
+///   the graph.  If given, only the `initial` nodes and nodes that are dominated by the
+///   `initial` set will be in the ordering.  Notably, any node that has a natural in degree of
+///   zero will not be in the output ordering if `initial` is given and the zero-in-degree node
+///   is not in it.  It is not supported to give an `initial` set where the nodes have even
+///   a partial topological order between themselves and `None` will be returned in this case
 ///
 /// # Returns
 ///
@@ -249,8 +250,8 @@ type LongestPathResult<G, T, E> = Result<Option<(Vec<NodeId<G>>, T)>, E>;
 /// # Arguments
 /// * `graph`: Reference to a directed graph.
 /// * `weight_fn` - An input callable that will be passed the `EdgeRef` for each edge in the graph.
-///  The callable should return the weight of the edge as `Result<T, E>`. The weight must be a type that implements
-/// `Num`, `Zero`, `PartialOrd`, and `Copy`.
+///   The callable should return the weight of the edge as `Result<T, E>`. The weight must be a type that implements
+///   `Num`, `Zero`, `PartialOrd`, and `Copy`.
 ///
 /// # Type Parameters
 /// * `G`: Type of the graph. Must be a directed graph.
@@ -326,6 +327,7 @@ where
     let mut v = *first;
     let mut u: Option<G::NodeId> = None;
     // Backtrack from this node to find the path
+    #[allow(clippy::unnecessary_map_or)]
     while u.map_or(true, |u| u != v) {
         path.push(v);
         u = Some(v);
@@ -346,7 +348,7 @@ where
 ///
 /// * `graph` - The graph to get the layers from
 /// * `first_layer` - A list of node ids for the first layer. This
-///     will be the first layer in the output
+///   will be the first layer in the output
 ///
 /// Will `panic!` if a provided node is not in the graph.
 /// ```
@@ -441,11 +443,15 @@ where
                     .neighbors_directed(*node, petgraph::Direction::Outgoing);
                 let mut used_indices: HashSet<G::NodeId> = HashSet::new();
                 for succ in children {
-                    // Skip duplicate successors
-                    if used_indices.contains(&succ) {
-                        continue;
+                    match used_indices.entry(succ) {
+                        Entry::Occupied(_) => {
+                            // Skip duplicate successors
+                            continue;
+                        }
+                        Entry::Vacant(used_indices_entry) => {
+                            used_indices_entry.insert();
+                        }
                     }
-                    used_indices.insert(succ);
                     let mut multiplicity: usize = 0;
                     let raw_edges: G::EdgesDirected = self
                         .graph
@@ -497,20 +503,20 @@ where
 ///
 /// * `graph`: The DAG to find bicolor runs in
 /// * `filter_fn`: The filter function to use for matching nodes. It takes
-///     in one argument, the node data payload/weight object, and will return a
-///     boolean whether the node matches the conditions or not.
-///     If it returns ``true``, it will continue the bicolor chain.
-///     If it returns ``false``, it will stop the bicolor chain.
-///     If it returns ``None`` it will skip that node.
+///   in one argument, the node data payload/weight object, and will return a
+///   boolean whether the node matches the conditions or not.
+///   If it returns ``true``, it will continue the bicolor chain.
+///   If it returns ``false``, it will stop the bicolor chain.
+///   If it returns ``None`` it will skip that node.
 /// * `color_fn`: The function that gives the color of the edge. It takes
-///     in one argument, the edge data payload/weight object, and will
-///     return a non-negative integer, the edge color. If the color is None,
-///     the edge is ignored.
+///   in one argument, the edge data payload/weight object, and will
+///   return a non-negative integer, the edge color. If the color is None,
+///   the edge is ignored.
 ///
 /// # Returns:
 ///
 /// * `Vec<Vec<G::NodeId>>`: a list of groups with exactly two edge colors, where each group
-///     is a list of node data payload/weight for the nodes in the bicolor run
+///   is a list of node data payload/weight for the nodes in the bicolor run
 /// * `None` if a cycle is found in the graph
 /// * Raises an error if found computing the bicolor runs
 ///
@@ -659,9 +665,9 @@ where
 ///
 /// * `graph`: The DAG to collect runs from
 /// * `include_node_fn`: A filter function used for matching nodes. It takes
-///     in one argument, the node data payload/weight object, and returns a
-///     boolean whether the node matches the conditions or not.
-///     If it returns ``false``, the node will be skipped, cutting the run it's part of.
+///   in one argument, the node data payload/weight object, and returns a
+///   boolean whether the node matches the conditions or not.
+///   If it returns ``false``, the node will be skipped, cutting the run it's part of.
 ///
 /// # Returns:
 ///
@@ -719,7 +725,7 @@ where
     Some(runs)
 }
 
-/// Auxiliary struct to make the output of [`collect_runs`] iteratable
+/// Auxiliary struct to make the output of [`collect_runs`] iterable
 ///
 /// If the filtering function passed to [`collect_runs`] returns an error, it is propagated
 /// through `next` as `Err`. In this case the run in which the error occurred will be skipped
@@ -1412,7 +1418,7 @@ mod test_collect_runs {
         let mut runs = collect_runs(&graph, |_| -> Result<bool, ()> { Ok(true) }).expect("Some");
 
         let run = runs.next();
-        assert!(run == None);
+        assert!(run.is_none());
 
         let runs = collect_runs(&graph, |_| -> Result<bool, ()> { Ok(true) }).expect("Some");
 

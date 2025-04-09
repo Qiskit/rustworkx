@@ -6,7 +6,7 @@
 [![](https://img.shields.io/github/release/Qiskit/rustworkx.svg?style=popout-square)](https://github.com/Qiskit/rustworkx/releases)
 [![](https://img.shields.io/pypi/dm/rustworkx.svg?style=popout-square)](https://pypi.org/project/rustworkx/)
 [![Coverage Status](https://coveralls.io/repos/github/Qiskit/rustworkx/badge.svg?branch=main)](https://coveralls.io/github/Qiskit/rustworkx?branch=main)
-[![Minimum rustc 1.70](https://img.shields.io/badge/rustc-1.70+-blue.svg)](https://rust-lang.github.io/rfcs/2495-min-rust-version.html)
+[![Minimum rustc 1.79](https://img.shields.io/badge/rustc-1.79+-blue.svg)](https://rust-lang.github.io/rfcs/2495-min-rust-version.html)
 [![DOI](https://joss.theoj.org/papers/10.21105/joss.03968/status.svg)](https://doi.org/10.21105/joss.03968)
 [![arXiv](https://img.shields.io/badge/arXiv-2110.15221-b31b1b.svg)](https://arxiv.org/abs/2110.15221)
 [![Zenodo](https://img.shields.io/badge/Zenodo-10.5281%2Fzenodo.5879859-blue)](https://doi.org/10.5281/zenodo.5879859)
@@ -58,7 +58,7 @@ environment.
 ### Installing on a platform without precompiled binaries
 
 If there are no precompiled binaries published for your system you'll have to
-build the package from source. However, to be able able to build the package
+build the package from source. However, to be able to build the package
 from the published source package you need to have Rust >= 1.70 installed (and
 also [cargo](https://doc.rust-lang.org/cargo/) which is normally included with
 rust) You can use [rustup](https://rustup.rs/) (a cross platform installer for
@@ -77,7 +77,7 @@ it just as it would if there was a prebuilt binary available.
 > [!NOTE]  
 > To build from source you will need to ensure you have pip >=19.0.0
 installed, which supports PEP-517, or that you have manually installed
-`setuptools-rust` prior to running `pip install rustworkx`. If you recieve an
+`setuptools-rust` prior to running `pip install rustworkx`. If you receive an
 error about `setuptools-rust` not being found you should upgrade pip with
 `pip install -U pip` or manually install `setuptools-rust` with
 `pip install setuptools-rust` and try again.
@@ -177,6 +177,6 @@ NetworkX usage (hence the original name).  The project was originally started
 to build a faster directed graph to use as the underlying data structure for
 the DAG at the center of
 [qiskit](https://github.com/Qiskit/qiskit/)'s transpiler. However,
-since it's initial introduction the project has grown substantially and now
+since its initial introduction the project has grown substantially and now
 covers all applications that need to work with graphs which includes
 Qiskit.

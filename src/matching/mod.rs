@@ -56,7 +56,7 @@ use crate::weight_callable;
 ///     solution is optimum. If set to true an exception will be raised if
 ///     the found solution is not optimum. This is mostly useful for testing.
 ///
-/// :returns: A set of tuples ofthe matching, Note that only a single
+/// :returns: A set of tuples of the matching, Note that only a single
 ///     direction will be listed in the output, for example:
 ///     ``{(0, 1),}``.
 /// :rtype: set

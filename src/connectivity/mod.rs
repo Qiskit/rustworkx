@@ -21,6 +21,7 @@ use super::{
 };
 
 use hashbrown::{HashMap, HashSet};
+use indexmap::IndexSet;
 use petgraph::algo;
 use petgraph::algo::condensation;
 use petgraph::graph::DiGraph;
@@ -34,7 +35,7 @@ use pyo3::Python;
 use rayon::prelude::*;
 
 use ndarray::prelude::*;
-use numpy::IntoPyArray;
+use numpy::{IntoPyArray, PyArray2};
 
 use crate::iterators::{
     AllPairsMultiplePathMapping, BiconnectedComponents, Chains, EdgeList, NodeIndices,
@@ -72,7 +73,7 @@ use rustworkx_core::dag_algo::longest_path;
 /// .. [1] Paton, K. An algorithm for finding a fundamental set of
 ///    cycles of a graph. Comm. ACM 12, 9 (Sept 1969), 514-518.
 #[pyfunction]
-#[pyo3(text_signature = "(graph, /, root=None)")]
+#[pyo3(text_signature = "(graph, /, root=None)", signature = (graph, root=None))]
 pub fn cycle_basis(graph: &graph::PyGraph, root: Option<usize>) -> Vec<Vec<usize>> {
     connectivity::cycle_basis(&graph.graph, root.map(NodeIndex::new))
         .into_iter()
@@ -126,19 +127,64 @@ pub fn cycle_basis_edges(graph: &graph::PyGraph, root: Option<usize>) -> Vec<Vec
 /// [3] https://github.com/networkx/networkx/blob/networkx-2.8.4/networkx/algorithms/cycles.py#L98-L222
 #[pyfunction]
 #[pyo3(text_signature = "(graph, /)")]
-pub fn simple_cycles(graph: &digraph::PyDiGraph) -> johnson_simple_cycles::SimpleCycleIter {
-    johnson_simple_cycles::SimpleCycleIter::new(graph)
+pub fn simple_cycles(
+    graph: Bound<digraph::PyDiGraph>,
+    py: Python,
+) -> PyResult<johnson_simple_cycles::PySimpleCycleIter> {
+    johnson_simple_cycles::PySimpleCycleIter::new(py, graph)
 }
 
-/// Compute the strongly connected components for a directed graph
+/// Find the number of strongly connected components in a directed graph
 ///
-/// This function is implemented using Kosaraju's algorithm
+/// A strongly connected component (SCC) is a maximal subset of vertices
+/// such that every vertex is reachable from every other vertex
+/// within that subset.
 ///
-/// :param PyDiGraph graph: The input graph to find the strongly connected
-///     components for.
+///     >>> G = rx.PyDiGraph()
+///     >>> G.extend_from_edge_list([(0, 1), (1, 2), (3, 4)])
+///     >>> rx.number_strongly_connected_components(G)
+///     2
 ///
-/// :return: A list of list of node ids for strongly connected components
-/// :rtype: list
+/// To get these components, see [strongly_connected_components].
+///
+/// If ``rx.number_strongly_connected_components(G) == 1``,
+/// then  ``rx.is_strongly_connected(G) is True``.
+///
+/// For undirected graphs, see [number_connected_components].
+///
+/// :param PyDiGraph graph: The directed graph to find the number
+///     of strongly connected components in
+///
+/// :returns: The number of strongly connected components in the graph
+/// :rtype: int
+#[pyfunction]
+#[pyo3(text_signature = "(graph, /)")]
+pub fn number_strongly_connected_components(graph: &digraph::PyDiGraph) -> usize {
+    algo::kosaraju_scc(&graph.graph).len()
+}
+
+/// Find the strongly connected components in a directed graph
+///
+/// A strongly connected component (SCC) is a maximal subset of vertices
+/// such that every vertex is reachable from every other vertex
+/// within that subset.
+///
+/// This function is implemented using Kosaraju's algorithm.
+///
+///     >>> G = rx.PyDiGraph()
+///     >>> G.extend_from_edge_list([(0, 1), (1, 2), (2, 0), (3, 4)])
+///     >>> rx.strongly_connected_components(G)
+///     [[4], [3], [0, 1, 2]]
+///
+/// See also [weakly_connected_components].
+///
+/// For undirected graphs, see [connected_components].
+///
+/// :param PyDiGraph graph: The directed graph to find the strongly connected
+///     components in
+///
+/// :return: A list of lists of node indices of strongly connected components
+/// :rtype: list[list[int]]
 #[pyfunction]
 #[pyo3(text_signature = "(graph, /)")]
 pub fn strongly_connected_components(graph: &digraph::PyDiGraph) -> Vec<Vec<usize>> {
@@ -146,6 +192,38 @@ pub fn strongly_connected_components(graph: &digraph::PyDiGraph) -> Vec<Vec<usiz
         .iter()
         .map(|x| x.iter().map(|id| id.index()).collect())
         .collect()
+}
+
+/// Check if a directed graph is strongly connected
+///
+/// A strongly connected component (SCC) is a maximal subset of vertices
+/// such that every vertex is reachable from every other vertex
+/// within that subset.
+///
+///     >>> G = rx.PyDiGraph()
+///     >>> G.extend_from_edge_list([(0, 1), (1, 2), (3, 4)])
+///     >>> rx.is_strongly_connected(G)
+///     False
+///
+/// See also [is_weakly_connected] and [is_semi_connected].
+///
+/// If ``rx.is_strongly_connected(G) is True`` then `rx.number_strongly_connected_components(G) == 1``.
+///
+/// For undirected graphs see [is_connected].
+///
+/// :param PyGraph graph: An undirected graph to check for strong connectivity
+///
+/// :returns: Whether the graph is strongly connected or not
+/// :rtype: bool
+///
+/// :raises NullGraph: If an empty graph is passed in
+#[pyfunction]
+#[pyo3(text_signature = "(graph, /)")]
+pub fn is_strongly_connected(graph: &digraph::PyDiGraph) -> PyResult<bool> {
+    if graph.graph.node_count() == 0 {
+        return Err(NullGraph::new_err("Invalid operation on a NullGraph"));
+    }
+    Ok(algo::kosaraju_scc(&graph.graph).len() == 1)
 }
 
 /// Return the first cycle encountered during DFS of a given PyDiGraph,
@@ -159,7 +237,7 @@ pub fn strongly_connected_components(graph: &digraph::PyDiGraph) -> Vec<Vec<usiz
 ///     forms a cycle (loop) in the input graph
 /// :rtype: EdgeList
 #[pyfunction]
-#[pyo3(text_signature = "(graph, /, source=None)")]
+#[pyo3(text_signature = "(graph, /, source=None)", signature=(graph, source=None))]
 pub fn digraph_find_cycle(graph: &digraph::PyDiGraph, source: Option<usize>) -> EdgeList {
     EdgeList {
         edges: connectivity::find_cycle(&graph.graph, source.map(NodeIndex::new))
@@ -169,10 +247,26 @@ pub fn digraph_find_cycle(graph: &digraph::PyDiGraph, source: Option<usize>) -> 
     }
 }
 
-/// Find the number of connected components in an undirected graph.
+/// Find the number of connected components in an undirected graph
 ///
-/// :param PyGraph graph: The graph to find the number of connected
-///     components on.
+/// A connected component is a subset of the graph where there is a path
+/// between any two vertices in that subset, and which is connected
+/// to no additional vertices in the graph.
+///
+///     >>> G = rx.PyGraph()
+///     >>> G.extend_from_edge_list([(0, 1), (1, 2), (3, 4)])
+///     >>> rx.number_connected_components(G)
+///     2
+///
+/// To get these components, see [connected_components].
+///
+/// If ``rx.number_connected_components(G) == 1``,
+/// then  ``rx.is_connected(G) is True``.
+///
+/// For directed graphs, see [number_weakly_connected_components].
+///
+/// :param PyGraph graph: The undirected graph to find the number of connected
+///     components in
 ///
 /// :returns: The number of connected components in the graph
 /// :rtype: int
@@ -184,11 +278,24 @@ pub fn number_connected_components(graph: &graph::PyGraph) -> usize {
 
 /// Find the connected components in an undirected graph
 ///
-/// :param PyGraph graph: The graph to find the connected components.
+/// A connected component is a subset of an undirected graph where there is a path
+/// between any two vertices in that subset, and which is connected
+/// to no additional vertices in the graph.
 ///
-/// :returns: A list of sets where each set is a connected component of
+///     >>> G = rx.PyGraph()
+///     >>> G.extend_from_edge_list([(0, 1), (1, 2), (3, 4)])
+///     >>> rx.connected_components(G)
+///     [{0, 1, 2}, {3, 4}]
+///
+/// To get just the number of these components, see [number_connected_components].
+///
+/// For directed graphs, see [weakly_connected_components] and [strongly_connected_components].
+///
+/// :param PyGraph graph: An undirected graph to find the connected components in
+///
+/// :returns: A list of sets of node indices where each set is a connected component of
 ///     the graph
-/// :rtype: list
+/// :rtype: list[set[int]]
 #[pyfunction]
 #[pyo3(text_signature = "(graph, /)")]
 pub fn connected_components(graph: &graph::PyGraph) -> Vec<HashSet<usize>> {
@@ -226,9 +333,22 @@ pub fn node_connected_component(graph: &graph::PyGraph, node: usize) -> PyResult
     )
 }
 
-/// Check if the graph is connected.
+/// Check if an undirected graph is fully connected
 ///
-/// :param PyGraph graph: The graph to check if it is connected.
+/// An undirected graph is considered connected if there is a path between
+/// every pair of vertices.
+///
+///     >>> G = rx.PyGraph()
+///     >>> G.extend_from_edge_list([(0, 1), (1, 2), (3, 4)])
+///     >>> rx.is_connected(G)
+///     False
+///
+/// If ``rx.is_connected(G) is True`` then `rx.number_connected_components(G) == 1``.
+///
+/// For directed graphs see [is_weakly_connected], [is_semi_connected],
+/// and [is_strongly_connected].
+///
+/// :param PyGraph graph: An undirected graph to check for connectivity
 ///
 /// :returns: Whether the graph is connected or not
 /// :rtype: bool
@@ -248,8 +368,26 @@ pub fn is_connected(graph: &graph::PyGraph) -> PyResult<bool> {
 
 /// Find the number of weakly connected components in a directed graph
 ///
-/// :param PyDiGraph graph: The graph to find the number of weakly connected
-///     components on
+/// A weakly connected component (WCC) is a maximal subset of vertices
+/// such that there is a path between any two vertices in the subset
+/// when the direction of edges is ignored.
+/// This means that if you treat the directed graph as an undirected graph,
+/// all vertices in a weakly connected component are reachable from one another.
+///
+///     >>> G = rx.PyDiGraph()
+///     >>> G.extend_from_edge_list([(0, 1), (1, 2), (3, 4)])
+///     >>> rx.number_weakly_connected_components(G)
+///     2
+///
+/// To get these components, see [weakly_connected_components].
+///
+/// If ``rx.number_weakly_connected_components(G) == 1``,
+/// then  ``rx.is_weakly_connected(G) is True``.
+///
+/// For undirected graphs, see [number_connected_components].
+///
+/// :param PyDiGraph graph: The directed graph to find the number
+///     of weakly connected components in
 ///
 /// :returns: The number of weakly connected components in the graph
 /// :rtype: int
@@ -270,12 +408,28 @@ pub fn number_weakly_connected_components(graph: &digraph::PyDiGraph) -> usize {
 
 /// Find the weakly connected components in a directed graph
 ///
-/// :param PyDiGraph graph: The graph to find the weakly connected components
-///     in
+/// A weakly connected component (WCC) is a maximal subset of vertices
+/// such that there is a path between any two vertices in the subset
+/// when the direction of edges is ignored.
+/// This means that if you treat the directed graph as an undirected graph,
+/// all vertices in a weakly connected component are reachable from one another.
 ///
-/// :returns: A list of sets where each set is a weakly connected component of
-///     the graph
-/// :rtype: list
+///     >>> G = rx.PyDiGraph()
+///     >>> G.extend_from_edge_list([(0, 1), (1, 2), (3, 4)])
+///     >>> rx.weakly_connected_components(G)
+///     [{0, 1, 2}, {3, 4}]
+///
+/// See also [strongly_connected_components].
+///
+/// To get just the number of these components, see [number_weakly_connected_components].
+///
+/// For undirected graphs, see [connected_components].
+///
+/// :param PyDiGraph graph: The directed graph to find the weakly connected
+///     components in.
+///
+/// :return: A list of sets of node indices of weakly connected components
+/// :rtype: list[set[int]]
 #[pyfunction]
 #[pyo3(text_signature = "(graph, /)")]
 pub fn weakly_connected_components(graph: &digraph::PyDiGraph) -> Vec<HashSet<usize>> {
@@ -285,9 +439,26 @@ pub fn weakly_connected_components(graph: &digraph::PyDiGraph) -> Vec<HashSet<us
         .collect()
 }
 
-/// Check if the graph is weakly connected
+/// Check if a directed graph is weakly connected
 ///
-/// :param PyDiGraph graph: The graph to check if it is weakly connected
+/// A directed graph is considered weakly connected
+/// if there is a path between every pair of vertices
+/// when the direction of edges is ignored.
+/// This means that if you treat the directed graph as an undirected graph,
+/// all vertices in a weakly connected graph are reachable from one another.
+///
+///     >>> G = rx.PyDiGraph()
+///     >>> G.extend_from_edge_list([(0, 1), (1, 2), (3, 4)])
+///     >>> rx.is_weakly_connected(G)
+///     False
+///
+/// See also [is_semi_connected].
+///
+/// If ``rx.is_weakly_connected(G) is True`` then `rx.number_weakly_connected_components(G) == 1``.
+///
+/// For undirected graphs see [is_connected].
+///
+/// :param PyGraph graph: An undirected graph to check for weak connectivity
 ///
 /// :returns: Whether the graph is weakly connected or not
 /// :rtype: bool
@@ -302,9 +473,23 @@ pub fn is_weakly_connected(graph: &digraph::PyDiGraph) -> PyResult<bool> {
     Ok(weakly_connected_components(graph)[0].len() == graph.graph.node_count())
 }
 
-/// Check if the graph is semi connected
+/// Check if a directed graph is semi-connected
 ///
-/// :param PyDiGraph graph: The graph to check if it is semi connected
+/// A directed graph is semi-connected if, for every pair of vertices `u` and `v`,
+/// there exists a directed path from `u` to `v` or from `v` to `u`,
+/// meaning that every vertex can reach every other vertex either
+/// directly or indirectly.
+///
+///     >>> G = rx.PyDiGraph()
+///     >>> G.extend_from_edge_list([(0, 1), (1, 2), (3, 4)])
+///     >>> rx.is_semi_connected(G)
+///     False
+///
+/// See also [is_weakly_connected] and [is_strongly_connected].
+///
+/// For undirected graphs see [is_connected].
+///
+/// :param PyDiGraph graph: An undirected graph to check for semi-connectivity
 ///
 /// :returns: Whether the graph is semi connected or not
 /// :rtype: bool
@@ -384,14 +569,14 @@ pub fn is_semi_connected(graph: &digraph::PyDiGraph) -> PyResult<bool> {
     signature=(graph, weight_fn=None, default_weight=1.0, null_value=0.0, parallel_edge="sum"),
     text_signature = "(graph, /, weight_fn=None, default_weight=1.0, null_value=0.0, parallel_edge=\"sum\")"
 )]
-pub fn digraph_adjacency_matrix(
-    py: Python,
+pub fn digraph_adjacency_matrix<'py>(
+    py: Python<'py>,
     graph: &digraph::PyDiGraph,
     weight_fn: Option<PyObject>,
     default_weight: f64,
     null_value: f64,
     parallel_edge: &str,
-) -> PyResult<PyObject> {
+) -> PyResult<Bound<'py, PyArray2<f64>>> {
     let n = graph.node_count();
     let mut matrix = Array2::<f64>::from_elem((n, n), null_value);
     let mut parallel_edge_count = HashMap::new();
@@ -429,7 +614,7 @@ pub fn digraph_adjacency_matrix(
             }
         }
     }
-    Ok(matrix.into_pyarray_bound(py).into())
+    Ok(matrix.into_pyarray(py))
 }
 
 /// Return the adjacency matrix for a PyGraph class
@@ -469,14 +654,14 @@ pub fn digraph_adjacency_matrix(
     signature=(graph, weight_fn=None, default_weight=1.0, null_value=0.0, parallel_edge="sum"),
     text_signature = "(graph, /, weight_fn=None, default_weight=1.0, null_value=0.0, parallel_edge=\"sum\")"
 )]
-pub fn graph_adjacency_matrix(
-    py: Python,
+pub fn graph_adjacency_matrix<'py>(
+    py: Python<'py>,
     graph: &graph::PyGraph,
     weight_fn: Option<PyObject>,
     default_weight: f64,
     null_value: f64,
     parallel_edge: &str,
-) -> PyResult<PyObject> {
+) -> PyResult<Bound<'py, PyArray2<f64>>> {
     let n = graph.node_count();
     let mut matrix = Array2::<f64>::from_elem((n, n), null_value);
     let mut parallel_edge_count = HashMap::new();
@@ -522,7 +707,7 @@ pub fn graph_adjacency_matrix(
             }
         }
     }
-    Ok(matrix.into_pyarray_bound(py).into())
+    Ok(matrix.into_pyarray(py))
 }
 
 /// Compute the complement of an undirected graph.
@@ -592,6 +777,64 @@ pub fn digraph_complement(py: Python, graph: &digraph::PyDiGraph) -> PyResult<di
     Ok(complement_graph)
 }
 
+/// Local complementation of a node applied to an undirected graph.
+///
+/// :param PyGraph graph: The graph to be used.
+/// :param int node: A node in the graph.
+///
+/// :returns: The locally complemented graph.
+/// :rtype: PyGraph
+///
+/// .. note::
+///
+///     This function assumes that there are no self loops
+///     in the provided graph.
+///     Returns an error if the :attr:`~rustworkx.PyGraph.multigraph`
+///     attribute is set to ``True``.
+#[pyfunction]
+#[pyo3(text_signature = "(graph, node, /)")]
+pub fn local_complement(
+    py: Python,
+    graph: &graph::PyGraph,
+    node: usize,
+) -> PyResult<graph::PyGraph> {
+    if graph.multigraph {
+        return Err(PyValueError::new_err(
+            "Local complementation not defined for multigraphs!",
+        ));
+    }
+
+    let mut complement_graph = graph.clone(); // keep same node indices
+
+    let node = NodeIndex::new(node);
+    if !graph.graph.contains_node(node) {
+        return Err(InvalidNode::new_err(
+            "The input index for 'node' is not a valid node index",
+        ));
+    }
+
+    // Local complementation
+    let node_neighbors: IndexSet<NodeIndex> = graph.graph.neighbors(node).collect();
+    let node_neighbors_vec: Vec<&NodeIndex> = node_neighbors.iter().collect();
+    for (i, neighbor_i) in node_neighbors_vec.iter().enumerate() {
+        // Ensure checking pairs of neighbors is only done once
+        let (_, nodes_tail) = node_neighbors_vec.split_at(i + 1);
+        for neighbor_j in nodes_tail.iter() {
+            let res = complement_graph.remove_edge(neighbor_i.index(), neighbor_j.index());
+            match res {
+                Ok(_) => (),
+                Err(_) => {
+                    let _ = complement_graph
+                        .graph
+                        .add_edge(**neighbor_i, **neighbor_j, py.None());
+                }
+            }
+        }
+    }
+
+    Ok(complement_graph)
+}
+
 /// Return all simple paths between 2 nodes in a PyGraph object
 ///
 /// A simple path is a path with no repeated nodes.
@@ -609,7 +852,7 @@ pub fn digraph_complement(py: Python, graph: &digraph::PyDiGraph) -> PyResult<di
 /// :returns: A list of lists where each inner list is a path of node indices
 /// :rtype: list
 #[pyfunction]
-#[pyo3(text_signature = "(graph, origin, to, /, min_depth=None, cutoff=None)")]
+#[pyo3(text_signature = "(graph, origin, to, /, min_depth=None, cutoff=None)", signature = (graph, origin, to, min_depth=None, cutoff=None))]
 pub fn graph_all_simple_paths(
     graph: &graph::PyGraph,
     origin: usize,
@@ -634,7 +877,7 @@ pub fn graph_all_simple_paths(
         Some(depth) => depth - 2,
     };
     let cutoff_petgraph: Option<usize> = cutoff.map(|depth| depth - 2);
-    let result: Vec<Vec<usize>> = algo::all_simple_paths(
+    let result: Vec<Vec<usize>> = algo::all_simple_paths::<Vec<_>, _, ahash::RandomState>(
         &graph.graph,
         from_index,
         to_index,
@@ -663,7 +906,7 @@ pub fn graph_all_simple_paths(
 /// :returns: A list of lists where each inner list is a path
 /// :rtype: list
 #[pyfunction]
-#[pyo3(text_signature = "(graph, origin, to, /, min_depth=None, cutoff=None)")]
+#[pyo3(text_signature = "(graph, origin, to, /, min_depth=None, cutoff=None)", signature = (graph, origin, to, min_depth=None, cutoff=None))]
 pub fn digraph_all_simple_paths(
     graph: &digraph::PyDiGraph,
     origin: usize,
@@ -688,7 +931,7 @@ pub fn digraph_all_simple_paths(
         Some(depth) => depth - 2,
     };
     let cutoff_petgraph: Option<usize> = cutoff.map(|depth| depth - 2);
-    let result: Vec<Vec<usize>> = algo::all_simple_paths(
+    let result: Vec<Vec<usize>> = algo::all_simple_paths::<Vec<_>, _, ahash::RandomState>(
         &graph.graph,
         from_index,
         to_index,
@@ -721,7 +964,7 @@ pub fn digraph_all_simple_paths(
 ///
 /// :raises ValueError: If ``min_depth`` or ``cutoff`` are < 2
 #[pyfunction]
-#[pyo3(text_signature = "(graph, /, min_depth=None, cutoff=None)")]
+#[pyo3(text_signature = "(graph, /, min_depth=None, cutoff=None)", signature = (graph, min_depth=None, cutoff=None))]
 pub fn digraph_all_pairs_all_simple_paths(
     graph: &digraph::PyDiGraph,
     min_depth: Option<usize>,
@@ -777,13 +1020,13 @@ pub fn connected_subgraphs(graph: &PyGraph, k: usize) -> PyResult<Vec<Vec<usize>
 ///     of paths. By default includes all paths regardless of depth, setting to
 ///     0 will behave like default.
 ///
-/// :returns: A mapping of node indices to to a mapping of target node
+/// :returns: A mapping of node indices to a mapping of target node
 ///     indices to a list of paths between the source and target nodes.
 /// :rtype: AllPairsMultiplePathMapping
 ///
 /// :raises ValueError: If ``min_depth`` or ``cutoff`` are < 2.
 #[pyfunction]
-#[pyo3(text_signature = "(graph, /, min_depth=None, cutoff=None)")]
+#[pyo3(text_signature = "(graph, /, min_depth=None, cutoff=None)", signature = (graph, min_depth=None, cutoff=None))]
 pub fn graph_all_pairs_all_simple_paths(
     graph: &graph::PyGraph,
     min_depth: Option<usize>,
@@ -919,7 +1162,7 @@ pub fn graph_longest_simple_path(graph: &graph::PyGraph) -> Option<NodeIndices> 
 #[pyo3(text_signature = "(graph, /)")]
 pub fn graph_core_number(py: Python, graph: &graph::PyGraph) -> PyResult<PyObject> {
     let cores = connectivity::core_number(&graph.graph);
-    let out_dict = PyDict::new_bound(py);
+    let out_dict = PyDict::new(py);
     for (k, v) in cores {
         out_dict.set_item(k.index(), v)?;
     }
@@ -945,7 +1188,7 @@ pub fn graph_core_number(py: Python, graph: &graph::PyGraph) -> PyResult<PyObjec
 #[pyo3(text_signature = "(graph, /)")]
 pub fn digraph_core_number(py: Python, graph: &digraph::PyDiGraph) -> PyResult<PyObject> {
     let cores = connectivity::core_number(&graph.graph);
-    let out_dict = PyDict::new_bound(py);
+    let out_dict = PyDict::new(py);
     for (k, v) in cores {
         out_dict.set_item(k.index(), v)?;
     }
@@ -962,7 +1205,7 @@ pub fn digraph_core_number(py: Python, graph: &digraph::PyDiGraph) -> PyResult<P
 /// :param PyGraph: The graph to be used
 /// :param Callable weight_fn:  An optional callable object (function, lambda, etc) which
 ///     will be passed the edge object and expected to return a ``float``.
-///     Edges with ``NaN`` weights will be ignored, i.e it's conidered to have zero weight.
+///     Edges with ``NaN`` weights will be ignored, i.e it's considered to have zero weight.
 ///     If ``weight_fn`` is not specified a default value of ``1.0`` will be used for all edges.
 ///
 /// :returns: A tuple with the minimum cut value and a list of all
@@ -973,7 +1216,7 @@ pub fn digraph_core_number(py: Python, graph: &digraph::PyDiGraph) -> PyResult<P
 /// .. [stoer_simple_1997] Stoer, Mechthild and Frank Wagner, "A simple min-cut
 ///     algorithm". Journal of the ACM 44 (4), 585-591, 1997.
 #[pyfunction]
-#[pyo3(text_signature = "(graph, /, weight_fn=None)")]
+#[pyo3(text_signature = "(graph, /, weight_fn=None)", signature = (graph, weight_fn=None))]
 pub fn stoer_wagner_min_cut(
     py: Python,
     graph: &graph::PyGraph,
@@ -1107,7 +1350,7 @@ pub fn biconnected_components(graph: &graph::PyGraph) -> BiconnectedComponents {
 ///     only the chain decomposition for the connected component containing
 ///     this node will be returned. This node indicates the root of the depth-first
 ///     search tree. If this is not specified then a source will be chosen
-///     arbitrarly and repeated until all components of the graph are searched.
+///     arbitrarily and repeated until all components of the graph are searched.
 /// :returns: A list of list of edges where each inner list is a chain.
 /// :rtype: list of EdgeList
 ///
@@ -1115,7 +1358,7 @@ pub fn biconnected_components(graph: &graph::PyGraph) -> BiconnectedComponents {
 ///       and 2-edge-connectivity." *Information Processing Letters*,
 ///       113, 241–244. Elsevier. <https://doi.org/10.1016/j.ipl.2013.01.016>
 #[pyfunction]
-#[pyo3(text_signature = "(graph, /, source=None)")]
+#[pyo3(text_signature = "(graph, /, source=None)", signature = (graph, source=None))]
 pub fn chain_decomposition(graph: graph::PyGraph, source: Option<usize>) -> Chains {
     let chains = connectivity::chain_decomposition(&graph.graph, source.map(NodeIndex::new));
     Chains {

@@ -21,7 +21,7 @@
 use std::collections::BinaryHeap;
 use std::hash::Hash;
 
-use hashbrown::hash_map::Entry::{Occupied, Vacant};
+use hashbrown::hash_map::Entry;
 use hashbrown::HashMap;
 
 use petgraph::algo::Measure;
@@ -144,7 +144,7 @@ where
             let mut next_score = node_score + cost;
 
             match scores.entry(next) {
-                Occupied(ent) => {
+                Entry::Occupied(ent) => {
                     let old_score = *ent.get();
                     if next_score < old_score {
                         *ent.into_mut() = next_score;
@@ -153,7 +153,7 @@ where
                         next_score = old_score;
                     }
                 }
-                Vacant(ent) => {
+                Entry::Vacant(ent) => {
                     ent.insert(next_score);
                     path_tracker.set_predecessor(next, node);
                 }

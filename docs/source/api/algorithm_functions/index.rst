@@ -10,6 +10,7 @@ Algorithm Functions
    coloring
    connectivity_and_cycles
    dag_algorithms
+   dominance
    graph_operations
    isomorphism
    link_analysis

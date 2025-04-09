@@ -28,23 +28,23 @@ use crate::utils::pairwise;
 /// Arguments:
 ///
 /// * `num_mesh_nodes` - The number of nodes to generate the mesh graph
-///     with. Node weights will be None if this is specified. If both
-///     `num_mesh_nodes` and `mesh_weights` are set, this will be ignored and
-///     `mesh_weights` will be used.
+///   with. Node weights will be None if this is specified. If both
+///   `num_mesh_nodes` and `mesh_weights` are set, this will be ignored and
+///   `mesh_weights` will be used.
 /// * `num_path_nodes` - The number of nodes to generate the path
-///     with. Node weights will be None if this is specified. If both
-///     `num_path_nodes` and `path_weights` are set, this will be ignored and
-///     `path_weights` will be used.
+///   with. Node weights will be None if this is specified. If both
+///   `num_path_nodes` and `path_weights` are set, this will be ignored and
+///   `path_weights` will be used.
 /// * `mesh_weights` - A list of node weights for the mesh graph. If both
-///     `num_mesh_nodes` and `mesh_weights` are set, `num_mesh_nodes` will
-///     be ignored and `mesh_weights` will be used.
+///   `num_mesh_nodes` and `mesh_weights` are set, `num_mesh_nodes` will
+///   be ignored and `mesh_weights` will be used.
 /// * `path_weights` - A list of node weights for the path. If both
-///     `num_path_nodes` and `path_weights` are set, `num_path_nodes` will
-///     be ignored and `path_weights` will be used.
+///   `num_path_nodes` and `path_weights` are set, `num_path_nodes` will
+///   be ignored and `path_weights` will be used.
 /// * `default_node_weight` - A callable that will return the weight to use
-///     for newly created nodes. This is ignored if node weights are specified.
+///   for newly created nodes. This is ignored if node weights are specified.
 /// * `default_edge_weight` - A callable that will return the weight object
-///     to use for newly created edges.
+///   to use for newly created edges.
 ///
 /// # Example
 /// ```rust

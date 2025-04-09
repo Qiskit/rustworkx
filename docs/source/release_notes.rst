@@ -185,7 +185,7 @@ New Features
   :meth:`~rustworkx.PyDiGraph.insert_node_on_in_edges_multiple`, and
   :meth:`~rustworkx.PyDiGraph.insert_node_on_out_edges_multiple` were added to
   :class:`~rustworkx.PyDiGraph`. These functions are used to insert an existing
-  node in between an reference node(s) and all it's predecessors or successors.
+  node in between an reference node(s) and all its predecessors or successors.
 - Two new functions, :func:`~rustworkx.graph_dfs_edges` and
   :func:`~rustworkx.digraph_dfs_edges`, were added to get an edge list in depth
   first order from a :class:`~rustworkx.PyGraph` and
@@ -266,7 +266,7 @@ New Features
 
 - A new method, :meth:`~rustworkx.PyDiGraph.remove_node_retain_edges`, has been
   added to the :class:`~rustworkx.PyDiGraph` class. This method can be used to
-  remove a node and add edges from its predecesors to its successors.
+  remove a node and add edges from its predecessors to its successors.
 - Two new methods, :meth:`~rustworkx.PyGraph.edge_list` and
   :meth:`~rustworkx.PyGraph.weighted_edge_list`, for getting a list of tuples
   with the edge source and target (with or without edge weights) have been
@@ -285,7 +285,7 @@ New Features
   edge list file and will read that file and generate a new object from the
   contents.
 - Two new methods, :meth:`~rustworkx.PyGraph.extend_from_edge_list` and
-  :meth:`~rustworkx.PyGraoh.extend_from_weighted_edge_list` has been added
+  :meth:`~rustworkx.PyGraph.extend_from_weighted_edge_list` has been added
   to :class:`~rustworkx.PyGraph` and :class:`~rustworkx.PyDiGraph`
   (:meth:`~rustworkx.PyDiGraph.extend_from_edge_list` and
   :meth:`~rustworkx.PyDiGraph.extend_from_weighted_edge_list`). This method
@@ -356,7 +356,7 @@ Upgrade Notes
 -------------
 
 - The :class:`~rustworkx.PyDAG` class was renamed :class:`~rustworkx.PyDiGraph`
-  to better reflect it's functionality. For backwards compatibility
+  to better reflect its functionality. For backwards compatibility
   :class:`~rustworkx.PyDAG` still exists as a Python subclass of
   :class:`~rustworkx.PyDiGraph`. No changes should be required for existing
   users.

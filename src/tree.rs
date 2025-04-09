@@ -27,28 +27,53 @@ use rayon::prelude::*;
 
 use crate::iterators::WeightedEdgeList;
 
-/// Find the edges in the minimum spanning tree or forest of a graph
+/// Find the edges in the minimum spanning tree or forest of an undirected graph
 /// using Kruskal's algorithm.
 ///
-/// :param PyGraph graph: Undirected graph
-/// :param weight_fn: A callable object (function, lambda, etc) which
-///     will be passed the edge object and expected to return a ``float``. This
-///     tells rustworkx/rust how to extract a numerical weight as a ``float``
-///     for edge object. Some simple examples are::
+/// A Minimum Spanning Tree (MST) is a subset of the edges of a connected,
+/// undirected graph that connects all vertices together without cycles and
+/// with the minimum possible total edge weight.
 ///
-///         minimum_spanning_edges(graph, weight_fn: lambda x: 1)
+/// This function computes the edges that form the MST or forest of an
+/// undirected graph. Kruskal's algorithm works by sorting all the edges in the
+/// graph by their weights and then adding them one by one to the MST, ensuring
+/// that no cycles are formed.
 ///
-///     to return a weight of 1 for all edges. Also::
+///     >>> G = rx.PyGraph()
+///     >>> G.add_nodes_from(["A", "B", "C", "D"])
+///     NodeIndices[0, 1, 2, 3]
+///     >>> G.add_edges_from([(0, 1, 10), (0, 2, 6), (0, 3, 5), (1, 3, 15), (2, 3, 4)])
+///     EdgeIndices[0, 1, 2, 3, 4]
+///     >>> rx.minimum_spanning_edges(G, weight_fn=lambda x: x)
+///     WeightedEdgeList[(2, 3, 4), (0, 3, 5), (0, 1, 10)]
 ///
-///         minimum_spanning_edges(graph, weight_fn: float)
+/// In this example, the edge `(0, 2, 6)` won't become part of the MST because
+/// in the moment it's considered, the two other edges connecting nodes
+/// 0-3-2 are already parts of MST because of their lower weight.
 ///
-///     to cast the edge object as a float as the weight.
-/// :param float default_weight: If ``weight_fn`` isn't specified this optional
+/// To obtain the result as a graph, see :func:`~minimum_spanning_tree`.
+///
+/// :param PyGraph graph: An undirected graph
+/// :param weight_fn: A callable object (function, lambda, etc) that takes
+///     an edge object and returns a ``float``. This function is used to
+///     extract the numerical weight for each edge. For example:
+///
+///         rx.minimum_spanning_edges(G, weight_fn=lambda x: 1)
+///
+///     will assign a weight of 1 to all edges and thus ignore the real weights.
+///
+///         rx.minimum_spanning_edges(G, weight_fn=float)
+///
+///     will just cast the edge object to a ``float`` to determine its weight.
+/// :param float default_weight: If ``weight_fn`` isn't specified, this optional
 ///     float value will be used for the weight/cost of each edge.
 ///
-/// :returns: The :math:`N - |c|` edges of the Minimum Spanning Tree (or Forest, if :math:`|c| > 1`)
-///     where :math:`N` is the number of nodes and :math:`|c|` is the number of connected components of the graph
+/// :returns: The :math:`N - |c|` edges of the Minimum Spanning Tree (or Forest,
+///     if :math:`|c| > 1`) where :math:`N` is the number of nodes and
+///     :math:`|c|` is the number of connected components of the graph.
 /// :rtype: WeightedEdgeList
+///
+/// :raises ValueError: If a NaN value is found (or computed) as an edge weight.
 #[pyfunction]
 #[pyo3(signature=(graph, weight_fn=None, default_weight=1.0), text_signature = "(graph, weight_fn=None, default_weight=1.0)")]
 pub fn minimum_spanning_edges(
@@ -69,52 +94,72 @@ pub fn minimum_spanning_edges(
         edge_list.push((weight, edge));
     }
 
-    edge_list.par_sort_unstable_by(|a, b| {
-        let weight_a = a.0;
-        let weight_b = b.0;
-        weight_a.partial_cmp(&weight_b).unwrap_or(Ordering::Less)
+    edge_list.par_sort_unstable_by(|(weight_a, _), (weight_b, _)| {
+        weight_a.partial_cmp(weight_b).unwrap_or(Ordering::Less)
     });
 
-    let mut answer: Vec<(usize, usize, PyObject)> = Vec::new();
-    for float_edge_pair in edge_list.iter() {
-        let edge = float_edge_pair.1;
+    let mut mst_edges: Vec<(usize, usize, PyObject)> = Vec::new();
+    for (_, edge) in edge_list.iter() {
         let u = edge.source().index();
         let v = edge.target().index();
         if subgraphs.union(u, v) {
-            let w = edge.weight().clone_ref(py);
-            answer.push((u, v, w));
+            mst_edges.push((u, v, edge.weight().clone_ref(py)));
         }
     }
 
-    Ok(WeightedEdgeList { edges: answer })
+    Ok(WeightedEdgeList { edges: mst_edges })
 }
 
-/// Find the minimum spanning tree or forest of a graph
-/// using Kruskal's algorithm.
+/// Find the minimum spanning tree or forest of an undirected graph using
+/// Kruskal's algorithm.
 ///
-/// :param PyGraph graph: Undirected graph
-/// :param weight_fn: A callable object (function, lambda, etc) which
-///     will be passed the edge object and expected to return a ``float``. This
-///     tells rustworkx/rust how to extract a numerical weight as a ``float``
-///     for edge object. Some simple examples are::
+/// A Minimum Spanning Tree (MST) is a subset of the edges of a connected,
+/// undirected graph that connects all vertices together without cycles and
+/// with the minimum possible total edge weight.
 ///
-///         minimum_spanning_tree(graph, weight_fn: lambda x: 1)
+/// This function computes the edges that form the MST or forest of an
+/// undirected graph. Kruskal's algorithm works by sorting all the edges in the
+/// graph by their weights and then adding them one by one to the MST, ensuring
+/// that no cycles are formed.
 ///
-///     to return a weight of 1 for all edges. Also::
+///     >>> G = rx.PyGraph()
+///     >>> G.add_nodes_from(["A", "B", "C", "D"])
+///     NodeIndices[0, 1, 2, 3]
+///     >>> G.add_edges_from([(0, 1, 10), (0, 2, 6), (0, 3, 5), (1, 3, 15), (2, 3, 4)])
+///     EdgeIndices[0, 1, 2, 3, 4]
+///     >>> mst_G = rx.minimum_spanning_tree(G, weight_fn=lambda x: x)
+///     >>> mst_G.weighted_edge_list()
+///     WeightedEdgeList[(2, 3, 4), (0, 3, 5), (0, 1, 10)]
 ///
-///         minimum_spanning_tree(graph, weight_fn: float)
+/// In this example, the edge `(0, 2, 6)` won't become part of the MST because
+/// in the moment it's considered, the two other edges connecting nodes
+/// 0-3-2 are already parts of MST because of their lower weight.
 ///
-///     to cast the edge object as a float as the weight.
-/// :param float default_weight: If ``weight_fn`` isn't specified this optional
+/// To obtain the result just as a list of edges, see :func:`~minimum_spanning_edges`.
+///
+/// :param PyGraph graph: An undirected graph
+/// :param weight_fn: A callable object (function, lambda, etc) that takes
+///     an edge object and returns a ``float``. This function is used to
+///     extract the numerical weight for each edge. For example:
+///
+///         rx.minimum_spanning_tree(G, weight_fn=lambda x: 1)
+///
+///     will assign a weight of 1 to all edges and thus ignore the real weights.
+///
+///         rx.minimum_spanning_tree(G, weight_fn=float)
+///
+///     will just cast the edge object to a ``float`` to determine its weight.
+/// :param float default_weight: If ``weight_fn`` isn't specified, this optional
 ///     float value will be used for the weight/cost of each edge.
 ///
 /// :returns: A Minimum Spanning Tree (or Forest, if the graph is not connected).
-///
 /// :rtype: PyGraph
 ///
 /// .. note::
 ///
 ///     The new graph will keep the same node indices, but edge indices might differ.
+///
+/// :raises ValueError: If a NaN value is found (or computed) as an edge weight.
 #[pyfunction]
 #[pyo3(signature=(graph, weight_fn=None, default_weight=1.0), text_signature = "(graph, weight_fn=None, default_weight=1.0)")]
 pub fn minimum_spanning_tree(
@@ -126,11 +171,11 @@ pub fn minimum_spanning_tree(
     let mut spanning_tree = (*graph).clone();
     spanning_tree.graph.clear_edges();
 
-    for edge in minimum_spanning_edges(py, graph, weight_fn, default_weight)?
+    for &(u, v, ref weight) in minimum_spanning_edges(py, graph, weight_fn, default_weight)?
         .edges
         .iter()
     {
-        spanning_tree.add_edge(edge.0, edge.1, edge.2.clone_ref(py))?;
+        spanning_tree.add_edge(u, v, weight.clone_ref(py))?;
     }
 
     Ok(spanning_tree)

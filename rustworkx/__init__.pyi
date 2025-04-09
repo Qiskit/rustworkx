@@ -9,17 +9,25 @@
 # This file contains only type annotations for PyO3 functions and classes
 # For implementation details, see __init__.py and src/lib.rs
 
+import sys
 import numpy as np
+import numpy.typing as npt
 
-from typing import Generic, TypeVar, Any, Callable, Iterator, overload, Sequence
+from typing import Generic, Any, Callable, overload
+from collections.abc import Iterator, Sequence
+
+if sys.version_info >= (3, 13):
+    from typing import TypeVar
+else:
+    from typing_extensions import TypeVar
 
 # Re-Exports of rust native functions in rustworkx.rustworkx
 # To workaround limitations in mypy around re-exporting objects from the inner
 # rustworkx module we need to explicitly re-export every inner function from
 # rustworkx.rustworkx (the root rust module) in the form:
 # `from .rustworkx import foo as foo` so that mypy will treat `rustworkx.foo`
-# as a valid path
-import rustworkx.visit as visit
+# as a valid path.
+from . import visit as visit
 
 from .rustworkx import DAGHasCycle as DAGHasCycle
 from .rustworkx import DAGWouldCycle as DAGWouldCycle
@@ -47,8 +55,18 @@ from .rustworkx import digraph_edge_betweenness_centrality as digraph_edge_betwe
 from .rustworkx import graph_edge_betweenness_centrality as graph_edge_betweenness_centrality
 from .rustworkx import digraph_closeness_centrality as digraph_closeness_centrality
 from .rustworkx import graph_closeness_centrality as graph_closeness_centrality
+from .rustworkx import (
+    digraph_newman_weighted_closeness_centrality as digraph_newman_weighted_closeness_centrality,
+)
+from .rustworkx import (
+    graph_newman_weighted_closeness_centrality as graph_newman_weighted_closeness_centrality,
+)
 from .rustworkx import digraph_katz_centrality as digraph_katz_centrality
 from .rustworkx import graph_katz_centrality as graph_katz_centrality
+from .rustworkx import digraph_degree_centrality as digraph_degree_centrality
+from .rustworkx import graph_degree_centrality as graph_degree_centrality
+from .rustworkx import in_degree_centrality as in_degree_centrality
+from .rustworkx import out_degree_centrality as out_degree_centrality
 from .rustworkx import graph_greedy_color as graph_greedy_color
 from .rustworkx import graph_greedy_edge_color as graph_greedy_edge_color
 from .rustworkx import graph_is_bipartite as graph_is_bipartite
@@ -60,9 +78,11 @@ from .rustworkx import graph_misra_gries_edge_color as graph_misra_gries_edge_co
 from .rustworkx import graph_bipartite_edge_color as graph_bipartite_edge_color
 from .rustworkx import connected_components as connected_components
 from .rustworkx import is_connected as is_connected
+from .rustworkx import is_strongly_connected as is_strongly_connected
 from .rustworkx import is_weakly_connected as is_weakly_connected
 from .rustworkx import is_semi_connected as is_semi_connected
 from .rustworkx import number_connected_components as number_connected_components
+from .rustworkx import number_strongly_connected_components as number_strongly_connected_components
 from .rustworkx import number_weakly_connected_components as number_weakly_connected_components
 from .rustworkx import node_connected_component as node_connected_component
 from .rustworkx import strongly_connected_components as strongly_connected_components
@@ -77,6 +97,7 @@ from .rustworkx import chain_decomposition as chain_decomposition
 from .rustworkx import digraph_find_cycle as digraph_find_cycle
 from .rustworkx import digraph_complement as digraph_complement
 from .rustworkx import graph_complement as graph_complement
+from .rustworkx import local_complement as local_complement
 from .rustworkx import digraph_all_simple_paths as digraph_all_simple_paths
 from .rustworkx import graph_all_simple_paths as graph_all_simple_paths
 from .rustworkx import digraph_all_pairs_all_simple_paths as digraph_all_pairs_all_simple_paths
@@ -237,6 +258,8 @@ from .rustworkx import steiner_tree as steiner_tree
 from .rustworkx import metric_closure as metric_closure
 from .rustworkx import digraph_union as digraph_union
 from .rustworkx import graph_union as graph_union
+from .rustworkx import immediate_dominators as immediate_dominators
+from .rustworkx import dominance_frontiers as dominance_frontiers
 from .rustworkx import NodeIndices as NodeIndices
 from .rustworkx import PathLengthMapping as PathLengthMapping
 from .rustworkx import PathMapping as PathMapping
@@ -263,8 +286,8 @@ from .rustworkx import AllPairsMultiplePathMapping as AllPairsMultiplePathMappin
 from .rustworkx import PyGraph as PyGraph
 from .rustworkx import PyDiGraph as PyDiGraph
 
-_S = TypeVar("_S")
-_T = TypeVar("_T")
+_S = TypeVar("_S", default=Any)
+_T = TypeVar("_T", default=Any)
 _BFSVisitor = TypeVar("_BFSVisitor", bound=visit.BFSVisitor)
 _DFSVisitor = TypeVar("_DFSVisitor", bound=visit.DFSVisitor)
 _DijkstraVisitor = TypeVar("_DijkstraVisitor", bound=visit.DijkstraVisitor)
@@ -276,7 +299,7 @@ def distance_matrix(
     parallel_threshold: int = ...,
     as_undirected: bool = ...,
     null_value: float = ...,
-) -> np.ndarray: ...
+) -> npt.NDArray[np.float64]: ...
 def unweighted_average_shortest_path_length(
     graph: PyGraph | PyDiGraph,
     parallel_threshold: int = ...,
@@ -287,7 +310,7 @@ def adjacency_matrix(
     weight_fn: Callable[[_T], float] | None = ...,
     default_weight: float = ...,
     null_value: float = ...,
-) -> np.ndarray: ...
+) -> npt.NDArray[np.float64]: ...
 def all_simple_paths(
     graph: PyGraph | PyDiGraph,
     from_: int,
@@ -306,13 +329,13 @@ def floyd_warshall_numpy(
     weight_fn: Callable[[_T], float] | None = ...,
     default_weight: float = ...,
     parallel_threshold: int = ...,
-) -> np.ndarray: ...
+) -> npt.NDArray[np.float64]: ...
 def floyd_warshall_successor_and_distance(
     graph: PyGraph[_S, _T] | PyDiGraph[_S, _T],
     weight_fn: Callable[[_T], float] | None = ...,
     default_weight: float | None = ...,
     parallel_threshold: int | None = ...,
-) -> tuple[np.ndarray, np.ndarray]: ...
+) -> tuple[npt.NDArray[np.float64], npt.NDArray[np.float64]]: ...
 def astar_shortest_path(
     graph: PyGraph[_S, _T] | PyDiGraph[_S, _T],
     node: int,
@@ -421,7 +444,7 @@ def is_subgraph_isomorphic(
 def transitivity(graph: PyGraph[_S, _T] | PyDiGraph[_S, _T]) -> float: ...
 def core_number(graph: PyGraph[_S, _T] | PyDiGraph[_S, _T]) -> int: ...
 def complement(
-    graph: PyGraph[_S, _T] | PyDiGraph[_S, _T]
+    graph: PyGraph[_S, _T] | PyDiGraph[_S, _T],
 ) -> PyGraph[_S, _T | None] | PyDiGraph[_S, _T | None]: ...
 def random_layout(
     graph: PyGraph[_S, _T] | PyDiGraph[_S, _T],
@@ -446,7 +469,7 @@ def spring_layout(
 def networkx_converter(graph: Any, keep_attributes: bool = ...) -> PyGraph | PyDiGraph: ...
 def bipartite_layout(
     graph: PyGraph[_S, _T] | PyDiGraph[_S, _T],
-    first_nodes,
+    first_nodes: set[int],
     horizontal: bool = ...,
     scale: int = ...,
     center: tuple[float, float] | None = ...,
@@ -481,7 +504,19 @@ def betweenness_centrality(
     parallel_threshold: int = ...,
 ) -> CentralityMapping: ...
 def closeness_centrality(
-    graph: PyGraph[_S, _T] | PyDiGraph[_S, _T], wf_improved: bool = ...
+    graph: PyGraph[_S, _T] | PyDiGraph[_S, _T],
+    wf_improved: bool = ...,
+    parallel_threshold: int = ...,
+) -> CentralityMapping: ...
+def newman_weighted_closeness_centrality(
+    graph: PyGraph[_S, _T],
+    weight_fn: Callable[[_T], float] | None = ...,
+    wf_improved: bool = ...,
+    default_weight: float = ...,
+    parallel_threshold: int = ...,
+) -> CentralityMapping: ...
+def degree_centrality(
+    graph: PyGraph[_S, _T] | PyDiGraph[_S, _T],
 ) -> CentralityMapping: ...
 def edge_betweenness_centrality(
     graph: PyGraph[_S, _T] | PyDiGraph[_S, _T],
@@ -573,12 +608,12 @@ def dfs_search(
 def dijkstra_search(
     graph: PyGraph | PyDiGraph,
     source: Sequence[int] | None,
-    weight_fn: Callable[[Any], float],
+    weight_fn: Callable[[Any], float] | None,
     visitor: _DijkstraVisitor,
 ) -> None: ...
 def bellman_ford_shortest_paths(
     graph: PyGraph[_S, _T] | PyDiGraph[_S, _T],
-    source,
+    source: int,
     target: int | None = ...,
     weight_fn: Callable[[_T], float] | None = ...,
     default_weight: float = ...,
@@ -602,8 +637,8 @@ def node_link_json(
     graph: PyGraph[_S, _T] | PyDiGraph[_S, _T],
     path: str | None = ...,
     graph_attrs: Callable[[Any], dict[str, str]] | None = ...,
-    node_attrs: Callable[[_S], str] | None = ...,
-    edge_attrs: Callable[[_T], str] | None = ...,
+    node_attrs: Callable[[_S], dict[str, str]] | None = ...,
+    edge_attrs: Callable[[_T], dict[str, str]] | None = ...,
 ) -> str | None: ...
 def longest_simple_path(graph: PyGraph[_S, _T] | PyDiGraph[_S, _T]) -> NodeIndices | None: ...
 def isolates(graph: PyGraph[_S, _T] | PyDiGraph[_S, _T]) -> NodeIndices: ...

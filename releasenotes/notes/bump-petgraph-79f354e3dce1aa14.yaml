@@ -1,0 +1,11 @@
+---
+upgrade:
+  - |
+    The version of petgraph used in ``rustworkx-core`` has been bumped to
+    0.8.1 from 0.7.1. This means for users of ``rustworkx-core`` that are
+    passing graph objects built using petgraph to algorithm functions you need
+    to ensure you upgrade your petgraph usage accordingly. This is handled
+    correctly if you use the petgraph re-export from ``rustworkx_core::petgraph``.
+    Any API changes around the usage of petgraph will need to be reflected in
+    the upgrade of your usage however. Refer to the release documentation for
+    petgraph 0.8.0 for details.
