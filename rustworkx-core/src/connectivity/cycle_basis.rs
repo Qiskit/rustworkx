@@ -35,10 +35,9 @@ use std::hash::Hash;
 ///
 /// * `graph` - The graph in which to find the basis.
 /// * `root` - Optional node index for starting the basis search. If not
-///     specified, an arbitrary node is chosen.
+///   specified, an arbitrary node is chosen.
 /// * `edges` - bool for when the user requests the edges instead
-///     of the nodes of the cycles.
-
+///   of the nodes of the cycles.
 fn inner_cycle_basis<G>(
     graph: G,
     root: Option<G::NodeId>,
