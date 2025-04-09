@@ -16,85 +16,105 @@ use rustworkx_core::petgraph::graph::{DiGraph, UnGraph};
 
 #[test]
 fn test_simple() {
-    let g = UnGraph::<i32, ()>::from_edges([(1, 2), (2, 3), (3, 4), (1, 4)]);
-    let c = closeness_centrality(&g, true);
-    assert_eq!(
-        vec![
-            Some(0.0),
-            Some(0.5625),
-            Some(0.5625),
-            Some(0.5625),
-            Some(0.5625)
-        ],
-        c
-    );
+    let test_case = |parallel_threshold: usize| {
+        let g = UnGraph::<i32, ()>::from_edges([(1, 2), (2, 3), (3, 4), (1, 4)]);
+        let c = closeness_centrality(&g, true, parallel_threshold);
+        assert_eq!(
+            vec![
+                Some(0.0),
+                Some(0.5625),
+                Some(0.5625),
+                Some(0.5625),
+                Some(0.5625)
+            ],
+            c
+        );
+    };
+    test_case(200); // sequential
+    test_case(1); // parallel
 }
 
 #[test]
 fn test_wf_improved() {
-    let g = UnGraph::<i32, ()>::from_edges([(0, 1), (1, 2), (2, 3), (4, 5), (5, 6)]);
-    let c = closeness_centrality(&g, true);
-    assert_eq!(
-        vec![
-            Some(1.0 / 4.0),
-            Some(3.0 / 8.0),
-            Some(3.0 / 8.0),
-            Some(1.0 / 4.0),
-            Some(2.0 / 9.0),
-            Some(1.0 / 3.0),
-            Some(2.0 / 9.0)
-        ],
-        c
-    );
-    let cwf = closeness_centrality(&g, false);
-    assert_eq!(
-        vec![
-            Some(1.0 / 2.0),
-            Some(3.0 / 4.0),
-            Some(3.0 / 4.0),
-            Some(1.0 / 2.0),
-            Some(2.0 / 3.0),
-            Some(1.0),
-            Some(2.0 / 3.0)
-        ],
-        cwf
-    );
+    let test_case = |parallel_threshold: usize| {
+        let g = UnGraph::<i32, ()>::from_edges([(0, 1), (1, 2), (2, 3), (4, 5), (5, 6)]);
+        let c = closeness_centrality(&g, true, parallel_threshold);
+        assert_eq!(
+            vec![
+                Some(1.0 / 4.0),
+                Some(3.0 / 8.0),
+                Some(3.0 / 8.0),
+                Some(1.0 / 4.0),
+                Some(2.0 / 9.0),
+                Some(1.0 / 3.0),
+                Some(2.0 / 9.0)
+            ],
+            c
+        );
+        let cwf = closeness_centrality(&g, false, parallel_threshold);
+        assert_eq!(
+            vec![
+                Some(1.0 / 2.0),
+                Some(3.0 / 4.0),
+                Some(3.0 / 4.0),
+                Some(1.0 / 2.0),
+                Some(2.0 / 3.0),
+                Some(1.0),
+                Some(2.0 / 3.0)
+            ],
+            cwf
+        );
+    };
+    test_case(200); // sequential
+    test_case(1); // parallel
 }
 
 #[test]
 fn test_digraph() {
-    let g = DiGraph::<i32, ()>::from_edges([(0, 1), (1, 2)]);
-    let c = closeness_centrality(&g, true);
-    assert_eq!(vec![Some(0.), Some(1. / 2.), Some(2. / 3.)], c);
+    let test_case = |parallel_threshold: usize| {
+        let g = DiGraph::<i32, ()>::from_edges([(0, 1), (1, 2)]);
+        let c = closeness_centrality(&g, true, parallel_threshold);
+        assert_eq!(vec![Some(0.), Some(1. / 2.), Some(2. / 3.)], c);
 
-    let cr = closeness_centrality(Reversed(&g), true);
-    assert_eq!(vec![Some(2. / 3.), Some(1. / 2.), Some(0.)], cr);
+        let cr = closeness_centrality(Reversed(&g), true, parallel_threshold);
+        assert_eq!(vec![Some(2. / 3.), Some(1. / 2.), Some(0.)], cr);
+    };
+    test_case(200); // sequential
+    test_case(1); // parallel
 }
 
 #[test]
 fn test_k5() {
-    let g = UnGraph::<i32, ()>::from_edges([
-        (0, 1),
-        (0, 2),
-        (0, 3),
-        (0, 4),
-        (1, 2),
-        (1, 3),
-        (1, 4),
-        (2, 3),
-        (2, 4),
-        (3, 4),
-    ]);
-    let c = closeness_centrality(&g, true);
-    assert_eq!(
-        vec![Some(1.0), Some(1.0), Some(1.0), Some(1.0), Some(1.0)],
-        c
-    );
+    let test_case = |parallel_threshold: usize| {
+        let g = UnGraph::<i32, ()>::from_edges([
+            (0, 1),
+            (0, 2),
+            (0, 3),
+            (0, 4),
+            (1, 2),
+            (1, 3),
+            (1, 4),
+            (2, 3),
+            (2, 4),
+            (3, 4),
+        ]);
+        let c = closeness_centrality(&g, true, parallel_threshold);
+        assert_eq!(
+            vec![Some(1.0), Some(1.0), Some(1.0), Some(1.0), Some(1.0)],
+            c
+        );
+    };
+    test_case(200); // sequential
+    test_case(1); // parallel
 }
 
 #[test]
 fn test_path() {
-    let g = UnGraph::<i32, ()>::from_edges([(0, 1), (1, 2)]);
-    let c = closeness_centrality(&g, true);
-    assert_eq!(vec![Some(2.0 / 3.0), Some(1.0), Some(2.0 / 3.0)], c);
+    let test_case = |parallel_threshold: usize| {
+        let g = UnGraph::<i32, ()>::from_edges([(0, 1), (1, 2)]);
+        let c = closeness_centrality(&g, true, parallel_threshold);
+        assert_eq!(vec![Some(2.0 / 3.0), Some(1.0), Some(2.0 / 3.0)], c);
+    };
+    test_case(200); // sequential
+    test_case(1); // parallel
 }
