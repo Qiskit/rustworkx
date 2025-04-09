@@ -116,7 +116,7 @@ where
                     let mut p = pred.get(&z).unwrap();
                     if edges {
                         let mut cycle: Vec<G::EdgeId> = Vec::new();
-                        // Retreive all edges from z to neighbor and push to cycle
+                        // Retrieve all edges from z to neighbor and push to cycle
                         cycle.push(get_edge_between(graph, z, neighbor));
 
                         // Make last p_node == z
@@ -127,12 +127,12 @@ where
                             cycle.push(get_edge_between(graph, *prev_p, *p));
                             // Update prev_p to p
                             prev_p = p;
-                            // Retreive a new predecessor node from p and replace p
+                            // Retrieve a new predecessor node from p and replace p
                             p = pred.get(p).unwrap();
                         }
                         // When loop ends add remaining edges from prev_p to p.
                         cycle.push(get_edge_between(graph, *prev_p, *p));
-                        // Also retreive all edges between the last p and neighbor
+                        // Also retrieve all edges between the last p and neighbor
                         cycle.push(get_edge_between(graph, *p, neighbor));
                         // Once all edges within cycle have been found, push to cycle list.
                         cycles_edges.push(cycle);
