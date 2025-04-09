@@ -354,8 +354,8 @@ pub fn graph_closeness_centrality(
 /// This function is multithreaded and will run in parallel if the number
 /// of nodes in the graph is above the value of ``parallel_threshold`` (it
 /// defaults to 50). If the function will be running in parallel the env var
-///
 /// ``RAYON_NUM_THREADS`` can be used to adjust how many threads will be used.
+///
 /// :param PyDiGraph graph: The input graph. Can either be a
 ///     :class:`~rustworkx.PyGraph` or :class:`~rustworkx.PyDiGraph`.
 /// :param bool wf_improved: This is optional; the default is True. If True,
