@@ -141,7 +141,7 @@ where
         return false;
     };
 
-    let mut try_creation = || -> Option<HashSet<(G::NodeId, G::NodeId)>> {
+    let mut try_creation = || -> Option<IndexSet<(G::NodeId, G::NodeId)>> {
         let mut edges: HashSet<(G::NodeId, G::NodeId)> = HashSet::with_capacity(num_nodes);
         let mut stubs: Vec<G::NodeId> = (0..num_nodes)
             .flat_map(|x| std::iter::repeat(graph.from_index(x)).take(degree))
