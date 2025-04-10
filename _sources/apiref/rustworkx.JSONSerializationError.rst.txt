@@ -1,0 +1,6 @@
+﻿rustworkx.JSONSerializationError
+================================
+
+.. currentmodule:: rustworkx
+
+.. autoexception:: JSONSerializationError

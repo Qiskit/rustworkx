@@ -1,0 +1,6 @@
+﻿rustworkx.digraph\_cartesian\_product
+=====================================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: digraph_cartesian_product

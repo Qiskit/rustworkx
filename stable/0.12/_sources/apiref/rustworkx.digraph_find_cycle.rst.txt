@@ -1,0 +1,6 @@
+﻿rustworkx.digraph\_find\_cycle
+==============================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: digraph_find_cycle
