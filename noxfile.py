@@ -3,25 +3,12 @@ import nox
 nox.options.reuse_existing_virtualenvs = True
 nox.options.stop_on_first_error = True
 
-deps = [
-  "setuptools-rust",
-  "fixtures",
-  "testtools>=2.5.0",
-  "networkx>=2.5",
-  "stestr>=4.1",
-]
+pyproject = nox.project.load_toml("pyproject.toml")
 
-lint_deps = [
-    "black~=24.8",
-    "ruff~=0.6",
-    "setuptools-rust",
-    "typos~=1.28",
-]
-
-stubs_deps = [
-    "mypy==1.11.2",
-    "typing-extensions>=4.4",
-]
+deps = nox.project.dependency_groups(pyproject, "test")
+lint_deps = nox.project.dependency_groups(pyproject, "lint")
+stubs_deps = nox.project.dependency_groups(pyproject, "stubs")
+docs_deps = nox.project.dependency_groups(pyproject, "docs")
 
 def install_rustworkx(session):
     session.install(*deps)
@@ -48,14 +35,14 @@ def lint(session):
     black(session)
     typos(session)
     session.install(*lint_deps)
-    session.run("ruff", "check", "rustworkx", "retworkx", "setup.py")
+    session.run("ruff", "check", "rustworkx", "setup.py")
     session.run("cargo", "fmt", "--all", "--", "--check", external=True)
     session.run("python", "tools/find_stray_release_notes.py")
 
 @nox.session(python=["3"])
 def docs(session):
     install_rustworkx(session)
-    session.install("-r", "docs/source/requirements.txt", "-c", "constraints.txt")
+    session.install(*docs_deps, "-c", "constraints.txt")
     session.run("python", "-m", "ipykernel", "install", "--user")
     session.run("jupyter", "kernelspec", "list")
     session.chdir("docs")
@@ -69,7 +56,7 @@ def docs_clean(session):
 @nox.session(python=["3"])
 def black(session):
     session.install(*[d for d in lint_deps if "black" in d])
-    session.run("black", "rustworkx", "tests", "retworkx", *session.posargs)
+    session.run("black", "rustworkx", "tests", *session.posargs)
 
 @nox.session(python=["3"])
 def typos(session):
