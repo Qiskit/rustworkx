@@ -12,7 +12,8 @@
 
 #![allow(clippy::float_cmp)]
 
-use std::collections::HashMap;
+use crate::dictmap::DictMap;
+use indexmap::IndexSet;
 use std::hash::Hash;
 
 use ndarray::ArrayView2;
@@ -33,12 +34,12 @@ use super::InvalidInputError;
 
 /// Generates a random regular graph
 ///
-/// A regular graph is one where each node has same number of neighbors. This function takes in 
+/// A regular graph is one where each node has same number of neighbors. This function takes in
 /// number of nodes and degrees as two functions which are used in order to generate a random regular graph.
-/// 
+///
 /// This is only defined for undirected graphs, which have no self-directed edges or parallel edges.
-/// 
-/// Raises an error if 
+///
+/// Raises an error if
 ///
 /// This algorithm is based on the implementation of networkx functon
 /// <https://github.com/networkx/networkx/blob/networkx-2.4/networkx/generators/random_graphs.py>
@@ -47,13 +48,13 @@ use super::InvalidInputError;
 /// Generating random regular graphs quickly,
 /// Probability and Computing 8 (1999), 377-396, 1999.
 /// https://doi.org/10.1017/S0963548399003867
-/// 
+///
 /// Jeong Han Kim and Van H. Vu,
 /// Generating random regular graphs,
 /// Proceedings of the thirty-fifth ACM symposium on Theory of computing,
 /// San Diego, CA, USA, pp 213--222, 2003.
 /// http://portal.acm.org/citation.cfm?id=780542.780576
-/// 
+///
 /// Arguments:
 ///
 /// * `num_nodes` - The number of nodes for creating the random graph.
@@ -142,12 +143,12 @@ where
     };
 
     let mut try_creation = || -> Option<IndexSet<(G::NodeId, G::NodeId)>> {
-        let mut edges: HashSet<(G::NodeId, G::NodeId)> = IndexSet::with_capacity(num_nodes);
+        let mut edges: IndexSet<(G::NodeId, G::NodeId)> = IndexSet::with_capacity(num_nodes);
         let mut stubs: Vec<G::NodeId> = (0..num_nodes)
             .flat_map(|x| std::iter::repeat(graph.from_index(x)).take(degree))
             .collect();
         while !stubs.is_empty() {
-            let mut potential_edges: HashMap<G::NodeId, usize> = HashMap::new();
+            let mut potential_edges: DictMap<G::NodeId, usize> = DictMap::default();
             stubs.shuffle(&mut rng);
 
             let mut i = 0;
@@ -1047,7 +1048,8 @@ mod tests {
     use crate::generators::InvalidInputError;
     use crate::generators::{
         barabasi_albert_graph, gnm_random_graph, gnp_random_graph, hyperbolic_random_graph,
-        path_graph, random_bipartite_graph, random_geometric_graph, sbm_random_graph,
+        path_graph, random_bipartite_graph, random_geometric_graph, random_regular_graph,
+        sbm_random_graph,
     };
     use crate::petgraph;
 
@@ -1064,11 +1066,14 @@ mod tests {
     }
 
     #[test]
-    fn test_random_regular_graph(){
-        let g: petgraph::graph::UnGraph<(), ()> = 
-            random_regular_graph( 4, 2, Some(10), || {()}, || {()}).unwrap();
-            assert_eq!(g.node_count(), 4);
-            assert_eq!(g.edge_count(), 2);
+    fn test_random_regular_graph() {
+        let g: petgraph::graph::UnGraph<(), ()> =
+            random_regular_graph(4, 2, Some(10), || (), || ()).unwrap();
+        assert_eq!(g.node_count(), 4);
+        assert_eq!(g.edge_count(), 4);
+        for node in g.node_indices() {
+            assert_eq!(g.edges(node).count(), 2)
+        }
     }
 
     #[test]
