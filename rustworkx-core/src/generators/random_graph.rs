@@ -117,8 +117,8 @@ where
         return Ok(graph);
     }
 
-    let suitable = |edges: &HashSet<(G::NodeId, G::NodeId)>,
-                    potential_edges: &HashMap<G::NodeId, usize>|
+    let suitable = |edges: &IndexSet<(G::NodeId, G::NodeId)>,
+                    potential_edges: &DictMap<G::NodeId, usize>|
      -> bool {
         if potential_edges.is_empty() {
             return true;
