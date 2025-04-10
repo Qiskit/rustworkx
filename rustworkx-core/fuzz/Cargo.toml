@@ -27,3 +27,10 @@ path = "fuzz_targets/test_fuzz_dijkstra.rs"
 test = false
 doc = false
 bench = false
+
+[[bin]]
+name = "test_fuzz_bellman_ford"
+path = "fuzz_targets/test_fuzz_bellman_ford.rs"
+test = false
+doc = false
+bench = false
