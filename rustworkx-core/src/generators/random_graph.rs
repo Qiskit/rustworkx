@@ -36,7 +36,7 @@ use super::InvalidInputError;
 /// A regular graph is one where each node has same number of neighbors. This function takes in 
 /// number of nodes and degrees as two functions which are used in order to generate a random regular graph.
 /// 
-/// This is only defined for un-directed graphs, which have no self-directed edges or parallel edges.
+/// This is only defined for undirected graphs, which have no self-directed edges or parallel edges.
 /// 
 /// Raises an error if 
 ///
