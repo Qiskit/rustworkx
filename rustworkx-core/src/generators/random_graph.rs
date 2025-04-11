@@ -162,8 +162,8 @@ where
                 if u != v && !edges.contains(&(u, v)) {
                     edges.insert((u, v));
                 } else {
-                    *potential_edges.entry(u).or_insert(1);
-                    *potential_edges.entry(v).or_insert(1);
+                    potential_edges.entry(u).or_insert(1);
+                    potential_edges.entry(v).or_insert(1);
                 }
                 i += 2;
             }
@@ -182,10 +182,6 @@ where
         Some(edges)
     };
 
-    // let mut edges = try_creation();
-    // while edges.is_none() {
-    //     edges = try_creation();
-    // }
     let edges = loop {
         match try_creation() {
             Some(created_edges) => {
