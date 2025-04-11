@@ -18,11 +18,6 @@ fuzz_target!(|data: &[u8]| {
 });
 
 fn fuzz_heavy_hex_graph(input: HeavyHexInput) {
-    let d = input.d % 21 | 1;
-    let _ = heavy_hex_graph::<UnGraph<(), ()>, (), _, _, ()>(
-        d,
-        || (),
-        || (),
-        input.bidirectional,
-    );
+    let d = (input.d % 21) | 1;
+    let _ = heavy_hex_graph::<UnGraph<(), ()>, (), _, _, ()>(d, || (), || (), input.bidirectional);
 }
