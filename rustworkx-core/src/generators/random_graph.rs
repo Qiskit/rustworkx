@@ -79,7 +79,6 @@ use super::InvalidInputError;
 /// assert_eq!(g.node_count(), 4);
 /// assert_eq!(g.edge_count(), 2);
 /// ```
-
 pub fn random_regular_graph<G, T, F, H, M>(
     num_nodes: usize,
     degree: usize,
@@ -139,7 +138,7 @@ where
                 }
             }
         }
-        return false;
+        false
     };
 
     let mut try_creation = || -> Option<IndexSet<(G::NodeId, G::NodeId)>> {
@@ -163,8 +162,8 @@ where
                 if u != v && !edges.contains(&(u, v)) {
                     edges.insert((u, v));
                 } else {
-                    *potential_edges.entry(u).or_insert(0) += 1;
-                    *potential_edges.entry(v).or_insert(0) += 1;
+                    *potential_edges.entry(u).or_insert(1);
+                    *potential_edges.entry(v).or_insert(1);
                 }
                 i += 2;
             }
@@ -175,19 +174,27 @@ where
             stubs = Vec::new();
             for (key, value) in potential_edges.iter() {
                 for _ in 0..*value {
-                    stubs.push(*key)
+                    stubs.push(*key);
                 }
             }
         }
 
-        return Some(edges);
+        Some(edges)
     };
 
-    let mut edges = try_creation();
-    while edges.is_none() {
-        edges = try_creation();
-    }
-    for (u, v) in edges.unwrap() {
+    // let mut edges = try_creation();
+    // while edges.is_none() {
+    //     edges = try_creation();
+    // }
+    let edges = loop {
+        match try_creation() {
+            Some(created_edges) => {
+                break created_edges;
+            }
+            None => continue,
+        }
+    };
+    for (u, v) in edges {
         graph.add_edge(u, v, default_edge_weight());
     }
 
