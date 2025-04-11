@@ -72,12 +72,12 @@ use super::InvalidInputError;
 /// let g: petgraph::graph::UnGraph<(), ()> = random_regular_graph(
 ///     4,
 ///     2,
-///     None,
+///     Some(2025),
 ///     || {()},
 ///     || {()},
 /// ).unwrap();
 /// assert_eq!(g.node_count(), 4);
-/// assert_eq!(g.edge_count(), 2);
+/// assert_eq!(g.edge_count(), 4);
 /// ```
 pub fn random_regular_graph<G, T, F, H, M>(
     num_nodes: usize,
