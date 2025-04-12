@@ -1137,7 +1137,7 @@ def betweenness_centrality(graph, normalized=True, endpoints=False, parallel_thr
 
 
 @_rustworkx_dispatch
-def closeness_centrality(graph, wf_improved=True):
+def closeness_centrality(graph, wf_improved=True, parallel_threshold=50):
     r"""Compute the closeness centrality of each node in a graph object.
 
     The closeness centrality of a node :math:`u` is defined as the
@@ -1167,10 +1167,19 @@ def closeness_centrality(graph, wf_improved=True):
     where :math:`N` is the number of nodes in the graph. This alternative
     formula can be used with the ``wf_improved`` argument.
 
+    This function is multithreaded and will run in parallel if the number
+    of nodes in the graph is above the value of ``parallel_threshold`` (it
+    defaults to 50). If the function will be running in parallel the env var
+    ``RAYON_NUM_THREADS`` can be used to adjust how many threads will be used.
+
     :param graph: The input graph. Can either be a
         :class:`~rustworkx.PyGraph` or :class:`~rustworkx.PyDiGraph`.
     :param bool wf_improved: This is optional; the default is True. If True,
         scale by the fraction of nodes reachable.
+    :param int parallel_threshold: The number of nodes to calculate the
+        the closeness centrality in parallel at if the number of nodes in
+        the graph is less than this value it will run in a single thread. The
+        default value is 50.
 
     :returns: A dictionary mapping each node index to its closeness centrality.
     :rtype: dict
@@ -1184,7 +1193,7 @@ def closeness_centrality(graph, wf_improved=True):
 
 @_rustworkx_dispatch
 def newman_weighted_closeness_centrality(
-    graph, weight_fn=None, wf_improved=True, default_weight=1.0
+    graph, weight_fn=None, wf_improved=True, default_weight=1.0, parallel_threshold=50
 ):
     r"""Compute the weighted closeness centrality of each node in the graph.
 
@@ -1210,6 +1219,11 @@ def newman_weighted_closeness_centrality(
     the average distance".[WF]
     You can enable this by setting `wf_improved` to `true`.
 
+    This function is multithreaded and will run in parallel if the number
+    of nodes in the graph is above the value of ``parallel_threshold`` (it
+    defaults to 50). If the function will be running in parallel the env var
+    ``RAYON_NUM_THREADS`` can be used to adjust how many threads will be used.
+
     :param PyGraph graph: The input graph. Can either be a
         :class:`~rustworkx.PyGraph` or :class:`~rustworkx.PyDiGraph`.
     :param weight_fn: An optional input callable that will be passed the edge's
@@ -1220,6 +1234,10 @@ def newman_weighted_closeness_centrality(
       scale by the fraction of nodes reachable.
     :param float default_weight: If ``weight_fn`` is not set the default weight
         value to use for the weight of all edges
+    :param int parallel_threshold: The number of nodes to calculate the
+        the closeness centrality in parallel at if the number of nodes in
+        the graph is less than this value it will run in a single thread. The
+        default value is 50.
 
     :returns: A dictionary mapping each node index to its closeness centrality.
     :rtype: CentralityMapping

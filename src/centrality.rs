@@ -290,16 +290,29 @@ pub fn out_degree_centrality(graph: &digraph::PyDiGraph) -> PyResult<CentralityM
 /// where :math:`N` is the number of nodes in the graph. This alternative
 /// formula can be used with the ``wf_improved`` argument.
 ///
+/// This function is multithreaded and will run in parallel if the number
+/// of nodes in the graph is above the value of ``parallel_threshold`` (it
+/// defaults to 50). If the function will be running in parallel the env var
+/// ``RAYON_NUM_THREADS`` can be used to adjust how many threads will be used.
+///
 /// :param PyGraph graph: The input graph. Can either be a
 ///     :class:`~rustworkx.PyGraph` or :class:`~rustworkx.PyDiGraph`.
 /// :param bool wf_improved: This is optional; the default is True. If True,
 ///     scale by the fraction of nodes reachable.
+/// :param int parallel_threshold: The number of nodes to calculate the
+///     the betweenness centrality in parallel at if the number of nodes in
+///     the graph is less than this value it will run in a single thread. The
+///     default value is 50
 ///
 /// :returns: A dictionary mapping each node index to its closeness centrality.
 /// :rtype: CentralityMapping
-#[pyfunction(signature = (graph, wf_improved=true))]
-pub fn graph_closeness_centrality(graph: &graph::PyGraph, wf_improved: bool) -> CentralityMapping {
-    let closeness = centrality::closeness_centrality(&graph.graph, wf_improved);
+#[pyfunction(signature = (graph, wf_improved=true, parallel_threshold=50))]
+pub fn graph_closeness_centrality(
+    graph: &graph::PyGraph,
+    wf_improved: bool,
+    parallel_threshold: usize,
+) -> CentralityMapping {
+    let closeness = centrality::closeness_centrality(&graph.graph, wf_improved, parallel_threshold);
     CentralityMapping {
         centralities: closeness
             .into_iter()
@@ -338,19 +351,29 @@ pub fn graph_closeness_centrality(graph: &graph::PyGraph, wf_improved: bool) -> 
 /// where :math:`N` is the number of nodes in the graph. This alternative
 /// formula can be used with the ``wf_improved`` argument.
 ///
+/// This function is multithreaded and will run in parallel if the number
+/// of nodes in the graph is above the value of ``parallel_threshold`` (it
+/// defaults to 50). If the function will be running in parallel the env var
+/// ``RAYON_NUM_THREADS`` can be used to adjust how many threads will be used.
+///
 /// :param PyDiGraph graph: The input graph. Can either be a
 ///     :class:`~rustworkx.PyGraph` or :class:`~rustworkx.PyDiGraph`.
 /// :param bool wf_improved: This is optional; the default is True. If True,
 ///     scale by the fraction of nodes reachable.
+/// :param int parallel_threshold: The number of nodes to calculate the
+///     the betweenness centrality in parallel at if the number of nodes in
+///     the graph is less than this value it will run in a single thread. The
+///     default value is 50
 ///
 /// :returns: A dictionary mapping each node index to its closeness centrality.
 /// :rtype: CentralityMapping
-#[pyfunction(signature = (graph, wf_improved=true))]
+#[pyfunction(signature = (graph, wf_improved=true, parallel_threshold=50))]
 pub fn digraph_closeness_centrality(
     graph: &digraph::PyDiGraph,
     wf_improved: bool,
+    parallel_threshold: usize,
 ) -> CentralityMapping {
-    let closeness = centrality::closeness_centrality(&graph.graph, wf_improved);
+    let closeness = centrality::closeness_centrality(&graph.graph, wf_improved, parallel_threshold);
     CentralityMapping {
         centralities: closeness
             .into_iter()
@@ -382,7 +405,12 @@ pub fn digraph_closeness_centrality(
 /// an alternative improved formula that calculates the closeness centrality
 /// as "a ratio of the fraction of actors in the group who are reachable, to
 /// the average distance".[WF]
+///
 /// You can enable this by setting `wf_improved` to `true`.
+/// This function is multithreaded and will run in parallel if the number
+/// of nodes in the graph is above the value of ``parallel_threshold`` (it
+/// defaults to 50). If the function will be running in parallel the env var
+/// ``RAYON_NUM_THREADS`` can be used to adjust how many threads will be used.
 ///
 /// :param PyGraph graph: The input graph. Can either be a
 ///     :class:`~rustworkx.PyGraph` or :class:`~rustworkx.PyDiGraph`.
@@ -394,16 +422,21 @@ pub fn digraph_closeness_centrality(
 ///   scale by the fraction of nodes reachable.
 /// :param float default_weight: If ``weight_fn`` is not set the default weight
 ///     value to use for the weight of all edges
+/// :param int parallel_threshold: The number of nodes to calculate the
+///     the betweenness centrality in parallel at if the number of nodes in
+///     the graph is less than this value it will run in a single thread. The
+///     default value is 50
 ///
 /// :returns: A dictionary mapping each node index to its closeness centrality.
 /// :rtype: CentralityMapping
-#[pyfunction(signature = (graph, weight_fn=None, wf_improved=true, default_weight = 1.0))]
+#[pyfunction(signature = (graph, weight_fn=None, wf_improved=true, default_weight = 1.0, parallel_threshold=50))]
 pub fn graph_newman_weighted_closeness_centrality(
     py: Python,
     graph: &graph::PyGraph,
     weight_fn: Option<PyObject>,
     wf_improved: bool,
     default_weight: f64,
+    parallel_threshold: usize,
 ) -> PyResult<CentralityMapping> {
     let mut edge_weights = vec![default_weight; graph.graph.edge_bound()];
     if weight_fn.is_some() {
@@ -414,10 +447,12 @@ pub fn graph_newman_weighted_closeness_centrality(
         }
     }
 
-    let closeness =
-        centrality::newman_weighted_closeness_centrality(&graph.graph, wf_improved, |e| {
-            edge_weights[e.id().index()]
-        });
+    let closeness = centrality::newman_weighted_closeness_centrality(
+        &graph.graph,
+        wf_improved,
+        |e| edge_weights[e.id().index()],
+        parallel_threshold,
+    );
 
     Ok(CentralityMapping {
         centralities: closeness
@@ -452,6 +487,11 @@ pub fn graph_newman_weighted_closeness_centrality(
 /// the average distance".[WF]
 /// You can enable this by setting `wf_improved` to `true`.
 ///
+/// This function is multithreaded and will run in parallel if the number
+/// of nodes in the graph is above the value of ``parallel_threshold`` (it
+/// defaults to 50). If the function will be running in parallel the env var
+/// ``RAYON_NUM_THREADS`` can be used to adjust how many threads will be used.
+///
 /// :param PyDiGraph graph: The input graph. Can either be a
 ///     :class:`~rustworkx.PyGraph` or :class:`~rustworkx.PyDiGraph`.
 /// :param weight_fn: An optional input callable that will be passed the edge's
@@ -462,16 +502,21 @@ pub fn graph_newman_weighted_closeness_centrality(
 ///   scale by the fraction of nodes reachable.
 /// :param float default_weight: If ``weight_fn`` is not set the default weight
 ///     value to use for the weight of all edges
+/// :param int parallel_threshold: The number of nodes to calculate the
+///     the betweenness centrality in parallel at if the number of nodes in
+///     the graph is less than this value it will run in a single thread. The
+///     default value is 50
 ///
 /// :returns: A dictionary mapping each node index to its closeness centrality.
 /// :rtype: CentralityMapping
-#[pyfunction(signature = (graph, weight_fn=None, wf_improved=true, default_weight = 1.0))]
+#[pyfunction(signature = (graph, weight_fn=None, wf_improved=true, default_weight = 1.0, parallel_threshold=50))]
 pub fn digraph_newman_weighted_closeness_centrality(
     py: Python,
     graph: &digraph::PyDiGraph,
     weight_fn: Option<PyObject>,
     wf_improved: bool,
     default_weight: f64,
+    parallel_threshold: usize,
 ) -> PyResult<CentralityMapping> {
     let mut edge_weights = vec![default_weight; graph.graph.edge_bound()];
     if weight_fn.is_some() {
@@ -482,10 +527,12 @@ pub fn digraph_newman_weighted_closeness_centrality(
         }
     }
 
-    let closeness =
-        centrality::newman_weighted_closeness_centrality(&graph.graph, wf_improved, |e| {
-            edge_weights[e.id().index()]
-        });
+    let closeness = centrality::newman_weighted_closeness_centrality(
+        &graph.graph,
+        wf_improved,
+        |e| edge_weights[e.id().index()],
+        parallel_threshold,
+    );
 
     Ok(CentralityMapping {
         centralities: closeness
