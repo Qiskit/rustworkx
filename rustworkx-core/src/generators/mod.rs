@@ -66,5 +66,6 @@ pub use random_graph::gnp_random_graph;
 pub use random_graph::hyperbolic_random_graph;
 pub use random_graph::random_bipartite_graph;
 pub use random_graph::random_geometric_graph;
+pub use random_graph::random_regular_graph;
 pub use random_graph::sbm_random_graph;
 pub use star_graph::star_graph;
