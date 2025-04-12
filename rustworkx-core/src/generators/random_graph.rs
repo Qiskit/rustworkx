@@ -47,13 +47,13 @@ use super::InvalidInputError;
 /// A. Steger and N. Wormald,
 /// Generating random regular graphs quickly,
 /// Probability and Computing 8 (1999), 377-396, 1999.
-/// https://doi.org/10.1017/S0963548399003867
+/// <https://doi.org/10.1017/S0963548399003867>
 ///
 /// Jeong Han Kim and Van H. Vu,
 /// Generating random regular graphs,
 /// Proceedings of the thirty-fifth ACM symposium on Theory of computing,
 /// San Diego, CA, USA, pp 213--222, 2003.
-/// http://portal.acm.org/citation.cfm?id=780542.780576
+/// <http://portal.acm.org/citation.cfm?id=780542.780576>
 ///
 /// Arguments:
 ///
