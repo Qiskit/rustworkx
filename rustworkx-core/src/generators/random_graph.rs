@@ -162,8 +162,8 @@ where
                 if u != v && !edges.contains(&(u, v)) {
                     edges.insert((u, v));
                 } else {
-                    potential_edges.entry(u).or_insert(1);
-                    potential_edges.entry(v).or_insert(1);
+                    *potential_edges.entry(u).or_insert(0) += 1;
+                    *potential_edges.entry(v).or_insert(0) += 1;
                 }
                 i += 2;
             }
