@@ -65,6 +65,6 @@ legacy_tox_ini = """
 
     [testenv]
     deps = nox
-    commands = nox -e {envname}
+    commands = nox -e {envname} -- {posargs}
     skip_install = true
 """
