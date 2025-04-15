@@ -3,7 +3,8 @@
 use arbitrary::{Arbitrary, Unstructured};
 use libfuzzer_sys::fuzz_target;
 use rustworkx_core::generators::gnm_random_graph;
-use rustworkx_core::petgraph::graph::DiGraph;
+use rustworkx_core::petgraph::graph::{DiGraph, EdgeReference};
+use rustworkx_core::petgraph::visit::{EdgeRef, IntoEdgeReferences};
 
 #[derive(Debug, Arbitrary)]
 struct GnmInput {
@@ -26,19 +27,43 @@ fn fuzz_gnm_random_graph(input: GnmInput) {
     let max_m = input.n.saturating_mul(input.n.saturating_sub(1));
     let capped_m = input.m.min(max_m);
 
-    if let Ok(graph) = gnm_random_graph::<DiGraph<(), ()>, _, _, _, ()>(
+    if let Ok(graph1) = gnm_random_graph::<DiGraph<(), ()>, _, _, _, ()>(
         input.n,
         capped_m,
         input.seed,
         || (),
         || (),
     ) {
-        assert_eq!(graph.node_count(), input.n);
+        assert_eq!(graph1.node_count(), input.n);
         assert!(
-            graph.edge_count() <= max_m,
+            graph1.edge_count() <= max_m,
             "edge_count {} > max_m {}",
-            graph.edge_count(),
+            graph1.edge_count(),
             max_m
         );
+
+        if input.seed.is_some() {
+            if let Ok(graph2) = gnm_random_graph::<DiGraph<(), ()>, _, _, _, ()>(
+                input.n,
+                capped_m,
+                input.seed,
+                || (),
+                || (),
+            ) {
+                assert_eq!(graph1.node_count(), graph2.node_count());
+                assert_eq!(graph1.edge_count(), graph2.edge_count());
+
+                let mut edges1: Vec<_> = graph1.edge_references()
+                    .map(|e| (e.source().index(), e.target().index()))
+                    .collect();
+                let mut edges2: Vec<_> = graph2.edge_references()
+                    .map(|e| (e.source().index(), e.target().index()))
+                    .collect();
+
+                edges1.sort_unstable();
+                edges2.sort_unstable();
+                assert_eq!(edges1, edges2, "Graphs differ even with the same seed");
+            }
+        }
     }
 }
