@@ -53,10 +53,12 @@ fn fuzz_gnm_random_graph(input: GnmInput) {
                 assert_eq!(graph1.node_count(), graph2.node_count());
                 assert_eq!(graph1.edge_count(), graph2.edge_count());
 
-                let mut edges1: Vec<_> = graph1.edge_references()
+                let mut edges1: Vec<_> = graph1
+                    .edge_references()
                     .map(|e| (e.source().index(), e.target().index()))
                     .collect();
-                let mut edges2: Vec<_> = graph2.edge_references()
+                let mut edges2: Vec<_> = graph2
+                    .edge_references()
                     .map(|e| (e.source().index(), e.target().index()))
                     .collect();
 
