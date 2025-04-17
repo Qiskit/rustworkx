@@ -3,8 +3,8 @@
 use arbitrary::{Arbitrary, Unstructured};
 use libfuzzer_sys::fuzz_target;
 use rustworkx_core::generators::gnm_random_graph;
-use rustworkx_core::petgraph::graph::{DiGraph, EdgeReference};
-use rustworkx_core::petgraph::visit::{EdgeRef, IntoEdgeReferences};
+use rustworkx_core::petgraph::graph::DiGraph;
+use rustworkx_core::petgraph::visit::EdgeRef;
 
 #[derive(Debug, Arbitrary)]
 struct GnmInput {
