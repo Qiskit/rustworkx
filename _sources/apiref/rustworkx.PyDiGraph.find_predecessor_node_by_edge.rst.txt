@@ -1,0 +1,6 @@
+rustworkx.PyDiGraph.find\_predecessor\_node\_by\_edge
+=====================================================
+
+.. currentmodule:: rustworkx
+
+.. automethod:: PyDiGraph.find_predecessor_node_by_edge

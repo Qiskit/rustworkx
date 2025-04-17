@@ -1,0 +1,6 @@
+﻿rustworkx.random\_layout
+========================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: random_layout
