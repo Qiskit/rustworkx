@@ -17,7 +17,7 @@ use std::sync::RwLock;
 use hashbrown::HashMap;
 use petgraph::algo::dijkstra;
 use petgraph::visit::{
-    EdgeCount, EdgeIndexable, EdgeRef, GraphBase, GraphProp, IntoEdgeReferences, IntoEdges,
+    Bfs, EdgeCount, EdgeIndexable, EdgeRef, GraphBase, GraphProp, IntoEdgeReferences, IntoEdges,
     IntoEdgesDirected, IntoNeighbors, IntoNeighborsDirected, IntoNodeIdentifiers, NodeCount,
     NodeIndexable, Reversed, ReversedEdgeReference, Visitable,
 };
@@ -1133,11 +1133,26 @@ where
         let index = graph.to_index(node);
         node_indices[index] = Some(node);
     });
+
+    let unweighted_shortest_path = |g: Reversed<&G>, s: G::NodeId| -> HashMap<G::NodeId, usize> {
+        let mut distances = HashMap::new();
+        let mut bfs = Bfs::new(g, s);
+        distances.insert(s, 0);
+        while let Some(node) = bfs.next(g) {
+            let distance = distances[&node];
+            for edge in g.edges(node) {
+                let target = edge.target();
+                distances.entry(target).or_insert(distance + 1);
+            }
+        }
+        distances
+    };
+
     let closeness: Vec<Option<f64>> =
         CondIterator::new(node_indices, graph.node_count() >= parallel_threshold)
             .map(|node_s| {
                 let node_s = node_s?;
-                let map = dijkstra(Reversed(&graph), node_s, None, |_| 1);
+                let map = unweighted_shortest_path(Reversed(&graph), node_s);
                 let reachable_nodes_count = map.len();
                 let dists_sum: usize = map.into_values().sum();
                 if reachable_nodes_count == 1 {
@@ -1265,6 +1280,7 @@ where
         let index = graph.to_index(node);
         node_indices[index] = Some(node);
     });
+
     let closeness: Vec<Option<f64>> =
         CondIterator::new(node_indices, graph.node_count() >= parallel_threshold)
             .map(|node_s| {
