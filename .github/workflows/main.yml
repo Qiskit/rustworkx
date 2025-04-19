@@ -37,9 +37,9 @@ jobs:
       - name: Clippy
         run: cargo clippy --workspace --all-targets -- -D warnings
       - name: Black Codestyle Format
-        run: black --check --diff retworkx rustworkx retworkx tests
+        run: black --check --diff rustworkx tests retworkx
       - name: Python Lint
-        run: ruff check rustworkx retworkx setup.py tests
+        run: ruff check rustworkx setup.py tests retworkx
       - name: Check stray release notes
         run: python tools/find_stray_release_notes.py
       - name: rustworkx-core Rust Tests
@@ -141,21 +141,21 @@ jobs:
       - name: Download grcov
         run: curl -L https://github.com/mozilla/grcov/releases/download/v0.8.7/grcov-x86_64-unknown-linux-gnu.tar.bz2 | tar jxf -
       - name: Install deps
-        run: pip install -U setuptools-rust networkx testtools fixtures stestr
-      - name: Build retworkx
+        run: pip install -U setuptools setuptools-rust networkx testtools fixtures stestr
+      - name: Build rustworkx
         run: python setup.py develop
         env:
           CARGO_INCREMENTAL: 0
           RUSTFLAGS: "-Cinstrument-coverage"
-          LLVM_PROFILE_FILE: "retworkx-%p-%m.profraw"
+          LLVM_PROFILE_FILE: "rustworkx-%p-%m.profraw"
       - name: Run tests
         run: cd tests && stestr run && cd ..
         env:
-          LLVM_PROFILE_FILE: "retworkx-%p-%m.profraw"
+          LLVM_PROFILE_FILE: "rustworkx-%p-%m.profraw"
       - name: Run grcov
         run: |
           set -e
-          mv tests/retworkx*profraw .
+          mv tests/rustworkx*profraw .
           ./grcov . --binary-path ./target/debug/ -s . -t lcov --branch --ignore-not-existing --ignore "/*" -o ./coveralls.lcov
       - uses: actions/upload-artifact@v4
         with:

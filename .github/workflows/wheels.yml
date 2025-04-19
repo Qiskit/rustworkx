@@ -202,12 +202,10 @@ jobs:
       - name: Install deps
         run: pip install -U setuptools-rust wheel build
       - name: Build sdist
-        run: python setup.py bdist_wheel
-        env:
-          RUSTWORKX_PKG_NAME: retworkx
+        run: pushd retworkx && python setup.py bdist_wheel && popd
       - uses: actions/upload-artifact@v4
         with:
-          path: ./dist/*
+          path: ./retworkx/dist/*
           name: sdist-retworkx
       - name: Publish package distributions to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
