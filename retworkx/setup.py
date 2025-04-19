@@ -10,19 +10,20 @@ from setuptools import setup
 
 import sys
 import pathlib
+
 if sys.version_info >= (3, 11):
     import tomllib
 else:
     # setuptools actually depends on this, so we can safely import it
     import tomli as tomllib
-    
+
 parent_dir = pathlib.Path(__file__).parent.parent
 
-with open(parent_dir/"README.md") as f:
+with open(parent_dir / "README.md") as f:
     original_readme = f.read()
-with open(parent_dir/"pyproject.toml", "rb") as f:
+with open(parent_dir / "pyproject.toml", "rb") as f:
     pyproject = tomllib.load(f)
-    
+
 retworkx_readme_compat = f"""# retworkx
 
 `retworkx` is the **deprecated** package name for `rustworkx`. `retworkx` has been
