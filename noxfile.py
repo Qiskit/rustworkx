@@ -35,7 +35,7 @@ def lint(session):
     black(session)
     typos(session)
     session.install(*lint_deps)
-    session.run("ruff", "check", "rustworkx", "setup.py")
+    session.run("ruff", "check", "rustworkx", "retworkx", "setup.py")
     session.run("cargo", "fmt", "--all", "--", "--check", external=True)
     session.run("python", "tools/find_stray_release_notes.py")
 
@@ -56,7 +56,7 @@ def docs_clean(session):
 @nox.session(python=["3"])
 def black(session):
     session.install(*[d for d in lint_deps if "black" in d])
-    session.run("black", "rustworkx", "tests", *session.posargs)
+    session.run("black", "rustworkx", "tests", "retworkx", *session.posargs)
 
 @nox.session(python=["3"])
 def typos(session):

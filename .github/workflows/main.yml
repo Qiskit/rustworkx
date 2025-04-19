@@ -37,9 +37,9 @@ jobs:
       - name: Clippy
         run: cargo clippy --workspace --all-targets -- -D warnings
       - name: Black Codestyle Format
-        run: black --check --diff rustworkx tests
+        run: black --check --diff rustworkx tests retworkx
       - name: Python Lint
-        run: ruff check rustworkx setup.py tests
+        run: ruff check rustworkx setup.py tests retworkx
       - name: Check stray release notes
         run: python tools/find_stray_release_notes.py
       - name: rustworkx-core Rust Tests
