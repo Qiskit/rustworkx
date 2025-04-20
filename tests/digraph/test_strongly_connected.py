@@ -152,3 +152,26 @@ class TestCondensation(unittest.TestCase):
         # Check the contents of the edge
         weight = condensed_graph.edges()[0]
         self.assertIn("b->e", weight)  # Ensure the correct edge remains in the condensed graph
+
+    def test_condensation_with_sccs_argument(self):
+        # Compute SCCs manually
+        sccs = rustworkx.strongly_connected_components(self.graph)
+        # Call condensation with explicit sccs argument
+        condensed_graph = rustworkx.condensation(self.graph, sccs=sccs)
+        node_map = condensed_graph.attrs["node_map"]
+
+        # Check the number of nodes (should match SCC count)
+        self.assertEqual(len(condensed_graph.node_indices()), len(sccs))
+
+        # Check the number of edges
+        self.assertEqual(len(condensed_graph.edge_indices()), 1)
+
+        # Check the contents of the condensed nodes
+        nodes = list(condensed_graph.nodes())
+        scc_sets = [set(n) for n in nodes]
+        self.assertIn(set(["a", "b", "c", "d"]), scc_sets)
+        self.assertIn(set(["e", "f", "g", "h"]), scc_sets)
+
+        # Check the contents of the edge
+        weight = condensed_graph.edges()[0]
+        self.assertIn("b->e", weight)
