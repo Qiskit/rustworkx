@@ -158,7 +158,6 @@ class TestCondensation(unittest.TestCase):
         sccs = rustworkx.strongly_connected_components(self.graph)
         # Call condensation with explicit sccs argument
         condensed_graph = rustworkx.condensation(self.graph, sccs=sccs)
-        node_map = condensed_graph.attrs["node_map"]
 
         # Check the number of nodes (should match SCC count)
         self.assertEqual(len(condensed_graph.node_indices()), len(sccs))
