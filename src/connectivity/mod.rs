@@ -197,7 +197,7 @@ fn condensation_inner<N, E, Ty, Ix>(
     g: Graph<N, E, Ty, Ix>,
     make_acyclic: bool,
     sccs: Option<Vec<Vec<usize>>>,
-) -> StableGraph<PyObject, PyObject, Ty, Ix>
+) -> StablePyGraph<Directed>
 where
     Ty: EdgeType,
     Ix: IndexType,
