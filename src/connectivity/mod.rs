@@ -192,48 +192,65 @@ pub fn is_strongly_connected(graph: &digraph::PyDiGraph) -> PyResult<bool> {
     Ok(algo::kosaraju_scc(&graph.graph).len() == 1)
 }
 
+/// Compute the condensation of a graph (directed or undirected).
+///
+/// For directed graphs, this returns the condensation (quotient graph) where each node
+/// represents a strongly connected component (SCC) of the input graph. For undirected graphs,
+/// each node represents a connected component.
+///
+/// The returned graph has a node attribute 'node_map' which is a list mapping each original
+/// node index to the index of the condensed node it belongs to.
+///
+/// :param graph: The input graph (PyDiGraph or PyGraph)
+/// :param sccs: (Optional, directed only) List of SCCs to use instead of computing them
+/// :returns: The condensed graph (PyDiGraph or PyGraph) with a 'node_map' attribute
+/// :rtype: PyDiGraph or PyGraph
 fn condensation_inner<N, E, Ty, Ix>(
     py: &Python,
     g: Graph<N, E, Ty, Ix>,
     make_acyclic: bool,
     sccs: Option<Vec<Vec<usize>>>,
-) -> StablePyGraph<Directed>
+) -> (StablePyGraph<Ty>, Vec<usize>)
 where
     Ty: EdgeType,
     Ix: IndexType,
     N: ToPyObject,
     E: ToPyObject,
 {
-    // Don't use into_iter to avoid extra allocations
-    let sccs = if let Some(sccs) = sccs {
-        sccs.iter()
-            .map(|row| row.iter().map(|x| NodeIndex::new(*x)).collect())
-            .collect()
+    // For directed graphs, use SCCs; for undirected, use connected components
+    let components: Vec<Vec<NodeIndex>> = if Ty::is_directed() {
+        if let Some(sccs) = sccs {
+            sccs.iter()
+                .map(|row| row.iter().map(|x| NodeIndex::new(*x)).collect())
+                .collect()
+        } else {
+            algo::kosaraju_scc(&g)
+        }
     } else {
-        algo::kosaraju_scc(&g)
+        connectivity::connected_components(&g)
     };
 
     let mut condensed: StableGraph<Vec<N>, E, Ty, Ix> =
-        StableGraph::with_capacity(sccs.len(), g.edge_count());
+        StableGraph::with_capacity(components.len(), g.edge_count());
 
     // Build a map from old indices to new ones.
-    let mut node_map = vec![NodeIndex::end(); g.node_count()];
-    for comp in sccs {
+    let mut node_map = vec![usize::MAX; g.node_count()];
+    for (i, comp) in components.iter().enumerate() {
         let new_nix = condensed.add_node(Vec::new());
         for nix in comp {
-            node_map[nix.index()] = new_nix;
+            node_map[nix.index()] = new_nix.index();
         }
     }
 
     // Consume nodes and edges of the old graph and insert them into the new one.
     let (nodes, edges) = g.into_nodes_edges();
     for (nix, node) in nodes.into_iter().enumerate() {
-        condensed[node_map[nix]].push(node.weight);
+        condensed[NodeIndex::new(node_map[nix])].push(node.weight);
     }
     for edge in edges {
-        let source = node_map[edge.source().index()];
-        let target = node_map[edge.target().index()];
-        if make_acyclic {
+        let source = NodeIndex::new(node_map[edge.source().index()]);
+        let target = NodeIndex::new(node_map[edge.target().index()]);
+        if make_acyclic && Ty::is_directed() {
             if source != target {
                 condensed.update_edge(source, target, edge.weight);
             }
@@ -241,27 +258,60 @@ where
             condensed.add_edge(source, target, edge.weight);
         }
     }
-    condensed.map(|_, w| w.to_object(*py), |_, w| w.to_object(*py))
+    (condensed.map(|_, w| w.to_object(*py), |_, w| w.to_object(*py)), node_map)
 }
 
+/// Compute the condensation of a directed graph (SCCs) or undirected graph (connected components).
+///
+/// For directed graphs, each node in the result is a strongly connected component (SCC).
+/// For undirected graphs, each node is a connected component.
+///
+/// The returned graph has a 'node_map' attribute: a list mapping each original node index
+/// to the index of the condensed node it belongs to.
+///
+/// :param graph: The input graph (PyDiGraph or PyGraph)
+/// :param sccs: (Optional, directed only) List of SCCs to use instead of computing them
+/// :returns: The condensed graph (PyDiGraph or PyGraph) with a 'node_map' attribute
+/// :rtype: PyDiGraph or PyGraph
 #[pyfunction]
 #[pyo3(text_signature = "(graph, /, sccs=None)", signature=(graph, sccs=None))]
 pub fn condensation(
     py: Python,
-    graph: &digraph::PyDiGraph,
+    graph: PyObject,
     sccs: Option<Vec<Vec<usize>>>,
-) -> digraph::PyDiGraph {
-    let g = graph.graph.clone();
-
-    let condensed = condensation_inner(&py, g.into(), true, sccs);
-
-    digraph::PyDiGraph {
-        graph: condensed,
-        cycle_state: algo::DfsSpace::default(),
-        check_cycle: false,
-        node_removed: false,
-        multigraph: true,
-        attrs: py.None(),
+) -> PyResult<PyObject> {
+    let gil = Python::acquire_gil();
+    let py = gil.python();
+    if let Ok(digraph) = graph.extract::<&digraph::PyDiGraph>(py) {
+        let g = digraph.graph.clone();
+        let (condensed, node_map) = condensation_inner(&py, g.into(), true, sccs);
+        let mut result = digraph::PyDiGraph {
+            graph: condensed,
+            cycle_state: algo::DfsSpace::default(),
+            check_cycle: false,
+            node_removed: false,
+            multigraph: true,
+            attrs: py.None(),
+        };
+        let node_map_py = node_map.into_py(py);
+        result.attrs = PyDict::new(py).into();
+        result.attrs.set_item("node_map", node_map_py)?;
+        Ok(result.into_py(py))
+    } else if let Ok(pygraph) = graph.extract::<&graph::PyGraph>(py) {
+        let g = pygraph.graph.clone();
+        let (condensed, node_map) = condensation_inner(&py, g.into(), false, None);
+        let mut result = graph::PyGraph {
+            graph: condensed,
+            node_removed: false,
+            multigraph: pygraph.multigraph,
+            attrs: py.None(),
+        };
+        let node_map_py = node_map.into_py(py);
+        result.attrs = PyDict::new(py).into();
+        result.attrs.set_item("node_map", node_map_py)?;
+        Ok(result.into_py(py))
+    } else {
+        Err(PyValueError::new_err("Input must be a PyDiGraph or PyGraph"))
     }
 }
 
