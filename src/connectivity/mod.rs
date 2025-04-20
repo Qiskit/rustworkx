@@ -206,7 +206,7 @@ pub fn is_strongly_connected(graph: &digraph::PyDiGraph) -> PyResult<bool> {
 /// :returns: The condensed graph (PyDiGraph or PyGraph) with a 'node_map' attribute
 /// :rtype: PyDiGraph or PyGraph
 fn condensation_inner<N, E, Ty, Ix>(
-    py: &Python,
+    py: Python,
     g: Graph<N, E, Ty, Ix>,
     make_acyclic: bool,
     sccs: Option<Vec<Vec<usize>>>,
@@ -214,28 +214,38 @@ fn condensation_inner<N, E, Ty, Ix>(
 where
     Ty: EdgeType,
     Ix: IndexType,
-    N: ToPyObject,
-    E: ToPyObject,
+    N: IntoPy<Py<PyAny>> + Clone,
+    E: IntoPy<Py<PyAny>> + Clone,
 {
     // For directed graphs, use SCCs; for undirected, use connected components
-    let components: Vec<Vec<NodeIndex>> = if Ty::is_directed() {
+    let components: Vec<Vec<NodeIndex<Ix>>> = if Ty::is_directed() {
         if let Some(sccs) = sccs {
-            sccs.iter()
-                .map(|row| row.iter().map(|x| NodeIndex::new(*x)).collect())
+            sccs
+                .into_iter()
+                .map(|row| row.into_iter().map(NodeIndex::new).collect())
                 .collect()
         } else {
             algo::kosaraju_scc(&g)
         }
     } else {
         connectivity::connected_components(&g)
+            .into_iter()
+            .map(|set| set.into_iter().collect())
+            .collect()
     };
 
-    let mut condensed: StableGraph<Vec<N>, E, Ty, Ix> =
-        StableGraph::with_capacity(components.len(), g.edge_count());
+    // Convert all NodeIndex<Ix> to NodeIndex<usize> for the output graph
+    let components_usize: Vec<Vec<NodeIndex<usize>>> = components
+        .iter()
+        .map(|comp| comp.iter().map(|ix| NodeIndex::new(ix.index())).collect())
+        .collect();
+
+    let mut condensed: StableGraph<Vec<N>, E, Ty, u32> =
+        StableGraph::with_capacity(components_usize.len(), g.edge_count());
 
     // Build a map from old indices to new ones.
     let mut node_map = vec![usize::MAX; g.node_count()];
-    for (i, comp) in components.iter().enumerate() {
+    for comp in components_usize.iter() {
         let new_nix = condensed.add_node(Vec::new());
         for nix in comp {
             node_map[nix.index()] = new_nix.index();
@@ -245,11 +255,19 @@ where
     // Consume nodes and edges of the old graph and insert them into the new one.
     let (nodes, edges) = g.into_nodes_edges();
     for (nix, node) in nodes.into_iter().enumerate() {
-        condensed[NodeIndex::new(node_map[nix])].push(node.weight);
+        let idx = node_map.get(nix).copied().unwrap_or(usize::MAX);
+        if idx != usize::MAX {
+            condensed[NodeIndex::new(idx)].push(node.weight);
+        }
     }
     for edge in edges {
-        let source = NodeIndex::new(node_map[edge.source().index()]);
-        let target = NodeIndex::new(node_map[edge.target().index()]);
+        let source = node_map.get(edge.source().index()).copied().unwrap_or(usize::MAX);
+        let target = node_map.get(edge.target().index()).copied().unwrap_or(usize::MAX);
+        if source == usize::MAX || target == usize::MAX {
+            continue;
+        }
+        let source = NodeIndex::new(source);
+        let target = NodeIndex::new(target);
         if make_acyclic && Ty::is_directed() {
             if source != target {
                 condensed.update_edge(source, target, edge.weight);
@@ -258,21 +276,9 @@ where
             condensed.add_edge(source, target, edge.weight);
         }
     }
-    (condensed.map(|_, w| w.to_object(*py), |_, w| w.to_object(*py)), node_map)
+    (condensed.map(|_, w| w.clone().into_py(py), |_, w| w.clone().into_py(py)), node_map)
 }
 
-/// Compute the condensation of a directed graph (SCCs) or undirected graph (connected components).
-///
-/// For directed graphs, each node in the result is a strongly connected component (SCC).
-/// For undirected graphs, each node is a connected component.
-///
-/// The returned graph has a 'node_map' attribute: a list mapping each original node index
-/// to the index of the condensed node it belongs to.
-///
-/// :param graph: The input graph (PyDiGraph or PyGraph)
-/// :param sccs: (Optional, directed only) List of SCCs to use instead of computing them
-/// :returns: The condensed graph (PyDiGraph or PyGraph) with a 'node_map' attribute
-/// :rtype: PyDiGraph or PyGraph
 #[pyfunction]
 #[pyo3(text_signature = "(graph, /, sccs=None)", signature=(graph, sccs=None))]
 pub fn condensation(
@@ -280,35 +286,35 @@ pub fn condensation(
     graph: PyObject,
     sccs: Option<Vec<Vec<usize>>>,
 ) -> PyResult<PyObject> {
-    let gil = Python::acquire_gil();
-    let py = gil.python();
-    if let Ok(digraph) = graph.extract::<&digraph::PyDiGraph>(py) {
+    if let Ok(digraph) = graph.extract::<digraph::PyDiGraph>(py) {
         let g = digraph.graph.clone();
-        let (condensed, node_map) = condensation_inner(&py, g.into(), true, sccs);
+        let (condensed, node_map) = condensation_inner(py, g.into(), true, sccs);
         let mut result = digraph::PyDiGraph {
             graph: condensed,
             cycle_state: algo::DfsSpace::default(),
             check_cycle: false,
             node_removed: false,
             multigraph: true,
-            attrs: py.None(),
+            attrs: PyDict::new(py).into(),
         };
         let node_map_py = node_map.into_py(py);
-        result.attrs = PyDict::new(py).into();
-        result.attrs.set_item("node_map", node_map_py)?;
+        let attrs = PyDict::new(py);
+        attrs.set_item("node_map", node_map_py)?;
+        result.attrs = attrs.into();
         Ok(result.into_py(py))
-    } else if let Ok(pygraph) = graph.extract::<&graph::PyGraph>(py) {
+    } else if let Ok(pygraph) = graph.extract::<graph::PyGraph>(py) {
         let g = pygraph.graph.clone();
-        let (condensed, node_map) = condensation_inner(&py, g.into(), false, None);
+        let (condensed, node_map) = condensation_inner(py, g.into(), false, None);
         let mut result = graph::PyGraph {
             graph: condensed,
             node_removed: false,
             multigraph: pygraph.multigraph,
-            attrs: py.None(),
+            attrs: PyDict::new(py).into(),
         };
         let node_map_py = node_map.into_py(py);
-        result.attrs = PyDict::new(py).into();
-        result.attrs.set_item("node_map", node_map_py)?;
+        let attrs = PyDict::new(py);
+        attrs.set_item("node_map", node_map_py)?;
+        result.attrs = attrs.into();
         Ok(result.into_py(py))
     } else {
         Err(PyValueError::new_err("Input must be a PyDiGraph or PyGraph"))
