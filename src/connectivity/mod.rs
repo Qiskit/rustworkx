@@ -30,6 +30,8 @@ use petgraph::{algo, Graph};
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use pyo3::types::PyDict;
+use pyo3::BoundObject;
+use pyo3::IntoPyObject;
 use pyo3::Python;
 use rayon::prelude::*;
 
@@ -205,23 +207,22 @@ pub fn is_strongly_connected(graph: &digraph::PyDiGraph) -> PyResult<bool> {
 /// :param sccs: (Optional, directed only) List of SCCs to use instead of computing them
 /// :returns: The condensed graph (PyDiGraph or PyGraph) with a 'node_map' attribute
 /// :rtype: PyDiGraph or PyGraph
-fn condensation_inner<N, E, Ty, Ix>(
-    py: Python,
+fn condensation_inner<'py, N, E, Ty, Ix>(
+    py: Python<'py>,
     g: Graph<N, E, Ty, Ix>,
     make_acyclic: bool,
     sccs: Option<Vec<Vec<usize>>>,
-) -> (StablePyGraph<Ty>, Vec<usize>)
+) -> PyResult<(StablePyGraph<Ty>, Vec<usize>)>
 where
     Ty: EdgeType,
     Ix: IndexType,
-    N: IntoPy<Py<PyAny>> + Clone,
-    E: IntoPy<Py<PyAny>> + Clone,
+    N: IntoPyObject<'py, Target = PyAny> + Clone,
+    E: IntoPyObject<'py, Target = PyAny> + Clone,
 {
     // For directed graphs, use SCCs; for undirected, use connected components
     let components: Vec<Vec<NodeIndex<Ix>>> = if Ty::is_directed() {
         if let Some(sccs) = sccs {
-            sccs
-                .into_iter()
+            sccs.into_iter()
                 .map(|row| row.into_iter().map(NodeIndex::new).collect())
                 .collect()
         } else {
@@ -261,8 +262,14 @@ where
         }
     }
     for edge in edges {
-        let source = node_map.get(edge.source().index()).copied().unwrap_or(usize::MAX);
-        let target = node_map.get(edge.target().index()).copied().unwrap_or(usize::MAX);
+        let source = node_map
+            .get(edge.source().index())
+            .copied()
+            .unwrap_or(usize::MAX);
+        let target = node_map
+            .get(edge.target().index())
+            .copied()
+            .unwrap_or(usize::MAX);
         if source == usize::MAX || target == usize::MAX {
             continue;
         }
@@ -276,7 +283,26 @@ where
             condensed.add_edge(source, target, edge.weight);
         }
     }
-    (condensed.map(|_, w| w.clone().into_py(py), |_, w| w.clone().into_py(py)), node_map)
+
+    let mapped = condensed.map(
+        |_, w| match w.clone().into_pyobject(py) {
+            Ok(bound) => bound.unbind(),
+            Err(_) => PyValueError::new_err("Node conversion failed")
+                .into_pyobject(py)
+                .unwrap()
+                .unbind()
+                .into(),
+        },
+        |_, w| match w.clone().into_pyobject(py) {
+            Ok(bound) => bound.unbind(),
+            Err(_) => PyValueError::new_err("Edge conversion failed")
+                .into_pyobject(py)
+                .unwrap()
+                .unbind()
+                .into(),
+        },
+    );
+    Ok((mapped, node_map))
 }
 
 #[pyfunction]
@@ -288,7 +314,7 @@ pub fn condensation(
 ) -> PyResult<PyObject> {
     if let Ok(digraph) = graph.extract::<digraph::PyDiGraph>(py) {
         let g = digraph.graph.clone();
-        let (condensed, node_map) = condensation_inner(py, g.into(), true, sccs);
+        let (condensed, node_map) = condensation_inner(py, g.into(), true, sccs)?;
         let mut result = digraph::PyDiGraph {
             graph: condensed,
             cycle_state: algo::DfsSpace::default(),
@@ -297,27 +323,29 @@ pub fn condensation(
             multigraph: true,
             attrs: PyDict::new(py).into(),
         };
-        let node_map_py = node_map.into_py(py);
+        let node_map_py = node_map.into_pyobject(py)?;
         let attrs = PyDict::new(py);
         attrs.set_item("node_map", node_map_py)?;
         result.attrs = attrs.into();
-        Ok(result.into_py(py))
+        Ok(result.into_pyobject(py)?.into())
     } else if let Ok(pygraph) = graph.extract::<graph::PyGraph>(py) {
         let g = pygraph.graph.clone();
-        let (condensed, node_map) = condensation_inner(py, g.into(), false, None);
+        let (condensed, node_map) = condensation_inner(py, g.into(), false, None)?;
         let mut result = graph::PyGraph {
             graph: condensed,
             node_removed: false,
             multigraph: pygraph.multigraph,
             attrs: PyDict::new(py).into(),
         };
-        let node_map_py = node_map.into_py(py);
+        let node_map_py = node_map.into_pyobject(py)?;
         let attrs = PyDict::new(py);
         attrs.set_item("node_map", node_map_py)?;
         result.attrs = attrs.into();
-        Ok(result.into_py(py))
+        Ok(result.into_pyobject(py)?.into())
     } else {
-        Err(PyValueError::new_err("Input must be a PyDiGraph or PyGraph"))
+        Err(PyValueError::new_err(
+            "Input must be a PyDiGraph or PyGraph",
+        ))
     }
 }
 
