@@ -2,9 +2,9 @@
 
 use arbitrary::{Arbitrary, Unstructured};
 use libfuzzer_sys::fuzz_target;
-use rustworkx_core::petgraph::graph::NodeIndex;
 use rustworkx_core::err::ContractError;
 use rustworkx_core::graph_ext::*;
+use rustworkx_core::petgraph::graph::NodeIndex;
 use rustworkx_core::petgraph::prelude::*;
 
 #[derive(Debug, Arbitrary)]
