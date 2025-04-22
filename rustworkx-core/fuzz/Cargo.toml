@@ -41,3 +41,10 @@ path = "fuzz_targets/test_fuzz_random_graph.rs"
 test = false
 doc = false
 bench = false
+
+[[bin]]
+name = "test_fuzz_planar"
+path = "fuzz_targets/test_fuzz_planar.rs"
+test = false
+doc = false
+bench = false
