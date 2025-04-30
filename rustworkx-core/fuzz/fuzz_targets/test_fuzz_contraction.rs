@@ -54,12 +54,18 @@ fn fuzz_contract_nodes(input: ContractFuzzInput) {
     // Run contraction without cycle check (should never fail)
     let _ = graph_no_check.contract_nodes(to_contract.clone(), input.replacement_weight, false);
 
-    // Run contraction with cycle check (may fail)
-    let result = graph.contract_nodes(to_contract.clone(), input.replacement_weight, true);
-    if let Err(ContractError::DAGWouldCycle) = result {
-        // Expected error — fine to ignore
-    } else {
-        // Performing an idempotency check, call contract_nodes again on same contracted graph, this should not panic
-        let _ = graph.contract_nodes(to_contract, input.replacement_weight, true);
+    // Run contraction with cycle check, match on the result
+    #[allow(unreachable_patterns)]
+    match graph.contract_nodes(to_contract.clone(), input.replacement_weight, true) {
+        Ok(_) => {
+            // Idempotency: running again should not panic
+            let _ = graph.contract_nodes(to_contract, input.replacement_weight, true);
+        }
+        Err(ContractError::DAGWouldCycle) => {
+            // Expected error — no-op
+        }
+        Err(err) => {
+            panic!("Unexpected error during node contraction: {:?}", err);
+        }
     }
 }
