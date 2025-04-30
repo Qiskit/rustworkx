@@ -256,8 +256,7 @@ where
     // Consume nodes and edges of the old graph and insert them into the new one.
     let (nodes, edges) = g.into_nodes_edges();
     for (nix, node) in nodes.into_iter().enumerate() {
-        let idx = node_map.get(nix).copied().unwrap_or(usize::MAX);
-        if idx != usize::MAX {
+        if let Some(idx) = node_map.get(nix).copied()  {
             condensed[NodeIndex::new(idx)].push(node.weight);
         }
     }
