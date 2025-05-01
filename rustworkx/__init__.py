@@ -2224,3 +2224,26 @@ def all_shortest_paths(
         is provided.
     """
     raise TypeError(f"Invalid Input Type {type(graph)} for graph")
+
+
+@_rustworkx_dispatch
+def condensation(graph, /, sccs=None):
+    """Return the condensation of a directed or undirected graph
+    The condensation of a directed graph is a directed acyclic graph (DAG) in which
+    each node represents a strongly connected component (SCC) of the original graph.
+    The edges of the DAG represent the connections between these components.
+    The condensation of an undirected graph is a directed graph in which each node
+    represents a connected component of the original graph. The edges of the DAG
+    represent the connections between these components.
+
+    The condensation is computed using Tarjan's algorithm.
+
+    :param graph: The input graph to condense. This can be a
+        :class:`~rustworkx.PyGraph` or :class:`~rustworkx.PyDiGraph`.
+    :param sccs: An optional list of strongly connected components (SCCs) to use.
+        If not specified, the function will compute the SCCs internally.
+        If the input graph is undirected, this parameter is ignored.
+    :returns: A PyGraph or PyDiGraph object representing the condensation of the input graph.
+    :rtype: PyGraph or PyDiGraph
+    """
+    raise TypeError(f"Invalid Input Type {type(graph)} for graph")
