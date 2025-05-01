@@ -2225,6 +2225,7 @@ def all_shortest_paths(
     """
     raise TypeError(f"Invalid Input Type {type(graph)} for graph")
 
+
 @_rustworkx_dispatch
 def condensation(graph, /, sccs = None):
     """Return the condensation of a directed or undirected graph

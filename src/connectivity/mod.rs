@@ -212,7 +212,7 @@ fn condensation_inner<'py, N, E, Ty, Ix>(
     g: Graph<N, E, Ty, Ix>,
     make_acyclic: bool,
     sccs: Option<Vec<Vec<usize>>>,
-) -> PyResult<(StablePyGraph<Ty>, Vec<usize>)>
+) -> PyResult<(StablePyGraph<Ty>, Vec<Option<usize>>)>
 where
     Ty: EdgeType,
     Ix: IndexType,
@@ -245,35 +245,30 @@ where
         StableGraph::with_capacity(components_usize.len(), g.edge_count());
 
     // Build a map from old indices to new ones.
-    let mut node_map = vec![usize::MAX; g.node_count()];
+    let mut node_map = vec![None; g.node_count()];
     for comp in components_usize.iter() {
         let new_nix = condensed.add_node(Vec::new());
         for nix in comp {
-            node_map[nix.index()] = new_nix.index();
+            node_map[nix.index()] = Some(new_nix.index());
         }
     }
 
     // Consume nodes and edges of the old graph and insert them into the new one.
     let (nodes, edges) = g.into_nodes_edges();
     for (nix, node) in nodes.into_iter().enumerate() {
-        if let Some(idx) = node_map.get(nix).copied()  {
+        if let Some(Some(idx)) = node_map.get(nix).copied() {
             condensed[NodeIndex::new(idx)].push(node.weight);
         }
     }
     for edge in edges {
-        let source = node_map
-            .get(edge.source().index())
-            .copied()
-            .unwrap_or(usize::MAX);
-        let target = node_map
-            .get(edge.target().index())
-            .copied()
-            .unwrap_or(usize::MAX);
-        if source == usize::MAX || target == usize::MAX {
-            continue;
-        }
-        let source = NodeIndex::new(source);
-        let target = NodeIndex::new(target);
+        let (source, target) = match (
+            node_map.get(edge.source().index()),
+            node_map.get(edge.target().index()),
+        ) {
+            (Some(Some(s)), Some(Some(t))) => (NodeIndex::new(*s), NodeIndex::new(*t)),
+            _ => continue,
+        };
+
         if make_acyclic && Ty::is_directed() {
             if source != target {
                 condensed.update_edge(source, target, edge.weight);
@@ -313,7 +308,7 @@ pub fn digraph_condensation(
 ) -> PyResult<digraph::PyDiGraph> {
     let g = graph.graph.clone();
     let (condensed, node_map) = condensation_inner(py, g.into(), true, sccs)?;
-    
+
     let mut attrs = HashMap::new();
     attrs.insert("node_map", node_map.clone());
 
@@ -330,13 +325,10 @@ pub fn digraph_condensation(
 
 #[pyfunction]
 #[pyo3(text_signature = "(graph, /)")]
-pub fn graph_condensation(
-    py: Python,
-    graph: graph::PyGraph,
-) -> PyResult<graph::PyGraph> {
+pub fn graph_condensation(py: Python, graph: graph::PyGraph) -> PyResult<graph::PyGraph> {
     let g = graph.graph.clone();
     let (condensed, node_map) = condensation_inner(py, g.into(), false, None)?;
-    
+
     let mut attrs = HashMap::new();
     attrs.insert("node_map", node_map.clone());
 
