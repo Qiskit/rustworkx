@@ -2227,7 +2227,7 @@ def all_shortest_paths(
 
 
 @_rustworkx_dispatch
-def condensation(graph, /, sccs = None):
+def condensation(graph, /, sccs=None):
     """Return the condensation of a directed or undirected graph
     The condensation of a directed graph is a directed acyclic graph (DAG) in which
     each node represents a strongly connected component (SCC) of the original graph.
