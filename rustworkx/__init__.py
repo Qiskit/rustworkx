@@ -2226,7 +2226,7 @@ def all_shortest_paths(
     raise TypeError(f"Invalid Input Type {type(graph)} for graph")
 
 @_rustworkx_dispatch
-def condensation(graph, /, sccs: list[int] | None = None):
+def condensation(graph, /, sccs = None):
     """Return the condensation of a directed or undirected graph
     The condensation of a directed graph is a directed acyclic graph (DAG) in which
     each node represents a strongly connected component (SCC) of the original graph.
