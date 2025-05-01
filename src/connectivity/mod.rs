@@ -306,46 +306,47 @@ where
 
 #[pyfunction]
 #[pyo3(text_signature = "(graph, /, sccs=None)", signature=(graph, sccs=None))]
-pub fn condensation(
+pub fn digraph_condensation(
     py: Python,
-    graph: PyObject,
+    graph: digraph::PyDiGraph,
     sccs: Option<Vec<Vec<usize>>>,
-) -> PyResult<PyObject> {
-    if let Ok(digraph) = graph.extract::<digraph::PyDiGraph>(py) {
-        let g = digraph.graph.clone();
-        let (condensed, node_map) = condensation_inner(py, g.into(), true, sccs)?;
-        let mut result = digraph::PyDiGraph {
-            graph: condensed,
-            cycle_state: algo::DfsSpace::default(),
-            check_cycle: false,
-            node_removed: false,
-            multigraph: true,
-            attrs: PyDict::new(py).into(),
-        };
-        let node_map_py = node_map.into_pyobject(py)?;
-        let attrs = PyDict::new(py);
-        attrs.set_item("node_map", node_map_py)?;
-        result.attrs = attrs.into();
-        Ok(result.into_pyobject(py)?.into())
-    } else if let Ok(pygraph) = graph.extract::<graph::PyGraph>(py) {
-        let g = pygraph.graph.clone();
-        let (condensed, node_map) = condensation_inner(py, g.into(), false, None)?;
-        let mut result = graph::PyGraph {
-            graph: condensed,
-            node_removed: false,
-            multigraph: pygraph.multigraph,
-            attrs: PyDict::new(py).into(),
-        };
-        let node_map_py = node_map.into_pyobject(py)?;
-        let attrs = PyDict::new(py);
-        attrs.set_item("node_map", node_map_py)?;
-        result.attrs = attrs.into();
-        Ok(result.into_pyobject(py)?.into())
-    } else {
-        Err(PyValueError::new_err(
-            "Input must be a PyDiGraph or PyGraph",
-        ))
-    }
+) -> PyResult<digraph::PyDiGraph> {
+    let g = graph.graph.clone();
+    let (condensed, node_map) = condensation_inner(py, g.into(), true, sccs)?;
+    
+    let mut attrs = HashMap::new();
+    attrs.insert("node_map", node_map.clone());
+
+    let result = digraph::PyDiGraph {
+        graph: condensed,
+        cycle_state: algo::DfsSpace::default(),
+        check_cycle: false,
+        node_removed: false,
+        multigraph: true,
+        attrs: attrs.into_pyobject(py)?.into(),
+    };
+    Ok(result)
+}
+
+#[pyfunction]
+#[pyo3(text_signature = "(graph, /)")]
+pub fn graph_condensation(
+    py: Python,
+    graph: graph::PyGraph,
+) -> PyResult<graph::PyGraph> {
+    let g = graph.graph.clone();
+    let (condensed, node_map) = condensation_inner(py, g.into(), false, None)?;
+    
+    let mut attrs = HashMap::new();
+    attrs.insert("node_map", node_map.clone());
+
+    let result = graph::PyGraph {
+        graph: condensed,
+        node_removed: false,
+        multigraph: graph.multigraph,
+        attrs: attrs.into_pyobject(py)?.into(),
+    };
+    Ok(result)
 }
 
 /// Return the first cycle encountered during DFS of a given PyDiGraph,

@@ -615,7 +615,8 @@ fn rustworkx(py: Python<'_>, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(number_strongly_connected_components))?;
     m.add_wrapped(wrap_pyfunction!(strongly_connected_components))?;
     m.add_wrapped(wrap_pyfunction!(is_strongly_connected))?;
-    m.add_wrapped(wrap_pyfunction!(condensation))?;
+    m.add_wrapped(wrap_pyfunction!(digraph_condensation))?;
+    m.add_wrapped(wrap_pyfunction!(graph_condensation))?;
     m.add_wrapped(wrap_pyfunction!(digraph_dfs_edges))?;
     m.add_wrapped(wrap_pyfunction!(graph_dfs_edges))?;
     m.add_wrapped(wrap_pyfunction!(digraph_find_cycle))?;

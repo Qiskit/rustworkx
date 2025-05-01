@@ -86,7 +86,8 @@ from .rustworkx import number_strongly_connected_components as number_strongly_c
 from .rustworkx import number_weakly_connected_components as number_weakly_connected_components
 from .rustworkx import node_connected_component as node_connected_component
 from .rustworkx import strongly_connected_components as strongly_connected_components
-from .rustworkx import condensation as condensation
+from .rustworkx import digraph_condensation as digraph_condensation
+from .rustworkx import graph_condensation as graph_condensation
 from .rustworkx import weakly_connected_components as weakly_connected_components
 from .rustworkx import digraph_adjacency_matrix as digraph_adjacency_matrix
 from .rustworkx import graph_adjacency_matrix as graph_adjacency_matrix
