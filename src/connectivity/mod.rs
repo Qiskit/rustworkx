@@ -22,20 +22,22 @@ use super::{
 
 use hashbrown::{HashMap, HashSet};
 use indexmap::IndexSet;
-use petgraph::algo;
-use petgraph::algo::condensation;
-use petgraph::graph::DiGraph;
+use petgraph::graph::{DiGraph, IndexType};
 use petgraph::stable_graph::NodeIndex;
 use petgraph::unionfind::UnionFind;
 use petgraph::visit::{EdgeRef, IntoEdgeReferences, NodeCount, NodeIndexable, Visitable};
+use petgraph::{algo, Graph};
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use pyo3::types::PyDict;
+use pyo3::BoundObject;
+use pyo3::IntoPyObject;
 use pyo3::Python;
 use rayon::prelude::*;
 
 use ndarray::prelude::*;
 use numpy::{IntoPyArray, PyArray2};
+use petgraph::prelude::StableGraph;
 
 use crate::iterators::{
     AllPairsMultiplePathMapping, BiconnectedComponents, Chains, EdgeList, NodeIndices,
@@ -190,6 +192,153 @@ pub fn is_strongly_connected(graph: &digraph::PyDiGraph) -> PyResult<bool> {
         return Err(NullGraph::new_err("Invalid operation on a NullGraph"));
     }
     Ok(algo::kosaraju_scc(&graph.graph).len() == 1)
+}
+
+/// Compute the condensation of a graph (directed or undirected).
+///
+/// For directed graphs, this returns the condensation (quotient graph) where each node
+/// represents a strongly connected component (SCC) of the input graph. For undirected graphs,
+/// each node represents a connected component.
+///
+/// The returned graph has a node attribute 'node_map' which is a list mapping each original
+/// node index to the index of the condensed node it belongs to.
+///
+/// :param graph: The input graph (PyDiGraph or PyGraph)
+/// :param sccs: (Optional, directed only) List of SCCs to use instead of computing them
+/// :returns: The condensed graph (PyDiGraph or PyGraph) with a 'node_map' attribute
+/// :rtype: PyDiGraph or PyGraph
+fn condensation_inner<'py, N, E, Ty, Ix>(
+    py: Python<'py>,
+    g: Graph<N, E, Ty, Ix>,
+    make_acyclic: bool,
+    sccs: Option<Vec<Vec<usize>>>,
+) -> PyResult<(StablePyGraph<Ty>, Vec<Option<usize>>)>
+where
+    Ty: EdgeType,
+    Ix: IndexType,
+    N: IntoPyObject<'py, Target = PyAny> + Clone,
+    E: IntoPyObject<'py, Target = PyAny> + Clone,
+{
+    // For directed graphs, use SCCs; for undirected, use connected components
+    let components: Vec<Vec<NodeIndex<Ix>>> = if Ty::is_directed() {
+        if let Some(sccs) = sccs {
+            sccs.into_iter()
+                .map(|row| row.into_iter().map(NodeIndex::new).collect())
+                .collect()
+        } else {
+            algo::kosaraju_scc(&g)
+        }
+    } else {
+        connectivity::connected_components(&g)
+            .into_iter()
+            .map(|set| set.into_iter().collect())
+            .collect()
+    };
+
+    // Convert all NodeIndex<Ix> to NodeIndex<usize> for the output graph
+    let components_usize: Vec<Vec<NodeIndex<usize>>> = components
+        .iter()
+        .map(|comp| comp.iter().map(|ix| NodeIndex::new(ix.index())).collect())
+        .collect();
+
+    let mut condensed: StableGraph<Vec<N>, E, Ty, u32> =
+        StableGraph::with_capacity(components_usize.len(), g.edge_count());
+
+    // Build a map from old indices to new ones.
+    let mut node_map = vec![None; g.node_count()];
+    for comp in components_usize.iter() {
+        let new_nix = condensed.add_node(Vec::new());
+        for nix in comp {
+            node_map[nix.index()] = Some(new_nix.index());
+        }
+    }
+
+    // Consume nodes and edges of the old graph and insert them into the new one.
+    let (nodes, edges) = g.into_nodes_edges();
+    for (nix, node) in nodes.into_iter().enumerate() {
+        if let Some(Some(idx)) = node_map.get(nix).copied() {
+            condensed[NodeIndex::new(idx)].push(node.weight);
+        }
+    }
+    for edge in edges {
+        let (source, target) = match (
+            node_map.get(edge.source().index()),
+            node_map.get(edge.target().index()),
+        ) {
+            (Some(Some(s)), Some(Some(t))) => (NodeIndex::new(*s), NodeIndex::new(*t)),
+            _ => continue,
+        };
+
+        if make_acyclic && Ty::is_directed() {
+            if source != target {
+                condensed.update_edge(source, target, edge.weight);
+            }
+        } else {
+            condensed.add_edge(source, target, edge.weight);
+        }
+    }
+
+    let mapped = condensed.map(
+        |_, w| match w.clone().into_pyobject(py) {
+            Ok(bound) => bound.unbind(),
+            Err(_) => PyValueError::new_err("Node conversion failed")
+                .into_pyobject(py)
+                .unwrap()
+                .unbind()
+                .into(),
+        },
+        |_, w| match w.clone().into_pyobject(py) {
+            Ok(bound) => bound.unbind(),
+            Err(_) => PyValueError::new_err("Edge conversion failed")
+                .into_pyobject(py)
+                .unwrap()
+                .unbind()
+                .into(),
+        },
+    );
+    Ok((mapped, node_map))
+}
+
+#[pyfunction]
+#[pyo3(text_signature = "(graph, /, sccs=None)", signature=(graph, sccs=None))]
+pub fn digraph_condensation(
+    py: Python,
+    graph: digraph::PyDiGraph,
+    sccs: Option<Vec<Vec<usize>>>,
+) -> PyResult<digraph::PyDiGraph> {
+    let g = graph.graph.clone();
+    let (condensed, node_map) = condensation_inner(py, g.into(), true, sccs)?;
+
+    let mut attrs = HashMap::new();
+    attrs.insert("node_map", node_map.clone());
+
+    let result = digraph::PyDiGraph {
+        graph: condensed,
+        cycle_state: algo::DfsSpace::default(),
+        check_cycle: false,
+        node_removed: false,
+        multigraph: true,
+        attrs: attrs.into_pyobject(py)?.into(),
+    };
+    Ok(result)
+}
+
+#[pyfunction]
+#[pyo3(text_signature = "(graph, /)")]
+pub fn graph_condensation(py: Python, graph: graph::PyGraph) -> PyResult<graph::PyGraph> {
+    let g = graph.graph.clone();
+    let (condensed, node_map) = condensation_inner(py, g.into(), false, None)?;
+
+    let mut attrs = HashMap::new();
+    attrs.insert("node_map", node_map.clone());
+
+    let result = graph::PyGraph {
+        graph: condensed,
+        node_removed: false,
+        multigraph: graph.multigraph,
+        attrs: attrs.into_pyobject(py)?.into(),
+    };
+    Ok(result)
 }
 
 /// Return the first cycle encountered during DFS of a given PyDiGraph,
@@ -480,7 +629,7 @@ pub fn is_semi_connected(graph: &digraph::PyDiGraph) -> PyResult<bool> {
         temp_graph.add_edge(node_map[source.index()], node_map[target.index()], ());
     }
 
-    let condensed = condensation(temp_graph, true);
+    let condensed = algo::condensation(temp_graph, true);
     let n = condensed.node_count();
     let weight_fn =
         |_: petgraph::graph::EdgeReference<()>| Ok::<usize, std::convert::Infallible>(1usize);
