@@ -3,7 +3,7 @@ deprecations:
   - |
     We are saying goodbye to the legacy ``retworkx`` package that operates as a
     backwards compatibility alias for ``rustworkx``. It was originally marked as
-    deprecated and this will be its last release. The ``rustworkx`` name has now existed
+    deprecated in the 0.12.0 release and this will be its last release it is supported. The ``rustworkx`` name has now existed
     longer than the ``retworkx`` name and the ``retworkx`` package is no longer needed.
 
     This release will unpin the ``retworkx`` package from the ``rustworkx`` package.
