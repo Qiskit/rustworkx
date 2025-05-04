@@ -11,17 +11,17 @@
 // under the License.
 
 //! This module contains the [`DictMap`] type alias which is a combination of
-//! [`IndexMap`] and [`AHash`].
+//! [`IndexMap`] and [`Foldhash`].
 //!
 //! It is used as a return type for rustworkx for compatibility
 //! with Python's dict which preserves insertion order.
 //!
-//! [`AHash`]: https://crates.io/crates/ahash
+//! [`Foldhash`]: https://crates.io/crates/foldhash
 
 use indexmap::IndexMap;
 
 /// Convenient alias to build an [`IndexMap`] using a custom hasher.
-/// For the moment, we use ahash which is the default hasher
+/// For the moment, we use foldhash which is the default hasher
 /// for [`HashMap`], another hashmap we use.
 ///
 /// [`HashMap`]: https://docs.rs/hashbrown/0.11.2/hashbrown/hash_map/struct.HashMap.html

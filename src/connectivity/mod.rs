@@ -843,7 +843,7 @@ pub fn graph_all_simple_paths(
         Some(depth) => depth - 2,
     };
     let cutoff_petgraph: Option<usize> = cutoff.map(|depth| depth - 2);
-    let result: Vec<Vec<usize>> = algo::all_simple_paths::<Vec<_>, _, ahash::RandomState>(
+    let result: Vec<Vec<usize>> = algo::all_simple_paths::<Vec<_>, _, foldhash::fast::RandomState>(
         &graph.graph,
         from_index,
         to_index,
@@ -897,7 +897,7 @@ pub fn digraph_all_simple_paths(
         Some(depth) => depth - 2,
     };
     let cutoff_petgraph: Option<usize> = cutoff.map(|depth| depth - 2);
-    let result: Vec<Vec<usize>> = algo::all_simple_paths::<Vec<_>, _, ahash::RandomState>(
+    let result: Vec<Vec<usize>> = algo::all_simple_paths::<Vec<_>, _, foldhash::fast::RandomState>(
         &graph.graph,
         from_index,
         to_index,
