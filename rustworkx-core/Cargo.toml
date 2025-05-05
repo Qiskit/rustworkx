@@ -12,7 +12,7 @@ repository.workspace = true
 license.workspace = true
 
 [dependencies]
-ahash.workspace = true
+foldhash.workspace = true
 fixedbitset.workspace = true
 hashbrown.workspace = true
 indexmap.workspace = true
