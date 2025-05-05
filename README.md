@@ -59,7 +59,7 @@ environment.
 
 If there are no precompiled binaries published for your system you'll have to
 build the package from source. However, to be able to build the package
-from the published source package you need to have Rust >= 1.70 installed (and
+from the published source package you need to have Rust >= 1.79 installed (and
 also [cargo](https://doc.rust-lang.org/cargo/) which is normally included with
 rust) You can use [rustup](https://rustup.rs/) (a cross platform installer for
 rust) to make this simpler, or rely on
@@ -77,10 +77,10 @@ it just as it would if there was a prebuilt binary available.
 > [!NOTE]  
 > To build from source you will need to ensure you have pip >=19.0.0
 installed, which supports PEP-517, or that you have manually installed
-`setuptools-rust` prior to running `pip install rustworkx`. If you receive an
+`setuptools-rust>=1.9` prior to running `pip install rustworkx`. If you receive an
 error about `setuptools-rust` not being found you should upgrade pip with
 `pip install -U pip` or manually install `setuptools-rust` with
-`pip install setuptools-rust` and try again.
+`pip install -U setuptools-rust` and try again.
 
 ### Optional dependencies
 
@@ -157,17 +157,14 @@ changes reflected in your python environment.
 ### Develop Mode
 
 If you'd like to build rustworkx in debug mode and use an interactive debugger
-while working on a change you can use `python setup.py develop` to build
-and install rustworkx in develop mode. This will build rustworkx without
-optimizations and include debuginfo which can be handy for debugging. Do note
-that installing rustworkx this way will be significantly slower then using
-`pip install` and should only be used for debugging/development.
+while working on a change you can set `SETUPTOOLS_RUST_CARGO_PROFILE="dev"`
+as an environment variable to build and install rustworkx in develop mode.
+This will build rustworkx without optimizations and include debuginfo
+when running `pip install`. That can be handy for debugging.
 
 > [!TIP]
 > It's worth noting that `pip install -e` does not work, as it will link the python
-packaging shim to your python environment but not build the rustworkx binary. If
-you want to build rustworkx in debug mode you have to use
-`python setup.py develop`.
+packaging shim to your python environment but not build the rustworkx binary.
 
 ## Project history
 
