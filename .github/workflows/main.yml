@@ -151,8 +151,9 @@ jobs:
           python -m pip install -U pip
           pip install -U --group test
       - name: Build rustworkx
-        run: python setup.py develop
+        run: pip install .
         env:
+          SETUPTOOLS_RUST_CARGO_PROFILE: "dev"
           CARGO_INCREMENTAL: 0
           RUSTFLAGS: "-Cinstrument-coverage"
           LLVM_PROFILE_FILE: "rustworkx-%p-%m.profraw"
