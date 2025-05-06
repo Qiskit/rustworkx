@@ -67,6 +67,9 @@ requires = ["setuptools>=70.1.0", "setuptools-rust>=1.9"]
 build-backend = "setuptools.build_meta"
 
 [dependency-groups]
+testinfra = [
+    "nox==2025.5.1",
+]
 test = [
   "setuptools-rust",
   "fixtures",
@@ -96,6 +99,9 @@ docs = [
     "sphinx-reredirects",
     "sphinxemoji",
     "ipykernel",
+]
+releaseinfra = [
+    "cibuildwheel==2.23.2",
 ]
 
 [tool.black]

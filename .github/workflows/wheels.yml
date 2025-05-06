@@ -57,7 +57,8 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - name: Install cibuildwheel
         run: |
-          python -m pip install cibuildwheel==2.23.2
+          python -m pip install -U pip
+          python -m pip install -U --group testinfra
       - name: Build wheels
         run: |
           python -m cibuildwheel --output-dir wheelhouse
@@ -105,7 +106,8 @@ jobs:
           platforms: all
       - name: Install cibuildwheel
         run: |
-          python -m pip install cibuildwheel==2.23.2
+          python -m pip install -U pip
+          python -m pip install -U --group testinfra
       - name: Build wheels
         run: |
           python -m cibuildwheel --output-dir wheelhouse
@@ -143,7 +145,8 @@ jobs:
           platforms: all
       - name: Install cibuildwheel
         run: |
-          python -m pip install cibuildwheel==2.23.2
+          python -m pip install -U pip
+          python -m pip install -U --group testinfra
       - name: Build wheels
         run: |
           python -m cibuildwheel --output-dir wheelhouse
@@ -176,7 +179,8 @@ jobs:
         run: rustup default stable-i686-pc-windows-msvc
       - name: Install cibuildwheel
         run: |
-          python -m pip install cibuildwheel==2.23.2
+          python -m pip install -U pip
+          python -m pip install -U --group releaseinfra
       - name: Build wheels
         run: |
           python -m cibuildwheel --output-dir wheelhouse
