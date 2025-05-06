@@ -63,7 +63,7 @@ name = "Ivan Carvalho"
 email = "ivancarvalho@gatech.edu"
 
 [build-system]
-requires = ["setuptools>=70.1.0", "setuptools-rust>=1.9"]
+requires = ["setuptools>=77.0.0", "setuptools-rust>=1.9"]
 build-backend = "setuptools.build_meta"
 
 [dependency-groups]
