@@ -34,3 +34,17 @@ path = "fuzz_targets/test_fuzz_bellman_ford.rs"
 test = false
 doc = false
 bench = false
+
+[[bin]]
+name = "test_fuzz_random_graph"
+path = "fuzz_targets/test_fuzz_random_graph.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "test_fuzz_contraction"
+path = "fuzz_targets/test_fuzz_contraction.rs"
+test = false
+doc = false
+bench = false

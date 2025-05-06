@@ -471,7 +471,7 @@ where
 
 fn contract_stable<G, F, E: Error>(
     graph: &mut G,
-    mut nodes: IndexSet<G::NodeId, ahash::RandomState>,
+    mut nodes: IndexSet<G::NodeId, foldhash::fast::RandomState>,
     weight: G::NodeWeight,
     weight_combo_fn: Option<F>,
 ) -> Result<G::NodeId, E>
@@ -499,7 +499,7 @@ where
     Ok(node_index)
 }
 
-fn can_contract<G>(graph: G, nodes: &IndexSet<G::NodeId, ahash::RandomState>) -> bool
+fn can_contract<G>(graph: G, nodes: &IndexSet<G::NodeId, foldhash::fast::RandomState>) -> bool
 where
     G: Data + Visitable + IntoEdgesDirected,
     G::NodeId: Eq + Hash,
@@ -536,7 +536,7 @@ type NoCallback<E> = Option<fn(&E, &E) -> Result<E, Infallible>>;
 fn add_edges<G, F, E>(
     graph: &mut G,
     new_node: G::NodeId,
-    nodes: &IndexSet<G::NodeId, ahash::RandomState>,
+    nodes: &IndexSet<G::NodeId, foldhash::fast::RandomState>,
     mut weight_combo_fn: Option<F>,
 ) -> Result<(), E>
 where
