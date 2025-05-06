@@ -22,7 +22,7 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install -U virtualenv setuptools wheel nox uv==0.6.12
+        pip install -U --group testinfra
         sudo apt-get install graphviz pandoc
     - name: Build docs
       run: |

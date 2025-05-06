@@ -67,6 +67,10 @@ requires = ["setuptools>=70.1.0", "setuptools-rust>=1.9"]
 build-backend = "setuptools.build_meta"
 
 [dependency-groups]
+testinfra = [
+    "nox==2025.5.1",
+    "uv==0.6.14",
+]
 test = [
   "setuptools-rust",
   "fixtures",
@@ -91,12 +95,15 @@ docs = [
     "pydot",
     "pillow>=4.2.1",
     "reno>=3.4.0",
-    "qiskit-sphinx-theme~=1.14.0rc1",
+    "qiskit-sphinx-theme==1.16.1",
     "matplotlib>=3.4",
     "sphinx-reredirects",
     "sphinxemoji",
     "ipykernel",
     "lxml_html_clean",
+]
+releaseinfra = [
+    "cibuildwheel==2.23.2",
 ]
 
 [tool.black]
