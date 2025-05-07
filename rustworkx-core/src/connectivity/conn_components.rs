@@ -9,14 +9,15 @@
 // WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 // License for the specific language governing permissions and limitations
 // under the License.
-
 use hashbrown::HashSet;
 use std::collections::VecDeque;
 use std::hash::Hash;
-
-use petgraph::visit::{GraphProp, IntoNeighborsDirected, IntoNodeIdentifiers, VisitMap, Visitable};
+// use super::digraph;
+use petgraph::visit::{
+    GraphProp, IntoNeighborsDirected, IntoNodeIdentifiers, NodeCount, NodeIndexable, VisitMap,
+    Visitable,
+};
 use petgraph::{Incoming, Outgoing};
-
 /// Given an graph, a node in the graph, and a visit_map,
 /// return the set of nodes connected to the given node
 /// using breadth first search and treating all edges
@@ -165,6 +166,33 @@ where
     num_components
 }
 
+pub fn is_connected<G>(graph: G) -> bool
+where
+    G: GraphProp
+        + IntoNeighborsDirected
+        + Visitable
+        + IntoNodeIdentifiers
+        + NodeIndexable
+        + NodeCount,
+    G::NodeId: Eq + Hash,
+{
+    match graph.node_identifiers().next() {
+        Some(node) => {
+            let component = node_connected_component(graph, node);
+            component.len() == graph.node_count()
+        }
+        None => false,
+    }
+}
+
+pub fn node_connected_component<G>(graph: G, node: G::NodeId) -> HashSet<G::NodeId>
+where
+    G: GraphProp + IntoNeighborsDirected + Visitable + IntoNodeIdentifiers,
+    G::NodeId: Eq + Hash,
+{
+    bfs_undirected(&graph, node, &mut graph.visit_map())
+}
+
 #[cfg(test)]
 mod test_conn_components {
     use hashbrown::HashSet;
@@ -174,13 +202,38 @@ mod test_conn_components {
     use petgraph::{Directed, Undirected};
     use std::iter::FromIterator;
 
-    use crate::connectivity::{bfs_undirected, connected_components, number_connected_components};
+    use crate::connectivity::{bfs_undirected, node_connected_component,connected_components, number_connected_components};
+
+    use super::is_connected;
 
     #[test]
     fn test_number_connected() {
         let graph = Graph::<(), (), Undirected>::from_edges([(0, 1), (1, 2), (3, 4)]);
         assert_eq!(number_connected_components(&graph), 2);
     }
+
+    #[test]
+    fn test_is_connected() {
+        let graph = Graph::<(), (), Directed>::from_edges([(0,1), (1,2), (2,3)]);
+        assert_eq!(is_connected(&graph), true);
+    }
+
+    #[test]
+    fn test_is_not_connected(){
+        let disconnected_graph = Graph::<(), (), Directed>::from_edges([(0,1), (3,4)]);
+        assert_eq!(is_connected(&disconnected_graph), false);
+    }
+
+    #[test]
+    fn test_node_connected_components(){
+        let graph = Graph::<(), (), Directed>::from_edges(&[(0, 1), (1, 2), (2, 3), (4,5)]);
+        let node_idx: NodeIndex<u32> = NodeIndex::new(3);
+        let expected: HashSet<NodeIndex> = HashSet::from_iter([ndx(3),ndx(0),ndx(1),ndx(2)]);
+        let component = node_connected_component(&graph, node_idx);
+        assert_eq!(component, expected);
+
+    }
+
 
     #[test]
     fn test_number_node_holes() {
