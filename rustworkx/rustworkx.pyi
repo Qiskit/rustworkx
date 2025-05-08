@@ -1251,14 +1251,24 @@ class PyGraph(Generic[_S, _T]):
         node_filter: Callable[[_S], bool] | None = ...,
         edge_weight_map: Callable[[_T], _T] | None = ...,
     ) -> NodeMap: ...
+    @overload
     def to_dot(
         self,
         /,
         node_attr: Callable[[_S], dict[str, str]] | None = ...,
         edge_attr: Callable[[_T], dict[str, str]] | None = ...,
         graph_attr: dict[str, str] | None = ...,
-        filename: str | None = None,
-    ) -> str | None: ...
+        filename: None = ...,
+    ) -> str: ...
+    @overload
+    def to_dot(
+        self,
+        /,
+        node_attr: Callable[[_S], dict[str, str]] | None = ...,
+        edge_attr: Callable[[_T], dict[str, str]] | None = ...,
+        graph_attr: dict[str, str] | None = ...,
+        filename: str = ...,
+    ) -> None: ...
     def to_directed(self) -> PyDiGraph[_S, _T]: ...
     def update_edge(
         self,
@@ -1446,14 +1456,24 @@ class PyDiGraph(Generic[_S, _T]):
     ) -> NodeMap: ...
     def successor_indices(self, node: int, /) -> NodeIndices: ...
     def successors(self, node: int, /) -> list[_S]: ...
+    @overload
     def to_dot(
         self,
         /,
         node_attr: Callable[[_S], dict[str, str]] | None = ...,
         edge_attr: Callable[[_T], dict[str, str]] | None = ...,
         graph_attr: dict[str, str] | None = ...,
-        filename: str | None = None,
-    ) -> str | None: ...
+        filename: None = ...,
+    ) -> str: ...
+    @overload
+    def to_dot(
+        self,
+        /,
+        node_attr: Callable[[_S], dict[str, str]] | None = ...,
+        edge_attr: Callable[[_T], dict[str, str]] | None = ...,
+        graph_attr: dict[str, str] | None = ...,
+        filename: str = ...,
+    ) -> None: ...
     def to_undirected(
         self,
         /,
