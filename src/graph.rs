@@ -1368,7 +1368,7 @@ impl PyGraph {
     ///       fd.write('2 3\n')
     ///       fd.flush()
     ///       graph = rx.PyGraph.read_edge_list(path=path)
-    ///       mpl_draw(graph)
+    ///   mpl_draw(graph)
     ///   
     /// For example for csv based data, you may use the below code
     /// 
