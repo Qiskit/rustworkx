@@ -11,6 +11,7 @@ from rustworkx.rustworkx import PyGraph, PyDiGraph
 
 if typing.TYPE_CHECKING:
     from PIL.Image import Image
+    
     Method: typing.TypeAlias = typing.Literal["twopi", "neato", "circo", "fdp", "sfdp", "dot"]
     ImageType: typing.TypeAlias = typing.Literal[
         "canon",
