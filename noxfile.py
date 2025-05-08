@@ -3,28 +3,16 @@ import nox
 nox.options.reuse_existing_virtualenvs = True
 nox.options.stop_on_first_error = True
 
-deps = [
-  "setuptools-rust",
-  "fixtures",
-  "testtools>=2.5.0",
-  "networkx>=2.5",
-  "stestr>=4.1",
-]
+pyproject = nox.project.load_toml("pyproject.toml")
 
-lint_deps = [
-    "black~=24.8",
-    "ruff~=0.6",
-    "setuptools-rust",
-]
-
-stubs_deps = [
-    "mypy==1.11.2",
-    "typing-extensions",
-]
+deps = nox.project.dependency_groups(pyproject, "test")
+lint_deps = nox.project.dependency_groups(pyproject, "lint")
+stubs_deps = nox.project.dependency_groups(pyproject, "stubs")
+docs_deps = nox.project.dependency_groups(pyproject, "docs")
 
 def install_rustworkx(session):
     session.install(*deps)
-    session.install(".", "-c", "constraints.txt")
+    session.install(".[all]", "-c", "constraints.txt")
 
 # We define a common base such that -e test triggers a test with the current
 # Python version of the interpreter and -e test_with_version launches
@@ -45,6 +33,7 @@ def test_with_version(session):
 @nox.session(python=["3"])
 def lint(session):
     black(session)
+    typos(session)
     session.install(*lint_deps)
     session.run("ruff", "check", "rustworkx", "retworkx", "setup.py")
     session.run("cargo", "fmt", "--all", "--", "--check", external=True)
@@ -53,7 +42,7 @@ def lint(session):
 @nox.session(python=["3"])
 def docs(session):
     install_rustworkx(session)
-    session.install("-r", "docs/source/requirements.txt", "-c", "constraints.txt")
+    session.install(*docs_deps, "-c", "constraints.txt")
     session.run("python", "-m", "ipykernel", "install", "--user")
     session.run("jupyter", "kernelspec", "list")
     session.chdir("docs")
@@ -68,6 +57,12 @@ def docs_clean(session):
 def black(session):
     session.install(*[d for d in lint_deps if "black" in d])
     session.run("black", "rustworkx", "tests", "retworkx", *session.posargs)
+
+@nox.session(python=["3"])
+def typos(session):
+    session.install(*[d for d in lint_deps if "typos" in d])
+    session.run("typos", "--exclude", "releasenotes")
+    session.run("typos", "--no-check-filenames", "releasenotes")
 
 @nox.session(python=["3"])
 def stubs(session):

@@ -38,7 +38,7 @@ use crate::dictmap::*;
 /// use rustworkx_core::dictmap::DictMap;
 /// use rustworkx_core::shortest_path::all_shortest_paths;
 /// use rustworkx_core::Result;
-/// use ahash::HashSet;
+/// use foldhash::HashSet;
 ///
 /// let mut graph : Graph<(), (), Directed>= Graph::new();
 /// let a = graph.add_node(()); // node with no weight

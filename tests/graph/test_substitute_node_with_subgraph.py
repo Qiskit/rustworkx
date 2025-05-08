@@ -74,7 +74,7 @@ class TestSubstituteNodeSubGraph(unittest.TestCase):
             2,
             in_graph,
             lambda _, __, ___: 0,
-            edge_weight_map=lambda edge: edge + "-migrated",
+            edge_weight_map=lambda edge: f"{edge}-migrated",
         )
         self.assertEqual([(0, 1), (3, 4), (5, 6), (1, 5), (5, 3)], self.graph.edge_list())
         self.assertEqual("edge-migrated", self.graph.get_edge_data(5, 6))

@@ -55,7 +55,7 @@ class TestSubstitute(unittest.TestCase):
             2,
             in_graph,
             lambda _, __, ___: 0,
-            edge_weight_map=lambda edge: edge + "-migrated",
+            edge_weight_map=lambda edge: f"{edge}-migrated",
         )
         self.assertEqual([(0, 1), (3, 4), (5, 6), (1, 5), (5, 3)], self.graph.edge_list())
         self.assertEqual("edge-migrated", self.graph.get_edge_data(5, 6))
@@ -129,7 +129,7 @@ class TestSubstitute(unittest.TestCase):
         with self.assertRaises(IndexError):
             self.graph.substitute_node_with_subgraph(16, in_graph, lambda *args: None)
 
-    def test_bidrectional(self):
+    def test_bidirectional(self):
         graph = rustworkx.generators.directed_path_graph(5, bidirectional=True)
         in_graph = rustworkx.generators.directed_star_graph(5, bidirectional=True)
 

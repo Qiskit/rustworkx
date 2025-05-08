@@ -11,7 +11,7 @@
 // under the License.
 
 // Needed to pass shared state between functions
-// closures don't work because of recurssion
+// closures don't work because of recursion
 #![allow(clippy::too_many_arguments)]
 // Allow single character names to match naming convention from
 // paper
@@ -87,7 +87,7 @@ fn assign_label<E>(
     best_edge[w] = None;
     best_edge[b] = None;
     if t == 1 {
-        // b became an S-vertex/blossom; add it(s verticies) to the queue
+        // b became an S-vertex/blossom; add it(s vertices) to the queue
         queue.append(&mut blossom_leaves(b, num_nodes, blossom_children)?);
     } else if t == 2 {
         // b became a T-vertex/blossom; assign label S to its mate.
@@ -142,7 +142,7 @@ fn scan_blossom(
         assert!(labels[blossom] == Some(1));
         path.push(blossom);
         labels[blossom] = Some(5);
-        // Trace one step bacl.
+        // Trace one step back.
         assert!(label_ends[blossom] == mate.get(&blossom_base[blossom].unwrap()).copied());
         if label_ends[blossom].is_none() {
             // The base of blossom is single; stop tracing this path
@@ -160,7 +160,7 @@ fn scan_blossom(
             mem::swap(&mut v, &mut w);
         }
     }
-    // Remvoe breadcrumbs.
+    // Remove breadcrumbs.
     for blossom in path {
         labels[blossom] = Some(1);
     }
@@ -371,7 +371,7 @@ fn expand_blossom<E>(
         // base.
         assert!(label_ends[blossom].is_some());
         let entry_child = in_blossoms[endpoints[label_ends[blossom].unwrap() ^ 1]];
-        // Decied in which direction we will go around the blossom.
+        // Decide in which direction we will go around the blossom.
         let i = blossom_children[blossom]
             .iter()
             .position(|x| *x == entry_child)
@@ -809,7 +809,7 @@ fn verify_optimum(
 /// Based on networkx implementation
 /// <https://github.com/networkx/networkx/blob/3351206a3ce5b3a39bb2fc451e93ef545b96c95b/networkx/algorithms/matching.py>
 ///
-/// With reference to the standalone protoype implementation from:
+/// With reference to the standalone prototype implementation from:
 /// <http://jorisvr.nl/article/maximum-matching>
 ///
 /// <http://jorisvr.nl/files/graphmatching/20130407/mwmatching.py>
@@ -820,14 +820,14 @@ fn verify_optimum(
 ///
 /// * `graph` - The undirected graph to compute the maximum weight matching for
 /// * `max_cardinality` - If set to true compute the maximum-cardinality matching
-///     with maximum weight among all maximum-cardinality matchings
+///   with maximum weight among all maximum-cardinality matchings
 /// * `weight_fn` - A callback function that will be give a edge reference and
-///     expected to return a `i128` representing the weight of the edge
+///   expected to return a `i128` representing the weight of the edge
 /// * `verify_optimum_flag`: If true an prior to returning an additional routine
-///     to verify the optimal solution was found will be run after computing
-///     the maximum weight matching. If it's true and the found matching is not
-///     an optimal solution this function will panic. This option should
-///     normally be only set true during testing.
+///   to verify the optimal solution was found will be run after computing
+///   the maximum weight matching. If it's true and the found matching is not
+///   an optimal solution this function will panic. This option should
+///   normally be only set true during testing.
 ///
 /// # Example
 /// ```rust
@@ -884,9 +884,9 @@ where
     if num_edges == 0 {
         return Ok(HashSet::new());
     }
-    // Node indicies in the PyGraph may not be contiguous however the
+    // Node indices in the PyGraph may not be contiguous however the
     // algorithm operates on contiguous indices 0..num_nodes. node_map maps
-    // the PyGraph's NodeIndex to the contingous usize used inside the
+    // the PyGraph's NodeIndex to the contiguous usize used inside the
     // algorithm
     let node_map: HashMap<G::NodeId, usize> = graph
         .node_identifiers()
@@ -1018,7 +1018,7 @@ where
         best_edge = vec![None; 2 * num_nodes];
         blossom_best_edges.splice(num_nodes.., (0..num_nodes).map(|_| Vec::new()));
         // Loss of labeling means that we can not be sure that currently
-        // allowable edges remain allowable througout this stage.
+        // allowable edges remain allowable throughout this stage.
         allowed_edge = vec![false; num_edges];
         // Make queue empty
         queue.clear();
@@ -1248,7 +1248,7 @@ where
             if delta_type == -1 {
                 // No further improvement possible; max-cardinality optimum
                 // reached. Do a final delta update to make the optimum
-                // verifyable
+                // verifiable
                 assert!(max_cardinality);
                 delta_type = 1;
                 delta = Some(max(0, *dual_var[..num_nodes].iter().min().unwrap()));
@@ -1275,7 +1275,7 @@ where
                     }
                 }
             }
-            // Take action at the point where minimum delta occured.
+            // Take action at the point where minimum delta occurred.
             if delta_type == 1 {
                 // No further improvement possible; optimum reached
                 break;

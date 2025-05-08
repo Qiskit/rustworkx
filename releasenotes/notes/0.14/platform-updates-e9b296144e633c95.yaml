@@ -6,7 +6,7 @@ features:
 upgrade:
   - |
     Support for the Linux ppc64le pllatform has changed from tier 3 to tier 4
-    (as documented in :ref:`platform-suppport`). This is a result of no longer
+    (as documented in :ref:`platform-support`). This is a result of no longer
     being able to run tests during the pre-compiled wheel publishing jobs due
     to constraints in the available CI infrastructure. There hopefully
     shouldn't be any meaningful impact resulting from this change, but as there

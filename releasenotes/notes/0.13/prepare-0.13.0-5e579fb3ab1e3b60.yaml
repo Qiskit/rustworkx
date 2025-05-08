@@ -13,5 +13,5 @@ prelude: |
 
   This is also the final rustworkx release that supports running with Python
   3.7. Starting in the 0.14.0 release Python >= 3.8 will be required to use
-  rustworkx. This release also increased the minimum suported Rust version for
+  rustworkx. This release also increased the minimum supported Rust version for
   compiling rustworkx and rustworkx-core from source to 1.56.1.

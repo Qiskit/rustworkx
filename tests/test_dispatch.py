@@ -86,7 +86,7 @@ class TestDispatchPyGraph(unittest.TestCase):
         res = rustworkx.all_pairs_dijkstra_shortest_paths(self.graph, lambda _: 1)
         self.assertIsInstance(res, rustworkx.AllPairsPathMapping)
 
-    def test_all_pairs_dijkstra_path_lengthss(self):
+    def test_all_pairs_dijkstra_path_lengths(self):
         res = rustworkx.all_pairs_dijkstra_path_lengths(self.graph, lambda _: 1)
         self.assertIsInstance(res, rustworkx.AllPairsPathLengthMapping)
 

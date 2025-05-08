@@ -336,7 +336,7 @@ mod tests {
 
     #[test]
     fn test_biconnected_components1() {
-        // exmaple from https://web.archive.org/web/20121229123447/http://www.ibluemojo.com/school/articul_algorithm.html
+        // example from https://web.archive.org/web/20121229123447/http://www.ibluemojo.com/school/articul_algorithm.html
         let graph = UnGraph::<(), ()>::from_edges([
             (0, 1),
             (0, 5),

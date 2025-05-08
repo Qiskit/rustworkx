@@ -17,19 +17,20 @@ use petgraph::Undirected;
 use pyo3::exceptions::{PyIndexError, PyOverflowError, PyValueError};
 use pyo3::prelude::*;
 use pyo3::wrap_pyfunction;
+use pyo3::IntoPyObjectExt;
 use pyo3::Python;
 
 use super::{digraph, graph, StablePyGraph};
 use rustworkx_core::generators as core_generators;
 
-/// Generate an undirected cycle graph
+/// Generate an undirected cycle graph.
 ///
 /// :param int num_nodes: The number of nodes to generate the graph with. Node
 ///     weights will be None if this is specified. If both ``num_nodes`` and
-///     ``weights`` are set this will be ignored and ``weights`` will be used.
-/// :param list weights: A list of node weights, the first element in the list
-///     will be the center node of the cycle graph. If both ``num_nodes`` and
-///     ``weights`` are set this will be ignored and ``weights`` will be used.
+///     ``weights`` are set, this will be ignored and ``weights`` will be used.
+/// :param Sequence[Any] weights: A sequence of node weights, typically a list.
+///     If both ``num_nodes`` and
+///     ``weights`` are set, this will be ignored and ``weights`` will be used.
 /// :param bool multigraph: When set to ``False`` the output
 ///     :class:`~rustworkx.PyGraph` object will not be not be a multigraph and
 ///     won't allow parallel edges to be added. Instead
@@ -75,14 +76,14 @@ pub fn cycle_graph(
     })
 }
 
-/// Generate a directed cycle graph
+/// Generate a directed cycle graph.
 ///
 /// :param int num_nodes: The number of nodes to generate the graph with. Node
 ///     weights will be None if this is specified. If both ``num_nodes`` and
-///     ``weights`` are set this will be ignored and ``weights`` will be used.
-/// :param list weights: A list of node weights, the first element in the list
-///     will be the center node of the cycle graph. If both ``num_nodes`` and
-///     ``weights`` are set this will be ignored and ``weights`` will be used.
+///     ``weights`` are set, this will be ignored and ``weights`` will be used.
+/// :param Sequence[Any] weights: A sequence of node weights, typically a list.
+///     If both ``num_nodes`` and
+///     ``weights`` are set, this will be ignored and ``weights`` will be used.
 /// :param bool bidirectional: Adds edges in both directions between two nodes
 ///     if set to ``True``. Default value is ``False``
 /// :param bool multigraph: When set to ``False`` the output
@@ -138,14 +139,14 @@ pub fn directed_cycle_graph(
     })
 }
 
-/// Generate an undirected path graph
+/// Generate an undirected path graph.
 ///
 /// :param int num_nodes: The number of nodes to generate the graph with. Node
 ///     weights will be None if this is specified. If both ``num_nodes`` and
-///     ``weights`` are set this will be ignored and ``weights`` will be used.
-/// :param list weights: A list of node weights, the first element in the list
-///     will be the center node of the path graph. If both ``num_nodes`` and
-///     ``weights`` are set this will be ignored and ``weights`` will be used.
+///     ``weights`` are set, this will be ignored and ``weights`` will be used.
+/// :param Sequence[Any] weights: A sequence of node weights, typically a list.
+///     If both ``num_nodes`` and
+///     ``weights`` are set, this will be ignored and ``weights`` will be used.
 /// :param bool multigraph: When set to ``False`` the output
 ///     :class:`~rustworkx.PyGraph` object will not be not be a multigraph and
 ///     won't allow parallel edges to be added. Instead
@@ -191,14 +192,14 @@ pub fn path_graph(
     })
 }
 
-/// Generate a directed path graph
+/// Generate a directed path graph.
 ///
 /// :param int num_nodes: The number of nodes to generate the graph with. Node
 ///     weights will be None if this is specified. If both ``num_nodes`` and
-///     ``weights`` are set this will be ignored and ``weights`` will be used.
-/// :param list weights: A list of node weights, the first element in the list
-///     will be the center node of the path graph. If both ``num_nodes`` and
-///     ``weights`` are set this will be ignored and ``weights`` will be used.
+///     ``weights`` are set, this will be ignored and ``weights`` will be used.
+/// :param Sequence[Any] weights: A sequence of node weights, typically a list.
+///     If both ``num_nodes`` and
+///     ``weights`` are set, this will be ignored and ``weights`` will be used.
 /// :param bool bidirectional: Adds edges in both directions between two nodes
 ///     if set to ``True``. Default value is ``False``
 /// :param bool multigraph: When set to ``False`` the output
@@ -254,19 +255,19 @@ pub fn directed_path_graph(
     })
 }
 
-/// Generate an undirected star graph
+/// Generate an undirected star graph.
 ///
 /// :param int num_nodes: The number of nodes to generate the graph with. Node
 ///     weights will be None if this is specified. If both ``num_nodes`` and
-///     ``weights`` are set this will be ignored and ``weights`` will be used.
-/// :param list weights: A list of node weights, the first element in the list
+///     ``weights`` are set, this will be ignored and ``weights`` will be used.
+/// :param Sequence[Any] weights: A sequence of node weights, typically a list.
+///     The first element in the list
 ///     will be the center node of the star graph. If both ``num_nodes`` and
-///     ``weights`` are set this will be ignored and ``weights`` will be used.
+///     ``weights`` are set, this will be ignored and ``weights`` will be used.
 /// :param bool multigraph: When set to ``False`` the output
 ///     :class:`~rustworkx.PyGraph` object will not be not be a multigraph and
 ///     won't allow parallel edges to be added. Instead
 ///     calls which would create a parallel edge will update the existing edge.
-///
 ///
 /// :returns: The generated star graph
 /// :rtype: PyGraph
@@ -309,15 +310,16 @@ pub fn star_graph(
     })
 }
 
-/// Generate a directed star graph
+/// Generate a directed star graph.
 ///
 /// :param int num_nodes: The number of nodes to generate the graph with. Node
 ///     weights will be None if this is specified. If both ``num_nodes`` and
-///     ``weights`` are set this will be ignored and ``weights`` will be used.
-/// :param list weights: A list of node weights, the first element in the list
+///     ``weights`` are set, this will be ignored and ``weights`` will be used.
+/// :param Sequence[Any] weights: A sequence of node weights, typically a list.
+///     The first element in the list
 ///     will be the center node of the star graph. If both ``num_nodes`` and
-///     ``weights`` are set this will be ignored and ``weights`` will be used.
-/// :param bool inward: If set ``True`` the nodes will be directed towards the
+///     ``weights`` are set, this will be ignored and ``weights`` will be used.
+/// :param bool inward: If set to ``True``, the nodes will be directed towards the
 ///     center node. This parameter is ignored if ``bidirectional`` is set to
 ///     ``True``.
 /// :param bool bidirectional: Adds edges in both directions between two nodes
@@ -385,13 +387,14 @@ pub fn directed_star_graph(
     })
 }
 
-/// Generate an undirected mesh (complete) graph where every node is connected to every other
+/// Generate an undirected mesh (complete) graph where every node is connected to every other.
 ///
 /// :param int num_nodes: The number of nodes to generate the graph with. Node
 ///     weights will be None if this is specified. If both ``num_nodes`` and
-///     ``weights`` are set this will be ignored and ``weights`` will be used.
-/// :param list weights: A list of node weights. If both ``num_nodes`` and
-///     ``weights`` are set this will be ignored and ``weights`` will be used.
+///     ``weights`` are set, this will be ignored and ``weights`` will be used.
+/// :param Sequence[Any] weights: A sequence of node weights, typically a list.
+///     If both ``num_nodes`` and
+///     ``weights`` are set, this will be ignored and ``weights`` will be used.
 /// :param bool multigraph: When set to ``False`` the output
 ///     :class:`~rustworkx.PyGraph` object will not be not be a multigraph and
 ///     won't allow parallel edges to be added. Instead
@@ -422,13 +425,14 @@ pub fn mesh_graph(
     complete_graph(py, num_nodes, weights, multigraph)
 }
 
-/// Generate a directed mesh (complete) graph where every node is connected to every other
+/// Generate a directed mesh (complete) graph where every node is connected to every other.
 ///
 /// :param int num_nodes: The number of nodes to generate the graph with. Node
 ///     weights will be None if this is specified. If both ``num_nodes`` and
-///     ``weights`` are set this will be ignored and ``weights`` will be used.
-/// :param list weights: A list of node weights. If both ``num_nodes`` and
-///     ``weights`` are set this will be ignored and ``weights`` will be used.
+///     ``weights`` are set, this will be ignored and ``weights`` will be used.
+/// :param Sequence[Any] weights: A sequence of node weights, typically a list.
+///     If both ``num_nodes`` and
+///     ``weights`` are set, this will be ignored and ``weights`` will be used.
 /// :param bool multigraph: When set to ``False`` the output
 ///     :class:`~rustworkx.PyDiGraph` object will not be not be a multigraph and
 ///     won't allow parallel edges to be added. Instead
@@ -464,16 +468,17 @@ pub fn directed_mesh_graph(
 /// :param int rows: The number of rows to generate the graph with.
 ///     If specified, ``cols`` also need to be specified
 /// :param int cols: The number of cols to generate the graph with.
-///     If specified, ``rows`` also need to be specified. rows*cols
+///     If specified, ``rows`` also need to be specified. ``rows * cols``
 ///     defines the number of nodes in the graph
-/// :param list weights: A list of node weights. Nodes are filled row wise.
+/// :param Sequence[Any] weights: A sequence of node weights, typically a list.
+///     Nodes are filled row wise.
 ///     If rows and cols are not specified, then a linear graph containing
 ///     all the values in weights list is created.
-///     If number of nodes(rows*cols) is less than length of
+///     If number of nodes (``rows * cols``) is less than length of
 ///     weights list, the trailing weights are ignored.
-///     If number of nodes(rows*cols) is greater than length of
+///     If number of nodes (``rows * cols``) is greater than length of
 ///     weights list, extra nodes with None weight are appended.
-/// :param bool multigraph: When set to ``False`` the output
+/// :param bool multigraph: When set to ``False``, the output
 ///     :class:`~rustworkx.PyGraph` object will not be not be a multigraph and
 ///     won't allow parallel edges to be added. Instead
 ///     calls which would create a parallel edge will update the existing edge.
@@ -522,17 +527,18 @@ pub fn grid_graph(
 ///
 /// :param int rows: The number of rows to generate the graph with.
 ///     If specified, ``cols`` also need to be specified.
-/// :param int cols: The number of cols to generate the graph with.
-///     If specified, ``rows`` also need to be specified. rows*cols
+/// :param int cols: The number of columns to generate the graph with.
+///     If specified, ``rows`` also need to be specified. ``rows * cols``
 ///     defines the number of nodes in the graph.
-/// :param list weights: A list of node weights. Nodes are filled row wise.
+/// :param Sequence[Any] weights: A sequence of node weights, typically a list.
+///     Nodes are filled row wise.
 ///     If rows and cols are not specified, then a linear graph containing
 ///     all the values in weights list is created.
-///     If number of nodes(rows*cols) is less than length of
+///     If number of nodes(``rows * cols``) is less than length of
 ///     weights list, the trailing weights are ignored.
-///     If number of nodes(rows*cols) is greater than length of
+///     If number of nodes(``rows * cols``) is greater than length of
 ///     weights list, extra nodes with None weight are appended.
-/// :param bidirectional: A parameter to indicate if edges should exist in
+/// :param bool bidirectional: A parameter to indicate if edges should exist in
 ///     both directions between nodes. Defaults to ``False``.
 /// :param bool multigraph: When set to ``False`` the output
 ///     :class:`~rustworkx.PyDiGraph` object will not be not be a multigraph and
@@ -616,10 +622,10 @@ pub fn directed_grid_graph(
 ///   This function implements Fig 10.b left of the `paper <https://arxiv.org/abs/1907.09528>`_.
 ///   This function doesn't support the variant Fig 10.b right.
 ///
-/// Note that if ``d`` is set to ``1`` a :class:`~rustworkx.PyGraph` with a
+/// Note that if ``d`` is set to ``1``, a :class:`~rustworkx.PyGraph` with a
 /// single node will be returned.
 ///
-/// :param int d: distance of the code. If ``d`` is set to ``1`` a
+/// :param int d: distance of the code. If ``d`` is set to ``1``, a
 ///     :class:`~rustworkx.PyGraph` with a single node will be returned. ``d`` must be
 ///     an odd number.
 /// :param bool multigraph: When set to ``False`` the output
@@ -629,7 +635,7 @@ pub fn directed_grid_graph(
 ///
 /// :returns: The generated heavy square graph
 /// :rtype: PyGraph
-/// :raises IndexError: If d is even.
+/// :raises IndexError: If ``d`` is even
 ///
 /// .. jupyter-execute::
 ///
@@ -689,10 +695,10 @@ pub fn heavy_square_graph(py: Python, d: usize, multigraph: bool) -> PyResult<gr
 ///   This function implements Fig 10.b left of the `paper <https://arxiv.org/abs/1907.09528>`_.
 ///   This function doesn't support the variant Fig 10.b right.
 ///
-/// :param int d: distance of the code. If ``d`` is set to ``1`` a
+/// :param int d: distance of the code. If ``d`` is set to ``1``, a
 ///     :class:`~rustworkx.PyDiGraph` with a single node will be returned. ``d`` must be
 ///     an odd number.
-/// :param bidirectional: A parameter to indicate if edges should exist in
+/// :param bool bidirectional: A parameter to indicate if edges should exist in
 ///     both directions between nodes. Defaults to ``False``.
 /// :param bool multigraph: When set to ``False`` the output
 ///     :class:`~rustworkx.PyDiGraph` object will not be not be a multigraph and
@@ -701,7 +707,7 @@ pub fn heavy_square_graph(py: Python, d: usize, multigraph: bool) -> PyResult<gr
 ///
 /// :returns: The generated directed heavy square graph
 /// :rtype: PyDiGraph
-/// :raises IndexError: If d is even.
+/// :raises IndexError: If ``d`` is even
 ///
 /// .. jupyter-execute::
 ///
@@ -776,10 +782,10 @@ pub fn directed_heavy_square_graph(
 ///     ... D   D-S-D ...
 ///
 ///
-/// :param int d: distance of the code. If ``d`` is set to ``1`` a
+/// :param int d: distance of the code. If ``d`` is set to ``1``, a
 ///     :class:`~rustworkx.PyGraph` with a single node will be returned.
 ///     ``d`` must be an odd number.
-/// :param bidirectional: A parameter to indicate if edges should exist in
+/// :param bool bidirectional: A parameter to indicate if edges should exist in
 ///     both directions between nodes. Defaults to ``False``.
 /// :param bool multigraph: When set to ``False`` the output
 ///     :class:`~rustworkx.PyGraph` object will not be not be a multigraph and
@@ -788,7 +794,7 @@ pub fn directed_heavy_square_graph(
 ///
 /// :returns: The generated heavy hex graph
 /// :rtype: PyGraph
-/// :raises IndexError: If d is even.
+/// :raises IndexError: If ``d`` is even
 ///
 /// .. jupyter-execute::
 ///
@@ -856,7 +862,7 @@ pub fn heavy_hex_graph(py: Python, d: usize, multigraph: bool) -> PyResult<graph
 ///     ... D   D-S-D ...
 ///
 ///
-/// :param int d: distance of the code. If ``d`` is set to ``1`` a
+/// :param int d: distance of the code. If ``d`` is set to ``1``, a
 ///     :class:`~rustworkx.PyDiGraph` with a single node will be returned.
 ///     ``d`` must be an odd number.
 /// :param bool multigraph: When set to ``False`` the output
@@ -866,7 +872,7 @@ pub fn heavy_hex_graph(py: Python, d: usize, multigraph: bool) -> PyResult<graph
 ///
 /// :returns: The generated heavy hex directed graph
 /// :rtype: PyDiGraph
-/// :raises IndexError: If d is even.
+/// :raises IndexError: If ``d`` is even.
 ///
 /// .. jupyter-execute::
 ///
@@ -909,24 +915,25 @@ const MAX_ORDER: u32 = 60;
 #[cfg(not(target_pointer_width = "64"))]
 const MAX_ORDER: u32 = 29;
 
-/// Generate an undirected binomial tree of order n recursively.
+/// Generate an undirected binomial tree of order `n` recursively.
 ///
 /// :param int order: Order of the binomial tree. The maximum allowed value
-///     for order on the platform your running on. If it's a 64bit platform
+///     for order on the platform your running on. If it's a 64bit platform,
 ///     the max value is 60 and on 32bit systems the max value is 29. Any order
 ///     value above these will raise an ``OverflowError``.
-/// :param list weights: A list of node weights. If the number of weights is
-///     less than 2**order, extra nodes with None will be appended.
+/// :param Sequence[Any] weights: A sequence of node weights, typically a list.
+///     If the number of weights is
+///     less than ``2**order``, extra nodes with None will be appended.
 /// :param bool multigraph: When set to ``False`` the output
 ///     :class:`~rustworkx.PyGraph` object will not be not be a multigraph and
 ///     won't allow parallel edges to be added. Instead calls which would
 ///     create a parallel edge will update the existing edge.
 ///
-/// :returns: A binomial tree with 2^n vertices and 2^n - 1 edges.
+/// :returns: A binomial tree with `2^n` vertices and `2^n - 1` edges
 /// :rtype: PyGraph
 /// :raises IndexError: If the length of ``weights`` is greater that 2^n
 /// :raises OverflowError: If the input order exceeds the maximum value for the
-///     current platform.
+///     current platform
 ///
 /// .. jupyter-execute::
 ///
@@ -970,28 +977,29 @@ pub fn binomial_tree_graph(
     })
 }
 
-/// Generate a directed binomial tree of order n recursively.
+/// Generate a directed binomial tree of order `n` recursively.
 ///
 /// The edges propagate towards right and bottom direction if ``bidirectional`` is ``False``
 ///
 /// :param int order: Order of the binomial tree. The maximum allowed value
-///     for order on the platform your running on. If it's a 64bit platform
+///     for order on the platform your running on. If it's a 64bit platform,
 ///     the max value is 60 and on 32bit systems the max value is 29. Any order
 ///     value above these will raise an ``OverflowError``.
-/// :param list weights: A list of node weights. If the number of weights is
-///     less than 2**order, extra nodes with None will be appended.
-/// :param bidirectional: A parameter to indicate if edges should exist in
+/// :param Sequence[Any] weights: A sequence of node weights, typically a list.
+///     If the number of weights is
+///     less than ``2**order``, extra nodes with None will be appended.
+/// :param bool bidirectional: A parameter to indicate if edges should exist in
 ///     both directions between nodes. Defaults to ``False``.
 /// :param bool multigraph: When set to ``False`` the output
 ///     :class:`~rustworkx.PyDiGraph` object will not be not be a multigraph and
 ///     won't allow parallel edges to be added. Instead
 ///     calls which would create a parallel edge will update the existing edge.
 ///
-/// :returns: A directed binomial tree with 2^n vertices and 2^n - 1 edges.
+/// :returns: A directed binomial tree with `2^n` vertices and `2^n - 1` edges
 /// :rtype: PyDiGraph
-/// :raises IndexError: If the lenght of ``weights`` is greater that 2^n
+/// :raises IndexError: If the length of ``weights`` is greater that `2^n`
 /// :raises OverflowError: If the input order exceeds the maximum value for the
-///     current platform.
+///     current platform
 ///
 /// .. jupyter-execute::
 ///
@@ -1047,9 +1055,10 @@ pub fn directed_binomial_tree_graph(
 ///
 /// Sometimes called a k-ary, n-ary, or m-ary tree.
 ///
-/// :param int branching factor: The number of children at each node.
-/// :param int num_nodes: The number of nodes in the graph.
-/// :param list weights: A list of node weights. If the number of weights is
+/// :param int branching factor: The number of children at each node
+/// :param int num_nodes: The number of nodes in the graph
+/// :param Sequence[Any] weights: A sequence of node weights, typically a list.
+///     If the number of weights is
 ///     less than ``num_nodes``, extra nodes with None will be appended. The
 ///     number of weights cannot exceed num_nodes.
 /// :param bool multigraph: When set to ``False`` the output
@@ -1057,9 +1066,9 @@ pub fn directed_binomial_tree_graph(
 ///     won't allow parallel edges to be added. Instead
 ///     calls which would create a parallel edge will update the existing edge.
 ///
-/// :returns: A r-ary tree.
+/// :returns: A r-ary tree
 /// :rtype: PyGraph
-/// :raises IndexError: If the lenght of ``weights`` is greater that n
+/// :raises IndexError: If the length of ``weights`` is greater that ``num_nodes``
 ///
 /// .. jupyter-execute::
 ///
@@ -1111,24 +1120,22 @@ fn _hexagonal_lattice_node_position(u: usize, v: usize) -> (f64, f64) {
 
 /// Generate an undirected hexagonal lattice graph.
 ///
-/// :param int rows: The number of rows to generate the graph with.
-/// :param int cols: The number of columns to generate the graph with.
-/// :param bool multigraph: When set to ``False`` the output
+/// :param int rows: The number of rows to generate the graph with
+/// :param int cols: The number of columns to generate the graph with
+/// :param bool multigraph: When set to ``False``, the output
 ///     :class:`~rustworkx.PyGraph` object will not be not be a multigraph and
 ///     won't allow parallel edges to be added. Instead
 ///     calls which would create a parallel edge will update the existing edge.
-/// :param bool periodic: When set to ``True`` the boundaries of the lattice
+/// :param bool periodic: When set to ``True``, the boundaries of the lattice
 ///     will be joined to form a periodic grid. Requires ``cols`` to be even,
 ///     ``rows > 1``, and ``cols > 1``.
 /// :param bool with_positions: When set to ``True`` each node will be assigned
 ///     a pair of coordinates ``(x, y)`` as a weight. This embeds the nodes in
 ///     the plane so that each hexagon is regular (with side length 1).
 ///
-/// :returns: The generated hexagonal lattice graph.
-///
+/// :returns: The generated hexagonal lattice graph
 /// :rtype: PyGraph
-/// :raises TypeError: If either ``rows`` or ``cols`` are
-///      not specified
+/// :raises TypeError: If either ``rows`` or ``cols`` are not specified
 ///
 /// .. jupyter-execute::
 ///
@@ -1152,8 +1159,11 @@ pub fn hexagonal_lattice_graph(
 ) -> PyResult<graph::PyGraph> {
     let default_fn = || py.None();
     let graph: StablePyGraph<Undirected> = if with_positions {
-        let node_position_fn =
-            |u: usize, v: usize| _hexagonal_lattice_node_position(u, v).to_object(py);
+        let node_position_fn = |u: usize, v: usize| {
+            _hexagonal_lattice_node_position(u, v)
+                .into_py_any(py)
+                .unwrap()
+        };
         match core_generators::hexagonal_lattice_graph_weighted(
             rows,
             cols,
@@ -1186,8 +1196,8 @@ pub fn hexagonal_lattice_graph(
 /// The edges propagate towards right and bottom direction if ``bidirectional`` is ``False``
 ///
 /// :param int rows: The number of rows to generate the graph with.
-/// :param int cols: The number of rows to generate the graph with.
-/// :param bidirectional: A parameter to indicate if edges should exist in
+/// :param int cols: The number of columns to generate the graph with.
+/// :param bool bidirectional: A parameter to indicate if edges should exist in
 ///     both directions between nodes. Defaults to ``False``.
 /// :param bool multigraph: When set to ``False`` the output
 ///     :class:`~rustworkx.PyDiGraph` object will not be not be a multigraph and
@@ -1200,11 +1210,9 @@ pub fn hexagonal_lattice_graph(
 ///     a pair of coordinates ``(x, y)`` as a payload. This embeds the nodes in
 ///     the plane so that each hexagon is regular (with side length 1).
 ///
-/// :returns: The generated directed hexagonal lattice graph.
-///
+/// :returns: The generated directed hexagonal lattice graph
 /// :rtype: PyDiGraph
-/// :raises TypeError: If either ``rows`` or ``cols`` are
-///      not specified
+/// :raises TypeError: If either ``rows`` or ``cols`` are not specified
 ///
 /// .. jupyter-execute::
 ///
@@ -1229,8 +1237,11 @@ pub fn directed_hexagonal_lattice_graph(
 ) -> PyResult<digraph::PyDiGraph> {
     let default_fn = || py.None();
     let graph: StablePyGraph<Directed> = if with_positions {
-        let node_position_fn =
-            |u: usize, v: usize| _hexagonal_lattice_node_position(u, v).to_object(py);
+        let node_position_fn = |u: usize, v: usize| {
+            _hexagonal_lattice_node_position(u, v)
+                .into_py_any(py)
+                .unwrap()
+        };
         match core_generators::hexagonal_lattice_graph_weighted(
             rows,
             cols,
@@ -1269,22 +1280,24 @@ pub fn directed_hexagonal_lattice_graph(
 /// path.
 ///
 /// If neither ``num_path_nodes`` nor ``path_weights`` (both described
-/// below) are specified then this is equivalent to
+/// below) are specified, then this is equivalent to
 /// :func:`~rustworkx.generators.complete_graph`
 ///
 /// :param int num_mesh_nodes: The number of nodes to generate the mesh graph
 ///     with. Node weights will be None if this is specified. If both
-///     ``num_mesh_nodes`` and ``mesh_weights`` are set this will be ignored and
+///     ``num_mesh_nodes`` and ``mesh_weights`` are set, this will be ignored and
 ///     ``mesh_weights`` will be used.
 /// :param int num_path_nodes: The number of nodes to generate the path
 ///     with. Node weights will be None if this is specified. If both
-///     ``num_path_nodes`` and ``path_weights`` are set this will be ignored and
+///     ``num_path_nodes`` and ``path_weights`` are set, this will be ignored and
 ///     ``path_weights`` will be used.
-/// :param list mesh_weights: A list of node weights for the mesh graph. If both
-///     ``num_mesh_nodes`` and ``mesh_weights`` are set ``num_mesh_nodes`` will
+/// :param Sequence[Any] mesh_weights: A sequence of node weights for the mesh graph,
+///     typically a list. If both
+///     ``num_mesh_nodes`` and ``mesh_weights`` are set, ``num_mesh_nodes`` will
 ///     be ignored and ``mesh_weights`` will be used.
-/// :param list path_weights: A list of node weights for the path. If both
-///     ``num_path_nodes`` and ``path_weights`` are set ``num_path_nodes`` will
+/// :param Sequence[Any] path_weights: A sequence of node weights for the path,
+///     typically a list. If both
+///     ``num_path_nodes`` and ``path_weights`` are set, ``num_path_nodes`` will
 ///     be ignored and ``path_weights`` will be used.
 /// :param bool multigraph: When set to ``False`` the output
 ///     :class:`~rustworkx.PyGraph` object will not be not be a multigraph and
@@ -1347,21 +1360,23 @@ pub fn lollipop_graph(
 ///
 /// :param int num_mesh_nodes: The number of nodes to generate the mesh graphs
 ///     with. Node weights will be None if this is specified. If both
-///     ``num_mesh_nodes`` and ``mesh_weights`` are set this will be ignored and
+///     ``num_mesh_nodes`` and ``mesh_weights`` are set, this will be ignored and
 ///     ``mesh_weights`` will be used.
 /// :param int num_path_nodes: The number of nodes to generate the path
 ///     with. Node weights will be None if this is specified. If both
-///     ``num_path_nodes`` and ``path_weights`` are set this will be ignored and
+///     ``num_path_nodes`` and ``path_weights`` are set, this will be ignored and
 ///     ``path_weights`` will be used.
-/// :param bool multigraph: When set to ``False`` the output
+/// :param bool multigraph: When set to ``False``, the output
 ///     :class:`~rustworkx.PyGraph` object will not be not be a multigraph and
 ///     won't allow parallel edges to be added. Instead
 ///     calls which would create a parallel edge will update the existing edge.
-/// :param list mesh_weights: A list of node weights for the mesh graph. If both
-///     ``num_mesh_nodes`` and ``mesh_weights`` are set ``num_mesh_nodes`` will
+/// :param Sequence[Any] mesh_weights: A sequence of node weights for the path,
+///     typically a list. If both
+///     ``num_mesh_nodes`` and ``mesh_weights`` are set, ``num_mesh_nodes`` will
 ///     be ignored and ``mesh_weights`` will be used.
-/// :param list path_weights: A list of node weights for the path. If both
-///     ``num_path_nodes`` and ``path_weights`` are set ``num_path_nodes`` will
+/// :param Sequence[Any] path_weights: A sequence of node weights for the path,
+///     typically a list. If both
+///     ``num_path_nodes`` and ``path_weights`` are set, ``num_path_nodes`` will
 ///     be ignored and ``path_weights`` will be used.
 ///
 /// :returns: The generated barbell graph
@@ -1426,13 +1441,10 @@ pub fn barbell_graph(
 ///     won't allow parallel edges to be added. Instead
 ///     calls which would create a parallel edge will update the existing edge.
 ///
-/// :returns: The generated generalized Petersen graph.
-///
+/// :returns: The generated generalized Petersen graph
 /// :rtype: PyGraph
-/// :raises IndexError: If either ``n`` or ``k`` are
-///      not valid
-/// :raises TypeError: If either ``n`` or ``k`` are
-///      not non-negative integers
+/// :raises IndexError: If either ``n`` or ``k`` are not valid
+/// :raises TypeError: If either ``n`` or ``k`` are not non-negative integers
 ///
 /// .. jupyter-execute::
 ///   
@@ -1488,7 +1500,7 @@ pub fn generalized_petersen_graph(
 
 /// Generate an undirected empty graph with ``n`` nodes and no edges.
 ///
-/// :param int n: The number of nodes to generate the graph with.
+/// :param int n: The number of nodes to generate the graph with
 ///
 /// :returns: The generated empty graph
 /// :rtype: PyGraph
@@ -1520,7 +1532,7 @@ pub fn empty_graph(py: Python, n: usize, multigraph: bool) -> PyResult<graph::Py
 
 /// Generate a directed empty graph with ``n`` nodes and no edges.
 ///
-/// :param int n: The number of nodes to generate the graph with.
+/// :param int n: The number of nodes to generate the graph with
 ///
 /// :returns: The generated empty graph
 /// :rtype: PyDiGraph
@@ -1566,9 +1578,10 @@ pub fn directed_empty_graph(
 ///
 /// :param int num_nodes: The number of nodes to generate the graph with. Node
 ///     weights will be None if this is specified. If both ``num_nodes`` and
-///     ``weights`` are set this will be ignored and ``weights`` will be used.
-/// :param list weights: A list of node weights. If both ``num_nodes`` and
-///     ``weights`` are set this will be ignored and ``weights`` will be used.
+///     ``weights`` are set, this will be ignored and ``weights`` will be used.
+/// :param Sequence[Any] weights: A sequence of node weights, typically a list.
+///     If both ``num_nodes`` and
+///     ``weights`` are set, this will be ignored and ``weights`` will be used.
 /// :param bool multigraph: When set to ``False`` the output
 ///     :class:`~rustworkx.PyGraph` object will not be not be a multigraph and
 ///     won't allow parallel edges to be added. Instead
@@ -1624,9 +1637,10 @@ pub fn complete_graph(
 ///
 /// :param int num_nodes: The number of nodes to generate the graph with. Node
 ///     weights will be None if this is specified. If both ``num_nodes`` and
-///     ``weights`` are set this will be ignored and ``weights`` will be used.
-/// :param list weights: A list of node weights. If both ``num_nodes`` and
-///     ``weights`` are set this will be ignored and ``weights`` will be used.
+///     ``weights`` are set, this will be ignored and ``weights`` will be used.
+/// :param Sequence[Any] weights: A sequence of node weights, typically a list.
+///     If both ``num_nodes`` and
+///     ``weights`` are set, this will be ignored and ``weights`` will be used.
 /// :param bool multigraph: When set to ``False`` the output
 ///     :class:`~rustworkx.PyDiGraph` object will not be not be a multigraph and
 ///     won't allow parallel edges to be added. Instead
@@ -1683,7 +1697,6 @@ pub fn directed_complete_graph(
 /// :param int n: The number of iterations to perform.
 ///
 /// :returns: The generated Dorogovtsev-Goltsev-Mendes graph
-///
 /// :rtype: PyGraph
 ///
 /// .. jupyter-execute::
@@ -1711,6 +1724,58 @@ pub fn dorogovtsev_goltsev_mendes_graph(py: Python, n: usize) -> PyResult<graph:
         graph,
         node_removed: false,
         multigraph: false,
+        attrs: py.None(),
+    })
+}
+
+/// Generates Zachary's Karate Club graph.
+///
+/// Zachary's Karate Club graph is a well-known social network that represents
+/// the relations between 34 members of a karate club, as described in the
+/// paper by Zachary [1]_.
+///
+/// The graph is undirected and contains 34 nodes (members) and 78 edges
+/// (interactions). Each node represents a club member, and each edge represents
+/// a relationship between two members.
+///
+/// :param bool multigraph: When set to ``False``, the output
+///     :class:`~rustworkx.PyGraph` object will not be not be a multigraph and
+///     won't allow parallel edges to be added. Instead
+///     calls which would create a parallel edge will update the existing edge.
+///
+/// :returns: The undirected graph representing the Karate club graph.
+///           Each node is labeled according to its assigned faction.
+/// :rtype: PyGraph
+///
+/// .. jupyter-execute::
+///   
+///   import rustworkx.generators
+///   from rustworkx.visualization import mpl_draw
+///   
+///   graph = rustworkx.generators.karate_club_graph()
+///   layout = rustworkx.circular_layout(graph)
+///   mpl_draw(graph, pos=layout)
+///   
+/// .. [1] Zachary, Wayne W.
+///     "An information flow model for conflict and fission in small groups"
+///     Journal of Anthropological Research, 33, 452-473.
+///     https://doi.org/10.1086/jar.33.4.3629752
+#[pyfunction]
+#[pyo3(
+    signature=(multigraph=true),
+)]
+pub fn karate_club_graph(py: Python, multigraph: bool) -> PyResult<graph::PyGraph> {
+    let default_node_fn = |w: bool| match w {
+        true => "Mr. Hi".into_py_any(py).unwrap(),
+        false => "Officer".into_py_any(py).unwrap(),
+    };
+    let default_edge_fn = |w: usize| (w as f64).into_py_any(py).unwrap();
+    let graph: StablePyGraph<Undirected> =
+        core_generators::karate_club_graph(default_node_fn, default_edge_fn);
+    Ok(graph::PyGraph {
+        graph,
+        node_removed: false,
+        multigraph,
         attrs: py.None(),
     })
 }
@@ -1744,5 +1809,6 @@ pub fn generators(_py: Python, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(complete_graph))?;
     m.add_wrapped(wrap_pyfunction!(directed_complete_graph))?;
     m.add_wrapped(wrap_pyfunction!(dorogovtsev_goltsev_mendes_graph))?;
+    m.add_wrapped(wrap_pyfunction!(karate_club_graph))?;
     Ok(())
 }

@@ -1,0 +1,8 @@
+---
+upgrade:
+  - |
+    The minimum supported rust version to build rustworkx and rustworkx-core
+    has been raised from 1.70 to 1.79. You will need to upgrade your rust
+    compiler version to at least version 1.79 to continue building from source.
+    Python library users who are installing rustworkx on a supported platform
+    will not need to make any changes.

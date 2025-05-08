@@ -17,6 +17,7 @@ mod coloring;
 mod connectivity;
 mod dag_algo;
 mod digraph;
+mod dominance;
 mod dot_utils;
 mod generators;
 mod graph;
@@ -47,6 +48,7 @@ use centrality::*;
 use coloring::*;
 use connectivity::*;
 use dag_algo::*;
+use dominance::*;
 use graphml::*;
 use isomorphism::*;
 use json::*;
@@ -112,6 +114,7 @@ use rustworkx_core::err::{ContractError, ContractSimpleError};
 /// [PyErr] type will be converted to [RxPyErr] using the same
 /// mechanism, allowing Rustworkx core and PyO3 API usage to be
 /// intermixed within the same calling function.
+#[derive(IntoPyObject)]
 pub struct RxPyErr {
     pyerr: PyErr,
 }
@@ -157,12 +160,6 @@ impl From<TopologicalSortError<PyErr>> for RxPyErr {
     }
 }
 
-impl IntoPy<PyObject> for RxPyErr {
-    fn into_py(self, py: Python<'_>) -> PyObject {
-        self.pyerr.into_value(py).into()
-    }
-}
-
 impl From<RxPyErr> for PyErr {
     fn from(value: RxPyErr) -> Self {
         value.pyerr
@@ -201,7 +198,7 @@ pub trait NodesRemoved {
     fn nodes_removed(&self) -> bool;
 }
 
-impl<'a, Ty> NodesRemoved for &'a StablePyGraph<Ty>
+impl<Ty> NodesRemoved for &StablePyGraph<Ty>
 where
     Ty: EdgeType,
 {
@@ -374,67 +371,112 @@ fn find_node_by_weight<Ty: EdgeType>(
     Ok(index)
 }
 
-// The provided node is invalid.
-create_exception!(rustworkx, InvalidNode, PyException);
-// Performing this operation would result in trying to add a cycle to a DAG.
-create_exception!(rustworkx, DAGWouldCycle, PyException);
-// There is no edge present between the provided nodes.
-create_exception!(rustworkx, NoEdgeBetweenNodes, PyException);
-// The specified Directed Graph has a cycle and can't be treated as a DAG.
-create_exception!(rustworkx, DAGHasCycle, PyException);
-// No neighbors found matching the provided predicate.
-create_exception!(rustworkx, NoSuitableNeighbors, PyException);
-// Invalid operation on a null graph
-create_exception!(rustworkx, NullGraph, PyException);
-// No path was found between the specified nodes.
-create_exception!(rustworkx, NoPathFound, PyException);
-// No mapping was found for the request swapping
-create_exception!(rustworkx, InvalidMapping, PyException);
+create_exception!(
+    rustworkx,
+    InvalidNode,
+    PyException,
+    "The provided node is invalid."
+);
+create_exception!(
+    rustworkx,
+    DAGWouldCycle,
+    PyException,
+    "Performing this operation would result in trying to add a cycle to a DAG."
+);
+create_exception!(
+    rustworkx,
+    NoEdgeBetweenNodes,
+    PyException,
+    "There is no edge present between the provided nodes."
+);
+create_exception!(
+    rustworkx,
+    DAGHasCycle,
+    PyException,
+    "The specified Directed Graph has a cycle and can't be treated as a DAG."
+);
+create_exception!(
+    rustworkx,
+    NoSuitableNeighbors,
+    PyException,
+    "No neighbors found matching the provided predicate."
+);
+create_exception!(
+    rustworkx,
+    NullGraph,
+    PyException,
+    "Invalid operation on a null graph"
+);
+create_exception!(
+    rustworkx,
+    NoPathFound,
+    PyException,
+    "No path was found between the specified nodes."
+);
+create_exception!(
+    rustworkx,
+    InvalidMapping,
+    PyException,
+    "No mapping was found for the request swapping"
+);
+
 // Prune part of the search tree while traversing a graph.
 import_exception!(rustworkx.visit, PruneSearch);
 // Stop graph traversal.
 import_exception!(rustworkx.visit, StopSearch);
-// JSON Error
-create_exception!(rustworkx, JSONSerializationError, PyException);
-// JSON Error
-create_exception!(rustworkx, JSONDeserializationError, PyException);
-// Negative Cycle found on shortest-path algorithm
-create_exception!(rustworkx, NegativeCycle, PyException);
-// Failed to Converge on a solution
-create_exception!(rustworkx, FailedToConverge, PyException);
-// Graph is not bipartite
-create_exception!(rustworkx, GraphNotBipartite, PyException);
+
+create_exception!(
+    rustworkx,
+    JSONSerializationError,
+    PyException,
+    "JSON Serialization Error"
+);
+create_exception!(
+    rustworkx,
+    JSONDeserializationError,
+    PyException,
+    "JSON Deserialization Error"
+);
+create_exception!(
+    rustworkx,
+    NegativeCycle,
+    PyException,
+    "Negative Cycle found on shortest-path algorithm"
+);
+create_exception!(
+    rustworkx,
+    FailedToConverge,
+    PyException,
+    "Failed to Converge on a solution"
+);
+create_exception!(
+    rustworkx,
+    GraphNotBipartite,
+    PyException,
+    "Graph is not bipartite"
+);
 
 #[pymodule]
 fn rustworkx(py: Python<'_>, m: &Bound<PyModule>) -> PyResult<()> {
     m.add("__version__", env!("CARGO_PKG_VERSION"))?;
-    m.add("InvalidNode", py.get_type_bound::<InvalidNode>())?;
-    m.add("DAGWouldCycle", py.get_type_bound::<DAGWouldCycle>())?;
-    m.add(
-        "NoEdgeBetweenNodes",
-        py.get_type_bound::<NoEdgeBetweenNodes>(),
-    )?;
-    m.add("DAGHasCycle", py.get_type_bound::<DAGHasCycle>())?;
-    m.add(
-        "NoSuitableNeighbors",
-        py.get_type_bound::<NoSuitableNeighbors>(),
-    )?;
-    m.add("NoPathFound", py.get_type_bound::<NoPathFound>())?;
-    m.add("InvalidMapping", py.get_type_bound::<InvalidMapping>())?;
-    m.add("NullGraph", py.get_type_bound::<NullGraph>())?;
-    m.add("NegativeCycle", py.get_type_bound::<NegativeCycle>())?;
+    m.add("InvalidNode", py.get_type::<InvalidNode>())?;
+    m.add("DAGWouldCycle", py.get_type::<DAGWouldCycle>())?;
+    m.add("NoEdgeBetweenNodes", py.get_type::<NoEdgeBetweenNodes>())?;
+    m.add("DAGHasCycle", py.get_type::<DAGHasCycle>())?;
+    m.add("NoSuitableNeighbors", py.get_type::<NoSuitableNeighbors>())?;
+    m.add("NoPathFound", py.get_type::<NoPathFound>())?;
+    m.add("InvalidMapping", py.get_type::<InvalidMapping>())?;
+    m.add("NullGraph", py.get_type::<NullGraph>())?;
+    m.add("NegativeCycle", py.get_type::<NegativeCycle>())?;
     m.add(
         "JSONSerializationError",
-        py.get_type_bound::<JSONSerializationError>(),
+        py.get_type::<JSONSerializationError>(),
     )?;
-    m.add("FailedToConverge", py.get_type_bound::<FailedToConverge>())?;
-    m.add(
-        "GraphNotBipartite",
-        py.get_type_bound::<GraphNotBipartite>(),
-    )?;
+    m.add("FailedToConverge", py.get_type::<FailedToConverge>())?;
+    m.add("GraphNotBipartite", py.get_type::<GraphNotBipartite>())?;
     m.add(
         "JSONDeserializationError",
-        py.get_type_bound::<JSONDeserializationError>(),
+        py.get_type::<JSONDeserializationError>(),
     )?;
     m.add_wrapped(wrap_pyfunction!(bfs_successors))?;
     m.add_wrapped(wrap_pyfunction!(bfs_predecessors))?;
@@ -464,6 +506,8 @@ fn rustworkx(py: Python<'_>, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(graph_vf2_mapping))?;
     m.add_wrapped(wrap_pyfunction!(digraph_union))?;
     m.add_wrapped(wrap_pyfunction!(graph_union))?;
+    m.add_wrapped(wrap_pyfunction!(immediate_dominators))?;
+    m.add_wrapped(wrap_pyfunction!(dominance_frontiers))?;
     m.add_wrapped(wrap_pyfunction!(digraph_maximum_bisimulation))?;
     m.add_wrapped(wrap_pyfunction!(digraph_cartesian_product))?;
     m.add_wrapped(wrap_pyfunction!(graph_cartesian_product))?;
@@ -527,12 +571,20 @@ fn rustworkx(py: Python<'_>, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(digraph_betweenness_centrality))?;
     m.add_wrapped(wrap_pyfunction!(graph_closeness_centrality))?;
     m.add_wrapped(wrap_pyfunction!(digraph_closeness_centrality))?;
+    m.add_wrapped(wrap_pyfunction!(graph_newman_weighted_closeness_centrality))?;
+    m.add_wrapped(wrap_pyfunction!(
+        digraph_newman_weighted_closeness_centrality
+    ))?;
     m.add_wrapped(wrap_pyfunction!(graph_edge_betweenness_centrality))?;
     m.add_wrapped(wrap_pyfunction!(digraph_edge_betweenness_centrality))?;
     m.add_wrapped(wrap_pyfunction!(graph_eigenvector_centrality))?;
     m.add_wrapped(wrap_pyfunction!(digraph_eigenvector_centrality))?;
     m.add_wrapped(wrap_pyfunction!(graph_katz_centrality))?;
     m.add_wrapped(wrap_pyfunction!(digraph_katz_centrality))?;
+    m.add_wrapped(wrap_pyfunction!(graph_degree_centrality))?;
+    m.add_wrapped(wrap_pyfunction!(digraph_degree_centrality))?;
+    m.add_wrapped(wrap_pyfunction!(in_degree_centrality))?;
+    m.add_wrapped(wrap_pyfunction!(out_degree_centrality))?;
     m.add_wrapped(wrap_pyfunction!(graph_astar_shortest_path))?;
     m.add_wrapped(wrap_pyfunction!(digraph_astar_shortest_path))?;
     m.add_wrapped(wrap_pyfunction!(graph_greedy_color))?;
@@ -560,7 +612,11 @@ fn rustworkx(py: Python<'_>, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(undirected_random_bipartite_graph))?;
     m.add_wrapped(wrap_pyfunction!(cycle_basis))?;
     m.add_wrapped(wrap_pyfunction!(simple_cycles))?;
+    m.add_wrapped(wrap_pyfunction!(number_strongly_connected_components))?;
     m.add_wrapped(wrap_pyfunction!(strongly_connected_components))?;
+    m.add_wrapped(wrap_pyfunction!(is_strongly_connected))?;
+    m.add_wrapped(wrap_pyfunction!(digraph_condensation))?;
+    m.add_wrapped(wrap_pyfunction!(graph_condensation))?;
     m.add_wrapped(wrap_pyfunction!(digraph_dfs_edges))?;
     m.add_wrapped(wrap_pyfunction!(graph_dfs_edges))?;
     m.add_wrapped(wrap_pyfunction!(digraph_find_cycle))?;
@@ -578,6 +634,7 @@ fn rustworkx(py: Python<'_>, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(digraph_core_number))?;
     m.add_wrapped(wrap_pyfunction!(graph_complement))?;
     m.add_wrapped(wrap_pyfunction!(digraph_complement))?;
+    m.add_wrapped(wrap_pyfunction!(local_complement))?;
     m.add_wrapped(wrap_pyfunction!(graph_random_layout))?;
     m.add_wrapped(wrap_pyfunction!(digraph_random_layout))?;
     m.add_wrapped(wrap_pyfunction!(graph_bipartite_layout))?;

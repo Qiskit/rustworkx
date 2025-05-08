@@ -178,7 +178,7 @@ fn euler_cycles(input_graph: &EdgedGraph) -> Vec<Vec<EdgeIndex>> {
 }
 
 /// Splits a regular bipartite multigraph g of even degree 2k into two regular
-/// bipartte multigraphs h0 and h1 of degree k.
+/// bipartite multigraphs h0 and h1 of degree k.
 fn rbmg_split_into_two(
     g: &RegularBipartiteMultiGraph,
 ) -> (RegularBipartiteMultiGraph, RegularBipartiteMultiGraph) {
@@ -411,7 +411,7 @@ fn rbmg_edge_color(g0: &RegularBipartiteMultiGraph) -> Vec<Matching> {
 /// Arguments:
 ///
 /// * `graph` - The graph object to run the algorithm on. The graph is
-///     assumed to be bipartite.
+///   assumed to be bipartite.
 /// * `l_nodes` - The vector containing the "left" nodes of the graph.
 /// * `r_nodes` - The vector containing the "right" nodes of the graph.
 ///
@@ -538,7 +538,7 @@ where
     }
 
     // Reconstruct coloring of the original graph by iterating over the edges, finding the
-    // correponding edge (endpoints) in the multigraph, and selecting the last (not yet
+    // corresponding edge (endpoints) in the multigraph, and selecting the last (not yet
     // assigned) color of that edge
     let mut edge_coloring: DictMap<G::EdgeId, usize> = DictMap::with_capacity(graph.edge_count());
     for edge in graph.edge_references() {
@@ -904,7 +904,7 @@ mod test_bipartite_coloring {
             match bipartite_edge_color(&graph) {
                 Ok(edge_coloring) => {
                     check_edge_coloring_undirected(&graph, &edge_coloring, Some(3));
-                    // check_bipatite_edge_coloring_is_valid(&graph, &edge_coloring, Some(3));
+                    // check_bipartite_edge_coloring_is_valid(&graph, &edge_coloring, Some(3));
                 }
                 Err(_) => panic!("This should error"),
             }
@@ -969,9 +969,8 @@ mod test_bipartite_coloring {
                 if n > 2 * k {
                     let graph: petgraph::graph::UnGraph<(), ()> =
                         petersen_graph(n, k, || (), || ()).unwrap();
-                    match bipartite_edge_color(&graph) {
-                        Ok(_) => panic!("This should error"),
-                        Err(_) => (),
+                    if bipartite_edge_color(&graph).is_ok() {
+                        panic!("This should error")
                     }
                 }
             }
@@ -980,9 +979,9 @@ mod test_bipartite_coloring {
 
     #[test]
     fn test_bipartite_random_graphs_undirected() {
-        for num_l_nodes in vec![5, 10, 15, 20] {
-            for num_r_nodes in vec![5, 10, 15, 20] {
-                for probability in vec![0.1, 0.3, 0.5, 0.7, 0.9] {
+        for num_l_nodes in [5, 10, 15, 20] {
+            for num_r_nodes in [5, 10, 15, 20] {
+                for probability in [0.1, 0.3, 0.5, 0.7, 0.9] {
                     let graph: petgraph::graph::UnGraph<(), ()> = random_bipartite_graph(
                         num_l_nodes,
                         num_r_nodes,
@@ -1014,9 +1013,9 @@ mod test_bipartite_coloring {
 
     #[test]
     fn test_bipartite_random_graphs_directed() {
-        for num_l_nodes in vec![5, 10, 15, 20] {
-            for num_r_nodes in vec![5, 10, 15, 20] {
-                for probability in vec![0.1, 0.3, 0.5, 0.7, 0.9] {
+        for num_l_nodes in [5, 10, 15, 20] {
+            for num_r_nodes in [5, 10, 15, 20] {
+                for probability in [0.1, 0.3, 0.5, 0.7, 0.9] {
                     let graph: petgraph::graph::DiGraph<(), ()> = random_bipartite_graph(
                         num_l_nodes,
                         num_r_nodes,
