@@ -1167,7 +1167,7 @@ impl PyGraph {
     #[pyo3(text_signature = "(self, node, /)")]
     pub fn adj(&mut self, node: usize) -> DictMap<usize, &PyObject> {
         let index = NodeIndex::new(node);
-        self.graph
+        self.graphdel
             .edges_directed(index, petgraph::Direction::Outgoing)
             .map(|edge| (edge.target().index(), edge.weight()))
             .collect()
@@ -1368,8 +1368,15 @@ impl PyGraph {
     ///       fd.write('2 3\n')
     ///       fd.flush()
     ///       graph = rx.PyGraph.read_edge_list(path=path)
-    ///   mpl_draw(graph)
-    ///
+    ///   
+    /// For example for csv based data, you may use the below code
+    /// 
+    ///     graph = rx.PyGraph.read_edge_list(path=file, deliminator=",")
+    /// 
+    /// Data with labels for nodes
+    /// 
+    ///     graph = rx.PyGraph.read_edge_list(path=file, deliminator=",",labels=True)
+    /// 
     #[staticmethod]
     #[pyo3(signature=(path, comment=None, deliminator=None, labels=false),  text_signature = "(path, /, comment=None, deliminator=None, labels=False)")]
     pub fn read_edge_list(
