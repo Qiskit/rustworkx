@@ -1,0 +1,6 @@
+---
+features:
+  - |
+    Add :func:`rustworkx.immediate_dominators` function for computing
+    immediate dominators of all nodes in a directed graph.
+    This function mirrors the ``networkx.immediate_dominators`` function.

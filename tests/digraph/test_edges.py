@@ -277,6 +277,32 @@ class TestEdges(unittest.TestCase):
         with self.assertRaises(rustworkx.NoSuitableNeighbors):
             dag.find_predecessor_node_by_edge(node_b, compare_edges)
 
+    def test_find_successor_node_by_edge(self):
+        dag = rustworkx.PyDiGraph()
+        node_a = dag.add_node("a")
+        node_b = dag.add_child(node_a, "b", "a to b")
+        node_c = dag.add_child(node_b, "c", "b to c")
+        dag.add_child(node_c, "d", "c to d")
+
+        def compare_edges(edge):
+            return "b to c" == edge
+
+        res = dag.find_successor_node_by_edge(node_b, compare_edges)
+        self.assertEqual("b", res)
+
+    def test_find_successor_node_by_edge_no_match(self):
+        dag = rustworkx.PyDiGraph()
+        node_a = dag.add_node("a")
+        node_b = dag.add_child(node_a, "b", "a to b")
+        node_c = dag.add_child(node_b, "c", "b to c")
+        dag.add_child(node_c, "d", "c to d")
+
+        def compare_edges(edge):
+            return "b to c" == edge
+
+        with self.assertRaises(rustworkx.NoSuitableNeighbors):
+            dag.find_successor_node_by_edge(node_c, compare_edges)
+
     def test_add_edge_from(self):
         dag = rustworkx.PyDAG()
         nodes = list(range(4))
@@ -812,6 +838,40 @@ class TestEdges(unittest.TestCase):
         graph.add_edge(node_d, node_c, "edge c")
         res = graph.incident_edges(node_d, all_edges=True)
         self.assertEqual([2, 1], res)
+
+    def test_in_edge_indices(self):
+        graph = rustworkx.PyDiGraph()
+        node_a = graph.add_node(0)
+        node_b = graph.add_node(1)
+        node_c = graph.add_node("c")
+        node_d = graph.add_node("d")
+        edge_ac = graph.add_edge(node_a, node_c, "edge a")
+        graph.add_edge(node_b, node_d, "edge b")
+        edge_dc = graph.add_edge(node_d, node_c, "edge c")
+        res = graph.in_edge_indices(node_c)
+        self.assertEqual([edge_dc, edge_ac], res)
+
+    def test_in_edge_indices_invalid_node(self):
+        graph = rustworkx.PyDiGraph()
+        res = graph.in_edge_indices(0)
+        self.assertEqual([], res)
+
+    def test_out_edge_indices(self):
+        graph = rustworkx.PyDiGraph()
+        node_a = graph.add_node(0)
+        node_b = graph.add_node(1)
+        node_c = graph.add_node("c")
+        node_d = graph.add_node("d")
+        edge_ab = graph.add_edge(node_a, node_b, "edge a")
+        edge_ac = graph.add_edge(node_a, node_c, "edge b")
+        graph.add_edge(node_c, node_d, "edge c")
+        res = graph.out_edge_indices(node_a)
+        self.assertEqual([edge_ac, edge_ab], res)
+
+    def test_out_edge_indices_invalid_node(self):
+        graph = rustworkx.PyDiGraph()
+        res = graph.out_edge_indices(0)
+        self.assertEqual([], res)
 
     def test_incident_edge_index_map(self):
         graph = rustworkx.PyDiGraph()

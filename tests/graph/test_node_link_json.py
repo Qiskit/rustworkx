@@ -126,7 +126,7 @@ class TestNodeLinkJSON(unittest.TestCase):
             self.assertEqual(json_dict, expected)
 
     def test_invalid_path_dir(self):
-        nonexistent_path = tempfile.gettempdir() + "/" + str(uuid.uuid4()) + "/graph.rustworkx.json"
+        nonexistent_path = f"{tempfile.gettempdir()}/{uuid.uuid4()}/graph.rustworkx.json"
         graph = rustworkx.PyGraph()
         with self.assertRaises(FileNotFoundError):
             rustworkx.node_link_json(graph, path=nonexistent_path)

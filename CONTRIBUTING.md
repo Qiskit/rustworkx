@@ -119,7 +119,7 @@ are no changes made to the rust code. To avoid this you can use the
 `--no-install` package if you'd like to rerun tests without recompiling.
 Note, you only want to use this flag if you recently ran Nox and there are no
 rust code (or packaged python code) changes to the repo since then. Otherwise
-the rustworkx package Nox installs in it's virtualenv will be out of date (or
+the rustworkx package Nox installs in its virtualenv will be out of date (or
 missing).
 
 Note, if you run tests outside of Nox that you can **not** run the tests from
@@ -194,8 +194,8 @@ the run finishes so you can inspect the output.
 
 #### rustworkx-core tests
 
-As rustworkx-core is a standalone rust crate with it's own public interface it
-needs it's own testing. These tests can be a combination of doc tests (embedded
+As rustworkx-core is a standalone rust crate with its own public interface it
+needs its own testing. These tests can be a combination of doc tests (embedded
 code examples in the docstrings in the rust code) or standalone tests. You
 can refer to the rust book on how to add tests:
 
@@ -203,10 +203,51 @@ https://doc.rust-lang.org/book/ch11-01-writing-tests.html
 
 The rustworkx-core tests can be run with:
 ```
-cargo test
+cargo test --workspace
 ```
 
-from the `rustworkx-core` directory.
+### Fuzz Testing in rustworkx
+
+We use cargo-fuzz to test rustworkx for unexpected crashes or undefined behavior. Follow these steps to run fuzzing locally.
+
+#### Building Fuzz Targets
+To build the fuzzing targets, first install cargo-fuzz:
+```sh
+cargo install cargo-fuzz
+```
+then run the following command:
+
+```sh
+cargo fuzz build
+```
+#### To run a fuzz test (e.g., test_traversal_node_coverage):
+
+List all the targets:
+```sh
+cargo fuzz list
+```
+Run the tests from the list
+```sh
+cargo fuzz run test_traversal_node_coverage
+```
+For nightly toolchain:
+```sh
+cargo +nightly fuzz run test_traversal_node_coverage
+```
+Limit fuzz testing to a specific time (e.g., 60 seconds):
+```sh
+cargo +nightly fuzz run test_traversal_node_coverage -- -max_total_time=60
+```
+#### Interpreting Failures
+Failures are stored in the fuzz/artifacts/ directory.
+
+#### Contributing to Fuzzing
+
+Add Fuzz Targets: Create new targets in the fuzz directory.
+Fix Failures: Investigate and fix bugs found by fuzz tests.
+
+Fuzz tests can be resource-heavy. Run them locally to save resources.
+Submit fuzz tests with detailed documentation and commit messages.
 
 ### Style
 
@@ -228,10 +269,16 @@ what CI is checking.
 ##### Lint
 
 An additional step is to run [clippy](https://github.com/rust-lang/rust-clippy)
-on your changes. You can run it by running:
+on your changes. You can execute it by running:
 
 ```bash
 cargo clippy
+```
+
+If you want a more detailed feedback identical to CI, run instead:
+
+```bash
+cargo clippy --workspace --all-targets -- -D warnings
 ```
 
 #### Python
@@ -267,10 +314,9 @@ you can view locally in a web browser.
 To build the rustworkx-core documentation you will use rust-doc. You can do this
 by running:
 ```
-cargo doc
+cargo doc -p rustworkx-core
 ```
-from the `rustworkx-core` directory (which is the root of the `rustworkx-core`
-crate. After it's built the compiled documentation will be located in
+After it's built the compiled documentation will be located in
 `target/doc/rustworkx_core` (which is off the repo root not the `rustworkx-core`
 dir)
 
@@ -278,13 +324,13 @@ You can build and open the documentation directly in your configured default
 web browser by running:
 
 ```
-cargo doc --open
+cargo doc -p rustworkx-core --open
 ```
 
 ### Type Annotations
 
 If you have added new methods, functions, or classes, and/or changed any
-signatures, type anotations for Python are required to be included in a pull
+signatures, type annotations for Python are required to be included in a pull
 request. Type annotations are added using type
 [stub files](https://typing.readthedocs.io/en/latest/source/stubs.html) which
 provide type annotations to python tooling which use type annotations. The stub
@@ -523,7 +569,7 @@ primary exception to this is adding support for new python versions. If a new
 python version is released backporting that feature change with that new support
 is an acceptable backport.
 
-In rustworkx at least until the 1.0 release we only maintaing a single stable
+In rustworkx at least until the 1.0 release we only maintain a single stable
 branch at a time for the most recent minor version release.
 
 #### Backporting procedure

@@ -1,0 +1,57 @@
+[package]
+name = "rustworkx-core-fuzz"
+version = "0.0.0"
+publish = false
+edition = "2021"
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+arbitrary = { version = "1", features = ["derive"] }
+libfuzzer-sys = "0.4"
+
+[dependencies.rustworkx-core]
+path = ".."
+
+[[bin]]
+name = "test_traversal_node_coverage"
+path = "fuzz_targets/test_traversal_node_coverage.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "test_fuzz_dijkstra"
+path = "fuzz_targets/test_fuzz_dijkstra.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "test_fuzz_bellman_ford"
+path = "fuzz_targets/test_fuzz_bellman_ford.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "test_fuzz_random_graph"
+path = "fuzz_targets/test_fuzz_random_graph.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "test_fuzz_contraction"
+path = "fuzz_targets/test_fuzz_contraction.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "test_fuzz_centrality"
+path = "fuzz_targets/test_fuzz_centrality.rs"
+test = false
+doc = false
+bench = false

@@ -29,23 +29,25 @@ jobs:
       - run: pip install -U ruff==0.6.8 black~=24.8
       - uses: dtolnay/rust-toolchain@stable
         with:
-          components: rustfmt
+          components: rustfmt, clippy
       - name: Test Build
         run: cargo build
       - name: Rust Format
         run: cargo fmt --all -- --check
       - name: Clippy
-        run: cargo clippy --all-targets -- -D warnings
+        run: cargo clippy --workspace --all-targets -- -D warnings
       - name: Black Codestyle Format
-        run: black --check --diff retworkx rustworkx retworkx tests
+        run: black --check --diff rustworkx tests retworkx
       - name: Python Lint
-        run: ruff check rustworkx retworkx setup.py tests
+        run: ruff check rustworkx setup.py tests retworkx
       - name: Check stray release notes
         run: python tools/find_stray_release_notes.py
       - name: rustworkx-core Rust Tests
-        run: pushd rustworkx-core && cargo test && popd
+        run: cargo test --workspace
       - name: rustworkx-core Docs
-        run: pushd rustworkx-core && cargo doc && popd
+        run: cargo doc -p rustworkx-core
+        env:
+          RUSTDOCFLAGS: '-D warnings'
       - uses: actions/upload-artifact@v4
         with:
           name: rustworkx_core_docs
@@ -58,7 +60,7 @@ jobs:
     strategy:
       matrix:
         rust: [stable]
-        python-version: [3.9, "3.10", "3.11", "3.12"]
+        python-version: [3.9, "3.10", "3.11", "3.12", "3.13"]
         platform: [
           { os: "macOS-13", python-architecture: "x64", rust-target: "x86_64-apple-darwin" },
           { os: "macOS-14", python-architecture: "arm64", rust-target: "aarch64-apple-darwin" },
@@ -67,13 +69,13 @@ jobs:
         ]
         include:
           # Test minimal supported Rust version
-          - rust: 1.70.0
+          - rust: 1.79.0
             python-version: "3.10"
             platform: { os: "ubuntu-latest", python-architecture: "x64", rust-target: "x86_64-unknown-linux-gnu" }
             msrv: "MSRV"
           # Test future versions of Rust and Python
           - rust: beta
-            python-version: "3.13-dev"
+            python-version: "3.13" # upgrade to 3.14-dev when the release candidate is available
             platform: { os: "ubuntu-latest", python-architecture: "x64", rust-target: "x86_64-unknown-linux-gnu" }
             msrv: "Beta"
         # Exclude python 3.9 on arm64 until actions/setup-python#808 is resolved
@@ -107,7 +109,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [3.9, "3.10", "3.11", "3.12"]
+        python-version: [3.9, "3.10", "3.11", "3.12", "3.13"]
     steps:
       - uses: actions/checkout@v4
       - name: Set up Python ${{ matrix.python-version }}
@@ -139,21 +141,21 @@ jobs:
       - name: Download grcov
         run: curl -L https://github.com/mozilla/grcov/releases/download/v0.8.7/grcov-x86_64-unknown-linux-gnu.tar.bz2 | tar jxf -
       - name: Install deps
-        run: pip install -U setuptools-rust networkx testtools fixtures stestr
-      - name: Build retworkx
+        run: pip install -U setuptools setuptools-rust networkx testtools fixtures stestr
+      - name: Build rustworkx
         run: python setup.py develop
         env:
           CARGO_INCREMENTAL: 0
           RUSTFLAGS: "-Cinstrument-coverage"
-          LLVM_PROFILE_FILE: "retworkx-%p-%m.profraw"
+          LLVM_PROFILE_FILE: "rustworkx-%p-%m.profraw"
       - name: Run tests
         run: cd tests && stestr run && cd ..
         env:
-          LLVM_PROFILE_FILE: "retworkx-%p-%m.profraw"
+          LLVM_PROFILE_FILE: "rustworkx-%p-%m.profraw"
       - name: Run grcov
         run: |
           set -e
-          mv tests/retworkx*profraw .
+          mv tests/rustworkx*profraw .
           ./grcov . --binary-path ./target/debug/ -s . -t lcov --branch --ignore-not-existing --ignore "/*" -o ./coveralls.lcov
       - uses: actions/upload-artifact@v4
         with:

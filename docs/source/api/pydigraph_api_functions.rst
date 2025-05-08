@@ -5,7 +5,7 @@ API functions for PyDigraph
 
 These functions are algorithm functions that are type specific for
 :class:`~rustworkx.PyDiGraph` or :class:`~rustworkx.PyDAG` objects. Universal
-functions from Retworkx API that work for both graph types internally call
+functions from Rustworkx API that work for both graph types internally call
 the functions from the explicitly typed based on the data type.
 
 .. autosummary::
@@ -51,6 +51,7 @@ the functions from the explicitly typed based on the data type.
    rustworkx.digraph_betweenness_centrality
    rustworkx.digraph_edge_betweenness_centrality
    rustworkx.digraph_closeness_centrality
+   rustworkx.digraph_newman_weighted_closeness_centrality
    rustworkx.digraph_eigenvector_centrality
    rustworkx.digraph_katz_centrality
    rustworkx.digraph_unweighted_average_shortest_path_length

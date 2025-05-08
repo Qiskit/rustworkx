@@ -32,7 +32,7 @@ use rustworkx_core::centrality;
 /// Compute the betweenness centrality of all nodes in a PyGraph.
 ///
 /// Betweenness centrality of a node :math:`v` is the sum of the
-/// fraction of all-pairs shortest paths that pass through :math`v`
+/// fraction of all-pairs shortest paths that pass through :math:`v`
 ///
 /// .. math::
 ///
@@ -56,7 +56,7 @@ use rustworkx_core::centrality;
 ///
 /// See Also
 /// --------
-/// graph_edge_betweenness_centrality
+/// :func:`~rustworkx.graph_edge_betweenness_centrality`
 ///
 /// :param PyGraph graph: The input graph
 /// :param bool normalized: Whether to normalize the betweenness scores by the number of distinct
@@ -100,14 +100,14 @@ pub fn graph_betweenness_centrality(
 /// Compute the betweenness centrality of all nodes in a PyDiGraph.
 ///
 /// Betweenness centrality of a node :math:`v` is the sum of the
-/// fraction of all-pairs shortest paths that pass through :math`v`
+/// fraction of all-pairs shortest paths that pass through :math:`v`
 ///
 /// .. math::
 ///
 ///    c_B(v) =\sum_{s,t \in V} \frac{\sigma(s, t|v)}{\sigma(s, t)}
 ///
 /// where :math:`V` is the set of nodes, :math:`\sigma(s, t)` is the number of
-/// shortest :math`(s, t)` paths, and :math:`\sigma(s, t|v)` is the number of
+/// shortest :math:`(s, t)` paths, and :math:`\sigma(s, t|v)` is the number of
 /// those paths  passing through some  node :math:`v` other than :math:`s, t`.
 /// If :math:`s = t`, :math:`\sigma(s, t) = 1`, and if :math:`v \in {s, t}`,
 /// :math:`\sigma(s, t|v) = 0`
@@ -124,7 +124,7 @@ pub fn graph_betweenness_centrality(
 ///
 /// See Also
 /// --------
-/// digraph_edge_betweenness_centrality
+/// :func:`~rustworkx.digraph_edge_betweenness_centrality`
 ///
 /// :param PyDiGraph graph: The input graph
 /// :param bool normalized: Whether to normalize the betweenness scores by the number of distinct
@@ -165,11 +165,107 @@ pub fn digraph_betweenness_centrality(
     }
 }
 
+/// Compute the degree centrality for nodes in a PyGraph.
+///
+/// Degree centrality assigns an importance score based simply on the number of edges held by each node.
+///
+/// :param PyGraph graph: The input graph
+///
+/// :returns: a read-only dict-like object whose keys are the node indices and values are the
+///      centrality score for each node.
+/// :rtype: CentralityMapping
+#[pyfunction(signature = (graph,))]
+#[pyo3(text_signature = "(graph, /,)")]
+pub fn graph_degree_centrality(graph: &graph::PyGraph) -> PyResult<CentralityMapping> {
+    let centrality = centrality::degree_centrality(&graph.graph, None);
+
+    Ok(CentralityMapping {
+        centralities: graph
+            .graph
+            .node_indices()
+            .map(|i| (i.index(), centrality[i.index()]))
+            .collect(),
+    })
+}
+
+/// Compute the degree centrality for nodes in a PyDiGraph.
+///
+/// Degree centrality assigns an importance score based simply on the number of edges held by each node.
+/// This function computes the TOTAL (in + out) degree centrality.
+///
+/// :param PyDiGraph graph: The input graph
+///
+/// :returns: a read-only dict-like object whose keys are the node indices and values are the
+///      centrality score for each node.
+/// :rtype: CentralityMapping
+#[pyfunction(signature = (graph,))]
+#[pyo3(text_signature = "(graph, /,)")]
+pub fn digraph_degree_centrality(graph: &digraph::PyDiGraph) -> PyResult<CentralityMapping> {
+    let centrality = centrality::degree_centrality(&graph.graph, None);
+
+    Ok(CentralityMapping {
+        centralities: graph
+            .graph
+            .node_indices()
+            .map(|i| (i.index(), centrality[i.index()]))
+            .collect(),
+    })
+}
+/// Compute the in-degree centrality for nodes in a PyDiGraph.
+///
+/// In-degree centrality assigns an importance score based on the number of incoming edges
+/// to each node.
+///
+/// :param PyDiGraph graph: The input graph
+///
+/// :returns: a read-only dict-like object whose keys are the node indices and values are the
+///      centrality score for each node.
+/// :rtype: CentralityMapping
+#[pyfunction(signature = (graph,))]
+#[pyo3(text_signature = "(graph, /)")]
+pub fn in_degree_centrality(graph: &digraph::PyDiGraph) -> PyResult<CentralityMapping> {
+    let centrality =
+        centrality::degree_centrality(&graph.graph, Some(petgraph::Direction::Incoming));
+
+    Ok(CentralityMapping {
+        centralities: graph
+            .graph
+            .node_indices()
+            .map(|i| (i.index(), centrality[i.index()]))
+            .collect(),
+    })
+}
+
+/// Compute the out-degree centrality for nodes in a PyDiGraph.
+///
+/// Out-degree centrality assigns an importance score based on the number of outgoing edges
+/// from each node.
+///
+/// :param PyDiGraph graph: The input graph
+///
+/// :returns: a read-only dict-like object whose keys are the node indices and values are the
+///      centrality score for each node.
+/// :rtype: CentralityMapping
+#[pyfunction(signature = (graph,))]
+#[pyo3(text_signature = "(graph, /,)")]
+pub fn out_degree_centrality(graph: &digraph::PyDiGraph) -> PyResult<CentralityMapping> {
+    let centrality =
+        centrality::degree_centrality(&graph.graph, Some(petgraph::Direction::Outgoing));
+
+    Ok(CentralityMapping {
+        centralities: graph
+            .graph
+            .node_indices()
+            .map(|i| (i.index(), centrality[i.index()]))
+            .collect(),
+    })
+}
+
 /// Compute the closeness centrality of each node in a :class:`~.PyGraph` object.
 ///
 /// The closeness centrality of a node :math:`u` is defined as the
 /// reciprocal of the average shortest path distance to :math:`u` over all
-/// :math:`n-1` reachable nodes in the graph. In it's general form this can
+/// :math:`n-1` reachable nodes in the graph. In its general form this can
 /// be expressed as:
 ///
 /// .. math::
@@ -194,16 +290,29 @@ pub fn digraph_betweenness_centrality(
 /// where :math:`N` is the number of nodes in the graph. This alternative
 /// formula can be used with the ``wf_improved`` argument.
 ///
+/// This function is multithreaded and will run in parallel if the number
+/// of nodes in the graph is above the value of ``parallel_threshold`` (it
+/// defaults to 50). If the function will be running in parallel the env var
+/// ``RAYON_NUM_THREADS`` can be used to adjust how many threads will be used.
+///
 /// :param PyGraph graph: The input graph. Can either be a
-///     :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`.
+///     :class:`~rustworkx.PyGraph` or :class:`~rustworkx.PyDiGraph`.
 /// :param bool wf_improved: This is optional; the default is True. If True,
 ///     scale by the fraction of nodes reachable.
+/// :param int parallel_threshold: The number of nodes to calculate the
+///     the betweenness centrality in parallel at if the number of nodes in
+///     the graph is less than this value it will run in a single thread. The
+///     default value is 50
 ///
 /// :returns: A dictionary mapping each node index to its closeness centrality.
 /// :rtype: CentralityMapping
-#[pyfunction(signature = (graph, wf_improved=true))]
-pub fn graph_closeness_centrality(graph: &graph::PyGraph, wf_improved: bool) -> CentralityMapping {
-    let closeness = centrality::closeness_centrality(&graph.graph, wf_improved);
+#[pyfunction(signature = (graph, wf_improved=true, parallel_threshold=50))]
+pub fn graph_closeness_centrality(
+    graph: &graph::PyGraph,
+    wf_improved: bool,
+    parallel_threshold: usize,
+) -> CentralityMapping {
+    let closeness = centrality::closeness_centrality(&graph.graph, wf_improved, parallel_threshold);
     CentralityMapping {
         centralities: closeness
             .into_iter()
@@ -217,7 +326,7 @@ pub fn graph_closeness_centrality(graph: &graph::PyGraph, wf_improved: bool) -> 
 ///
 /// The closeness centrality of a node :math:`u` is defined as the
 /// reciprocal of the average shortest path distance to :math:`u` over all
-/// :math:`n-1` reachable nodes in the graph. In it's general form this can
+/// :math:`n-1` reachable nodes in the graph. In its general form this can
 /// be expressed as:
 ///
 /// .. math::
@@ -242,19 +351,29 @@ pub fn graph_closeness_centrality(graph: &graph::PyGraph, wf_improved: bool) -> 
 /// where :math:`N` is the number of nodes in the graph. This alternative
 /// formula can be used with the ``wf_improved`` argument.
 ///
+/// This function is multithreaded and will run in parallel if the number
+/// of nodes in the graph is above the value of ``parallel_threshold`` (it
+/// defaults to 50). If the function will be running in parallel the env var
+/// ``RAYON_NUM_THREADS`` can be used to adjust how many threads will be used.
+///
 /// :param PyDiGraph graph: The input graph. Can either be a
-///     :class:`~retworkx.PyGraph` or :class:`~retworkx.PyDiGraph`.
+///     :class:`~rustworkx.PyGraph` or :class:`~rustworkx.PyDiGraph`.
 /// :param bool wf_improved: This is optional; the default is True. If True,
 ///     scale by the fraction of nodes reachable.
+/// :param int parallel_threshold: The number of nodes to calculate the
+///     the betweenness centrality in parallel at if the number of nodes in
+///     the graph is less than this value it will run in a single thread. The
+///     default value is 50
 ///
 /// :returns: A dictionary mapping each node index to its closeness centrality.
 /// :rtype: CentralityMapping
-#[pyfunction(signature = (graph, wf_improved=true))]
+#[pyfunction(signature = (graph, wf_improved=true, parallel_threshold=50))]
 pub fn digraph_closeness_centrality(
     graph: &digraph::PyDiGraph,
     wf_improved: bool,
+    parallel_threshold: usize,
 ) -> CentralityMapping {
-    let closeness = centrality::closeness_centrality(&graph.graph, wf_improved);
+    let closeness = centrality::closeness_centrality(&graph.graph, wf_improved, parallel_threshold);
     CentralityMapping {
         centralities: closeness
             .into_iter()
@@ -264,10 +383,170 @@ pub fn digraph_closeness_centrality(
     }
 }
 
+/// Compute the weighted closeness centrality of each node in the graph.
+///
+/// The weighted closeness centrality is an extension of the standard closeness
+/// centrality measure where edge weights represent connection strength rather
+/// than distance. To properly compute shortest paths, weights are inverted
+/// so that stronger connections correspond to shorter effective distances.
+/// The algorithm follows the method described by Newman (2001) in analyzing
+/// weighted graphs.[Newman]
+///
+/// The edges originally represent connection strength between nodes.
+/// The idea is that if two nodes have a strong connection, the computed
+/// distance between them should be small (shorter), and vice versa.
+/// Note that this assume that the graph is modelling a measure of
+/// connection strength (e.g. trust, collaboration, or similarity).
+/// If the graph is not modelling a measure of connection strength,
+/// the function `weight_fn` should invert the weights before calling this
+/// function, if not it is considered as a logical error.
+///
+/// In the case of a graphs with more than one connected component there is
+/// an alternative improved formula that calculates the closeness centrality
+/// as "a ratio of the fraction of actors in the group who are reachable, to
+/// the average distance".[WF]
+///
+/// You can enable this by setting `wf_improved` to `true`.
+/// This function is multithreaded and will run in parallel if the number
+/// of nodes in the graph is above the value of ``parallel_threshold`` (it
+/// defaults to 50). If the function will be running in parallel the env var
+/// ``RAYON_NUM_THREADS`` can be used to adjust how many threads will be used.
+///
+/// :param PyGraph graph: The input graph. Can either be a
+///     :class:`~rustworkx.PyGraph` or :class:`~rustworkx.PyDiGraph`.
+/// :param weight_fn: An optional input callable that will be passed the edge's
+///    payload object and is expected to return a `float` weight for that edge.
+///    If this is not specified ``default_weight`` will be used as the weight
+///    for every edge in ``graph``
+/// :param bool wf_improved: This is optional; the default is True. If True,
+///   scale by the fraction of nodes reachable.
+/// :param float default_weight: If ``weight_fn`` is not set the default weight
+///     value to use for the weight of all edges
+/// :param int parallel_threshold: The number of nodes to calculate the
+///     the betweenness centrality in parallel at if the number of nodes in
+///     the graph is less than this value it will run in a single thread. The
+///     default value is 50
+///
+/// :returns: A dictionary mapping each node index to its closeness centrality.
+/// :rtype: CentralityMapping
+#[pyfunction(signature = (graph, weight_fn=None, wf_improved=true, default_weight = 1.0, parallel_threshold=50))]
+pub fn graph_newman_weighted_closeness_centrality(
+    py: Python,
+    graph: &graph::PyGraph,
+    weight_fn: Option<PyObject>,
+    wf_improved: bool,
+    default_weight: f64,
+    parallel_threshold: usize,
+) -> PyResult<CentralityMapping> {
+    let mut edge_weights = vec![default_weight; graph.graph.edge_bound()];
+    if weight_fn.is_some() {
+        let cost_fn = CostFn::try_from((weight_fn, default_weight))?;
+        for edge in graph.graph.edge_indices() {
+            edge_weights[edge.index()] =
+                cost_fn.call(py, graph.graph.edge_weight(edge).unwrap())?;
+        }
+    }
+
+    let closeness = centrality::newman_weighted_closeness_centrality(
+        &graph.graph,
+        wf_improved,
+        |e| edge_weights[e.id().index()],
+        parallel_threshold,
+    );
+
+    Ok(CentralityMapping {
+        centralities: closeness
+            .into_iter()
+            .enumerate()
+            .filter_map(|(i, v)| v.map(|x| (i, x)))
+            .collect(),
+    })
+}
+
+/// Compute the weighted closeness centrality of each node in the graph.
+///
+/// The weighted closeness centrality is an extension of the standard closeness
+/// centrality measure where edge weights represent connection strength rather
+/// than distance. To properly compute shortest paths, weights are inverted
+/// so that stronger connections correspond to shorter effective distances.
+/// The algorithm follows the method described by Newman (2001) in analyzing
+/// weighted graphs.[Newman]
+///
+/// The edges originally represent connection strength between nodes.
+/// The idea is that if two nodes have a strong connection, the computed
+/// distance between them should be small (shorter), and vice versa.
+/// Note that this assume that the graph is modelling a measure of
+/// connection strength (e.g. trust, collaboration, or similarity).
+/// If the graph is not modelling a measure of connection strength,
+/// the function `weight_fn` should invert the weights before calling this
+/// function, if not it is considered as a logical error.
+///
+/// In the case of a graphs with more than one connected component there is
+/// an alternative improved formula that calculates the closeness centrality
+/// as "a ratio of the fraction of actors in the group who are reachable, to
+/// the average distance".[WF]
+/// You can enable this by setting `wf_improved` to `true`.
+///
+/// This function is multithreaded and will run in parallel if the number
+/// of nodes in the graph is above the value of ``parallel_threshold`` (it
+/// defaults to 50). If the function will be running in parallel the env var
+/// ``RAYON_NUM_THREADS`` can be used to adjust how many threads will be used.
+///
+/// :param PyDiGraph graph: The input graph. Can either be a
+///     :class:`~rustworkx.PyGraph` or :class:`~rustworkx.PyDiGraph`.
+/// :param weight_fn: An optional input callable that will be passed the edge's
+///    payload object and is expected to return a `float` weight for that edge.
+///    If this is not specified ``default_weight`` will be used as the weight
+///    for every edge in ``graph``
+/// :param bool wf_improved: This is optional; the default is True. If True,
+///   scale by the fraction of nodes reachable.
+/// :param float default_weight: If ``weight_fn`` is not set the default weight
+///     value to use for the weight of all edges
+/// :param int parallel_threshold: The number of nodes to calculate the
+///     the betweenness centrality in parallel at if the number of nodes in
+///     the graph is less than this value it will run in a single thread. The
+///     default value is 50
+///
+/// :returns: A dictionary mapping each node index to its closeness centrality.
+/// :rtype: CentralityMapping
+#[pyfunction(signature = (graph, weight_fn=None, wf_improved=true, default_weight = 1.0, parallel_threshold=50))]
+pub fn digraph_newman_weighted_closeness_centrality(
+    py: Python,
+    graph: &digraph::PyDiGraph,
+    weight_fn: Option<PyObject>,
+    wf_improved: bool,
+    default_weight: f64,
+    parallel_threshold: usize,
+) -> PyResult<CentralityMapping> {
+    let mut edge_weights = vec![default_weight; graph.graph.edge_bound()];
+    if weight_fn.is_some() {
+        let cost_fn = CostFn::try_from((weight_fn, default_weight))?;
+        for edge in graph.graph.edge_indices() {
+            edge_weights[edge.index()] =
+                cost_fn.call(py, graph.graph.edge_weight(edge).unwrap())?;
+        }
+    }
+
+    let closeness = centrality::newman_weighted_closeness_centrality(
+        &graph.graph,
+        wf_improved,
+        |e| edge_weights[e.id().index()],
+        parallel_threshold,
+    );
+
+    Ok(CentralityMapping {
+        centralities: closeness
+            .into_iter()
+            .enumerate()
+            .filter_map(|(i, v)| v.map(|x| (i, x)))
+            .collect(),
+    })
+}
+
 /// Compute the edge betweenness centrality of all edges in a :class:`~PyGraph`.
 ///
 /// Edge betweenness centrality of an edge :math:`e` is the sum of the
-/// fraction of all-pairs shortest paths that pass through :math`e`
+/// fraction of all-pairs shortest paths that pass through :math:`e`
 ///
 /// .. math::
 ///
@@ -289,7 +568,7 @@ pub fn digraph_closeness_centrality(
 ///
 /// See Also
 /// --------
-/// graph_betweenness_centrality
+/// :func:`~rustworkx.graph_betweenness_centrality`
 ///
 /// :param PyGraph graph: The input graph
 /// :param bool normalized: Whether to normalize the betweenness scores by the number of distinct
@@ -329,7 +608,7 @@ pub fn graph_edge_betweenness_centrality(
 /// Compute the edge betweenness centrality of all edges in a :class:`~PyDiGraph`.
 ///
 /// Edge betweenness centrality of an edge :math:`e` is the sum of the
-/// fraction of all-pairs shortest paths that pass through :math`e`
+/// fraction of all-pairs shortest paths that pass through :math:`e`
 ///
 /// .. math::
 ///
@@ -351,7 +630,7 @@ pub fn graph_edge_betweenness_centrality(
 ///
 /// See Also
 /// --------
-/// digraph_betweenness_centrality
+/// :func:`~rustworkx.digraph_betweenness_centrality`
 ///
 /// :param PyGraph graph: The input graph
 /// :param bool normalized: Whether to normalize the betweenness scores by the number of distinct

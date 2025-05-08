@@ -4,7 +4,7 @@ fixes:
     Fixed the plots of multigraphs using :func:`.mpl_draw`. Previously, parallel edges of 
     multigraphs were plotted on top of each other, with overlapping arrows and labels. 
     The radius of parallel edges of the multigraph was fixed to be `0.25` for 
-    `connectionstyle` supporting this argument in :func:`.draw_edges`. The edge lables 
+    `connectionstyle` supporting this argument in :func:`.draw_edges`. The edge labels 
     were offset to `0.25` in :func:`.draw_edge_labels` to align with their respective 
     edges. This fix can be tested using the following code: 
 

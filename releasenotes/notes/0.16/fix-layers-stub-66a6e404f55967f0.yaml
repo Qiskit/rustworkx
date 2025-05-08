@@ -1,0 +1,6 @@
+---
+fixes:
+  - |
+    Fixed a bug in the type hint for :func:`~rustworkx.layers`
+    Refer to `issue 1340 <https://github.com/Qiskit/rustworkx/issues/1340>`__ for
+    more information.

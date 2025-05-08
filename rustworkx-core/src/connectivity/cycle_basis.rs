@@ -34,7 +34,7 @@ use std::hash::Hash;
 ///
 /// * `graph` - The graph in which to find the basis.
 /// * `root` - Optional node index for starting the basis search. If not
-///     specified, an arbitrary node is chosen.
+///   specified, an arbitrary node is chosen.
 ///
 /// # Example
 /// ```rust
@@ -92,10 +92,10 @@ where
                     cycles.push(cycle);
                 // A cycle was found:
                 } else if !used.get(&z).unwrap().contains(&neighbor) {
-                    let pn = used.get(&neighbor).unwrap();
+                    let prev_n = used.get(&neighbor).unwrap();
                     let mut cycle: Vec<G::NodeId> = vec![neighbor, z];
                     let mut p = pred.get(&z).unwrap();
-                    while !pn.contains(p) {
+                    while !prev_n.contains(p) {
                         cycle.push(*p);
                         p = pred.get(p).unwrap();
                     }

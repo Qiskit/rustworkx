@@ -28,6 +28,7 @@ use rustworkx_core::traversal::dfs_edges;
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use pyo3::types::PyList;
+use pyo3::IntoPyObjectExt;
 use pyo3::Python;
 
 use petgraph::algo;
@@ -81,7 +82,7 @@ where
 }
 
 /// Return a pair of [`petgraph::Direction`] values corresponding to the "forwards" and "backwards"
-/// direction of graph traversal, based on whether the graph is being traved forwards (following
+/// direction of graph traversal, based on whether the graph is being traversed forwards (following
 /// the edges) or backward (reversing along edges).  The order of returns is (forwards, backwards).
 #[inline(always)]
 pub fn traversal_directions(reverse: bool) -> (petgraph::Direction, petgraph::Direction) {
@@ -278,7 +279,7 @@ pub fn is_directed_acyclic_graph(graph: &digraph::PyDiGraph) -> bool {
 /// :param PyDiGraph graph: The DAG to get the layers from
 /// :param list first_layer: A list of node ids for the first layer. This
 ///     will be the first layer in the output
-/// :param bool index_output: When set to to ``True`` the output layers will be
+/// :param bool index_output: When set to ``True`` the output layers will be
 ///     a list of integer node indices.
 ///
 /// :returns: A list of layers, each layer is a list of node data, or if
@@ -313,7 +314,7 @@ pub fn layers(
             .collect(),
     );
     if index_output {
-        let pylist = PyList::empty_bound(py);
+        let pylist = PyList::empty(py);
         for layer in result {
             match layer {
                 Ok(layer) => pylist.append(
@@ -327,7 +328,7 @@ pub fn layers(
         }
         Ok(pylist.into())
     } else {
-        let pylist = PyList::empty_bound(py);
+        let pylist = PyList::empty(py);
         for layer in result {
             match layer {
                 Ok(layer) => pylist.append(
@@ -342,41 +343,47 @@ pub fn layers(
         Ok(pylist.into())
     }
 }
-/// Get the lexicographical topological sorted nodes from the provided DAG
+
+/// Get the lexicographical topological sorted nodes from the provided directed
+/// graph.
 ///
-/// This function returns a list of nodes data in a graph lexicographically
-/// topologically sorted using the provided key function. A topological sort
-/// is a linear ordering of vertices such that for every directed edge from
-/// node :math:`u` to node :math:`v`, :math:`u` comes before :math:`v`
-/// in the ordering.  If ``reverse`` is set to ``False``, the edges are treated
-/// as if they pointed in the opposite direction.
+/// This function returns a list of node data from the graph, sorted in
+/// lexicographical order based on the provided key function. A topological sort
+/// is a linear ordering of vertices such that for every directed edge from node
+/// :math:`u` to node :math:`v`, :math:`u` appears before :math:`v` in the
+/// ordering.  If `reverse` is set to `False`, the edges are treated as if they
+/// point in the opposite direction.
 ///
-/// This function differs from :func:`~rustworkx.topological_sort` because
-/// when there are ties between nodes in the sort order this function will
-/// use the string returned by the ``key`` argument to determine the output
-/// order used.  The ``reverse`` argument does not affect the ordering of keys
-/// from this function, only the edges of the graph.
+/// Unlike :func:`~rustworkx.topological_sort`, this function resolves ties
+/// between nodes using the string returned by the `key` argument. The `reverse`
+/// argument only affects the direction of the edges, not the ordering of keys.
 ///
-/// :param PyDiGraph dag: The DAG to get the topological sorted nodes from
-/// :param callable key: key is a python function or other callable that
-///     gets passed a single argument the node data from the graph and is
-///     expected to return a string which will be used for resolving ties
-///     in the sorting order.
-/// :param bool reverse: If ``False`` (the default), perform a regular
-///     topological ordering.  If ``True``, return the lexicographical
-///     topological order that would have been found if all the edges in the
-///     graph were reversed.  This does not affect the comparisons from the
-///     ``key``.
-/// :param Iterable[int] initial: If given, the initial node indices to start the topological
-///     ordering from.  If not given, the topological ordering will certainly contain every node in
-///     the graph.  If given, only the ``initial`` nodes and nodes that are dominated by the
-///     ``initial`` set will be in the ordering.  Notably, any node that has a natural in degree of
-///     zero will not be in the output ordering if ``initial`` is given and the zero-in-degree node
-///     is not in it.  It is a :exc:`ValueError` to give an `initial` set where the nodes have even
-///     a partial topological order between themselves.
+///   >>> G = rx.PyDiGraph()
+///   >>> a, b, c, d, e, f, g = G.add_nodes_from(["A", "B", "C", "D", "E", "F", "G"])
+///   >>> G.add_edges_from_no_data([(a, g), (b, g), (c, g), (d, g), (e, g), (f, g)])
+///   >>> rx.topological_sort(G)
+///   NodeIndices[5, 4, 3, 2, 1, 0, 6]                     # First 6 items in any order
+///   >>> rx.lexicographical_topological_sort(G, key=str)
+///   ['A', 'B', 'C', 'D', 'E', 'F', 'G']                  # First 6 items in alphabetical order
 ///
-/// :returns: A list of node's data lexicographically topologically sorted.
-/// :rtype: list
+/// For a standard topological sort without lexicographical ordering, see
+/// :func:`~rustworkx.topological_sort`.
+///
+/// :param PyDiGraph dag: The directed graph to sort.
+/// :param callable key: A callable that takes a single argument (node data) and
+///     returns a string used to resolve ties in the sorting order.
+/// :param bool reverse: If `False` (default), perform a regular topological
+///     ordering. If `True`, return the lexicographical order as if all edges
+///     were reversed. This does not affect the comparisons from the `key`.
+/// :param Iterable[int] initial: By default, the topological ordering will
+///     include all nodes in the graph. If ``initial`` node indices are
+///     provided, the ordering will only include those nodes and any nodes that
+///     are dominated by them. Providing an initial set where the nodes have
+///     even a partial topological order among themselves will raise a
+///     :exc:`ValueError`.
+///     
+/// :returns: A list of node data, lexicographically topologically sorted.
+/// :rtype: list[S]
 #[pyfunction]
 #[pyo3(signature = (dag, /, key, *, reverse=false, initial=None))]
 pub fn lexicographical_topological_sort(
@@ -394,7 +401,7 @@ pub fn lexicographical_topological_sort(
     let initial: Option<Vec<NodeIndex>> = match initial {
         Some(initial) => {
             let mut initial_vec: Vec<NodeIndex> = Vec::new();
-            for maybe_index in initial.iter()? {
+            for maybe_index in initial.try_iter()? {
                 let node = NodeIndex::new(maybe_index?.extract::<usize>()?);
                 initial_vec.push(node);
             }
@@ -403,28 +410,37 @@ pub fn lexicographical_topological_sort(
         None => None,
     };
     let out_list = core_lexico_topo_sort(&dag.graph, key_callable, reverse, initial.as_deref())?;
-    Ok(PyList::new_bound(
+    Ok(PyList::new(
         py,
         out_list
             .into_iter()
             .map(|node| dag.graph[node].clone_ref(py)),
-    )
+    )?
     .into())
 }
 
-/// Return the topological generations of a DAG
+/// Return the topological generations of a directed graph.
 ///
-/// A topological generation is node collection in which ancestors of a node in each
-/// generation are guaranteed to be in a previous generation, and any descendants of
-/// a node are guaranteed to be in a following generation. Nodes are guaranteed to
-/// be in the earliest possible generation that they can belong to.
+/// A topological generation is a collection of nodes where all ancestors of a
+/// node are guaranteed to be in a previous generation, and all descendants of a
+/// node are guaranteed to be in a subsequent generation. Nodes are placed in
+/// the earliest possible generation they can belong to.
 ///
-/// :param PyDiGraph graph: The DAG to get the topological generations from
+///   >>> G = rx.PyDiGraph()
+///   >>> G.add_nodes_from([0, 1, 2, 3, 4])
+///   >>> G.add_edges_from_no_data([(0, 1), (0, 2), (1, 3), (2, 3), (3, 4)])
+///   >>> rx.topological_generations(G)
+///   [NodeIndices[0], NodeIndices[1, 2], NodeIndices[3], NodeIndices[4]]
 ///
-/// :returns: A list of topological generations.
-/// :rtype: list
+/// For a topologically sorted node list without generations, see :func:`~topological_sort`.
 ///
-/// :raises DAGHasCycle: if a cycle is encountered while sorting the graph
+/// For more advanced control over the nodes iteration, see :class:`~rustworkx.TopologicalSorter`.
+///
+/// :param PyDiGraph dag: The directed graph to get the topological generations from.
+/// :returns: A list of topological generations, where each generation is
+///     represented as a list of node indices.
+/// :rtype: list[NodeIndices]
+/// :raises DAGHasCycle: if a cycle is encountered while processing the graph.o
 #[pyfunction]
 #[pyo3(text_signature = "(dag, /)")]
 pub fn topological_generations(dag: &digraph::PyDiGraph) -> PyResult<Vec<NodeIndices>> {
@@ -467,14 +483,29 @@ pub fn topological_generations(dag: &digraph::PyDiGraph) -> PyResult<Vec<NodeInd
     Ok(generations)
 }
 
-/// Return the topological sort of node indices from the provided graph
+/// Return the topological sort of node indices from the provided directed
+/// graph.
 ///
-/// :param PyDiGraph graph: The DAG to get the topological sort on
+/// Computes a topological ordering of the nodes in the given directed graph,
+/// ensuring that for every directed edge from node :math:`u` to node :math:`v`,
+/// node :math:`u` appears before node :math:`v` in the resulting sequence. This
+/// is particularly useful in scenarios such as task scheduling and dependency
+/// resolution, where certain tasks must be completed before others.
 ///
+///   >>> G = rx.PyDiGraph()
+///   >>> G.add_nodes_from(["A", "B", "C", "D", "E", "F", "G"])
+///   >>> G.add_edges_from_no_data([(0, 1),(1, 2), (2, 3), (3, 4), (5, 2), (6, 3)])
+///   >>> rx.topological_sort(G)
+///   NodeIndices[6, 5, 0, 1, 2, 3, 4]
+///
+/// For more advanced control over the nodes iteration, see :class:`~rustworkx.TopologicalSorter`.
+///
+/// For custom sorting algorithm, see :func:`~lexicographical_topological_sort`.
+///
+/// :param PyDiGraph graph: The directed graph to get the topological sort on.
 /// :returns: A list of node indices topologically sorted.
 /// :rtype: NodeIndices
-///
-/// :raises DAGHasCycle: if a cycle is encountered while sorting the graph
+/// :raises DAGHasCycle: if a cycle is encountered while sorting the graph.
 #[pyfunction]
 #[pyo3(text_signature = "(graph, /)")]
 pub fn topological_sort(graph: &digraph::PyDiGraph) -> PyResult<NodeIndices> {
@@ -524,8 +555,8 @@ pub fn collect_runs(
         // This is where a filter function error will be returned, otherwise Result is stripped away
         let py_run: Vec<PyObject> = run_result?
             .iter()
-            .map(|node| return graph.graph.node_weight(*node).into_py(py))
-            .collect();
+            .map(|node| graph.graph.node_weight(*node).into_py_any(py))
+            .collect::<PyResult<Vec<PyObject>>>()?;
 
         result.push(py_run)
     }
@@ -585,7 +616,7 @@ pub fn collect_bicolor_runs(
                     .into_iter()
                     .map(|node_index| {
                         let node_weight = dag.node_weight(node_index).expect("Invalid NodeId");
-                        node_weight.into_py(py)
+                        node_weight.into_py_any(py).unwrap()
                     })
                     .collect()
             })
@@ -667,7 +698,7 @@ pub fn transitive_reduction(
             );
         }
     }
-    return Ok((
+    Ok((
         digraph::PyDiGraph {
             graph: tr,
             node_removed: false,
@@ -680,5 +711,5 @@ pub fn transitive_reduction(
             .iter()
             .map(|(k, v)| (k.index(), v.index()))
             .collect::<DictMap<usize, usize>>(),
-    ));
+    ))
 }

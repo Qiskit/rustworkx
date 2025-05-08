@@ -55,6 +55,13 @@ class TestPredecessors(unittest.TestCase):
             res,
         )
 
+    def test_missing_node_has_no_predecessors(self):
+        G = rustworkx.PyDiGraph()
+        G.add_nodes_from(range(5))
+        G.add_edges_from_no_data([(0, 1), (2, 3)])
+        res = G.predecessors(10)
+        self.assertEqual([], res)
+
 
 class TestSuccessors(unittest.TestCase):
     def test_single_successor(self):
@@ -97,6 +104,13 @@ class TestSuccessors(unittest.TestCase):
             ],
             res,
         )
+
+    def test_missing_node_has_no_successors(self):
+        G = rustworkx.PyDiGraph()
+        G.add_nodes_from(range(5))
+        G.add_edges_from_no_data([(0, 1), (2, 3)])
+        res = G.successors(10)
+        self.assertEqual([], res)
 
 
 class TestFindPredecessorsByEdge(unittest.TestCase):
@@ -274,7 +288,7 @@ class TestBfsSuccessors(unittest.TestCase):
             res,
         )
 
-    def test_bfs_succesors(self):
+    def test_bfs_successors(self):
         dag = rustworkx.PyDAG()
         node_a = dag.add_node(0)
         node_b = dag.add_child(node_a, 1, {})

@@ -25,7 +25,7 @@ Installing on a platform without precompiled binaries
 -----------------------------------------------------
 
 If there are no precompiled binaries published for your system you'll have to
-build the package from source. However, to be able able to build the package from
+build the package from source. However, to be able to build the package from
 the published source package you need to have Rust >= 1.64 installed (and also
 cargo which is normally included with rust) You can use
 `rustup <https://rustup.rs/>`_ (a cross platform installer for rust) to make this
@@ -44,12 +44,12 @@ just as it would if there was a prebuilt binary available.
 
     To build from source you will need to ensure you have pip >=19.0.0
     installed, which supports PEP-517, or that you have manually installed
-    setuptools-rust prior to running pip install rustworkx. If you recieve an
+    setuptools-rust prior to running pip install rustworkx. If you receive an
     error about ``setuptools-rust`` not being found you should upgrade pip with
     ``pip install -U pip`` or manually install ``setuptools-rust`` with:
     ``pip install setuptools-rust`` and try again.
 
-.. _platform-suppport:
+.. _platform-support:
 
 Platform Support
 ================

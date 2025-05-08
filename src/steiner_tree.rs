@@ -17,6 +17,7 @@ use rayon::prelude::*;
 
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
+use pyo3::IntoPyObjectExt;
 use pyo3::Python;
 
 use petgraph::stable_graph::{EdgeIndex, EdgeReference, NodeIndex};
@@ -63,7 +64,7 @@ pub fn metric_closure(
             out_graph.graph.add_edge(
                 *result_graph.node_weight(source).unwrap(),
                 *result_graph.node_weight(target).unwrap(),
-                weight.to_object(py),
+                weight.into_py_any(py)?,
             );
         }
         Ok(out_graph)
@@ -79,7 +80,7 @@ pub fn metric_closure(
 ///
 /// The minimum tree of ``graph`` with regard to a set of ``terminal_nodes``
 /// is a tree within ``graph`` that spans those nodes and has a minimum size
-/// (measured as the sum of edge weights) amoung all such trees.
+/// (measured as the sum of edge weights) among all such trees.
 ///
 /// The minimum steiner tree can be approximated by computing the minimum
 /// spanning tree of the subgraph of the metric closure of ``graph`` induced
@@ -200,7 +201,7 @@ fn deduplicate_edges(
             let mut edges: Vec<(EdgeIndex, f64)> = Vec::with_capacity(edges_raw.len());
             for edge in edges_raw {
                 let res = weight_fn.call1(py, (&edge.1,))?;
-                let raw = res.to_object(py);
+                let raw = res.into_py_any(py)?;
                 let weight = raw.extract(py)?;
                 edges.push((edge.0, weight));
             }

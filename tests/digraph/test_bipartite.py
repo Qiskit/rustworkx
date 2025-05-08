@@ -40,21 +40,21 @@ class TestBipartite(unittest.TestCase):
         graph.add_nodes_from(range(3))
         self.assertTrue(rustworkx.is_bipartite(graph))
 
-    def test_two_colors_not_biparite_with_isolates(self):
+    def test_two_colors_not_bipartite_with_isolates(self):
         graph = rustworkx.generators.directed_complete_graph(5)
         graph.add_nodes_from(range(3))
         self.assertIsNone(rustworkx.two_color(graph))
 
-    def test_not_biparite_with_isolates(self):
+    def test_not_bipartite_with_isolates(self):
         graph = rustworkx.generators.directed_complete_graph(5)
         graph.add_nodes_from(range(3))
         self.assertFalse(rustworkx.is_bipartite(graph))
 
-    def test_not_biparite(self):
+    def test_not_bipartite(self):
         graph = rustworkx.generators.directed_complete_graph(5)
         self.assertFalse(rustworkx.is_bipartite(graph))
 
-    def test_two_color_not_biparite(self):
+    def test_two_color_not_bipartite(self):
         graph = rustworkx.generators.directed_complete_graph(5)
         self.assertIsNone(rustworkx.two_color(graph))
 
