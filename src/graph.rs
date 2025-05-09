@@ -1371,11 +1371,6 @@ impl PyGraph {
     ///   mpl_draw(graph)
     ///   
     /// For example for csv based data, you may use the below code
-<<<<<<< HEAD
-    /// 
-=======
-    ///
->>>>>>> 4320ceb (fmt changes)
     ///     graph = rx.PyGraph.read_edge_list(path=file, deliminator=",")
     ///
     /// Data with labels for nodes
