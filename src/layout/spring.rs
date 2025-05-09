@@ -17,7 +17,7 @@ use std::iter::Iterator;
 
 use hashbrown::{HashMap, HashSet};
 
-use pyo3::exceptions::PyValueError;
+use pyo3::exceptions::{PyRuntimeError, PyValueError};
 use pyo3::prelude::*;
 
 use petgraph::graph::NodeIndex;
@@ -326,7 +326,7 @@ where
     };
 
     let dist = Uniform::new(0.0, 1.0)
-        .map_err(|_| PyValueError::new_err("Invalid range for uniform distribution"))?;
+        .map_err(|_| PyRuntimeError::new_err("Error creating uniform distribution"))?;
 
     let pos = pos.unwrap_or_default();
     let mut vpos: Vec<Point> = (0..graph.node_bound())

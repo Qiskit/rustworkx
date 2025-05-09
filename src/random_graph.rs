@@ -14,7 +14,7 @@
 
 use crate::{digraph, graph, StablePyGraph};
 
-use pyo3::exceptions::PyValueError;
+use pyo3::exceptions::{PyRuntimeError, PyValueError};
 use pyo3::prelude::*;
 use pyo3::types::PyDict;
 use pyo3::IntoPyObjectExt;
@@ -457,7 +457,7 @@ pub fn random_geometric_graph(
     };
 
     let dist = Uniform::new(0.0, 1.0)
-        .map_err(|_| PyValueError::new_err("Invalid range for uniform distribution"))?;
+        .map_err(|_| PyRuntimeError::new_err("Error creating uniform distribution"))?;
     let pos = pos.unwrap_or_else(|| {
         (0..num_nodes)
             .map(|_| (0..dim).map(|_| dist.sample(&mut rng)).collect())

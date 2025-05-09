@@ -293,7 +293,7 @@ where
                 Err(_) => return Err(InvalidInputError {}),
             };
             let lp: f64 = (1.0 - probability).ln();
-            let between = Uniform::new(0.0, 1.0).map_err(|_| InvalidInputError {})?;
+            let between = Uniform::new(0.0, 1.0).unwrap();
 
             // For directed, create inward edges to a v
             if directed {
@@ -457,7 +457,7 @@ where
         }
     } else {
         let mut created_edges: usize = 0;
-        let between = Uniform::new(0, num_nodes).map_err(|_| InvalidInputError {})?;
+        let between = Uniform::new(0, num_nodes).unwrap();
         while created_edges < num_edges {
             let u = between.sample(&mut rng);
             let v = between.sample(&mut rng);
@@ -565,7 +565,7 @@ where
         }
     }
 
-    let between = Uniform::new(0.0, 1.0).map_err(|_| InvalidInputError {})?;
+    let between = Uniform::new(0.0, 1.0).unwrap();
     for v in 0..(if directed || loops {
         num_nodes
     } else {
@@ -686,7 +686,7 @@ where
     let mut graph = G::with_capacity(num_nodes, num_nodes);
 
     let radius_p = pnorm(radius, p);
-    let dist = Uniform::new(0.0, 1.0).map_err(|_| InvalidInputError {})?;
+    let dist = Uniform::new(0.0, 1.0).unwrap();
     let pos = pos.unwrap_or_else(|| {
         (0..num_nodes)
             .map(|_| (0..dim).map(|_| dist.sample(&mut rng)).collect())
@@ -896,7 +896,7 @@ where
         graph.add_node(default_node_weight());
     }
 
-    let between = Uniform::new(0.0, 1.0).map_err(|_| InvalidInputError {})?;
+    let between = Uniform::new(0.0, 1.0).unwrap();
     for v in 0..num_l_nodes {
         for w in 0..num_r_nodes {
             let random: f64 = between.sample(&mut rng);
@@ -1001,7 +1001,7 @@ where
         graph.add_node(default_node_weight());
     }
 
-    let between = Uniform::new(0.0, 1.0).map_err(|_| InvalidInputError {})?;
+    let between = Uniform::new(0.0, 1.0).unwrap();
     for (v, p1) in pos.iter().enumerate().take(num_nodes - 1) {
         for (w, p2) in pos.iter().enumerate().skip(v + 1) {
             let dist = hyperbolic_distance(p1, p2);
