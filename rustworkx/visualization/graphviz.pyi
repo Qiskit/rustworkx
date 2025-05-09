@@ -10,10 +10,11 @@ import typing
 from rustworkx.rustworkx import PyGraph, PyDiGraph
 
 if typing.TYPE_CHECKING:
+    from typing_extensions import TypeAlias
     from PIL.Image import Image
 
-    Method: typing.TypeAlias = typing.Literal["twopi", "neato", "circo", "fdp", "sfdp", "dot"]
-    ImageType: typing.TypeAlias = typing.Literal[
+    _Method: TypeAlias = typing.Literal["twopi", "neato", "circo", "fdp", "sfdp", "dot"]
+    _ImageType: TypeAlias = typing.Literal[
         "canon",
         "cmap",
         "cmapx",
@@ -61,8 +62,8 @@ def graphviz_draw(
     edge_attr_fn: typing.Callable[[_T], dict[str, str]] | None = ...,
     graph_attr: dict[str, str] | None = ...,
     filename: None = ...,
-    image_type: ImageType | None = ...,
-    method: Method | None = ...,
+    image_type: _ImageType | None = ...,
+    method: _Method | None = ...,
 ) -> Image: ...
 @typing.overload
 def graphviz_draw(
@@ -71,6 +72,6 @@ def graphviz_draw(
     edge_attr_fn: typing.Callable[[_T], dict[str, str]] | None = ...,
     graph_attr: dict[str, str] | None = ...,
     filename: str = ...,
-    image_type: ImageType | None = ...,
-    method: Method | None = ...,
+    image_type: _ImageType | None = ...,
+    method: _Method | None = ...,
 ) -> None: ...
