@@ -26,7 +26,7 @@ use petgraph::prelude::*;
 
 use numpy::PyReadonlyArray2;
 
-use rand::distributions::{Distribution, Uniform};
+use rand_distr::{Distribution, Uniform};
 use rand::prelude::*;
 use rand_pcg::Pcg64;
 
@@ -453,7 +453,7 @@ pub fn random_geometric_graph(
     let radius_p = pnorm(radius, p);
     let mut rng: Pcg64 = match seed {
         Some(seed) => Pcg64::seed_from_u64(seed),
-        None => Pcg64::from_entropy(),
+        None => Pcg64::from_os_rng(),
     };
 
     let dist = Uniform::new(0.0, 1.0);
