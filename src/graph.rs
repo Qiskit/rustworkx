@@ -1370,7 +1370,7 @@ impl PyGraph {
     ///       graph = rx.PyGraph.read_edge_list(path=path)
     ///   mpl_draw(graph)
     ///   
-    /// For example for csv based data, you may use the below code::
+    /// For example for csv based data, you may use the below code
     /// 
     ///     graph = rx.PyGraph.read_edge_list(path=file, deliminator=",")
     /// 
