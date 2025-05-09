@@ -26,8 +26,8 @@ use petgraph::prelude::*;
 
 use numpy::PyReadonlyArray2;
 
-use rand_distr::{Distribution, Uniform};
 use rand::prelude::*;
+use rand_distr::{Distribution, Uniform};
 use rand_pcg::Pcg64;
 
 use rustworkx_core::generators as core_generators;
@@ -456,7 +456,8 @@ pub fn random_geometric_graph(
         None => Pcg64::from_os_rng(),
     };
 
-    let dist = Uniform::new(0.0, 1.0);
+    let dist = Uniform::new(0.0, 1.0)
+        .map_err(|_| PyValueError::new_err("Invalid range for uniform distribution"))?;
     let pos = pos.unwrap_or_else(|| {
         (0..num_nodes)
             .map(|_| (0..dim).map(|_| dist.sample(&mut rng)).collect())

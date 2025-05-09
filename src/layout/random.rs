@@ -32,7 +32,7 @@ pub fn random_layout<Ty: EdgeType>(
         pos_map: graph
             .node_indices()
             .map(|n| {
-                let random_tuple: [f64; 2] = rng.gen();
+                let random_tuple: [f64; 2] = rng.random();
                 match center {
                     Some(center) => (
                         n.index(),
