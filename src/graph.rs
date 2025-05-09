@@ -1371,13 +1371,17 @@ impl PyGraph {
     ///   mpl_draw(graph)
     ///   
     /// For example for csv based data, you may use the below code
+<<<<<<< HEAD
     /// 
+=======
+    ///
+>>>>>>> 4320ceb (fmt changes)
     ///     graph = rx.PyGraph.read_edge_list(path=file, deliminator=",")
-    /// 
+    ///
     /// Data with labels for nodes
-    /// 
+    ///
     ///     graph = rx.PyGraph.read_edge_list(path=file, deliminator=",",labels=True)
-    /// 
+    ///
     #[staticmethod]
     #[pyo3(signature=(path, comment=None, deliminator=None, labels=false),  text_signature = "(path, /, comment=None, deliminator=None, labels=False)")]
     pub fn read_edge_list(
