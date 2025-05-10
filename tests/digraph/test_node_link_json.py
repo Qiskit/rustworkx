@@ -174,7 +174,11 @@ class TestNodeLinkJSON(unittest.TestCase):
 
     def test_round_trip_networkx(self):
         graph = nx.generators.path_graph(5, create_using=nx.DiGraph)
-        node_link_str = json.dumps(nx.node_link_data(graph, edges="links"))
+        try:
+            node_link_str = json.dumps(nx.node_link_data(graph, edges="links"))
+        except TypeError:
+            # TODO: Remove this once we no longer need to support Python 3.9
+            node_link_str = json.dumps(nx.node_link_data(graph))
         new = rustworkx.parse_node_link_json(node_link_str)
         self.assertIsInstance(new, rustworkx.PyDiGraph)
         self.assertEqual(new.num_nodes(), graph.number_of_nodes())
