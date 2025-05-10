@@ -25,7 +25,7 @@ repository = "https://github.com/Qiskit/rustworkx"
 license = "Apache-2.0"
 
 [workspace.dependencies]
-ahash = "0.8.6"
+foldhash = "0.1.5"
 fixedbitset = "0.5.7"
 indexmap = { version = ">=1.9, <3", features = ["rayon"] }
 ndarray = { version = "0.16.1", features = ["rayon"] }
@@ -33,8 +33,9 @@ num-traits = "0.2"
 petgraph = "0.8"
 hashbrown = { version = ">=0.13, <0.16", features = ["rayon"] }
 numpy = "0.24"
-rand = "0.8"
-rand_pcg = "0.3"
+rand = "0.9"
+rand_distr = "0.5"
+rand_pcg = "0.9"
 rayon = "1.10"
 
 [lib]
@@ -42,7 +43,7 @@ name = "rustworkx"
 crate-type = ["cdylib"]
 
 [dependencies]
-ahash.workspace = true
+foldhash.workspace = true
 fixedbitset.workspace = true
 hashbrown.workspace = true
 indexmap.workspace = true
@@ -55,6 +56,7 @@ numpy.workspace = true
 petgraph.workspace = true
 quick-xml = "0.37"
 rand.workspace = true
+rand_distr.workspace = true
 rand_pcg.workspace = true
 rayon.workspace = true
 serde = { version = "1.0", features = ["derive"] }
