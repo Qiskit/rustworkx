@@ -1,0 +1,6 @@
+﻿rustworkx.graph\_core\_number
+=============================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: graph_core_number
