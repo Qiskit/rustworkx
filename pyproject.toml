@@ -105,9 +105,6 @@ docs = [
 releaseinfra = [
     "cibuildwheel==2.23.2",
 ]
-releaseinfra = [
-    "cibuildwheel==2.23.2",
-]
 
 [tool.black]
 line-length = 100
