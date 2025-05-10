@@ -72,14 +72,13 @@ testinfra = [
 ]
 test = [
   "setuptools-rust",
-  "fixtures",
   "testtools>=2.5.0",
-  "networkx>=2.5",
+  "networkx>=3.2",
   "stestr>=4.1",
 ]
 lint = [
     "black~=24.8",
-    "ruff~=0.6",
+    "ruff==0.11.9",
     "setuptools-rust",
     "typos~=1.28",
 ]
@@ -106,7 +105,7 @@ releaseinfra = [
 
 [tool.black]
 line-length = 100
-target-version = ['py39', 'py310', 'py311', 'py312']
+target-version = ['py39', 'py310', 'py311', 'py312', 'py313']
 
 [tool.ruff]
 line-length = 105 # more lenient than black due to long function signatures
