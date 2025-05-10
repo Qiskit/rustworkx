@@ -10,8 +10,8 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-use rand::distributions::{Standard, Uniform};
 use rand::prelude::*;
+use rand_distr::{StandardUniform, Uniform};
 use rand_pcg::Pcg64;
 use std::error::Error;
 use std::fmt;
@@ -161,10 +161,12 @@ where
         // into a Vec based on the given seed
         let outer_rng: Pcg64 = match self.seed {
             Some(rng_seed) => Pcg64::seed_from_u64(rng_seed),
-            None => Pcg64::from_entropy(),
+            None => Pcg64::from_os_rng(),
         };
-        let trial_seeds_vec: Vec<u64> =
-            outer_rng.sample_iter(&Standard).take(self.trials).collect();
+        let trial_seeds_vec: Vec<u64> = outer_rng
+            .sample_iter(&StandardUniform)
+            .take(self.trials)
+            .collect();
 
         CondIterator::new(
             trial_seeds_vec,
@@ -260,7 +262,7 @@ where
         let mut rng_seed: Pcg64 = Pcg64::seed_from_u64(trial_seed);
         while !todo_nodes.is_empty() && steps <= 4 * digraph.node_count().pow(2) {
             // Choose a random todo_node
-            let between = Uniform::new(0, todo_nodes.len());
+            let between = Uniform::new(0, todo_nodes.len()).map_err(|_| MapNotPossible {})?;
             let random: usize = between.sample(&mut rng_seed);
             let todo_node = todo_nodes[random];
 
