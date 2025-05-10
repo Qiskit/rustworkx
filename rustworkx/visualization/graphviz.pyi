@@ -71,7 +71,27 @@ def graphviz_draw(
     node_attr_fn: typing.Callable[[_S], dict[str, str]] | None = ...,
     edge_attr_fn: typing.Callable[[_T], dict[str, str]] | None = ...,
     graph_attr: dict[str, str] | None = ...,
+    filename: None = ...,
+    image_type: str | None = ...,
+    method: str | None = ...,
+) -> Image: ...
+@typing.overload
+def graphviz_draw(
+    graph: PyDiGraph[_S, _T] | PyGraph[_S, _T],
+    node_attr_fn: typing.Callable[[_S], dict[str, str]] | None = ...,
+    edge_attr_fn: typing.Callable[[_T], dict[str, str]] | None = ...,
+    graph_attr: dict[str, str] | None = ...,
     filename: str = ...,
     image_type: _ImageType | None = ...,
     method: _Method | None = ...,
+) -> None: ...
+@typing.overload
+def graphviz_draw(
+    graph: PyDiGraph[_S, _T] | PyGraph[_S, _T],
+    node_attr_fn: typing.Callable[[_S], dict[str, str]] | None = ...,
+    edge_attr_fn: typing.Callable[[_T], dict[str, str]] | None = ...,
+    graph_attr: dict[str, str] | None = ...,
+    filename: str = ...,
+    image_type: str | None = ...,
+    method: str | None = ...,
 ) -> None: ...
