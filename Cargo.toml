@@ -75,5 +75,5 @@ default-features = false
 features = ["multi_thread"]
 
 [profile.release]
-lto = 'fat'
+lto = "fat"
 codegen-units = 1

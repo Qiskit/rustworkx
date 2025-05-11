@@ -9,3 +9,13 @@ rustflags = [
   "-C", "link-arg=-undefined",
   "-C", "link-arg=dynamic_lookup",
 ]
+
+[target.wasm32-unknown-emscripten]
+rustflags = [
+  "-C", "target-feature=+atomics,+bulk-memory,+mutable-globals",
+  "-C", "link-arg=-s", "-C", "link-arg=ALLOW_MEMORY_GROWTH=1",
+  "-C", "link-arg=-s", "-C", "link-arg=MODULARIZE=1",
+  "-C", "link-arg=-s", "-C", "link-arg=EXPORT_NAME=createModule",
+  "-C", "link-arg=-s", "-C", "link-arg=EXPORT_ES6=1",
+  "-C", "link-arg=-s", "-C", "link-arg=ASSERTIONS=1"
+]
