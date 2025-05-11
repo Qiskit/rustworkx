@@ -19,3 +19,6 @@ rustflags = [
   "-C", "link-arg=-s", "-C", "link-arg=EXPORT_ES6=1",
   "-C", "link-arg=-s", "-C", "link-arg=ASSERTIONS=1"
 ]
+
+[unstable]
+build-std = ["std", "panic_abort"]
