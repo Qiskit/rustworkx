@@ -173,7 +173,7 @@ Support for these platforms are best effort only.
 .. _tier-experimental:
 
 Tier Experimental
-------
+-----------------
 
 Tier Experimental platforms are not tested upstream as part of the development process.
 Pre-compiled binaries are built by the external community in separate repositories. Not all of rustworkx might compile for
