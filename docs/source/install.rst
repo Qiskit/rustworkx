@@ -113,6 +113,10 @@ source.
      - i686 or x86_64
      - :ref:`tier-2` (Python < 3.10), :ref:`tier-3` (Python >= 3.10)
      -
+   * - Pyodide 
+     - WASM (Emscripten)
+     - :ref:`tier-experimental`
+     -
 
 
 .. _manylinux 2014: https://peps.python.org/pep-0599/>
@@ -165,6 +169,18 @@ process, with no testing at all. They may not be installable with just a
 functioning Python environment and may require a C/C++ compiler or additional
 programs to build dependencies from source as part of the installation process.
 Support for these platforms are best effort only.
+
+.. _tier-experimental:
+
+Tier Experimental
+------
+
+Tier Experimental platforms are not tested upstream as part of the development process.
+Pre-compiled binaries are built by the external community in separate repositories. Not all of rustworkx might compile for
+platforms of this tier and features can be removed. Often, platforms in this tier use unstable features
+from the Rust compiler and might break at any time. Support for these platforms are best effort only.
+
+Currently, the only platform in this tier is Pyodide, which is a port of Python that can run in the browser and on Node.js.
 
 Using rustworkx
 ===============
