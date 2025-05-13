@@ -206,6 +206,7 @@ jobs:
     steps:
       - uses: prefix-dev/setup-pixi@v0.8.8
         with:
+          manifest-path: pyproject.toml
           pixi-version: v0.46.0
           environments: default
       - run: pixi run build_pyodide
