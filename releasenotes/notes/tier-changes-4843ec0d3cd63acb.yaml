@@ -2,7 +2,7 @@
 upgrade:
   - |
     There have been changes to the support tiers for some platforms. These changes
-    reflect the current state of supporting each of underlying platforms.
+    reflect the current state of supporting each of the underlying platforms.
 
     * Linux for aarch64 has been upgraded to tier 1, and will now be built and tested
        as part of upstream development on every commit.
@@ -18,4 +18,4 @@ upgrade:
        on NumPy.
     * Windows 32-bits has been downgraded to tier 4. Although NumPy publishes win32 wheels,
        the support of rust-numpy for win32 is precarious and might be dropped at any time.
-       If possible, we recommend using the 64-bit version of our wheel with tier 1 support.
+       If possible, we recommend using the 64-bit version of our wheels with tier 1 support.
