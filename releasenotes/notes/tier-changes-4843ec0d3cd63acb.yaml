@@ -1,0 +1,21 @@
+---
+upgrade:
+  - |
+    There have been changes to the support tiers for some platforms. These changes
+    reflect the current state of supporting each of underlying platforms.
+
+    * Linux for aarch64 has been upgraded to tier 1, and will now be built and tested
+       as part of upstream development on every commit.
+    * Linux for x86_64 (musl) and aarch64 (musl) have been upgraded to tier 2, and
+       will be built and tested as part of the release process. NumPy also provides
+       wheels for these platforms, so we expect most users to install from PyPI with
+       little effort.
+    * Linux for ppc64le has been downgraded to tier 4. We will still publish wheels for
+       this platform, but they will not be tested under the emulated environment.
+    * Linux for i686 has been downgraded to tier 4. We will still publish wheels for this
+       platform, but they will not be tested as NumPy no longer provides i686 wheels. Users
+       will need a C/C++ compiler to install rustworkx on these platforms due to our dependency
+       on NumPy.
+    * Windows 32-bits has been downgraded to tier 4. Although NumPy publishes win32 wheels,
+       the support of rust-numpy for win32 is precarious and might be dropped at any time.
+       If possible, we recommend using the 64-bit version of our wheel with tier 1 support.
