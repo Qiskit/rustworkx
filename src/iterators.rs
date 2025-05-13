@@ -34,7 +34,7 @@
 // don't store any python object, just use `impl PyGCProtocol for MyReadOnlyType {}`.
 //
 // Types `T, K, V` above should implement `PyHash`, `PyEq`, `PyDisplay` traits.
-// These are arleady implemented for many primitive rust types and `PyObject`.
+// These are already implemented for many primitive rust types and `PyObject`.
 
 #![allow(clippy::float_cmp, clippy::upper_case_acronyms)]
 
@@ -51,6 +51,7 @@ use pyo3::gc::PyVisit;
 use pyo3::prelude::*;
 use pyo3::types::IntoPyDict;
 use pyo3::types::PySlice;
+use pyo3::IntoPyObjectExt;
 use pyo3::PyTraverseError;
 
 macro_rules! last_type {
@@ -282,7 +283,7 @@ where
     }
 }
 
-impl<'py, T> PyEq<Bound<'py, PyAny>> for T
+impl<T> PyEq<Bound<'_, PyAny>> for T
 where
     for<'p> T: PyEq<T> + Clone + FromPyObject<'p>,
 {
@@ -295,7 +296,7 @@ where
 
 impl<'py, K, V> PyEq<Bound<'py, PyAny>> for DictMap<K, V>
 where
-    for<'p> K: PyEq<K> + Clone + pyo3::ToPyObject,
+    for<'p> K: PyEq<K> + Clone + pyo3::IntoPyObject<'py>,
     for<'p> V: PyEq<Bound<'py, PyAny>>,
 {
     #[inline]
@@ -304,7 +305,7 @@ where
             return Ok(false);
         }
         for (key, value) in self {
-            match other.get_item(key) {
+            match other.get_item(key.clone()) {
                 Ok(other_raw) => {
                     if !PyEq::eq(value, &other_raw, py)? {
                         return Ok(false);
@@ -432,14 +433,14 @@ impl<'py> FromPyObject<'py> for PySequenceIndex<'py> {
 }
 
 trait PyConvertToPyArray {
-    fn convert_to_pyarray(&self, py: Python) -> PyResult<PyObject>;
+    fn convert_to_pyarray<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>>;
 }
 
 macro_rules! py_convert_to_py_array_impl {
     ($($t:ty)*) => ($(
         impl PyConvertToPyArray for Vec<$t> {
-            fn convert_to_pyarray(&self, py: Python) -> PyResult<PyObject> {
-                Ok(self.clone().into_pyarray_bound(py).into())
+            fn convert_to_pyarray<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+                Ok(self.clone().into_pyarray(py).into_any())
             }
         }
     )*)
@@ -448,9 +449,12 @@ macro_rules! py_convert_to_py_array_impl {
 macro_rules! py_convert_to_py_array_obj_impl {
     ($t:ty) => {
         impl PyConvertToPyArray for Vec<$t> {
-            fn convert_to_pyarray(&self, py: Python) -> PyResult<PyObject> {
-                let pyobj_vec: Vec<PyObject> = self.iter().map(|x| x.clone().into_py(py)).collect();
-                Ok(pyobj_vec.into_pyarray_bound(py).into())
+            fn convert_to_pyarray<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+                let pyobj_vec: Vec<PyObject> = self
+                    .iter()
+                    .map(|x| x.clone().into_py_any(py))
+                    .collect::<PyResult<Vec<PyObject>>>()?;
+                Ok(pyobj_vec.into_pyarray(py).into_any())
             }
         }
     };
@@ -462,7 +466,7 @@ py_convert_to_py_array_obj_impl! {EdgeList}
 py_convert_to_py_array_obj_impl! {(PyObject, Vec<PyObject>)}
 
 impl PyConvertToPyArray for Vec<(usize, usize)> {
-    fn convert_to_pyarray(&self, py: Python) -> PyResult<PyObject> {
+    fn convert_to_pyarray<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
         let mut mat = Array2::<usize>::from_elem((self.len(), 2), 0);
 
         for (index, element) in self.iter().enumerate() {
@@ -470,21 +474,21 @@ impl PyConvertToPyArray for Vec<(usize, usize)> {
             mat[[index, 1]] = element.1;
         }
 
-        Ok(mat.into_pyarray_bound(py).into())
+        Ok(mat.into_pyarray(py).into_any())
     }
 }
 
 impl PyConvertToPyArray for Vec<(usize, usize, PyObject)> {
-    fn convert_to_pyarray(&self, py: Python) -> PyResult<PyObject> {
+    fn convert_to_pyarray<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
         let mut mat = Array2::<PyObject>::from_elem((self.len(), 3), py.None());
 
         for (index, element) in self.iter().enumerate() {
-            mat[[index, 0]] = element.0.into_py(py);
-            mat[[index, 1]] = element.1.into_py(py);
+            mat[[index, 0]] = element.0.into_py_any(py)?;
+            mat[[index, 1]] = element.1.into_py_any(py)?;
             mat[[index, 2]] = element.2.clone();
         }
 
-        Ok(mat.into_pyarray_bound(py).into())
+        Ok(mat.into_pyarray(py).into_any())
     }
 }
 
@@ -588,7 +592,7 @@ macro_rules! custom_vec_iter_impl {
                                 cond = pos < indices.stop;
                             }
                         }
-                        Ok(out_vec.into_py(py))
+                        out_vec.into_py_any(py)
                     }
                     PySequenceIndex::Int(idx) => {
                         let len = self.$data.len() as isize;
@@ -596,9 +600,9 @@ macro_rules! custom_vec_iter_impl {
                             Err(PyIndexError::new_err(format!("Invalid index, {}", idx)))
                         } else if idx < 0 {
                             let len = self.$data.len();
-                            Ok(self.$data[len - idx.unsigned_abs()].clone().into_py(py))
+                            self.$data[len - idx.unsigned_abs()].clone().into_py_any(py)
                         } else {
-                            Ok(self.$data[idx as usize].clone().into_py(py))
+                            self.$data[idx as usize].clone().into_py_any(py)
                         }
                     }
                 }
@@ -619,12 +623,12 @@ macro_rules! custom_vec_iter_impl {
             }
 
             #[pyo3(signature = (dtype=None, copy=None))]
-            fn __array__(
+            fn __array__<'py>(
                 &self,
-                py: Python,
+                py: Python<'py>,
                 dtype: Option<PyObject>,
                 copy: Option<bool>,
-            ) -> PyResult<PyObject> {
+            ) -> PyResult<Bound<'py, PyAny>> {
                 if copy == Some(false) {
                     return Err(PyValueError::new_err(
                         "A copy is needed to return an array from this object.",
@@ -633,12 +637,10 @@ macro_rules! custom_vec_iter_impl {
                 let res = self.$data.convert_to_pyarray(py)?;
                 Ok(match dtype {
                     Some(dtype) => {
-                        let numpy_mod = py.import_bound("numpy")?;
+                        let numpy_mod = py.import("numpy")?;
                         let args = (res,);
-                        let kwargs = [("dtype", dtype)].into_py_dict_bound(py);
-                        numpy_mod
-                            .call_method("asarray", args, Some(&kwargs))?
-                            .into()
+                        let kwargs = [("dtype", dtype)].into_py_dict(py)?;
+                        numpy_mod.call_method("asarray", args, Some(&kwargs))?
                     }
                     None => res,
                 })
@@ -664,14 +666,14 @@ macro_rules! custom_vec_iter_impl {
 
         #[pymethods]
         impl $iter {
-            fn __next__(&mut self, py: Python) -> Option<Py<PyAny>> {
+            fn __next__<'py>(&mut self, py: Python<'py>) -> PyResult<Option<Bound<'py, PyAny>>> {
                 let data = self.inner.as_ref().unwrap().borrow(py);
                 if self.index < data.$data.len() {
-                    let out = data.$data[self.index].clone().into_py(py);
+                    let out = data.$data[self.index].clone().into_pyobject(py)?.into_any();
                     self.index += 1;
-                    Some(out)
+                    Ok(Some(out))
                 } else {
-                    None
+                    Ok(None)
                 }
             }
 
@@ -714,15 +716,15 @@ macro_rules! custom_vec_iter_impl {
 
         #[pymethods]
         impl $reversed {
-            fn __next__(&mut self, py: Python) -> Option<Py<PyAny>> {
+            fn __next__(&mut self, py: Python) -> PyResult<Option<Py<PyAny>>> {
                 let data = self.inner.as_ref().unwrap().borrow(py);
                 let len = data.$data.len();
                 if self.index < len {
-                    let out = data.$data[len - self.index - 1].clone().into_py(py);
+                    let out = data.$data[len - self.index - 1].clone().into_py_any(py)?;
                     self.index += 1;
-                    Some(out)
+                    Ok(Some(out))
                 } else {
-                    None
+                    Ok(None)
                 }
             }
 
@@ -1031,7 +1033,7 @@ impl PyHash for EdgeList {
     }
 }
 
-impl<'py> PyEq<Bound<'py, PyAny>> for EdgeList {
+impl PyEq<Bound<'_, PyAny>> for EdgeList {
     #[inline]
     fn eq(&self, other: &Bound<PyAny>, py: Python) -> PyResult<bool> {
         PyEq::eq(&self.edges, other, py)
@@ -1088,7 +1090,7 @@ custom_vec_iter_impl!(
 
     The class is a read-only sequence of integers instances.
 
-    This class is a container class for the results of the digraph_maximum_bisimulation funtion.
+    This class is a container class for the results of the digraph_maximum_bisimulation function.
     It implements the Python sequence
     protocol. So you can treat the return as a read-only sequence/list
     that is integer indexed. If you want to use it as an iterator you
@@ -1119,7 +1121,7 @@ impl PyHash for IndexPartitionBlock {
     }
 }
 
-impl<'py> PyEq<Bound<'py, PyAny>> for IndexPartitionBlock {
+impl PyEq<Bound<'_, PyAny>> for IndexPartitionBlock {
     #[inline]
     fn eq(&self, other: &Bound<PyAny>, py: Python) -> PyResult<bool> {
         PyEq::eq(&self.block, other, py)
@@ -1144,7 +1146,7 @@ custom_vec_iter_impl!(
 
     The class is a read-only sequence of :class:`.NodeIndices` instances.
 
-    This class is a container class for the results of the digraph_maximum_bisimulation funtion.
+    This class is a container class for the results of the digraph_maximum_bisimulation function.
     It implements the Python sequence
     protocol. So you can treat the return as a read-only sequence/list
     that is integer indexed. If you want to use it as an iterator you
@@ -1161,8 +1163,8 @@ custom_vec_iter_impl!(
         a_partition_block = partition[0]
         # Use as iterator
         partition_iter = iter(partition)
-        another_block = next(parititon_iter)
-        the_second_block = next(parititon_iter)
+        another_block = next(partition_iter)
+        the_second_block = next(partition_iter)
     "
 );
 impl PyGCProtocol for RelationalCoarsestPartition {}
@@ -1522,7 +1524,7 @@ impl PyHash for PathMapping {
     }
 }
 
-impl<'py> PyEq<Bound<'py, PyAny>> for PathMapping {
+impl PyEq<Bound<'_, PyAny>> for PathMapping {
     #[inline]
     fn eq(&self, other: &Bound<PyAny>, py: Python) -> PyResult<bool> {
         PyEq::eq(&self.paths, other, py)
@@ -1686,7 +1688,7 @@ impl PyHash for MultiplePathMapping {
     }
 }
 
-impl<'py> PyEq<Bound<'py, PyAny>> for MultiplePathMapping {
+impl PyEq<Bound<'_, PyAny>> for MultiplePathMapping {
     #[inline]
     fn eq(&self, other: &Bound<PyAny>, py: Python) -> PyResult<bool> {
         PyEq::eq(&self.paths, other, py)
@@ -1750,7 +1752,7 @@ impl PyHash for PathLengthMapping {
     }
 }
 
-impl<'py> PyEq<Bound<'py, PyAny>> for PathLengthMapping {
+impl PyEq<Bound<'_, PyAny>> for PathLengthMapping {
     #[inline]
     fn eq(&self, other: &Bound<PyAny>, py: Python) -> PyResult<bool> {
         PyEq::eq(&self.path_lengths, other, py)

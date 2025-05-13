@@ -4,7 +4,7 @@ features:
     A new function :func:`rustworkx.networkx_converter` has been added. This
     function takes in a networkx ``Graph`` object and will generate an
     equivalent :class:`~rustworkx.PyGraph` or :class:`~rustworkx.PyDiGraph`
-    object. While this function is provided as a convience for users of
+    object. While this function is provided as a convenience for users of
     both rustworkx and networkx, networkx will **not** be added as a dependency
     of rustworkx (which precludes a rustworkx->networkx converter, see
     :ref:`networkx_converter` for example code on how to build this yourself).

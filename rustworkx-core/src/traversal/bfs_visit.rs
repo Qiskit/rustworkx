@@ -56,29 +56,32 @@ pub enum BfsEvent<N, E> {
 ///
 /// ***Panics** if you attempt to prune a node from its `Finish` event.
 ///
-/// The pseudo-code for the BFS algorithm is listed below, with the annotated
-/// event points, for which the given visitor object will be called with the
-/// appropriate method.
+/// Pseudo-code for the BFS algorithm is listed below, with the annotated event points,
+/// for which the given visitor object will be called with the appropriate method.
 ///
 /// ```norust
+/// // G - graph, s - single source node
 /// BFS(G, s)
-///   for each vertex u in V
-///       color[u] := WHITE
+///   let color be a mapping             // color[u] - vertex u color WHITE/GRAY/BLACK
+///   for each u in G                    // u - vertex in G
+///     color[u] := WHITE                // color all vertices as undiscovered
 ///   end for
-///   color[s] := GRAY
-///   EQUEUE(Q, s)                             discover vertex s
-///   while (Q != Ø)
-///       u := DEQUEUE(Q)
-///       for each vertex v in Adj[u]          (u,v) is a tree edge
-///           if (color[v] = WHITE)
-///               color[v] = GRAY
-///           else                             (u,v) is a non - tree edge
-///               if (color[v] = GRAY)         (u,v) has a gray target
-///                   ...
-///               else if (color[v] = BLACK)   (u,v) has a black target
-///                   ...
-///       end for
-///       color[u] := BLACK                    finish vertex u
+///   let Q be a queue
+///   ENQUEUE(Q, s)
+///   color[s] := GRAY                   // event: Discover(s)
+///   while (Q is not empty)
+///     u := DEQUEUE(Q)
+///     for each v, w in OutEdges(G, u)  // v - target vertex, w - edge weight
+///       if (WHITE = color[v])          // event: TreeEdge(u, v, w)
+///         color[v] := GRAY             // event: Discover(v)
+///         ENQUEUE(Q, v)
+///       else                           // event: NonTreeEdge(u, v, w)
+///         if (GRAY = color[v])         // event: GrayTargetEdge(u, v, w)
+///           ...                       
+///         elif (BLACK = color[v])      // event: BlackTargetEdge(u, v, w)
+///           ...                       
+///     end for
+///     color[u] := BLACK                // event: Finish(u)
 ///   end while
 /// ```
 ///

@@ -14,9 +14,10 @@
 
 use crate::{digraph, graph, StablePyGraph};
 
-use pyo3::exceptions::PyValueError;
+use pyo3::exceptions::{PyRuntimeError, PyValueError};
 use pyo3::prelude::*;
 use pyo3::types::PyDict;
+use pyo3::IntoPyObjectExt;
 use pyo3::Python;
 
 use petgraph::algo;
@@ -25,8 +26,8 @@ use petgraph::prelude::*;
 
 use numpy::PyReadonlyArray2;
 
-use rand::distributions::{Distribution, Uniform};
 use rand::prelude::*;
+use rand_distr::{Distribution, Uniform};
 use rand_pcg::Pcg64;
 
 use rustworkx_core::generators as core_generators;
@@ -87,7 +88,7 @@ pub fn directed_gnp_random_graph(
     // in the python interface, we do it here.
     let nodes: Vec<NodeIndex> = graph.node_indices().collect();
     for node in nodes.iter() {
-        graph[*node] = node.index().to_object(py);
+        graph[*node] = node.index().into_py_any(py)?;
     }
     Ok(digraph::PyDiGraph {
         graph,
@@ -155,7 +156,7 @@ pub fn undirected_gnp_random_graph(
     // in the python interface, we do it here.
     let nodes: Vec<NodeIndex> = graph.node_indices().collect();
     for node in nodes.iter() {
-        graph[*node] = node.index().to_object(py);
+        graph[*node] = node.index().into_py_any(py)?;
     }
     Ok(graph::PyGraph {
         graph,
@@ -209,7 +210,7 @@ pub fn directed_gnm_random_graph(
     // in the python interface, we do it here.
     let nodes: Vec<NodeIndex> = graph.node_indices().collect();
     for node in nodes.iter() {
-        graph[*node] = node.index().to_object(py);
+        graph[*node] = node.index().into_py_any(py)?;
     }
     Ok(digraph::PyDiGraph {
         graph,
@@ -265,7 +266,7 @@ pub fn undirected_gnm_random_graph(
     // in the python interface, we do it here.
     let nodes: Vec<NodeIndex> = graph.node_indices().collect();
     for node in nodes.iter() {
-        graph[*node] = node.index().to_object(py);
+        graph[*node] = node.index().into_py_any(py)?;
     }
     Ok(graph::PyGraph {
         graph,
@@ -452,10 +453,11 @@ pub fn random_geometric_graph(
     let radius_p = pnorm(radius, p);
     let mut rng: Pcg64 = match seed {
         Some(seed) => Pcg64::seed_from_u64(seed),
-        None => Pcg64::from_entropy(),
+        None => Pcg64::from_os_rng(),
     };
 
-    let dist = Uniform::new(0.0, 1.0);
+    let dist = Uniform::new(0.0, 1.0)
+        .map_err(|_| PyRuntimeError::new_err("Error creating uniform distribution"))?;
     let pos = pos.unwrap_or_else(|| {
         (0..num_nodes)
             .map(|_| (0..dim).map(|_| dist.sample(&mut rng)).collect())
@@ -469,8 +471,8 @@ pub fn random_geometric_graph(
     }
 
     for pval in pos.iter() {
-        let pos_dict = PyDict::new_bound(py);
-        pos_dict.set_item("pos", pval.to_object(py))?;
+        let pos_dict = PyDict::new(py);
+        pos_dict.set_item("pos", pval.into_py_any(py)?)?;
 
         inner_graph.add_node(pos_dict.into());
     }

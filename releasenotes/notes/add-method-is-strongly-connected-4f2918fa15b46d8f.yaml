@@ -1,0 +1,10 @@
+---
+features:
+  - |
+    Added two new functions: :func:`~rustworkx.is_strongly_connected` and
+    :func:`~rustworkx.number_strongly_connected_components`
+    to the ``rustworkx.PyDiGraph`` class.
+    These functions check whether the directed graph is strongly connected,
+    and the number of such components, respectively.
+    They are the “strongly-connected” pendants for the already existing 
+    “weakly-connected” methods.

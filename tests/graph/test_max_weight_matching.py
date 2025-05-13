@@ -10,7 +10,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-# These tests are adapated from the networkx test cases:
+# These tests are adapted from the networkx test cases:
 # https://github.com/networkx/networkx/blob/3351206a3ce5b3a39bb2fc451e93ef545b96c95b/networkx/algorithms/tests/test_matching.py
 
 import random
@@ -30,7 +30,7 @@ class TestMaxWeightMatching(unittest.TestCase):
         for u, v in rx_match:
             if (u, v) not in expected_match and (v, u) not in expected_match:
                 self.fail(
-                    f"Element {(u, v)} and it's reverse {(v, u)} not found in "
+                    f"Element {(u, v)} and its reverse {(v, u)} not found in "
                     f"expected output.\nrustworkx output: {rx_match}\nexpected "
                     f"output: {expected_match}"
                 )

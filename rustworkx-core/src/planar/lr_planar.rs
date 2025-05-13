@@ -211,7 +211,7 @@ where
     graph: G,
     /// roots of the DFS forest.
     roots: Vec<G::NodeId>,
-    /// distnace from root.
+    /// distance from root.
     height: HashMap<G::NodeId, usize>,
     /// parent edge.
     eparent: HashMap<G::NodeId, Edge<G>>,

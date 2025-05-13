@@ -17,7 +17,7 @@ use std::iter::Iterator;
 
 use hashbrown::{HashMap, HashSet};
 
-use pyo3::exceptions::PyValueError;
+use pyo3::exceptions::{PyRuntimeError, PyValueError};
 use pyo3::prelude::*;
 
 use petgraph::graph::NodeIndex;
@@ -25,8 +25,8 @@ use petgraph::prelude::*;
 use petgraph::visit::{IntoEdgeReferences, NodeIndexable};
 use petgraph::EdgeType;
 
-use rand::distributions::{Distribution, Uniform};
 use rand::prelude::*;
+use rand_distr::{Distribution, Uniform};
 use rand_pcg::Pcg64;
 
 use crate::StablePyGraph;
@@ -183,7 +183,7 @@ pub fn rescale(pos: &mut [Point], scale: Nt, indices: Vec<usize>) {
     mu[0] /= n as Nt;
     mu[1] /= n as Nt;
 
-    // substract mean and find max coordinate for all axes
+    // subtract mean and find max coordinate for all axes
     let mut lim = f64::NEG_INFINITY;
     for n in indices {
         let [px, py] = pos.get_mut(n).unwrap();
@@ -322,10 +322,11 @@ where
 
     let mut rng: Pcg64 = match seed {
         Some(seed) => Pcg64::seed_from_u64(seed),
-        None => Pcg64::from_entropy(),
+        None => Pcg64::from_os_rng(),
     };
 
-    let dist = Uniform::new(0.0, 1.0);
+    let dist = Uniform::new(0.0, 1.0)
+        .map_err(|_| PyRuntimeError::new_err("Error creating uniform distribution"))?;
 
     let pos = pos.unwrap_or_default();
     let mut vpos: Vec<Point> = (0..graph.node_bound())

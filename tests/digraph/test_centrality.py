@@ -136,10 +136,26 @@ class TestCentralityDiGraphDeletedNode(unittest.TestCase):
         expected = {0: 0.0, 1: 1.0 / 3.0, 2: 4.0 / 9.0, 4: 0.5}
         self.assertEqual(expected, closeness)
 
+    def test_closeness_centrality_parallel(self):
+        closeness = rustworkx.digraph_closeness_centrality(
+            self.graph, parallel_threshold=1
+        )  # force parallelism
+        expected = {0: 0.0, 1: 1.0 / 3.0, 2: 4.0 / 9.0, 4: 0.5}
+        self.assertEqual(expected, closeness)
+
     def test_closeness_centrality_wf_improved(self):
         closeness = rustworkx.digraph_closeness_centrality(self.graph, wf_improved=False)
         expected = {0: 0.0, 1: 1.0, 2: 2.0 / 3.0, 4: 0.5}
         self.assertEqual(expected, closeness)
+
+    def test_closeness_weighted_with_default_weight(self):
+        for parallel_threshold in [1, 200]:
+            with self.subTest(parallel_threshold=parallel_threshold):
+                closeness = rustworkx.closeness_centrality(self.graph, parallel_threshold=1)
+                weighted_closeness = rustworkx.newman_weighted_closeness_centrality(
+                    self.graph, default_weight=1.0, parallel_threshold=1
+                )
+                self.assertEqual(closeness, weighted_closeness)
 
 
 class TestEigenvectorCentrality(unittest.TestCase):
@@ -239,5 +255,100 @@ class TestEdgeBetweennessCentrality(unittest.TestCase):
         graph = rustworkx.generators.directed_path_graph(5)
         centrality = rustworkx.edge_betweenness_centrality(graph, normalized=False)
         expected = {0: 4.0, 1: 6.0, 2: 6.0, 3: 4.0}
+        for k, v in centrality.items():
+            self.assertAlmostEqual(v, expected[k])
+
+
+class TestDiGraphDegreeCentrality(unittest.TestCase):
+    def setUp(self):
+        self.graph = rustworkx.PyDiGraph()
+        self.a = self.graph.add_node("A")
+        self.b = self.graph.add_node("B")
+        self.c = self.graph.add_node("C")
+        self.d = self.graph.add_node("D")
+        edge_list = [
+            (self.a, self.b, 1),
+            (self.b, self.c, 1),
+            (self.c, self.d, 1),
+            (self.a, self.c, 1),  # Additional edge
+        ]
+        self.graph.add_edges_from(edge_list)
+
+    def test_degree_centrality(self):
+        centrality = rustworkx.degree_centrality(self.graph)
+        expected = {
+            0: 2 / 3,  # 2 total edges / 3
+            1: 2 / 3,  # 2 total edges / 3
+            2: 1.0,  # 3 total edges / 3
+            3: 1 / 3,  # 1 total edge / 3
+        }
+        for k, v in centrality.items():
+            self.assertAlmostEqual(v, expected[k])
+
+    def test_in_degree_centrality(self):
+        centrality = rustworkx.in_degree_centrality(self.graph)
+        expected = {
+            0: 0.0,  # 0 incoming edges
+            1: 1 / 3,  # 1 incoming edge
+            2: 2 / 3,  # 2 incoming edges
+            3: 1 / 3,  # 1 incoming edge
+        }
+        for k, v in centrality.items():
+            self.assertAlmostEqual(v, expected[k])
+
+    def test_out_degree_centrality(self):
+        centrality = rustworkx.out_degree_centrality(self.graph)
+        expected = {
+            0: 2 / 3,  # 2 outgoing edges
+            1: 1 / 3,  # 1 outgoing edge
+            2: 1 / 3,  # 1 outgoing edge
+            3: 0.0,  # 0 outgoing edges
+        }
+        for k, v in centrality.items():
+            self.assertAlmostEqual(v, expected[k])
+
+    def test_degree_centrality_complete_digraph(self):
+        graph = rustworkx.generators.directed_complete_graph(5)
+        centrality = rustworkx.degree_centrality(graph)
+        expected = {0: 1.0, 1: 1.0, 2: 1.0, 3: 1.0, 4: 1.0}
+        for k, v in centrality.items():
+            self.assertAlmostEqual(v, expected[k])
+
+    def test_degree_centrality_directed_path(self):
+        graph = rustworkx.generators.directed_path_graph(5)
+        centrality = rustworkx.degree_centrality(graph)
+        expected = {
+            0: 1 / 4,  # 1 total edge (out only) / 4
+            1: 2 / 4,  # 2 total edges (1 in + 1 out) / 4
+            2: 2 / 4,  # 2 total edges (1 in + 1 out) / 4
+            3: 2 / 4,  # 2 total edges (1 in + 1 out) / 4
+            4: 1 / 4,  # 1 total edge (in only) / 4
+        }
+        for k, v in centrality.items():
+            self.assertAlmostEqual(v, expected[k])
+
+    def test_in_degree_centrality_directed_path(self):
+        graph = rustworkx.generators.directed_path_graph(5)
+        centrality = rustworkx.in_degree_centrality(graph)
+        expected = {
+            0: 0.0,  # 0 incoming edges
+            1: 1 / 4,  # 1 incoming edge
+            2: 1 / 4,  # 1 incoming edge
+            3: 1 / 4,  # 1 incoming edge
+            4: 1 / 4,  # 1 incoming edge
+        }
+        for k, v in centrality.items():
+            self.assertAlmostEqual(v, expected[k])
+
+    def test_out_degree_centrality_directed_path(self):
+        graph = rustworkx.generators.directed_path_graph(5)
+        centrality = rustworkx.out_degree_centrality(graph)
+        expected = {
+            0: 1 / 4,  # 1 outgoing edge
+            1: 1 / 4,  # 1 outgoing edge
+            2: 1 / 4,  # 1 outgoing edge
+            3: 1 / 4,  # 1 outgoing edge
+            4: 0.0,  # 0 outgoing edges
+        }
         for k, v in centrality.items():
             self.assertAlmostEqual(v, expected[k])

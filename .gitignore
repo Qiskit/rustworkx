@@ -21,4 +21,7 @@ retworkx/*pyd
 !/docs/source/images/*.svg
 *.jpg
 **/*.so
-retworkx-core/Cargo.lock
+rustworkx-core/Cargo.lock
+**/.DS_Store
+venv/
+.python-version

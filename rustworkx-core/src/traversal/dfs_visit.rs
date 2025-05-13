@@ -65,6 +65,43 @@ pub enum DfsEvent<N, E> {
 ///
 /// ***Panics** if you attempt to prune a node from its `Finish` event.
 ///
+/// Pseudo-code for the DFS algorithm is listed below, with the annotated event points,
+/// for which the given visitor object will be called with the appropriate method.
+///
+/// ```norust
+/// // G - graph, s - single source node
+/// DFS(G, s)
+///   let color be a mapping                        // color[u] - vertex u color WHITE/GRAY/BLACK
+///   for each u in G                               // u - vertex in G
+///     color[u] := WHITE                           // color all as undiscovered
+///   end for
+///   time := 0
+///   let S be a stack
+///   PUSH(S, (s, iterator of OutEdges(G, s)))      // S - stack of vertices and edge iterators
+///   color[s] := GRAY                              // event: Discover(s, time)
+///   while (S is not empty)
+///     let (u, iterator) := LAST(S)
+///     flag := False                               // whether edge to undiscovered vertex found
+///     for each v, w in iterator                   // v - target vertex, w - edge weight
+///       if (WHITE = color[v])                     // event: TreeEdge(u, v, w)
+///         time := time + 1
+///         color[v] := GRAY                        // event: Discover(v, time)
+///         flag := True
+///         break
+///       elif (GRAY = color[v])                    // event: BackEdge(u, v, w)
+///         ...
+///       elif (BLACK = color[v])                   // event: CrossForwardEdge(u, v, w)
+///         ...
+///     end for
+///     if (flag is True)
+///       PUSH(S, (v, iterator of OutEdges(G, v)))
+///     elif (flag is False)
+///       time := time + 1
+///       color[u] := BLACK                         // event: Finish(u, time)
+///       POP(S)
+///   end while
+/// ```
+///
 /// # Example returning `Control`.
 ///
 /// Find a path from vertex 0 to 5, and exit the visit as soon as we reach

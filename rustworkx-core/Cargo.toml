@@ -12,7 +12,7 @@ repository.workspace = true
 license.workspace = true
 
 [dependencies]
-ahash.workspace = true
+foldhash.workspace = true
 fixedbitset.workspace = true
 hashbrown.workspace = true
 indexmap.workspace = true
@@ -21,6 +21,7 @@ num-traits.workspace = true
 petgraph.workspace = true
 priority-queue = "2.1"
 rand.workspace = true
+rand_distr.workspace = true
 rand_pcg.workspace = true
 rayon.workspace = true
-rayon-cond = "0.3"
+rayon-cond = "0.4"

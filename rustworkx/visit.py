@@ -6,6 +6,10 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
+from typing import TypeVar, Generic
+
+_T = TypeVar("_T")
+
 
 class StopSearch(Exception):
     """Stop graph traversal"""
@@ -19,7 +23,7 @@ class PruneSearch(Exception):
     pass
 
 
-class BFSVisitor:
+class BFSVisitor(Generic[_T]):
     """A visitor object that is invoked at the event-points inside the
     :func:`~rustworkx.bfs_search` algorithm. By default, it performs no
     action, and should be used as a base class in order to be useful.
@@ -68,7 +72,7 @@ class BFSVisitor:
         return
 
 
-class DFSVisitor:
+class DFSVisitor(Generic[_T]):
     """A visitor object that is invoked at the event-points inside the
     :func:`~rustworkx.dfs_search` algorithm. By default, it performs no
     action, and should be used as a base class in order to be useful.
@@ -119,7 +123,7 @@ class DFSVisitor:
         return
 
 
-class DijkstraVisitor:
+class DijkstraVisitor(Generic[_T]):
     """A visitor object that is invoked at the event-points inside the
     :func:`~rustworkx.dijkstra_search` algorithm. By default, it performs no
     action, and should be used as a base class in order to be useful.

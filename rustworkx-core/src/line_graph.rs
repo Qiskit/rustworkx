@@ -26,9 +26,9 @@ use petgraph::visit::{Data, EdgeCount, EdgeRef, IntoEdges, IntoNodeIdentifiers};
 ///
 /// * `input_graph` - The input graph `G`.
 /// * `default_node_weight` - A callable that will return the weight to use
-///     for newly created nodes.
+///   for newly created nodes.
 /// * `default_edge_weight` - A callable that will return the weight object
-///     to use for newly created edges.
+///   to use for newly created edges.
 ///
 /// Returns the constructed line graph `L(G)`, and the map from the edges of `L(G)` to
 /// the vertices of `G`.
@@ -104,7 +104,6 @@ where
 }
 
 #[cfg(test)]
-
 mod test_line_graph {
     use crate::line_graph::line_graph;
     use crate::petgraph::visit::EdgeRef;

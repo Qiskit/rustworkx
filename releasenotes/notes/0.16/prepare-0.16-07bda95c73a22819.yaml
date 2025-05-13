@@ -1,0 +1,15 @@
+---
+prelude: >
+  This is a new Rustworkx release with many bug fixes and new features to
+  the library. The highlights of this release are:
+
+    * Enhanced support for type checking with `mypy` and `pyright`
+    * Support for reading GraphML files that are compressed
+    * New dominance algorithms
+
+  This release uses the `Python Stable ABI <https://docs.python.org/3.9/c-api/stable.html>`__,
+  and will be compatible with all versions from Python 3.9 onwards. The published
+  binaries have been tested with Python 3.9 to 3.13, although they will likely
+  work with future versions like 3.14.
+  We'd like to thank all the users that reported issues and contributed to this release.
+  This is the rustworkx release with the most individual contributors to date!

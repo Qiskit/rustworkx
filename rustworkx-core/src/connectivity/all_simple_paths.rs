@@ -80,8 +80,8 @@ where
 
     // list of visited nodes
     let mut visited: IndexSet<G::NodeId> = IndexSet::from_iter(Some(from));
-    // list of childs of currently exploring path nodes,
-    // last elem is list of childs of last visited node
+    // list of children of currently exploring path nodes,
+    // last elem is list of children of last visited node
     let mut stack = vec![graph.neighbors_directed(from, Outgoing)];
 
     let mut output: DictMap<G::NodeId, Vec<Vec<G::NodeId>>> = DictMap::with_capacity(to.len());
@@ -174,8 +174,8 @@ where
 {
     // list of visited nodes
     let mut visited: IndexSet<G::NodeId> = IndexSet::from_iter(Some(from));
-    // list of childs of currently exploring path nodes,
-    // last elem is list of childs of last visited node
+    // list of children of currently exploring path nodes,
+    // last elem is list of children of last visited node
     let mut stack = vec![graph.neighbors_directed(from, Outgoing)];
 
     let mut output_path: Option<Vec<G::NodeId>> = None;

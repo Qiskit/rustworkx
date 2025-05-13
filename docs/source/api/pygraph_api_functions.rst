@@ -37,6 +37,7 @@ typed API based on the data type.
    rustworkx.graph_transitivity
    rustworkx.graph_core_number
    rustworkx.graph_complement
+   rustworkx.local_complement
    rustworkx.graph_union
    rustworkx.graph_tensor_product
    rustworkx.graph_token_swapper
@@ -51,6 +52,7 @@ typed API based on the data type.
    rustworkx.graph_betweenness_centrality
    rustworkx.graph_edge_betweenness_centrality
    rustworkx.graph_closeness_centrality
+   rustworkx.graph_newman_weighted_closeness_centrality
    rustworkx.graph_eigenvector_centrality
    rustworkx.graph_katz_centrality
    rustworkx.graph_unweighted_average_shortest_path_length
