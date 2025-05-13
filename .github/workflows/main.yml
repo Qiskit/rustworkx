@@ -198,3 +198,14 @@ jobs:
         with:
           name: html_docs
           path: docs/build/html
+    pyodide-build:
+      if: github.repository_owner == 'Qiskit'
+      needs: [tests]
+      name: Pyodide Build
+      runs-on: ubuntu-latest
+      steps:
+        - uses: prefix-dev/setup-pixi@v0.8.8
+          with:
+            pixi-version: v0.46.0
+            environments: default
+        - run: pixi run build_pyodide
