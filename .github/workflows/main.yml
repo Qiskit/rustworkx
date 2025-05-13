@@ -69,15 +69,15 @@ jobs:
           { os: "windows-latest", python-architecture: "x64", rust-target: "x86_64-pc-windows-msvc" },
         ]
         include:
-          # Test minimal supported Rust version
+          # Test ARM + minimal supported Rust version
           - rust: 1.79.0
             python-version: "3.10"
-            platform: { os: "ubuntu-latest", python-architecture: "x64", rust-target: "x86_64-unknown-linux-gnu" }
+            platform: { os: "ubuntu-24.04-arm", python-architecture: "arm64", rust-target: "aarch64-unknown-linux-gnu" }
             msrv: "MSRV"
-          # Test future versions of Rust and Python
+          # Test ARM + future versions of Rust and Python
           - rust: beta
             python-version: "3.13" # upgrade to 3.14-dev when the release candidate is available
-            platform: { os: "ubuntu-latest", python-architecture: "x64", rust-target: "x86_64-unknown-linux-gnu" }
+            platform: { os: "ubuntu-24.04-arm", python-architecture: "x64", rust-target: "x86_64-unknown-linux-gnu" }
             msrv: "Beta"
         # Exclude python 3.9 on arm64 until actions/setup-python#808 is resolved
         exclude:
