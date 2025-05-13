@@ -492,7 +492,7 @@ where
                 distance[w_index] = distance_v + 1;
             }
             if distance[w_index] == distance_v + 1 {
-                sigma[w_index] = sigma[w_index] + sigma[v_index];
+                sigma[w_index] += sigma[v_index];
                 let e_p = predecessors.get_mut(w_index).unwrap();
                 e_p.push(v);
                 predecessor_edges.get_mut(w_index).unwrap().push(edge.id());
