@@ -79,7 +79,7 @@ where
         + GraphProp
         + GraphBase
         + std::marker::Sync,
-    <G as GraphBase>::NodeId: std::cmp::Eq  + Send,
+    <G as GraphBase>::NodeId: std::cmp::Eq + Send,
     // rustfmt deletes the following comments if placed inline above
     // + IntoNodeIdentifiers // for node_identifiers()
     // + IntoNeighborsDirected // for neighbors()
@@ -470,10 +470,10 @@ where
 {
     let mut verts_sorted_by_distance: Vec<G::NodeId> = Vec::new(); // a stack
     let c = graph.node_count();
-    let mut predecessors = vec![Vec::new();c];
-    let mut predecessor_edges = vec![Vec::new();c];
-    let mut sigma = vec![0.0;c];
-    let mut distance = vec![-1;c];
+    let mut predecessors = vec![Vec::new(); c];
+    let mut predecessor_edges = vec![Vec::new(); c];
+    let mut sigma = vec![0.0; c];
+    let mut distance = vec![-1; c];
     #[allow(non_snake_case)]
     let mut Q: VecDeque<G::NodeId> = VecDeque::with_capacity(c);
 
