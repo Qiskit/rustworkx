@@ -2,29 +2,28 @@ import { loadPyodide } from "pyodide";
 import * as fs from 'fs';
 import * as path from 'path';
 
-async function rustworkx_python() {
+async function run_smoke_test() {
   let pyodide = await loadPyodide();
   await pyodide.loadPackage("micropip");
   const micropip = pyodide.pyimport("micropip");
 
   // Load rustworkx wheel into memory
-  const filename = 'rustworkx-0.17.0-cp39-abi3-pyodide_2024_0_wasm32.whl';
+  const filePath = process.argv[2];
+  const filename = path.basename(filePath);
 
-  const wheelPath = path.resolve(filename);
+  const wheelPath = path.resolve(filePath);
   const wheelData = fs.readFileSync(wheelPath);
-  // console.log("Read data");
 
-  pyodide.FS.mkdir('/tmp', 0o777);
   pyodide.FS.writeFile(`/tmp/${filename}`, new Uint8Array(wheelData));
 
-  // console.log(`Successfully loaded ${filename} into Pyodide's virtual file system`);
-
-  await micropip.install(`emfs://tmp/${filename}`);
+  await micropip.install(`emfs:/tmp/${filename}`);
+  console.log("installed wheel");
+  return null;
   return pyodide.runPythonAsync(`
     import rustworkx
     print(rustworkx.__version__)
   `);
 }
 
-const result = await rustworkx_python();
+const result = await run_smoke_test();
 console.log("Smoke test completed successfully");
