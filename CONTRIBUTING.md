@@ -578,7 +578,8 @@ of versions that works, visit the [pyodide-cross-build-environments.json](https:
 
 We'll need to align the [Emscripten](https://anaconda.org/conda-forge/emscripten) version from `conda-forge` with one
 of the public releases. Then, we pick a `pyodide-build` version higher than the required build version and the equivalent Python
-version also specified in the cross build environments.
+version also specified in the cross build environments. Lastly, update `[tool.pixi.tasks.install_xbuildenv]` to install
+the selected version of Pyodide.
 
 Lastly, we need to pin the Rust compiler. To find an appropriate Rust compiler version, run:
 
