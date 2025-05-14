@@ -588,7 +588,7 @@ pyodide config list
 ```
 
 This will output a list including `rust_toolchain`. Currently, `pyodide-build` requires Rust Nightly. Because conda-forge
-only provides stable releases, we'll need to map a nightly version to a stable version. Some repositories like [https://github.com/oxalica/rust-overlay/tree/master/manifests/nightly/](oxalica/rust-overlay) contain a list of the nightly releases. For example, `nightly-2025-02-01`
+only provides stable releases, we'll need to map a nightly version to a stable version. Some repositories like [oxalica/rust-overlay]([oxalica/rust-overlay](https://github.com/oxalica/rust-overlay/tree/master/manifests/nightly/)) contain a list of the nightly releases. For example, `nightly-2025-02-01`
 maps roughly to `1.86`. If that version was not yet stable, we could try picking `1.85` as well.
 
 After updating the versions in `[tool.pixi.dependencies]`, run `pixi lock` which will update `pixi.lock`. Onwards, all builds
