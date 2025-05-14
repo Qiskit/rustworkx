@@ -32,3 +32,8 @@ venv/
 
 # pyodide xbuild
 .xbuildenv
+
+# Node.js
+node_modules/
+jspm_packages/
+.npm
