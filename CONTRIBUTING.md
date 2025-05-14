@@ -542,6 +542,58 @@ has the necessary approvals and is tagged as `automerge` unless it has a merge
 conflict or has a failed CI run. Doing so will just waste CI resources and
 delay everything from merging, including your PR.
 
+### Pyodide Support
+
+`rustworkx` has experimental support for Pyodide, the Python distribution for
+the browser.
+
+Because building for Pyodide is a more involved process, we use [Pixi](https://pixi.sh/latest/)
+to manage the dependencies of the build. Currently, the scripts work only for Linux x86-64.
+It is also possible to run the build on Windows with Windows Subsystem for Linux (WSL). At
+the moment, aarch64 platforms like macOS cannot run the script.
+
+Please refer to the [Pixi](https://pixi.sh/latest/) page for the latest instructions on how
+to install Pixi. Once installed, there's a single command that needs to be run.
+
+#### Building for Pyodide
+
+At the root of the directory, simply run:
+
+```bash
+pixi run build_pyodide
+```
+
+This will create a separate environment with all of the required toolchains. At the end,
+a Pyodide wheel will be available in the `dist` folder if the build is successful.
+
+#### Testing Pyodide Wheels
+
+Currently, there are no tests for Pyodide wheels. In the future, we plan to add smoke tests
+like those in the `pyodide-recipes` repository.
+
+#### Updating `pyodide-build` and dependencies
+
+All the dependencies for the Pyodide build are listed under `[tool.pixi.dependencies]`. To find a set
+of versions that works, visit the [pyodide-cross-build-environments.json](https://github.com/pyodide/pyodide/blob/main/pyodide-cross-build-environments.json) file in the `pyodide` repository.
+
+We'll need to align the [Emscripten](https://anaconda.org/conda-forge/emscripten) version from `conda-forge` with one
+of the public releases. Then, we pick a `pyodide-build` version higher than the required build version and the equivalent Python
+version also specified in the cross build environments.
+
+Lastly, we need to pin the Rust compiler. To find an appropriate Rust compiler version, run:
+
+```bash
+pixi shell
+pyodide config list
+```
+
+This will output a list including `rust_toolchain`. Currently, `pyodide-build` requires Rust Nightly. Because conda-forge
+only provides stable releases, we'll need to map a nightly version to a stable version. Some repositories like [https://github.com/oxalica/rust-overlay/tree/master/manifests/nightly/](oxalica/rust-overlay) contain a list of the nightly releases. For example, `nightly-2025-02-01`
+maps roughly to `1.86`. If that version was not yet stable, we could try picking `1.85` as well.
+
+After updating the versions in `[tool.pixi.dependencies]`, run `pixi lock` which will update `pixi.lock`. Onwards, all builds
+will use the same environment. As long as `pixi run build_pyodide` passes locally or on CI it should keep compiling and building.
+
 ### Stable Branch Policy and Backporting
 
 The stable branch is intended to be a safe source of fixes for high-impact bugs,
