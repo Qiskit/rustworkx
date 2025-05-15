@@ -185,14 +185,14 @@ env = { RUSTC_BOOTSTRAP = "1", RUSTFLAGS = "-C target-feature=+atomics,+bulk-mem
 depends-on = ["install_xbuildenv"]
 
 [tool.pixi.tasks.install_smoke_env]
-cmd = ["pushd tests/pyodide_smoke_test", "&&", "npm", "install", "&&", "popd", "&&", "popd"]
+cmd = ["cd", "tests/pyodide_smoke_test", "&&", "npm", "install", "&&", "cd", ".."]
 
 [tool.pixi.tasks.smoke_test]
-cmd = ["pushd tests/pyodide_smoke_test", "&&", "node", "smoke_test.mjs", "{{ wheel_path }}"]
+cmd = ["cd", "tests/pyodide_smoke_test", "&&", "node", "smoke_test.mjs", "{{ wheel_path }}", "cd", ".."]
 args = [
-  { "arg" = "path", "default" = "$(python tools/find_only_wheel.py)" }
+  { "arg" = "wheel_path", "default" = "$(python ../../tools/find_only_wheel.py)" },
 ]
-depends-on = ["install_smoke_env", "find_pyodide_wheel"]
+depends-on = ["install_smoke_env"]
 
 [tool.pixi.tasks.build_pyodide_and_test]
 depends-on = ["build_pyodide", "smoke_test"]
