@@ -201,7 +201,7 @@ jobs:
   pyodide-build:
     if: github.repository_owner == 'Qiskit'
     needs: [tests]
-    name: Pyodide Build
+    name: Pyodide Build + Test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -210,4 +210,4 @@ jobs:
           manifest-path: pyproject.toml
           pixi-version: v0.46.0
           environments: default
-      - run: pixi run build_pyodide
+      - run: pixi run build_pyodide_and_test
