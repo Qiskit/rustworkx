@@ -1,6 +1,7 @@
 import { loadPyodide } from "pyodide";
 import * as fs from 'fs';
 import * as path from 'path';
+import { fileURLToPath } from 'url';
 
 async function get_pyodide_with_rustworkx() {
   let pyodide = await loadPyodide();
@@ -22,6 +23,8 @@ async function get_pyodide_with_rustworkx() {
 }
 
 async function getUnitTest() {
+  const __filename = fileURLToPath(import.meta.url);
+  const __dirname = dirname(__filename);
   let unitTestFile = `${__dirname}/test_smoke.py`;
   let unitTestData = fs.readFileSync(unitTestFile);
   return unitTestData.toString();
