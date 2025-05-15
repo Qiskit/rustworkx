@@ -1,5 +1,4 @@
 import sys
-import rustworkx
 import unittest
 
 @unittest.skipUnless(sys.platform == "emscripten", "Smoke tests target Pyodide")
@@ -31,8 +30,6 @@ class TestPyodide(unittest.TestCase):
 if sys.platform == "emscripten":
   suite = unittest.TestLoader().loadTestsFromTestCase(TestPyodide)
   runner = unittest.TextTestRunner()
-  runner.run(suite)
-  if result.wasSuccessful():
-    sys.exit(0)
-  else:
+  result = runner.run(suite)
+  if not result.wasSuccessful():
     sys.exit(1)
