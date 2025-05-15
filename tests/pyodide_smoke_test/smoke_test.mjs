@@ -22,9 +22,9 @@ async function get_pyodide_with_rustworkx() {
   return pyodide;
 }
 
-async function getUnitTest() {
+function getUnitTest() {
   const __filename = fileURLToPath(import.meta.url);
-  const __dirname = dirname(__filename);
+  const __dirname = path.dirname(__filename);
   let unitTestFile = `${__dirname}/test_smoke.py`;
   let unitTestData = fs.readFileSync(unitTestFile);
   return unitTestData.toString();
@@ -32,7 +32,8 @@ async function getUnitTest() {
 
 async function run_smoke_test() {
   let pyodide = await get_pyodide_with_rustworkx();
-  return pyodide.runPythonAsync(getUnitTest());
+  let unitTest = await getUnitTest();
+  return pyodide.runPythonAsync(unitTest);
 }
 
 const result = await run_smoke_test();
