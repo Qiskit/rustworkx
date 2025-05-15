@@ -568,8 +568,25 @@ a Pyodide wheel will be available in the `dist` folder if the build is successfu
 
 #### Testing Pyodide Wheels
 
-Currently, there are no tests for Pyodide wheels. In the future, we plan to add smoke tests
-like those in the `pyodide-recipes` repository.
+After running `pixi run build_pyodide`, we can run a simple smoke test with:
+
+```bash
+pixi run smoke_test
+```
+
+It is also possible to run the smoke test with a specific wheel via an **absolute path**:
+```
+pixi run smoke_test $ABSOLUTE_PATH_TO_WHEEL
+```
+
+> [!WARNING]  
+> If there are multiple Pyodide wheels in the dist/ folder, the test will fail
+> to prevent you from testing an outdated wheel. This scenario can happen when
+> we update the rustworkx version, minimum Python version, or Pyodide. To fix,
+> clean the directory with `rm -r dist` and re-run `pixi run build_pyodide`
+
+> [!TIP]
+> You can build and test with a single command with `pixi run build_pyodide_and_test`.
 
 #### Updating `pyodide-build` and dependencies
 
@@ -581,7 +598,7 @@ of the public releases. Then, we pick a `pyodide-build` version higher than the 
 version also specified in the cross build environments. Lastly, update `[tool.pixi.tasks.install_xbuildenv]` to install
 the selected version of Pyodide.
 
-Lastly, we need to pin the Rust compiler. To find an appropriate Rust compiler version, run:
+We need to pin the Rust compiler. To find an appropriate Rust compiler version, run:
 
 ```bash
 pixi shell
@@ -594,6 +611,10 @@ maps roughly to `1.86`. If that version was not yet stable, we could try picking
 
 After updating the versions in `[tool.pixi.dependencies]`, run `pixi lock` which will update `pixi.lock`. Onwards, all builds
 will use the same environment. As long as `pixi run build_pyodide` passes locally or on CI it should keep compiling and building.
+
+Lastly, remember to update the Pyodide version in `tests/pyodide_smoke_test`. Change the version in `tests/pyodide_smoke_test/package.json`
+and run `pixi run install_smoke_env` to generate the new lockfile. If you forget to update the Pyodide version, the smoke test
+will fail.
 
 ### Stable Branch Policy and Backporting
 
