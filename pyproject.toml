@@ -188,7 +188,7 @@ depends-on = ["install_xbuildenv"]
 cmd = ["cd", "tests/pyodide_smoke_test", "&&", "npm", "install", "&&", "cd", "../.."]
 
 [tool.pixi.tasks.smoke_test]
-cmd = ["cd", "tests/pyodide_smoke_test", "&&", "node", "smoke_test.mjs", "{{ wheel_path }}", "cd", "../.."]
+cmd = ["cd", "tests/pyodide_smoke_test", "&&", "node", "smoke_test.mjs", "{{ wheel_path }}", "&&", "cd", "../.."]
 args = [
   { "arg" = "wheel_path", "default" = "$(python ../../tools/find_only_wheel.py)" },
 ]
