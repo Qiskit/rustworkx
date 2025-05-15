@@ -32,3 +32,7 @@ if sys.platform == "emscripten":
   suite = unittest.TestLoader().loadTestsFromTestCase(TestPyodide)
   runner = unittest.TextTestRunner()
   runner.run(suite)
+  if result.wasSuccessful():
+    sys.exit(0)
+  else:
+    sys.exit(1)

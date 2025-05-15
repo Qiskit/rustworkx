@@ -3,7 +3,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { fileURLToPath } from 'url';
 
-async function get_pyodide_with_rustworkx() {
+async function getPyodideWithRustworkx() {
   let pyodide = await loadPyodide();
   await pyodide.loadPackage("micropip");
   const micropip = pyodide.pyimport("micropip");
@@ -22,7 +22,7 @@ async function get_pyodide_with_rustworkx() {
   return pyodide;
 }
 
-function getUnitTest() {
+async function getUnitTest() {
   const __filename = fileURLToPath(import.meta.url);
   const __dirname = path.dirname(__filename);
   let unitTestFile = `${__dirname}/test_smoke.py`;
@@ -30,11 +30,11 @@ function getUnitTest() {
   return unitTestData.toString();
 }
 
-async function run_smoke_test() {
-  let pyodide = await get_pyodide_with_rustworkx();
+async function runSmokeTest() {
+  let pyodide = await getPyodideWithRustworkx();
   let unitTest = await getUnitTest();
   return pyodide.runPythonAsync(unitTest);
 }
 
-const result = await run_smoke_test();
+await runSmokeTest();
 console.log("Smoke test completed successfully");
