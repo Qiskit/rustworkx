@@ -581,8 +581,8 @@ pixi run smoke_test $ABSOLUTE_PATH_TO_WHEEL
 
 > [!WARNING]  
 > If there are multiple Pyodide wheels in the dist/ folder, the test will fail
-> to prevent you from testing an outdated wheel. This scenario can happen when
-> we update the rustworkx version, minimum Python version, or Pyodide. To fix,
+> to prevent anyone from testing an outdated wheel. This scenario can happen when
+> we update the rustworkx version, update the minimum Python ABI, or update Pyodide. To fix,
 > clean the directory with `rm -r dist` and re-run `pixi run build_pyodide`
 
 > [!TIP]
