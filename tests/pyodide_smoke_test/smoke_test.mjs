@@ -10,6 +10,9 @@ async function getPyodideWithRustworkx() {
 
   // Load rustworkx from local file system to Pyodide's
   const filePath = process.argv[2];
+  if (process.argv[2] === '') {
+    throw new Error('Wheel path is empty, check the logs to see if there are multiple wheels in dist/.');
+  }
   const filename = path.basename(filePath);
 
   const wheelPath = path.resolve(filePath);
