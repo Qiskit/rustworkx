@@ -574,7 +574,7 @@ After running `pixi run build_pyodide`, we can run the test suite with:
 pixi run pyodide_test
 ```
 
-It is also possible to run the smoke test with a specific wheel via an **absolute path**:
+It is also possible to run the tests with a specific wheel via an **absolute path**:
 ```
 pixi run pyodide_test $ABSOLUTE_PATH_TO_WHEEL
 ```
