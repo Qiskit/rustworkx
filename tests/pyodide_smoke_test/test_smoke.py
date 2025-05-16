@@ -1,38 +1,35 @@
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License. You may obtain
+# a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
+
+import pathlib
 import sys
 import unittest
 
+def main():
+    if sys.platform == "emscripten":
+        tests_folder = "/tmp/tests/"
+    else:
+        # Set the path to the code to test
+        tests_folder = pathlib.Path(__file__).parent.parent.resolve()
 
-@unittest.skipUnless(sys.platform == "emscripten", "Smoke tests target Pyodide")
-class TestPyodide(unittest.TestCase):
-    def test_isomorphism(self):
-        # Adapted from tests/graph/test_isomorphic.py
-        import rustworkx
+    # Discover tests in the specified folder
+    loader = unittest.TestLoader()
+    suite = loader.discover(start_dir=tests_folder)
 
-        n = 15
-        upper_bound_k = (n - 1) // 2
-        for k in range(1, upper_bound_k + 1):
-            for t in range(k, upper_bound_k + 1):
-                result = rustworkx.is_isomorphic(
-                    rustworkx.generators.generalized_petersen_graph(n, k),
-                    rustworkx.generators.generalized_petersen_graph(n, t),
-                )
-                expected = (k == t) or (k == n - t) or (k * t % n == 1) or (k * t % n == n - 1)
-                self.assertEqual(result, expected)
-
-    def test_rayon_works(self):
-        # This essentially tests that multi-threading is set to one core and does not panic
-        import rustworkx
-
-        graph = rustworkx.generators.cycle_graph(10)
-        path_lenghts_floyd = rustworkx.floyd_warshall(graph)
-        path_lenghts_no_self = rustworkx.all_pairs_dijkstra_path_lengths(graph, lambda _: 1.0)
-        path_lenghts_dijkstra = {k: {**v, k: 0.0} for k, v in path_lenghts_no_self.items()}
-        self.assertEqual(path_lenghts_floyd, path_lenghts_dijkstra)
-
-
-if sys.platform == "emscripten":
-    suite = unittest.TestLoader().loadTestsFromTestCase(TestPyodide)
+    # Run the discovered tests
     runner = unittest.TextTestRunner()
     result = runner.run(suite)
-    if not result.wasSuccessful():
-        sys.exit(1)
+    assert result.wasSuccessful()
+
+
+if __name__ == "__main__" or sys.platform == "emscripten":
+    main()
