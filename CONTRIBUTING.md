@@ -568,15 +568,15 @@ a Pyodide wheel will be available in the `dist` folder if the build is successfu
 
 #### Testing Pyodide Wheels
 
-After running `pixi run build_pyodide`, we can run a simple smoke test with:
+After running `pixi run build_pyodide`, we can run the test suite with:
 
 ```bash
-pixi run smoke_test
+pixi run pyodide_test
 ```
 
 It is also possible to run the smoke test with a specific wheel via an **absolute path**:
 ```
-pixi run smoke_test $ABSOLUTE_PATH_TO_WHEEL
+pixi run pyodide_test $ABSOLUTE_PATH_TO_WHEEL
 ```
 
 > [!WARNING]  
@@ -612,8 +612,8 @@ maps roughly to `1.86`. If that version was not yet stable, we could try picking
 After updating the versions in `[tool.pixi.dependencies]`, run `pixi lock` which will update `pixi.lock`. Onwards, all builds
 will use the same environment. As long as `pixi run build_pyodide` passes locally or on CI it should keep compiling and building.
 
-Lastly, remember to update the Pyodide version in `tests/pyodide_smoke_test`. Change the version in `tests/pyodide_smoke_test/package.json`
-and run `pixi run install_smoke_env` to generate the new lockfile. If you forget to update the Pyodide version, the smoke test
+Lastly, remember to update the Pyodide version in `tests/pyodide_tests`. Change the version in `tests/pyodide_tests/package.json`
+and run `pixi run install_pyodide_test_env` to generate the new lockfile. If you forget to update the Pyodide version, the smoke test
 will fail.
 
 ### Stable Branch Policy and Backporting
