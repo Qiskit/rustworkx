@@ -19,7 +19,7 @@
 
 /*
   Usage: node pyodide_runner.mjs <path_to_wheel>
-  This loads Pyodide, rustworkx, networkx, numpy, and the test files
+  This loads Pyodide, rustworkx, networkx, numpy. Then, it mounts the test folder
   and runs the tests in memory with unittest.
 */
 

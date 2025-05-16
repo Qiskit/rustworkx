@@ -19,6 +19,7 @@ import pathlib
 import sys
 import unittest
 
+
 def main():
     if sys.platform == "emscripten":
         tests_folder = "/tmp/tests/"
