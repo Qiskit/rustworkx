@@ -184,18 +184,18 @@ cmd = ["pyodide", "build"]
 env = { RUSTC_BOOTSTRAP = "1", RUSTFLAGS = "-C target-feature=+atomics,+bulk-memory,+mutable-globals $(pyodide config get rustflags)" }
 depends-on = ["install_xbuildenv"]
 
-[tool.pixi.tasks.install_smoke_env]
-cmd = ["cd", "tests/pyodide_smoke_test", "&&", "npm", "install", "&&", "cd", "../.."]
+[tool.pixi.tasks.install_pyodide_test_env]
+cmd = ["cd", "tests/pyodide_tests", "&&", "npm", "install", "&&", "cd", "../.."]
 
-[tool.pixi.tasks.smoke_test]
-cmd = ["cd", "tests/pyodide_smoke_test", "&&", "node", "smoke_test.mjs", "{{ wheel_path }}", "&&", "cd", "../.."]
+[tool.pixi.tasks.pyodide_test]
+cmd = ["cd", "tests/pyodide_tests", "&&", "node", "pyodide_runner.mjs", "{{ wheel_path }}", "&&", "cd", "../.."]
 args = [
   { "arg" = "wheel_path", "default" = "$(python ../../tools/find_only_wheel.py)" },
 ]
-depends-on = ["install_smoke_env"]
+depends-on = ["install_pyodide_test_env"]
 
 [tool.pixi.tasks.build_pyodide_and_test]
-depends-on = ["build_pyodide", "smoke_test"]
+depends-on = ["build_pyodide", "pyodide_test"]
 
 [tool.pyodide.build]
 xbuildenv_path = ".xbuildenv"

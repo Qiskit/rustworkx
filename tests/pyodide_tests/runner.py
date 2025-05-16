@@ -10,6 +10,11 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+# Running this file is the equivalent of running:
+# python -m unittest discover .
+# At the root of the tests folder. It works both with Pyodide and
+# in a normal Python environment.
+
 import pathlib
 import sys
 import unittest
