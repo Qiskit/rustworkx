@@ -73,9 +73,9 @@ async function main() {
   let unitTests = await getUnitTests(pyodide);
   try {
     await pyodide.runPythonAsync(unitTests);
-    console.log("Smoke test completed successfully");
+    console.log("Unit tests completed successfully");
   } catch (error) {
-    console.error("Error during smoke test:", error);
+    console.error("Error during unit tests:", error);
     process.exit(1);
   }
 }

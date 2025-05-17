@@ -613,7 +613,7 @@ After updating the versions in `[tool.pixi.dependencies]`, run `pixi lock` which
 will use the same environment. As long as `pixi run build_pyodide` passes locally or on CI it should keep compiling and building.
 
 Lastly, remember to update the Pyodide version in `tests/pyodide_tests`. Change the version in `tests/pyodide_tests/package.json`
-and run `pixi run install_pyodide_test_env` to generate the new lockfile. If you forget to update the Pyodide version, the smoke test
+and run `pixi run install_pyodide_test_env` to generate the new lockfile. If you forget to update the Pyodide version, the tests
 will fail.
 
 ### Stable Branch Policy and Backporting
