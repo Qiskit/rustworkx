@@ -41,7 +41,7 @@ use super::InvalidInputError;
 ///
 /// Raises an error if
 ///
-/// This algorithm is based on the implementation of networkx functon
+/// This algorithm is based on the implementation of networkx function
 /// <https://github.com/networkx/networkx/blob/networkx-2.4/networkx/generators/random_graphs.py>
 ///
 /// A. Steger and N. Wormald,
