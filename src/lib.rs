@@ -703,5 +703,21 @@ fn rustworkx(py: Python<'_>, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_class::<iterators::BiconnectedComponents>()?;
     m.add_class::<ColoringStrategy>()?;
     m.add_wrapped(wrap_pymodule!(generators::generators))?;
+    #[cfg(target_os = "emscripten")]
+    setup_rayon_for_pyodide();
     Ok(())
+}
+
+#[cfg(target_os = "emscripten")]
+static PYODIDE_INIT: std::sync::Once = std::sync::Once::new();
+
+#[cfg(target_os = "emscripten")]
+pub fn setup_rayon_for_pyodide() {
+    PYODIDE_INIT.call_once(|| {
+        rayon::ThreadPoolBuilder::new()
+            .num_threads(1)
+            .use_current_thread()
+            .build_global()
+            .expect("failing setting up threads for pyodide");
+    });
 }
