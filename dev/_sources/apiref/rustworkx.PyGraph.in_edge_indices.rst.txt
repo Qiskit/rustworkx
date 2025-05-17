@@ -1,0 +1,6 @@
+rustworkx.PyGraph.in\_edge\_indices
+===================================
+
+.. currentmodule:: rustworkx
+
+.. automethod:: PyGraph.in_edge_indices

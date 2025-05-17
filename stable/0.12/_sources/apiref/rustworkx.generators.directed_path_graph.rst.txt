@@ -1,0 +1,6 @@
+﻿rustworkx.generators.directed\_path\_graph
+==========================================
+
+.. currentmodule:: rustworkx.generators
+
+.. autofunction:: directed_path_graph
