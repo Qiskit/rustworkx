@@ -1,4 +1,4 @@
-.. _rustworkx_visualization:
+.. _rustworkx_playground:
 
 ####################
 Rustworkx Playground
