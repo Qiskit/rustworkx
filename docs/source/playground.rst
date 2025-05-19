@@ -11,11 +11,10 @@ Welcome to the Rustworkx Playground! This is an interactive environment where yo
 experiment with Rustworkx on your browser.
 
 .. replite::
-   :toctree: apiref
    :kernel: python
    :height: 600px
    :prompt: Try Rustworkx!
-   :prompt_color: #dc3545
+   :prompt_color: #6929c4
 
    import piplite
    await piplite.install("rustworkx")
