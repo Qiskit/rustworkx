@@ -18,11 +18,12 @@ experiment with Rustworkx on your browser.
 
    import rustworkx as rx
    import rustworkx.visualization as rxviz
-   import matplotlib as mpl
+   import matplotlib.pyplot as plt
 
    pet_graph = rx.generators.generalized_petersen_graph(5, 2)
    pet_layout = rx.shell_layout(pet_graph, nlist=[[0, 1, 2, 3, 4], [6, 7, 8, 9, 5]])
    rxviz.mpl_draw(pet_graph, pos=pet_layout)
+   plt.draw()
 
 .. note::
    The `rustworkx` version in the playground is not always the latest. Verify the deployed
