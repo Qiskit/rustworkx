@@ -4,9 +4,6 @@
 Rustworkx Playground
 ####################
 
-Rustworkx Playground
-====================
-
 Welcome to the Rustworkx Playground! This is an interactive environment where you can
 experiment with Rustworkx on your browser.
 
@@ -23,9 +20,9 @@ experiment with Rustworkx on your browser.
    import rustworkx.visualization as rxviz
    import matplotlib as mpl
 
-   pet_graph = rustworkx.generators.generalized_petersen_graph(5, 2)
-   pet_layout = rustworkx.shell_layout(graph, nlist=[[0, 1, 2, 3, 4], [6, 7, 8, 9, 5]])
-   mpl_draw(pet_graph, pos=pet_layout)
+   pet_graph = rx.generators.generalized_petersen_graph(5, 2)
+   pet_layout = rx.shell_layout(pet_graph, nlist=[[0, 1, 2, 3, 4], [6, 7, 8, 9, 5]])
+   rxviz.mpl_draw(pet_graph, pos=pet_layout)
 
 .. note::
    The `rustworkx` version in the playground is not always the latest. Verify the deployed
