@@ -101,10 +101,19 @@ docs = [
     "sphinxemoji",
     "ipykernel",
     "lxml_html_clean",
+    # Jupyterlite is intertwined with Pyodide. Always ensure that the Pyodide
+    # version provided by the kernel is identical to the one we built the wheel with.
+    "jupyterlite-sphinx==0.20.1",
+    "jupyterlite-core",
+    "jupyterlite-pyodide-kernel==0.6.0b1",
 ]
 releaseinfra = [
     "cibuildwheel==2.23.2",
 ]
+
+[tool.uv]
+# Required to force Pyodide 0.27.5 to work with jupyterlite-sphinx
+override-dependencies = ["jupyterlite-core==0.6.0b0"]
 
 [tool.black]
 line-length = 100
