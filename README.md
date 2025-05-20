@@ -102,19 +102,11 @@ install rustworkx you can use `pip install 'rustworkx[all]'` to do this.
 
 ### Conda Ecosystem
 
-[![Conda Version](https://img.shields.io/conda/vn/conda-forge/rustworkx.svg)](https://anaconda.org/conda-forge/rustworkx) 
-
-Community-supported binaries are published to the Conda ecosystem via `conda-forge`. Although
-unofficial, they can be helpful for `conda` users. To install, simply run:
+Community-supported binaries are published to [conda-forge](https://anaconda.org/conda-forge/rustworkx). Although
+unofficial, they can be helpful for users of the Conda ecosystem (including `mamba`, `micromamba`, `pixi`). To install, simply run:
 
 ```
-conda install conda-forge::rustworkx
-```
-
-Likewise, if you have `mamba` instead of `conda`:
-
-```
-mamba install conda-forge::rustworkx
+conda install -c conda-forge rustworkx
 ```
 
 ## Authors and Citation
