@@ -100,7 +100,9 @@ with `pip install 'rustworkx[graphviz]'`.
 If you would like to install all the optional Python dependencies when you
 install rustworkx you can use `pip install 'rustworkx[all]'` to do this.
 
-### Conda Ecosystem [![Conda Version](https://img.shields.io/conda/vn/conda-forge/rustworkx.svg)](https://anaconda.org/conda-forge/rustworkx) 
+### Conda Ecosystem
+
+[![Conda Version](https://img.shields.io/conda/vn/conda-forge/rustworkx.svg)](https://anaconda.org/conda-forge/rustworkx) 
 
 Community supported binaries are published to the Conda ecosystem via `conda-forge`. Although
 unofficial, they can be helpful for `conda` users. To install, simply run:
