@@ -69,6 +69,7 @@ build-backend = "setuptools.build_meta"
 [dependency-groups]
 testinfra = [
     "nox==2025.5.1",
+    "uv==0.7.8",
 ]
 test = [
   "setuptools-rust",
@@ -94,14 +95,28 @@ docs = [
     "pydot",
     "pillow>=4.2.1",
     "reno>=3.4.0",
-    "qiskit-sphinx-theme~=1.14.0rc1",
+    "qiskit-sphinx-theme==1.16.1",
     "matplotlib>=3.4",
     "sphinx-reredirects",
     "sphinxemoji",
     "ipykernel",
+    "lxml_html_clean",
+    "jupyterlite-sphinx",
+    "jupyterlite-core",
+    "jupyterlite-pyodide-kernel",
 ]
 releaseinfra = [
     "cibuildwheel==2.23.2",
+]
+
+[tool.uv]
+# Required to pin Pyodide 0.27.5 with jupyterlite-sphinx.
+# jupyterlite-pyodide-kernel is pinned to specific Pyodide versions,
+# therefore we need to pick releases that are compatible.
+override-dependencies = [
+    "jupyterlite-sphinx==0.20.1",
+    "jupyterlite-pyodide-kernel==0.6.0b1",
+    "jupyterlite-core==0.6.0b0",
 ]
 
 [tool.black]
