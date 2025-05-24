@@ -69,6 +69,7 @@ build-backend = "setuptools.build_meta"
 [dependency-groups]
 testinfra = [
     "nox==2025.5.1",
+    "uv==0.7.8",
 ]
 test = [
   "setuptools-rust",
@@ -94,11 +95,12 @@ docs = [
     "pydot",
     "pillow>=4.2.1",
     "reno>=3.4.0",
-    "qiskit-sphinx-theme~=1.14.0rc1",
+    "qiskit-sphinx-theme==1.16.1",
     "matplotlib>=3.4",
     "sphinx-reredirects",
     "sphinxemoji",
     "ipykernel",
+    "lxml_html_clean",
 ]
 releaseinfra = [
     "cibuildwheel==2.23.2",
