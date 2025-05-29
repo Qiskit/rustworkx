@@ -1,4 +1,3 @@
-
 macro_rules! common_test {
     ($func:ident, $graph_ty:ty) => {
         #[test]
