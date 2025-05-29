@@ -29,7 +29,3 @@ rayon-cond = "0.4"
 [dev-dependencies]
 quickcheck = "1.0"
 quickcheck_macros = "1.0"
-
-[[test]]
-name = "quickcheck_special_graph"
-path = "tests/quickcheck/special_graph.rs"
