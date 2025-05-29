@@ -109,7 +109,7 @@ where
         I: IntoIterator<Item = Self::NodeId>,
     {
         let nodes = IndexSet::from_iter(nodes);
-        if check_cycle && !can_contract(self.deref(), &nodes) {
+        if check_cycle && !can_contract_without_cycle(self.deref(), &nodes) {
             return Err(ContractError::DAGWouldCycle);
         }
         Ok(contract_stable(self, nodes, obj, NoCallback::None).unwrap())
@@ -133,7 +133,7 @@ where
         I: IntoIterator<Item = Self::NodeId>,
     {
         let nodes = IndexSet::from_iter(nodes);
-        if check_cycle && !can_contract(self.deref(), &nodes) {
+        if check_cycle && !can_contract_without_cycle(self.deref(), &nodes) {
             return Err(ContractError::DAGWouldCycle);
         }
         Ok(contract_stable(self, nodes, obj, NoCallback::None).unwrap())
@@ -223,7 +223,7 @@ where
         F: FnMut(&Self::EdgeWeight, &Self::EdgeWeight) -> Result<Self::EdgeWeight, C>,
     {
         let nodes = IndexSet::from_iter(nodes);
-        if check_cycle && !can_contract(self.deref(), &nodes) {
+        if check_cycle && !can_contract_without_cycle(self.deref(), &nodes) {
             return Err(ContractSimpleError::DAGWouldCycle);
         }
         contract_stable(self, nodes, weight, Some(weight_combo_fn))
@@ -250,7 +250,7 @@ where
         F: FnMut(&Self::EdgeWeight, &Self::EdgeWeight) -> Result<Self::EdgeWeight, C>,
     {
         let nodes = IndexSet::from_iter(nodes);
-        if check_cycle && !can_contract(self.deref(), &nodes) {
+        if check_cycle && !can_contract_without_cycle(self.deref(), &nodes) {
             return Err(ContractSimpleError::DAGWouldCycle);
         }
         contract_stable(self, nodes, weight, Some(weight_combo_fn))
@@ -499,7 +499,37 @@ where
     Ok(node_index)
 }
 
-fn can_contract<G>(graph: G, nodes: &IndexSet<G::NodeId, foldhash::fast::RandomState>) -> bool
+/// Checks if contracting the given set of nodes in the graph would introduce a cycle.
+///
+/// This function returns `true` if the contraction can be performed without introducing a cycle,
+/// and `false` otherwise. It is useful for checking contraction feasibility before performing
+/// the actual operation.
+///
+/// # Arguments
+/// * `graph` - The graph to check contraction on.
+/// * `nodes` - The set of node indices to contract.
+///
+/// # Example
+/// ```
+/// use petgraph::prelude::*;
+/// use rustworkx_core::graph_ext::can_contract_without_cycle;
+/// use indexmap::IndexSet;
+/// use foldhash::fast::RandomState;
+/// let mut dag: StableDiGraph<char, usize> = StableDiGraph::default();
+/// let a = dag.add_node('a');
+/// let b = dag.add_node('b');
+/// let c = dag.add_node('c');
+/// dag.add_edge(a, b, 0);
+/// dag.add_edge(b, c, 1);
+/// let mut nodes: IndexSet<_, RandomState> = IndexSet::with_hasher(RandomState::default());
+/// nodes.insert(b);
+/// nodes.insert(c);
+/// assert!(can_contract_without_cycle(&dag, &nodes));
+/// ```
+pub fn can_contract_without_cycle<G>(
+    graph: G,
+    nodes: &IndexSet<G::NodeId, foldhash::fast::RandomState>,
+) -> bool
 where
     G: Data + Visitable + IntoEdgesDirected,
     G::NodeId: Eq + Hash,
