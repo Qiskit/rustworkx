@@ -1,0 +1,6 @@
+﻿rustworkx.InvalidMapping
+========================
+
+.. currentmodule:: rustworkx
+
+.. autoexception:: InvalidMapping
