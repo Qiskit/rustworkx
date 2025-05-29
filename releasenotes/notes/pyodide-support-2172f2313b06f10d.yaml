@@ -1,5 +1,5 @@
 ---
-upgrade:
+features:
   - |
     `rustworkx` now has experimental support for `Pyodide <https://pyodide.org/en/stable/>`__.
     Pyodide is a Python distribution for WebAssembly that runs in the browser.
