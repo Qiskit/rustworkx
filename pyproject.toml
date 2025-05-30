@@ -170,7 +170,7 @@ default = {features = [], solve-group = "default"}
 [tool.pixi.dependencies]
 python = "==3.12.7"
 pip="==25.1"
-pyodide-build = "==0.30.2"
+pyodide-build = "==0.30.4"
 emscripten = "==3.1.58"
 nodejs = ">=22.13.0,<22.14"
 rust = "==1.86"
@@ -178,11 +178,11 @@ rust-std-wasm32-unknown-emscripten = "==1.86"
 rust-src = "==1.86"
 
 [tool.pixi.tasks.install_xbuildenv]
-cmd = ["pyodide", "xbuildenv", "install", "0.27.5"]
+cmd = ["pyodide", "xbuildenv", "install", "0.27.6"]
 
 [tool.pixi.tasks.build_pyodide]
 cmd = ["pyodide", "build"]
-env = { RUSTC_BOOTSTRAP = "1", RUSTFLAGS = "-C target-feature=+atomics,+bulk-memory,+mutable-globals $(pyodide config get rustflags)" }
+env = { RUSTC_BOOTSTRAP = "1", RUSTFLAGS = "$(pyodide config get rustflags) -C target-feature=+atomics,+bulk-memory,+mutable-globals" }
 depends-on = ["install_xbuildenv"]
 
 [tool.pyodide.build]
