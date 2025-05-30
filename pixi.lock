@@ -81,7 +81,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/pydantic-2.11.4-pyh3cfb1c2_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/pydantic-core-2.33.2-py312h680f630_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/pygments-2.19.1-pyhd8ed1ab_0.conda
-      - conda: https://conda.anaconda.org/conda-forge/noarch/pyodide-build-0.30.2-pyhac95a24_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/pyodide-build-0.30.4-pyhac95a24_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/pyodide-cli-0.3.0-pyh5d45ec7_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/pyodide-lock-0.1.0a7-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/pyproject_hooks-1.2.0-pyhd8ed1ab_1.conda
@@ -1052,9 +1052,9 @@ packages:
   - pkg:pypi/pygments?source=hash-mapping
   size: 888600
   timestamp: 1736243563082
-- conda: https://conda.anaconda.org/conda-forge/noarch/pyodide-build-0.30.2-pyhac95a24_0.conda
-  sha256: 3b07fb5ce926ebaeb018df47a5a64b3238f07598009b223aae346c2e664cd47d
-  md5: 903583e853d3cc2c82fcdcc698b66940
+- conda: https://conda.anaconda.org/conda-forge/noarch/pyodide-build-0.30.4-pyhac95a24_0.conda
+  sha256: 97ca682e4bb732b3eb8516dba6863f20ab7cd2cbf1a1f7f0c437678dbee11373
+  md5: 262efcb48d7313f522e72da0c11c027c
   depends:
   - auditwheel-emscripten ==0.1.0
   - packaging
@@ -1077,8 +1077,8 @@ packages:
   license_family: MOZILLA
   purls:
   - pkg:pypi/pyodide-build?source=hash-mapping
-  size: 101351
-  timestamp: 1746476227410
+  size: 101429
+  timestamp: 1747737109119
 - conda: https://conda.anaconda.org/conda-forge/noarch/pyodide-cli-0.3.0-pyh5d45ec7_0.conda
   sha256: 30e4a37a40d7ee47b8be64015674ad7323c6f41e935d080fb6bcfb8ec1f02b3d
   md5: 0947e2092ff75a34f5e58bc5f689e247
