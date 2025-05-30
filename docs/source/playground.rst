@@ -17,15 +17,7 @@ experiment with Rustworkx on your browser.
    await piplite.install(["rustworkx", "matplotlib"])
 
    import rustworkx as rx
-   import rustworkx.visualization as rxviz
-   import matplotlib.pyplot as plt
-
-   pet_graph = rx.generators.generalized_petersen_graph(5, 2)
-   layout = rx.shell_layout(pet_graph, nlist=[[0, 1, 2, 3, 4], [6, 7, 8, 9, 5]])
-   
-   plt.ioff(); plt.figure(figsize=(2, 2)); # just use mpl_draw directly, this is only for demos
-   rxviz.mpl_draw(pet_graph, pos=layout, node_size=100)
-   plt.show()
+   print(f"Rustworkx Playground with version: {rx.__version__}")
 
 .. note::
    The `rustworkx` version in the playground is not always the latest. Verify the deployed
