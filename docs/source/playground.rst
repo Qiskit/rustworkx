@@ -14,7 +14,7 @@ experiment with Rustworkx on your browser.
    :prompt_color: #6929c4
 
    import piplite
-   await piplite.install(["rustworkx", "matplotlib"])
+   await piplite.install("rustworkx")
 
    import rustworkx as rx
    print(f"Rustworkx Playground with version: {rx.__version__}")
