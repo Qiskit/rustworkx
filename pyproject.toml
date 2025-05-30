@@ -186,12 +186,12 @@ env = { RUSTC_BOOTSTRAP = "1", RUSTFLAGS = "-C target-feature=+atomics,+bulk-mem
 depends-on = ["install_xbuildenv"]
 
 [tool.pixi.tasks.install_pyodide_test_env]
-cmd = ["cd", "tests/pyodide_tests", "&&", "npm", "install", "&&", "cd", "../.."]
+cmd = ["npm", "install"]
 
 [tool.pixi.tasks.pyodide_test]
-cmd = ["cd", "tests/pyodide_tests", "&&", "node", "pyodide_runner.mjs", "{{ wheel_path }}", "&&", "cd", "../.."]
+cmd = ["node", "tests/pyodide_tests/pyodide_runner.mjs", "{{ wheel_path }}"]
 args = [
-  { "arg" = "wheel_path", "default" = "$(python ../../tools/find_only_wheel.py)" },
+  { "arg" = "wheel_path", "default" = "$(python tools/find_only_wheel.py)" },
 ]
 depends-on = ["install_pyodide_test_env"]
 
