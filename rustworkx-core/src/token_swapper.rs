@@ -99,7 +99,8 @@ where
         }
     }
 
-    fn map(&mut self) -> Result<Vec<Swap>, MapNotPossible> {
+    #[allow(clippy::type_complexity)]
+    fn map(&mut self) -> Result<Vec<(G::NodeId, G::NodeId)>, MapNotPossible> {
         let num_nodes = self.graph.node_bound();
         let num_edges = self.graph.edge_count();
 
@@ -168,7 +169,7 @@ where
             .take(self.trials)
             .collect();
 
-        CondIterator::new(
+        let result = CondIterator::new(
             trial_seeds_vec,
             self.graph.node_count() >= self.parallel_threshold,
         )
@@ -185,7 +186,13 @@ where
             Ok(res) => Ok(res.len()),
             Err(e) => Err(*e),
         })
-        .unwrap()
+        .unwrap()?;
+        // Map NodeIndex swaps to NodeId swaps
+        let swaps = result
+            .into_iter()
+            .map(|(a, b)| (self.rev_node_map[&a], self.rev_node_map[&b]))
+            .collect();
+        Ok(swaps)
     }
 
     fn add_token_edges(
@@ -439,13 +446,14 @@ where
 ///  assert_eq!(3, output.len());
 ///
 /// ```
+#[allow(clippy::type_complexity)]
 pub fn token_swapper<G>(
     graph: G,
     mapping: HashMap<G::NodeId, G::NodeId>,
     trials: Option<usize>,
     seed: Option<u64>,
     parallel_threshold: Option<usize>,
-) -> Result<Vec<Swap>, MapNotPossible>
+) -> Result<Vec<(G::NodeId, G::NodeId)>, MapNotPossible>
 where
     G: NodeCount
         + EdgeCount
