@@ -21,21 +21,22 @@ use std::convert::TryFrom;
 
 use crate::{digraph, edge_weights_from_callable, graph, CostFn, NegativeCycle, NoPathFound};
 
-use pyo3::prelude::*;
-use pyo3::Python;
-
+use hashbrown::HashMap;
 use petgraph::graph::NodeIndex;
 use petgraph::prelude::*;
 use petgraph::stable_graph::EdgeIndex;
 use petgraph::visit::NodeCount;
 use pyo3::exceptions::PyIndexError;
 use pyo3::exceptions::PyValueError;
+use pyo3::prelude::*;
+use pyo3::Python;
 
 use numpy::{IntoPyArray, PyArray2};
 
 use rustworkx_core::dictmap::*;
 use rustworkx_core::shortest_path::{
     all_shortest_paths, astar, bellman_ford, dijkstra, k_shortest_path, negative_cycle_finder,
+    single_source_all_shortest_paths,
 };
 
 use crate::iterators::{
@@ -322,6 +323,148 @@ pub fn digraph_all_shortest_paths(
         .iter()
         .map(|v| v.iter().map(|v| v.index()).collect())
         .collect())
+}
+
+/// Find all shortest paths from a single source node to all other nodes in an undirected graph
+///
+/// This function will generate all possible shortest paths from a source node to all other nodes
+/// using Dijkstra's algorithm.
+///
+/// :param PyGraph graph: The input undirected graph.
+/// :param int source: The node index to find paths from.
+/// :param weight_fn: An optional weight function for an edge. It will accept
+///     a single argument, the edge's weight object and will return a float which
+///     will be used to represent the weight/cost of the edge.
+/// :param float default_weight: If ``weight_fn`` isn't specified this optional
+///     float value will be used for the weight/cost of each edge.
+///
+/// :return: A dictionary where keys are node indices and values are lists of all shortest paths
+///     from the source to that node. Each path is a list of node indices starting with the source.
+/// :rtype: dict
+/// :raises ValueError: when an edge weight with NaN or negative value is provided.
+/// :raises IndexError: if the source node index is out of range.
+#[pyfunction]
+#[pyo3(
+    signature=(graph, source, weight_fn=None, default_weight=1.0),
+    text_signature = "(graph, source, /, weight_fn=None, default_weight=1.0)"
+)]
+pub fn graph_single_source_all_shortest_paths(
+    py: Python,
+    graph: &graph::PyGraph,
+    source: usize,
+    weight_fn: Option<PyObject>,
+    default_weight: f64,
+) -> PyResult<HashMap<usize, Vec<Vec<usize>>>> {
+    if source >= graph.node_count() {
+        return Err(PyIndexError::new_err("Source node index out of range"));
+    }
+
+    let start = NodeIndex::new(source);
+    let cost_fn = CostFn::try_from((weight_fn, default_weight))?;
+    let cost_fn_closure =
+        |edge: petgraph::stable_graph::EdgeReference<'_, Py<PyAny>>| -> Result<f64, PyErr> {
+            let edge_weight = edge.weight(); // &Py<PyAny>
+            cost_fn.call(py, edge_weight)
+        };
+    let all_paths = single_source_all_shortest_paths(
+        &graph.graph, // Pass the wrapper directly
+        start,
+        cost_fn_closure,
+    )?;
+
+    let mut paths_map = HashMap::new();
+    for (n, paths) in all_paths.into_iter() {
+        let node_key = n.index();
+        let paths_list = paths
+            .into_iter()
+            .map(|path| {
+                path.into_iter()
+                    .map(|node| node.index())
+                    .collect::<Vec<usize>>()
+            })
+            .collect::<Vec<Vec<usize>>>();
+        paths_map.insert(node_key, paths_list);
+    }
+
+    Ok(paths_map)
+}
+
+// Find all shortest paths from a single source node to all other nodes in a directed graph
+///
+/// This function will generate all possible shortest paths from a source node to all other nodes
+/// using Dijkstra's algorithm. If ``as_undirected`` is True, the directed graph will be treated as undirected.
+///
+/// :param PyDiGraph graph: The input directed graph.
+/// :param int source: The node index to find paths from.
+/// :param weight_fn: An optional weight function for an edge. It will accept
+///     a single argument, the edge's weight object and will return a float which
+///     will be used to represent the weight/cost of the edge.
+/// :param float default_weight: If ``weight_fn`` isn't specified this optional
+///     float value will be used for the weight/cost of each edge.
+/// :param bool as_undirected: If True, treat the directed graph as undirected.
+///
+/// :return: A dictionary where keys are node indices and values are lists of all shortest paths
+///     from the source to that node. Each path is a list of node indices starting with the source.
+/// :rtype: dict
+/// :raises ValueError: when an edge weight with NaN or negative value is provided.
+/// :raises IndexError: if the source node index is out of range.
+#[pyfunction]
+#[pyo3(
+    signature=(graph, source, weight_fn=None, default_weight=1.0, as_undirected=false),
+    text_signature = "(graph, source, /, weight_fn=None, default_weight=1.0, as_undirected=False)"
+)]
+pub fn digraph_single_source_all_shortest_paths(
+    py: Python,
+    graph: &digraph::PyDiGraph,
+    source: usize,
+    weight_fn: Option<PyObject>,
+    default_weight: f64,
+    as_undirected: bool,
+) -> PyResult<HashMap<usize, Vec<Vec<usize>>>> {
+    if source >= graph.node_count() {
+        return Err(PyIndexError::new_err("Source node index out of range"));
+    }
+
+    let start = NodeIndex::new(source);
+    let cost_fn = CostFn::try_from((weight_fn, default_weight))?;
+
+    // Define a closure that wraps CostFn to match the expected signature
+    let cost_fn_closure =
+        |edge: petgraph::stable_graph::EdgeReference<'_, Py<PyAny>>| -> Result<f64, PyErr> {
+            let edge_weight = edge.weight();
+            cost_fn.call(py, edge_weight)
+        };
+
+    let all_paths = if as_undirected {
+        let undirected_graph = graph.to_undirected(py, true, None)?;
+        single_source_all_shortest_paths(
+            &undirected_graph.graph, // Pass the inner graph reference for undirected
+            start,
+            cost_fn_closure,
+        )?
+    } else {
+        single_source_all_shortest_paths(
+            &graph.graph, // Pass the inner graph reference for directed
+            start,
+            cost_fn_closure,
+        )?
+    };
+
+    let mut paths_map = HashMap::new();
+    for (n, paths) in all_paths.into_iter() {
+        let node_key = n.index();
+        let paths_list = paths
+            .into_iter()
+            .map(|path| {
+                path.into_iter()
+                    .map(|node| node.index())
+                    .collect::<Vec<usize>>()
+            })
+            .collect::<Vec<Vec<usize>>>();
+        paths_map.insert(node_key, paths_list);
+    }
+
+    Ok(paths_map)
 }
 
 /// Check if a digraph has a path between source and target nodes
