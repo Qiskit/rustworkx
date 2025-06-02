@@ -21,7 +21,7 @@ use std::convert::TryFrom;
 
 use crate::{digraph, edge_weights_from_callable, graph, CostFn, NegativeCycle, NoPathFound};
 
-use hashbrown::HashMap;
+use numpy::{IntoPyArray, PyArray2};
 use petgraph::graph::NodeIndex;
 use petgraph::prelude::*;
 use petgraph::stable_graph::EdgeIndex;
@@ -30,8 +30,7 @@ use pyo3::exceptions::PyIndexError;
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use pyo3::Python;
-
-use numpy::{IntoPyArray, PyArray2};
+use std::boxed::Box;
 
 use rustworkx_core::dictmap::*;
 use rustworkx_core::shortest_path::{
@@ -343,6 +342,11 @@ pub fn digraph_all_shortest_paths(
 /// :rtype: dict
 /// :raises ValueError: when an edge weight with NaN or negative value is provided.
 /// :raises IndexError: if the source node index is out of range.
+///
+/// .. warning::
+///     This function can return an exponential number of paths in certain graphs, especially with zero-weight edges.
+///     For most use cases, consider using `rustworkx.dijkstra_shortest_paths` for a single shortest path, which runs much faster.
+///
 #[pyfunction]
 #[pyo3(
     signature=(graph, source, weight_fn=None, default_weight=1.0),
@@ -354,25 +358,29 @@ pub fn graph_single_source_all_shortest_paths(
     source: usize,
     weight_fn: Option<PyObject>,
     default_weight: f64,
-) -> PyResult<HashMap<usize, Vec<Vec<usize>>>> {
+) -> PyResult<DictMap<usize, Vec<Vec<usize>>>> {
     if source >= graph.node_count() {
         return Err(PyIndexError::new_err("Source node index out of range"));
     }
 
     let start = NodeIndex::new(source);
-    let cost_fn = CostFn::try_from((weight_fn, default_weight))?;
-    let cost_fn_closure =
-        |edge: petgraph::stable_graph::EdgeReference<'_, Py<PyAny>>| -> Result<f64, PyErr> {
-            let edge_weight = edge.weight(); // &Py<PyAny>
-            cost_fn.call(py, edge_weight)
-        };
-    let all_paths = single_source_all_shortest_paths(
-        &graph.graph, // Pass the wrapper directly
-        start,
-        cost_fn_closure,
-    )?;
 
-    let mut paths_map = HashMap::new();
+    // Define the cost function closure based on whether weight_fn is provided
+    let cost_fn_closure: Box<
+        dyn FnMut(petgraph::stable_graph::EdgeReference<'_, Py<PyAny>>) -> Result<f64, PyErr>,
+    > = if let Some(weight_fn) = weight_fn {
+        let cost_fn = CostFn::try_from((Some(weight_fn), default_weight))?;
+        Box::new(move |edge| {
+            let edge_weight = edge.weight();
+            cost_fn.call(py, edge_weight)
+        })
+    } else {
+        Box::new(|edge| edge.weight().extract::<f64>(py))
+    };
+
+    let all_paths = single_source_all_shortest_paths(&graph.graph, start, cost_fn_closure)?;
+
+    let mut paths_map = DictMap::new();
     for (n, paths) in all_paths.into_iter() {
         let node_key = n.index();
         let paths_list = paths
@@ -408,6 +416,10 @@ pub fn graph_single_source_all_shortest_paths(
 /// :rtype: dict
 /// :raises ValueError: when an edge weight with NaN or negative value is provided.
 /// :raises IndexError: if the source node index is out of range.
+///
+/// .. warning::
+///     This function can return an exponential number of paths in certain graphs, especially with zero-weight edges.
+///     For most use cases, consider using `rustworkx.dijkstra_shortest_paths` for a single shortest path, which runs much faster.
 #[pyfunction]
 #[pyo3(
     signature=(graph, source, weight_fn=None, default_weight=1.0, as_undirected=false),
@@ -420,7 +432,7 @@ pub fn digraph_single_source_all_shortest_paths(
     weight_fn: Option<PyObject>,
     default_weight: f64,
     as_undirected: bool,
-) -> PyResult<HashMap<usize, Vec<Vec<usize>>>> {
+) -> PyResult<DictMap<usize, Vec<Vec<usize>>>> {
     if source >= graph.node_count() {
         return Err(PyIndexError::new_err("Source node index out of range"));
     }
@@ -450,7 +462,7 @@ pub fn digraph_single_source_all_shortest_paths(
         )?
     };
 
-    let mut paths_map = HashMap::new();
+    let mut paths_map = DictMap::new();
     for (n, paths) in all_paths.into_iter() {
         let node_key = n.index();
         let paths_list = paths

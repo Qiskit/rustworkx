@@ -11,15 +11,20 @@ pub fn single_source_all_shortest_paths<G, F, K, E>(
 ) -> Result<DictMap<G::NodeId, Vec<Vec<G::NodeId>>>, E>
 where
     G: IntoEdgesDirected + Visitable + NodeIndexable + IntoNodeIdentifiers,
-    G::NodeId: Eq + Hash + Clone,
+    G::NodeId: Eq + Hash + Clone + Ord,
     F: FnMut(G::EdgeRef) -> Result<K, E>,
-    K: petgraph::algo::Measure + Copy + std::ops::Add<Output = K> + PartialEq,
+    K: petgraph::algo::Measure + Copy + std::ops::Add<Output = K> + PartialEq + PartialOrd,
 {
     // Compute shortest path distances using Dijkstra's algorithm
     let distance: DictMap<G::NodeId, K> = dijkstra(graph, source, None, &mut edge_cost, None)?;
 
     // Build predecessor map for all nodes
-    let mut pred: DictMap<G::NodeId, Vec<G::NodeId>> = DictMap::new();
+    let max_index = graph
+        .node_identifiers()
+        .map(|n| graph.to_index(n))
+        .max()
+        .unwrap_or(0);
+    let mut pred = vec![Vec::new(); max_index + 1];
 
     for v in graph.node_identifiers() {
         if let Some(dist_v) = distance.get(&v) {
@@ -34,63 +39,68 @@ where
                 }
             }
             if !predecessors.is_empty() {
-                pred.insert(v, predecessors);
+                pred[graph.to_index(v)] = predecessors;
             }
         }
     }
 
-    // Memoized recursive function to compute all shortest paths
-    let mut memo: DictMap<G::NodeId, Vec<Vec<G::NodeId>>> = DictMap::new();
-    fn all_paths<G: NodeIndexable>(
-        n: G::NodeId,
+    // Collect all shortest paths from source to a node
+    fn collect_paths<G>(
+        v: G::NodeId,
+        pred: &Vec<Vec<G::NodeId>>,
         source: G::NodeId,
-        pred: &DictMap<G::NodeId, Vec<G::NodeId>>,
-        memo: &mut DictMap<G::NodeId, Vec<Vec<G::NodeId>>>,
-    ) -> Vec<Vec<G::NodeId>>
-    where
-        G::NodeId: Eq + Hash + Clone,
+        current_path: &mut Vec<G::NodeId>,
+        all_paths: &mut Vec<Vec<G::NodeId>>,
+        graph: &G,
+    ) where
+        G: IntoEdgesDirected + Visitable + NodeIndexable + IntoNodeIdentifiers,
+        G::NodeId: Eq + Hash + Clone + Ord,
     {
-        if let Some(paths) = memo.get(&n) {
-            return paths.clone();
+        if v == source {
+            let mut path = current_path.clone();
+            path.push(source);
+            path.reverse();
+            all_paths.push(path);
+            return;
         }
-        if n == source {
-            let paths = vec![vec![source]];
-            memo.insert(n, paths.clone());
-            return paths;
-        }
-        let mut paths = Vec::new();
-        if let Some(pred_n) = pred.get(&n) {
-            for p in pred_n {
-                let paths_p = all_paths::<G>(*p, source, pred, memo);
-                for mut path in paths_p {
-                    path.push(n);
-                    paths.push(path);
-                }
+        for &p in &pred[graph.to_index(v)] {
+            if !current_path.contains(&p) {
+                current_path.push(v);
+                collect_paths(p, pred, source, current_path, all_paths, graph);
+                current_path.pop();
             }
         }
-        memo.insert(n, paths.clone());
-        paths
     }
 
     // Compute all shortest paths for each reachable node
     let mut all_paths_map: DictMap<G::NodeId, Vec<Vec<G::NodeId>>> = DictMap::new();
-    for n in graph.node_identifiers() {
-        if distance.contains_key(&n) {
-            let paths = all_paths::<G>(n, source, &pred, &mut memo);
-            all_paths_map.insert(n, paths);
+    for node in graph.node_identifiers() {
+        if distance.contains_key(&node) {
+            let mut all_paths = Vec::new();
+            let mut current_path = Vec::new();
+            collect_paths(
+                node,
+                &pred,
+                source,
+                &mut current_path,
+                &mut all_paths,
+                &graph,
+            );
+            all_paths_map.insert(node, all_paths);
         }
     }
 
     Ok(all_paths_map)
 }
-
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::dictmap::DictMap;
+    use crate::generators::grid_graph;
+    use hashbrown::HashSet;
     use petgraph::prelude::*;
     use petgraph::Graph;
-
+    use std::convert::Infallible;
     #[test]
     fn test_single_source_all_shortest_paths_cycle() {
         let mut g = Graph::new_undirected();
@@ -127,43 +137,71 @@ mod tests {
 
     #[test]
     fn test_single_source_all_shortest_paths_grid() {
-        let mut g = Graph::new_undirected();
-        let mut nodes = Vec::new();
-        for _ in 0..16 {
-            nodes.push(g.add_node(()));
-        }
-        // Add horizontal edges
-        for r in 0..4 {
-            for c in 0..3 {
-                let i = r * 4 + c;
-                let j = r * 4 + c + 1;
-                g.add_edge(nodes[i], nodes[j], 1.0);
-            }
-        }
-
-        // Add vertical edges
-        for c in 0..4 {
-            for r in 0..3 {
-                let i = r * 4 + c;
-                let j = (r + 1) * 4 + c;
-                g.add_edge(nodes[i], nodes[j], 1.0);
-            }
-        }
-
-        let source = nodes[1]; // Node 1
-        let paths = single_source_all_shortest_paths(&g, source, |e| {
-            Ok::<_, std::convert::Infallible>(*e.weight())
-        })
+        // Create a 4x4 grid graph with explicit type annotation
+        let g: Graph<(), f64, petgraph::Undirected> = grid_graph(
+            Some(4), // rows
+            Some(4), // cols
+            None,    // no specific weights
+            || (),   // default node weight
+            || 1.0,  // default edge weight
+            false,   // unidirectional edges
+        )
         .unwrap();
 
-        let target = nodes[11]; // Node 11
+        let source = NodeIndex::new(1); // Node 1
+        let paths = single_source_all_shortest_paths(
+            &g,
+            source,
+            |e: petgraph::graph::EdgeReference<'_, f64>| {
+                Ok::<_, std::convert::Infallible>(*e.weight())
+            },
+        )
+        .unwrap();
+
+        let target = NodeIndex::new(11); // Node 11
         let expected_paths = vec![
-            vec![nodes[1], nodes[2], nodes[3], nodes[7], nodes[11]],
-            vec![nodes[1], nodes[2], nodes[6], nodes[7], nodes[11]],
-            vec![nodes[1], nodes[2], nodes[6], nodes[10], nodes[11]],
-            vec![nodes[1], nodes[5], nodes[6], nodes[7], nodes[11]],
-            vec![nodes[1], nodes[5], nodes[6], nodes[10], nodes[11]],
-            vec![nodes[1], nodes[5], nodes[9], nodes[10], nodes[11]],
+            vec![
+                NodeIndex::new(1),
+                NodeIndex::new(2),
+                NodeIndex::new(3),
+                NodeIndex::new(7),
+                NodeIndex::new(11),
+            ],
+            vec![
+                NodeIndex::new(1),
+                NodeIndex::new(2),
+                NodeIndex::new(6),
+                NodeIndex::new(7),
+                NodeIndex::new(11),
+            ],
+            vec![
+                NodeIndex::new(1),
+                NodeIndex::new(2),
+                NodeIndex::new(6),
+                NodeIndex::new(10),
+                NodeIndex::new(11),
+            ],
+            vec![
+                NodeIndex::new(1),
+                NodeIndex::new(5),
+                NodeIndex::new(6),
+                NodeIndex::new(7),
+                NodeIndex::new(11),
+            ],
+            vec![
+                NodeIndex::new(1),
+                NodeIndex::new(5),
+                NodeIndex::new(6),
+                NodeIndex::new(10),
+                NodeIndex::new(11),
+            ],
+            vec![
+                NodeIndex::new(1),
+                NodeIndex::new(5),
+                NodeIndex::new(9),
+                NodeIndex::new(10),
+                NodeIndex::new(11),
+            ],
         ];
 
         let actual_paths = paths.get(&target).unwrap();
@@ -269,5 +307,108 @@ mod tests {
         }
 
         assert_eq!(actual_paths, expected);
+    }
+    #[test]
+    fn test_single_source_all_shortest_paths_zero_weight_no_cycle() {
+        let mut g = Graph::new_undirected();
+        let a = g.add_node(());
+        let b = g.add_node(());
+        let c = g.add_node(());
+        g.add_edge(a, b, 1.0);
+        g.add_edge(b, c, 0.0);
+
+        let paths = single_source_all_shortest_paths(&g, a, |e| {
+            Ok::<_, std::convert::Infallible>(*e.weight())
+        })
+        .unwrap();
+
+        let mut expected = DictMap::new();
+        expected.insert(a, vec![vec![a]]);
+        expected.insert(b, vec![vec![a, b]]);
+        expected.insert(c, vec![vec![a, b, c]]);
+
+        for paths_list in expected.values_mut() {
+            paths_list.sort_by(|p1, p2| p1.cmp(p2));
+        }
+        let mut actual_paths = paths.clone();
+        for paths_list in actual_paths.values_mut() {
+            paths_list.sort_by(|p1, p2| p1.cmp(p2));
+        }
+
+        assert_eq!(actual_paths, expected);
+    }
+
+    #[test]
+    fn test_single_source_all_shortest_paths_zero_weight_with_cycle() {
+        let mut g = Graph::<(), f64, Undirected>::new_undirected();
+        let a = g.add_node(());
+        let b = g.add_node(());
+        let c = g.add_node(());
+        g.add_edge(a, b, 0.0);
+        g.add_edge(b, c, 0.0);
+        g.add_edge(c, a, 0.0);
+
+        let mut edge_cost =
+            |e: petgraph::graph::EdgeReference<'_, f64>| -> Result<f64, Infallible> {
+                Ok(*e.weight())
+            };
+        let result = single_source_all_shortest_paths(&g, a, &mut edge_cost).unwrap();
+
+        for (_node, paths) in result.iter() {
+            for path in paths {
+                // Check no repeated nodes
+                let mut seen = HashSet::new();
+                for &n in path {
+                    assert!(
+                        seen.insert(n),
+                        "Path {:?} contains repeated node {:?}",
+                        path,
+                        n
+                    );
+                }
+            }
+        }
+    }
+    #[test]
+    fn test_single_source_all_shortest_paths_zero_weight() {
+        use crate::dictmap::DictMap;
+        use petgraph::graph::{NodeIndex, UnGraph};
+        use std::convert::Infallible;
+
+        let mut graph = UnGraph::<(), f64>::new_undirected();
+        let a = graph.add_node(()); // Node 0
+        let b = graph.add_node(()); // Node 1
+        let c = graph.add_node(()); // Node 2
+        let d = graph.add_node(()); // Node 3
+
+        // Add edges with weights
+        graph.add_edge(a, b, 0.0); // 0 -- 1 with weight 0
+        graph.add_edge(b, c, 0.0); // 1 -- 2 with weight 0
+        graph.add_edge(c, a, 0.0); // 2 -- 0 with weight 0
+        graph.add_edge(c, d, 1.0); // 2 -- 3 with weight 1
+
+        // Define the edge cost function
+        let edge_cost =
+            |e: petgraph::graph::EdgeReference<f64>| -> Result<f64, Infallible> { Ok(*e.weight()) };
+
+        // Compute all shortest paths from source node 0 (a)
+        let paths = single_source_all_shortest_paths(&graph, a, edge_cost).unwrap();
+
+        // Define expected shortest paths
+        let mut expected: DictMap<NodeIndex, Vec<Vec<NodeIndex>>> = DictMap::new();
+        expected.insert(a, vec![vec![a]]); // To 0: [[0]]
+        expected.insert(b, vec![vec![a, b], vec![a, c, b]]); // To 1: [[0, 1], [0, 2, 1]]
+        expected.insert(c, vec![vec![a, c], vec![a, b, c]]); // To 2: [[0, 2], [0, 1, 2]]
+        expected.insert(d, vec![vec![a, c, d], vec![a, b, c, d]]); // To 3: [[0, 2, 3], [0, 1, 2, 3]]
+
+        // Verify all paths match the expected output
+        for (node, expected_paths) in expected.iter() {
+            let computed_paths = paths.get(node).unwrap();
+            let mut computed_paths_sorted = computed_paths.clone();
+            computed_paths_sorted.sort(); // Sort for comparison
+            let mut expected_paths_sorted = expected_paths.clone();
+            expected_paths_sorted.sort(); // Sort for comparison
+            assert_eq!(computed_paths_sorted, expected_paths_sorted);
+        }
     }
 }

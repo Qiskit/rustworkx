@@ -17,6 +17,8 @@ class TestSingleSourceAllShortestPaths(unittest.TestCase):
         )
         # Set up a 4x4 grid graph
         self.grid = rustworkx.generators.grid_graph(4, 4)
+        for edge in self.grid.edge_list():
+            self.grid.update_edge(edge[0], edge[1], 1.0)
         # Set up a disconnected graph (cycle + isolated node)
         self.disconnected = rustworkx.PyGraph()
         self.disconnected_nodes = self.disconnected.add_nodes_from([0, 1, 2, 3, 4])
@@ -94,3 +96,44 @@ class TestSingleSourceAllShortestPaths(unittest.TestCase):
         g.add_nodes_from([0, 1])
         with self.assertRaises(TypeError):
             rustworkx.graph_single_source_all_shortest_paths(g, 0)
+
+    def test_single_source_all_shortest_paths_zero_weight(self):
+        # Create a graph with zero-weighted edges
+        graph = rustworkx.PyGraph()
+        nodes = graph.add_nodes_from([0, 1, 2, 3])  # a=0, b=1, c=2, d=3
+        graph.add_edge(nodes[0], nodes[1], 0.0)  # ab with weight 0.0
+        graph.add_edge(nodes[1], nodes[2], 0.0)  # bc with weight 0.0
+        graph.add_edge(nodes[2], nodes[0], 0.0)  # ca with weight 0.0
+        graph.add_edge(nodes[2], nodes[3], 1.0)  # cd with weight 1.0
+
+        source = nodes[0]
+
+        # Compute shortest path lengths from source node using Dijkstra's algorithm
+        shortest_lengths = rustworkx.dijkstra_shortest_path_lengths(graph, source, lambda x: x)
+
+        # Compute the total weight of a path
+        def path_weight(path):
+            total = 0.0
+            for i in range(len(path) - 1):
+                edge_data = graph.get_edge_data(path[i], path[i + 1])
+                total += edge_data
+            return total
+
+        # Compute expected shortest paths
+        expected = {source: [[source]]}  # Trivial path from source to itself
+        for target in graph.nodes():
+            if target != source:
+                # Get all simple paths from source to target
+                paths = rustworkx.all_simple_paths(graph, source, target)
+                # Filter paths to keep only those with total weight equal to the shortest path length
+                expected_paths = [
+                    path for path in paths if path_weight(path) == shortest_lengths[target]
+                ]
+                expected[target] = expected_paths
+
+        # Compute all shortest paths using the function to test
+        paths = rustworkx.graph_single_source_all_shortest_paths(graph, source)
+
+        # Verify all paths match the expected output
+        for node in expected:
+            self.assertEqual(sorted(paths[node]), sorted(expected[node]))
