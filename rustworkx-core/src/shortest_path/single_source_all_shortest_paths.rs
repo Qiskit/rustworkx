@@ -4,11 +4,12 @@ use petgraph::visit::{EdgeRef, IntoEdgesDirected, IntoNodeIdentifiers, NodeIndex
 use petgraph::Direction::Incoming;
 use std::hash::Hash;
 
+type AllShortestPathsMap<N> = DictMap<N, Vec<Vec<N>>>;
 pub fn single_source_all_shortest_paths<G, F, K, E>(
     graph: G,
     source: G::NodeId,
     mut edge_cost: F,
-) -> Result<DictMap<G::NodeId, Vec<Vec<G::NodeId>>>, E>
+) -> Result<AllShortestPathsMap<G::NodeId>, E>
 where
     G: IntoEdgesDirected + Visitable + NodeIndexable + IntoNodeIdentifiers,
     G::NodeId: Eq + Hash + Clone + Ord,

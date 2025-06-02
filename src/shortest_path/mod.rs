@@ -43,6 +43,7 @@ use crate::iterators::{
     PathLengthMapping, PathMapping,
 };
 
+type CostFnClosure<'py> = Box<dyn for<'a> FnMut(petgraph::stable_graph::EdgeReference<'a, Py<PyAny>>) -> Result<f64, PyErr> + 'py>;
 /// Find the shortest path from a node
 ///
 /// This function will generate the shortest path from a source node using
@@ -366,9 +367,7 @@ pub fn graph_single_source_all_shortest_paths(
     let start = NodeIndex::new(source);
 
     // Define the cost function closure based on whether weight_fn is provided
-    let cost_fn_closure: Box<
-        dyn FnMut(petgraph::stable_graph::EdgeReference<'_, Py<PyAny>>) -> Result<f64, PyErr>,
-    > = if let Some(weight_fn) = weight_fn {
+    let cost_fn_closure: CostFnClosure<'_> = if let Some(weight_fn) = weight_fn {
         let cost_fn = CostFn::try_from((Some(weight_fn), default_weight))?;
         Box::new(move |edge| {
             let edge_weight = edge.weight();
