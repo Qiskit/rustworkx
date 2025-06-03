@@ -3019,12 +3019,11 @@ impl PyDiGraph {
     ///
     /// :param list[int] nodes: A set of node indices to check for contraction.
     /// :returns: `True` if contraction can proceed without creating cycles, `False` otherwise.
-    #[staticmethod]
-    #[pyo3(text_signature = "(graph, nodes, /)",signature = (graph, nodes))]
-    pub fn can_contract_without_cycle(graph: &PyDiGraph, nodes: Vec<usize>) -> bool {
+    #[pyo3(text_signature = "(self, nodes, /)",signature = (nodes))]
+    pub fn can_contract_without_cycle(&self, nodes: Vec<usize>) -> bool {
         let index_set: IndexSet<NodeIndex, RandomState> =
             nodes.into_iter().map(NodeIndex::new).collect();
-        can_contract_without_cycle(&graph.graph, &index_set)
+        can_contract_without_cycle(&self.graph, &index_set)
     }
 
     /// Return a new PyDiGraph object for a subgraph of this graph
