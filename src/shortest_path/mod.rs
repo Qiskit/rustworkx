@@ -26,11 +26,9 @@ use petgraph::graph::NodeIndex;
 use petgraph::prelude::*;
 use petgraph::stable_graph::EdgeIndex;
 use petgraph::visit::NodeCount;
-use pyo3::exceptions::PyIndexError;
-use pyo3::exceptions::PyValueError;
+use pyo3::exceptions::{PyIndexError, PyTypeError, PyValueError};
 use pyo3::prelude::*;
 use pyo3::Python;
-use std::boxed::Box;
 
 use rustworkx_core::dictmap::*;
 use rustworkx_core::shortest_path::{
@@ -43,10 +41,6 @@ use crate::iterators::{
     PathLengthMapping, PathMapping,
 };
 
-type CostFnClosure<'py> = Box<
-    dyn for<'a> FnMut(petgraph::stable_graph::EdgeReference<'a, Py<PyAny>>) -> Result<f64, PyErr>
-        + 'py,
->;
 /// Find the shortest path from a node
 ///
 /// This function will generate the shortest path from a source node using
@@ -369,19 +363,42 @@ pub fn graph_single_source_all_shortest_paths(
 
     let start = NodeIndex::new(source);
 
-    // Define the cost function closure based on whether weight_fn is provided
-    let cost_fn_closure: CostFnClosure<'_> = if let Some(weight_fn) = weight_fn {
-        let cost_fn = CostFn::try_from((Some(weight_fn), default_weight))?;
-        Box::new(move |edge| {
-            let edge_weight = edge.weight();
+    // Compute maximum edge index
+    let max_edge_index = graph
+        .graph
+        .edge_indices()
+        .map(|ei| ei.index())
+        .max()
+        .unwrap_or(0);
+    let mut edge_costs = vec![None; max_edge_index + 1];
+
+    // Precompute edge costs
+    for edge_index in graph.graph.edge_indices() {
+        let pos = edge_index.index();
+        let edge_weight = graph
+            .graph
+            .edge_weight(edge_index)
+            .ok_or_else(|| PyIndexError::new_err("Edge not found for index"))?;
+        let cost = if let Some(weight_fn) = &weight_fn {
+            let cost_fn = CostFn::try_from((Some(weight_fn.clone()), default_weight))?;
             cost_fn.call(py, edge_weight)
-        })
-    } else {
-        Box::new(|edge| edge.weight().extract::<f64>(py))
-    };
+        } else {
+            edge_weight.extract::<f64>(py)
+        }?;
+        edge_costs[pos] = Some(cost);
+    }
 
-    let all_paths = single_source_all_shortest_paths(&graph.graph, start, cost_fn_closure)?;
+    // Define cost function using precomputed costs
+    let cost_fn =
+        move |edge: petgraph::stable_graph::EdgeReference<'_, Py<PyAny>>| -> Result<f64, PyErr> {
+            let pos = edge.id().index();
+            edge_costs[pos].ok_or_else(|| PyTypeError::new_err("Edge cost not found"))
+        };
 
+    // Compute all shortest paths
+    let all_paths = single_source_all_shortest_paths(&graph.graph, start, cost_fn)?;
+
+    // Convert paths to use usize indices
     let mut paths_map = DictMap::new();
     for (n, paths) in all_paths.into_iter() {
         let node_key = n.index();
@@ -440,28 +457,35 @@ pub fn digraph_single_source_all_shortest_paths(
     }
 
     let start = NodeIndex::new(source);
-    let cost_fn = CostFn::try_from((weight_fn, default_weight))?;
+    // Precompute edge costs
+    let max_edge_index = graph
+        .graph
+        .edge_indices()
+        .map(|ei| ei.index())
+        .max()
+        .unwrap_or(0);
+    let mut edge_costs = vec![None; max_edge_index + 1];
 
-    // Define a closure that wraps CostFn to match the expected signature
+    let cost_fn = CostFn::try_from((weight_fn, default_weight))?;
+    for edge_index in graph.graph.edge_indices() {
+        let pos = edge_index.index();
+        let edge_weight = graph.graph.edge_weight(edge_index).unwrap();
+        let cost = cost_fn.call(py, edge_weight)?;
+        edge_costs[pos] = Some(cost);
+    }
+
+    // Define cost function using precomputed costs
     let cost_fn_closure =
-        |edge: petgraph::stable_graph::EdgeReference<'_, Py<PyAny>>| -> Result<f64, PyErr> {
-            let edge_weight = edge.weight();
-            cost_fn.call(py, edge_weight)
+        move |edge: petgraph::stable_graph::EdgeReference<'_, Py<PyAny>>| -> Result<f64, PyErr> {
+            let pos = edge.id().index();
+            edge_costs[pos].ok_or_else(|| PyTypeError::new_err("Edge cost not found"))
         };
 
     let all_paths = if as_undirected {
         let undirected_graph = graph.to_undirected(py, true, None)?;
-        single_source_all_shortest_paths(
-            &undirected_graph.graph, // Pass the inner graph reference for undirected
-            start,
-            cost_fn_closure,
-        )?
+        single_source_all_shortest_paths(&undirected_graph.graph, start, cost_fn_closure)?
     } else {
-        single_source_all_shortest_paths(
-            &graph.graph, // Pass the inner graph reference for directed
-            start,
-            cost_fn_closure,
-        )?
+        single_source_all_shortest_paths(&graph.graph, start, cost_fn_closure)?
     };
 
     let mut paths_map = DictMap::new();

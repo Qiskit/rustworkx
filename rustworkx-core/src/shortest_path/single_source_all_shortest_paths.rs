@@ -1,5 +1,6 @@
 use crate::dictmap::{DictMap, InitWithHasher};
 use crate::shortest_path::dijkstra;
+use fixedbitset::FixedBitSet;
 use petgraph::visit::{EdgeRef, IntoEdgesDirected, IntoNodeIdentifiers, NodeIndexable, Visitable};
 use petgraph::Direction::Incoming;
 use std::hash::Hash;
@@ -53,6 +54,7 @@ where
         current_path: &mut Vec<G::NodeId>,
         all_paths: &mut Vec<Vec<G::NodeId>>,
         graph: &G,
+        visited: &mut FixedBitSet,
     ) where
         G: IntoEdgesDirected + Visitable + NodeIndexable + IntoNodeIdentifiers,
         G::NodeId: Eq + Hash + Clone + Ord,
@@ -65,20 +67,25 @@ where
             return;
         }
         for &p in &pred[graph.to_index(v)] {
-            if !current_path.contains(&p) {
+            if !visited.contains(graph.to_index(p)) {
+                visited.insert(graph.to_index(v));
                 current_path.push(v);
-                collect_paths(p, pred, source, current_path, all_paths, graph);
+                collect_paths(p, pred, source, current_path, all_paths, graph, visited);
                 current_path.pop();
+                visited.remove(graph.to_index(v));
             }
         }
     }
 
     // Compute all shortest paths for each reachable node
+    let total_nodes = graph.node_bound();
     let mut all_paths_map: DictMap<G::NodeId, Vec<Vec<G::NodeId>>> = DictMap::new();
+    let mut visited = FixedBitSet::with_capacity(total_nodes);
     for node in graph.node_identifiers() {
         if distance.contains_key(&node) {
             let mut all_paths = Vec::new();
             let mut current_path = Vec::new();
+            visited.clear();
             collect_paths(
                 node,
                 &pred,
@@ -86,6 +93,7 @@ where
                 &mut current_path,
                 &mut all_paths,
                 &graph,
+                &mut visited,
             );
             all_paths_map.insert(node, all_paths);
         }
@@ -126,11 +134,11 @@ mod tests {
         expected.insert(d, vec![vec![a, d]]);
 
         for paths_list in expected.values_mut() {
-            paths_list.sort_by(|p1, p2| p1.cmp(p2));
+            paths_list.sort();
         }
         let mut actual_paths = paths.clone();
         for paths_list in actual_paths.values_mut() {
-            paths_list.sort_by(|p1, p2| p1.cmp(p2));
+            paths_list.sort();
         }
 
         assert_eq!(actual_paths, expected);
@@ -207,9 +215,9 @@ mod tests {
 
         let actual_paths = paths.get(&target).unwrap();
         let mut actual_paths_sorted = actual_paths.clone();
-        actual_paths_sorted.sort_by(|p1, p2| p1.cmp(p2));
+        actual_paths_sorted.sort();
         let mut expected_paths_sorted = expected_paths.clone();
-        expected_paths_sorted.sort_by(|p1, p2| p1.cmp(p2));
+        expected_paths_sorted.sort();
 
         assert_eq!(actual_paths_sorted, expected_paths_sorted);
     }
@@ -234,9 +242,9 @@ mod tests {
         let expected_a = vec![vec![a, b, c], vec![a, d, c]];
         let actual_paths_a = paths_from_a.get(&c).unwrap();
         let mut actual_paths_sorted_a = actual_paths_a.clone();
-        actual_paths_sorted_a.sort_by(|p1, p2| p1.cmp(p2));
+        actual_paths_sorted_a.sort();
         let mut expected_paths_sorted_a = expected_a.clone();
-        expected_paths_sorted_a.sort_by(|p1, p2| p1.cmp(p2));
+        expected_paths_sorted_a.sort();
         assert_eq!(actual_paths_sorted_a, expected_paths_sorted_a);
 
         let paths_from_e = single_source_all_shortest_paths(&g, e, |e| {
@@ -300,11 +308,11 @@ mod tests {
         expected.insert(d, vec![vec![a, b, d], vec![a, c, d]]);
 
         for paths_list in expected.values_mut() {
-            paths_list.sort_by(|p1, p2| p1.cmp(p2));
+            paths_list.sort();
         }
         let mut actual_paths = paths.clone();
         for paths_list in actual_paths.values_mut() {
-            paths_list.sort_by(|p1, p2| p1.cmp(p2));
+            paths_list.sort();
         }
 
         assert_eq!(actual_paths, expected);
@@ -329,11 +337,11 @@ mod tests {
         expected.insert(c, vec![vec![a, b, c]]);
 
         for paths_list in expected.values_mut() {
-            paths_list.sort_by(|p1, p2| p1.cmp(p2));
+            paths_list.sort();
         }
         let mut actual_paths = paths.clone();
         for paths_list in actual_paths.values_mut() {
-            paths_list.sort_by(|p1, p2| p1.cmp(p2));
+            paths_list.sort();
         }
 
         assert_eq!(actual_paths, expected);
