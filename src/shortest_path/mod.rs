@@ -43,7 +43,10 @@ use crate::iterators::{
     PathLengthMapping, PathMapping,
 };
 
-type CostFnClosure<'py> = Box<dyn for<'a> FnMut(petgraph::stable_graph::EdgeReference<'a, Py<PyAny>>) -> Result<f64, PyErr> + 'py>;
+type CostFnClosure<'py> = Box<
+    dyn for<'a> FnMut(petgraph::stable_graph::EdgeReference<'a, Py<PyAny>>) -> Result<f64, PyErr>
+        + 'py,
+>;
 /// Find the shortest path from a node
 ///
 /// This function will generate the shortest path from a source node using
