@@ -41,10 +41,10 @@ use ndarray::prelude::*;
 use num_traits::Zero;
 use numpy::Complex64;
 use numpy::PyReadonlyArray2;
-
 use petgraph::algo;
 use petgraph::graph::{EdgeIndex, NodeIndex};
 use petgraph::prelude::*;
+use rustworkx_core::graph_ext::contraction::can_contract_without_cycle;
 
 use crate::RxPyResult;
 use petgraph::visit::{
@@ -60,6 +60,8 @@ use super::{
     find_node_by_weight, weight_callable, DAGHasCycle, DAGWouldCycle, IsNan, NoEdgeBetweenNodes,
     NoSuitableNeighbors, NodesRemoved, StablePyGraph,
 };
+use foldhash::fast::RandomState;
+use indexmap::IndexSet;
 
 use super::dag_algo::is_directed_acyclic_graph;
 
@@ -3011,6 +3013,18 @@ impl PyDiGraph {
             (None, true) => self.graph.contract_nodes(nodes, obj, check_cycle)?,
         };
         Ok(res.index())
+    }
+
+    /// Check if contracting the specified nodes can occur without introducing cycles.
+    ///
+    /// :param list[int] nodes: A set of node indices to check for contraction.
+    /// :returns: `True` if contraction can proceed without creating cycles, `False` otherwise.
+    #[staticmethod]
+    #[pyo3(text_signature = "(graph, nodes, /)",signature = (graph, nodes))]
+    pub fn can_contract_without_cycle(graph: &PyDiGraph, nodes: Vec<usize>) -> bool {
+        let index_set: IndexSet<NodeIndex, RandomState> =
+            nodes.into_iter().map(NodeIndex::new).collect();
+        can_contract_without_cycle(&graph.graph, &index_set)
     }
 
     /// Return a new PyDiGraph object for a subgraph of this graph
