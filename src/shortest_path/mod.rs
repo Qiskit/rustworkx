@@ -21,21 +21,19 @@ use std::convert::TryFrom;
 
 use crate::{digraph, edge_weights_from_callable, graph, CostFn, NegativeCycle, NoPathFound};
 
-use pyo3::prelude::*;
-use pyo3::Python;
-
+use numpy::{IntoPyArray, PyArray2};
 use petgraph::graph::NodeIndex;
 use petgraph::prelude::*;
 use petgraph::stable_graph::EdgeIndex;
 use petgraph::visit::NodeCount;
-use pyo3::exceptions::PyIndexError;
-use pyo3::exceptions::PyValueError;
-
-use numpy::{IntoPyArray, PyArray2};
+use pyo3::exceptions::{PyIndexError, PyTypeError, PyValueError};
+use pyo3::prelude::*;
+use pyo3::Python;
 
 use rustworkx_core::dictmap::*;
 use rustworkx_core::shortest_path::{
     all_shortest_paths, astar, bellman_ford, dijkstra, k_shortest_path, negative_cycle_finder,
+    single_source_all_shortest_paths,
 };
 
 use crate::iterators::{
@@ -322,6 +320,198 @@ pub fn digraph_all_shortest_paths(
         .iter()
         .map(|v| v.iter().map(|v| v.index()).collect())
         .collect())
+}
+
+/// Find all shortest paths from a single source node to all other nodes in an undirected graph
+///
+/// This function will generate all possible shortest paths from a source node to all other nodes
+/// using Dijkstra's algorithm.
+///
+/// :param PyGraph graph: The input undirected graph.
+/// :param int source: The node index to find paths from.
+/// :param weight_fn: An optional weight function for an edge. It will accept
+///     a single argument, the edge's weight object and will return a float which
+///     will be used to represent the weight/cost of the edge.
+/// :param float default_weight: If ``weight_fn`` isn't specified this optional
+///     float value will be used for the weight/cost of each edge.
+///
+/// :return: A dictionary where keys are node indices and values are lists of all shortest paths
+///     from the source to that node. Each path is a list of node indices starting with the source.
+/// :rtype: dict
+/// :raises ValueError: when an edge weight with NaN or negative value is provided.
+/// :raises IndexError: if the source node index is out of range.
+///
+/// .. warning::
+///     This function can return an exponential number of paths in certain graphs, especially with zero-weight edges.
+///     For most use cases, consider using `rustworkx.dijkstra_shortest_paths` for a single shortest path, which runs much faster.
+///
+#[pyfunction]
+#[pyo3(
+    signature=(graph, source, weight_fn=None, default_weight=1.0),
+    text_signature = "(graph, source, /, weight_fn=None, default_weight=1.0)"
+)]
+pub fn graph_single_source_all_shortest_paths(
+    py: Python,
+    graph: &graph::PyGraph,
+    source: usize,
+    weight_fn: Option<PyObject>,
+    default_weight: f64,
+) -> PyResult<DictMap<usize, Vec<Vec<usize>>>> {
+    if source >= graph.node_count() {
+        return Err(PyIndexError::new_err("Source node index out of range"));
+    }
+
+    let start = NodeIndex::new(source);
+
+    // Compute maximum edge index
+    let max_edge_index = graph
+        .graph
+        .edge_indices()
+        .map(|ei| ei.index())
+        .max()
+        .unwrap_or(0);
+    let mut edge_costs = vec![None; max_edge_index + 1];
+
+    // Precompute edge costs
+    for edge_index in graph.graph.edge_indices() {
+        let pos = edge_index.index();
+        let edge_weight = graph
+            .graph
+            .edge_weight(edge_index)
+            .ok_or_else(|| PyIndexError::new_err("Edge not found for index"))?;
+        let cost = if let Some(weight_fn) = &weight_fn {
+            let cost_fn = CostFn::try_from((Some(weight_fn.clone()), default_weight))?;
+            cost_fn.call(py, edge_weight)
+        } else {
+            edge_weight.extract::<f64>(py)
+        }?;
+        edge_costs[pos] = Some(cost);
+    }
+
+    // Define cost function using precomputed costs
+    let edge_cost_fn = move |edge_id: EdgeIndex| -> Result<f64, PyErr> {
+        let pos = edge_id.index();
+        edge_costs[pos].ok_or_else(|| PyTypeError::new_err("Edge cost not found"))
+    };
+
+    // Adapt for single_source_all_shortest_paths, which expects EdgeReference
+    let cost_fn =
+        move |edge: petgraph::stable_graph::EdgeReference<'_, Py<PyAny>>| -> Result<f64, PyErr> {
+            edge_cost_fn(edge.id())
+        };
+    // Compute all shortest paths
+    let all_paths = single_source_all_shortest_paths(&graph.graph, start, cost_fn)?;
+
+    // Convert paths to use usize indices
+    let mut paths_map = DictMap::new();
+    for (n, paths) in all_paths.into_iter() {
+        let node_key = n.index();
+        let paths_list = paths
+            .into_iter()
+            .map(|path| {
+                path.into_iter()
+                    .map(|node| node.index())
+                    .collect::<Vec<usize>>()
+            })
+            .collect::<Vec<Vec<usize>>>();
+        paths_map.insert(node_key, paths_list);
+    }
+
+    Ok(paths_map)
+}
+
+// Find all shortest paths from a single source node to all other nodes in a directed graph
+///
+/// This function will generate all possible shortest paths from a source node to all other nodes
+/// using Dijkstra's algorithm. If ``as_undirected`` is True, the directed graph will be treated as undirected.
+///
+/// :param PyDiGraph graph: The input directed graph.
+/// :param int source: The node index to find paths from.
+/// :param weight_fn: An optional weight function for an edge. It will accept
+///     a single argument, the edge's weight object and will return a float which
+///     will be used to represent the weight/cost of the edge.
+/// :param float default_weight: If ``weight_fn`` isn't specified this optional
+///     float value will be used for the weight/cost of each edge.
+/// :param bool as_undirected: If True, treat the directed graph as undirected.
+///
+/// :return: A dictionary where keys are node indices and values are lists of all shortest paths
+///     from the source to that node. Each path is a list of node indices starting with the source.
+/// :rtype: dict
+/// :raises ValueError: when an edge weight with NaN or negative value is provided.
+/// :raises IndexError: if the source node index is out of range.
+///
+/// .. warning::
+///     This function can return an exponential number of paths in certain graphs, especially with zero-weight edges.
+///     For most use cases, consider using `rustworkx.dijkstra_shortest_paths` for a single shortest path, which runs much faster.
+#[pyfunction]
+#[pyo3(
+    signature=(graph, source, weight_fn=None, default_weight=1.0, as_undirected=false),
+    text_signature = "(graph, source, /, weight_fn=None, default_weight=1.0, as_undirected=False)"
+)]
+pub fn digraph_single_source_all_shortest_paths(
+    py: Python,
+    graph: &digraph::PyDiGraph,
+    source: usize,
+    weight_fn: Option<PyObject>,
+    default_weight: f64,
+    as_undirected: bool,
+) -> PyResult<DictMap<usize, Vec<Vec<usize>>>> {
+    if source >= graph.node_count() {
+        return Err(PyIndexError::new_err("Source node index out of range"));
+    }
+
+    let start = NodeIndex::new(source);
+    // Precompute edge costs
+    let max_edge_index = graph
+        .graph
+        .edge_indices()
+        .map(|ei| ei.index())
+        .max()
+        .unwrap_or(0);
+    let mut edge_costs = vec![None; max_edge_index + 1];
+
+    let cost_fn = CostFn::try_from((weight_fn, default_weight))?;
+    for edge_index in graph.graph.edge_indices() {
+        let pos = edge_index.index();
+        let edge_weight = graph.graph.edge_weight(edge_index).unwrap();
+        let cost = cost_fn.call(py, edge_weight)?;
+        edge_costs[pos] = Some(cost);
+    }
+
+    // Define cost function using EdgeIndex
+    let edge_cost_fn = move |edge_id: EdgeIndex| -> Result<f64, PyErr> {
+        let pos = edge_id.index();
+        edge_costs[pos].ok_or_else(|| PyTypeError::new_err("Edge cost not found"))
+    };
+
+    // Adapter for single_source_all_shortest_paths, which expects EdgeReference
+    let cost_fn_closure =
+        move |edge: petgraph::stable_graph::EdgeReference<'_, Py<PyAny>>| -> Result<f64, PyErr> {
+            edge_cost_fn(edge.id())
+        };
+
+    let all_paths = if as_undirected {
+        let undirected_graph = graph.to_undirected(py, true, None)?;
+        single_source_all_shortest_paths(&undirected_graph.graph, start, cost_fn_closure)?
+    } else {
+        single_source_all_shortest_paths(&graph.graph, start, cost_fn_closure)?
+    };
+
+    let mut paths_map = DictMap::new();
+    for (n, paths) in all_paths.into_iter() {
+        let node_key = n.index();
+        let paths_list = paths
+            .into_iter()
+            .map(|path| {
+                path.into_iter()
+                    .map(|node| node.index())
+                    .collect::<Vec<usize>>()
+            })
+            .collect::<Vec<Vec<usize>>>();
+        paths_map.insert(node_key, paths_list);
+    }
+
+    Ok(paths_map)
 }
 
 /// Check if a digraph has a path between source and target nodes
