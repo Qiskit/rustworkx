@@ -3013,8 +3013,13 @@ impl PyDiGraph {
         Ok(res.index())
     }
 
-    /// Return a new PyDiGraph object for a subgraph of this graph and
-    /// a NodeMap object that maps the nodes of the subgraph to the nodes of the original graph.
+    /// Return a new PyDiGraph object for a subgraph of this graph and a NodeMap
+    /// object that maps the nodes of the subgraph to the nodes of the original graph.
+    ///
+    /// .. note::
+    ///     This method is identical to :meth:`.subgraph()` but includes a
+    ///     NodeMap object that maps the nodes of the subgraph to the nodes of
+    ///     the original graph.
     ///
     /// :param list[int] nodes: A list of node indices to generate the subgraph
     ///     from. If a node index is included that is not present in the graph
@@ -3077,6 +3082,10 @@ impl PyDiGraph {
     }
 
     /// Return a new PyDiGraph object for a subgraph of this graph.
+    ///
+    /// .. note::
+    ///     To return a NodeMap object that maps the nodes of the subgraph to
+    ///     the nodes of the original graph, use :meth:`.subgraph_with_nodemap()`.
     ///
     /// :param list[int] nodes: A list of node indices to generate the subgraph
     ///     from. If a node index is included that is not present in the graph
