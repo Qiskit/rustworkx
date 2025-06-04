@@ -1,0 +1,5 @@
+features:
+  - |
+      Added `single_source_all_shortest_paths` function to compute all shortest paths from a source node to all other nodes using Dijkstra's algorithm.
+      This function supports both PyGraph and PyDiGraph, with an option to treat directed graphs as undirected.
+      See the documentation for usage and performance warnings.
