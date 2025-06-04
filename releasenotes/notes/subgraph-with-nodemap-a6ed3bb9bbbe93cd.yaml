@@ -1,0 +1,7 @@
+---
+features:
+  - |
+    Added new :meth:`.subgraph_with_nodemap` method to the :class:`~.PyGraph` and
+    :class:`~.PyDiGraph` classes. This method extends the existing :meth:`.subgraph`
+    method by returning a :class:`~.NodeMap` object that maps the nodes of the
+    subgraph to the nodes of the original graph.
