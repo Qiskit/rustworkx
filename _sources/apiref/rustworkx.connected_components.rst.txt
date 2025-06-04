@@ -1,0 +1,6 @@
+﻿rustworkx.connected\_components
+===============================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: connected_components
