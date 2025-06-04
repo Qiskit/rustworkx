@@ -970,6 +970,21 @@ def graph_all_shortest_paths(
     weight_fn: Callable[[_T], float] | None = ...,
     default_weight: float = ...,
 ) -> list[list[int]]: ...
+def graph_single_source_all_shortest_paths(
+    graph: PyGraph[_S, _T],
+    source: int,
+    /,
+    weight_fn: Callable[[_T], float] | None = ...,
+    default_weight: float = 1.0,
+) -> dict[int, list[list[int]]]: ...
+def digraph_single_source_all_shortest_paths(
+    graph: PyDiGraph[_S, _T],
+    source: int,
+    /,
+    weight_fn: Callable[[_T], float] | None = ...,
+    default_weight: float = 1.0,
+    as_undirected: bool = False,
+) -> dict[int, list[list[int]]]: ...
 
 # Tensor Product
 
@@ -1305,6 +1320,9 @@ class PyGraph(Generic[_S, _T]):
     def remove_node(self, node: int, /) -> None: ...
     def remove_nodes_from(self, index_list: Iterable[int], /) -> None: ...
     def subgraph(self, nodes: Sequence[int], /, preserve_attrs: bool = ...) -> PyGraph[_S, _T]: ...
+    def subgraph_with_nodemap(
+        self, nodes: Sequence[int], /, preserve_attrs: bool = ...
+    ) -> tuple[PyGraph[_S, _T], NodeMap]: ...
     def substitute_node_with_subgraph(
         self,
         node: int,
@@ -1514,6 +1532,9 @@ class PyDiGraph(Generic[_S, _T]):
     def subgraph(
         self, nodes: Sequence[int], /, preserve_attrs: bool = ...
     ) -> PyDiGraph[_S, _T]: ...
+    def subgraph_with_nodemap(
+        self, nodes: Sequence[int], /, preserve_attrs: bool = ...
+    ) -> tuple[PyDiGraph[_S, _T], NodeMap]: ...
     def substitute_node_with_subgraph(
         self,
         node: int,
