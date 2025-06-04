@@ -1923,7 +1923,7 @@ impl PyGraph {
     ///     passed by reference so if you update (not replace) an object used
     ///     as the weight in graph or the subgraph it will also be updated in
     ///     the other.
-    /// :rtype: PyGraph
+    /// :rtype: tuple[PyGraph, NodeMap]
     ///
     #[pyo3(signature=(nodes, preserve_attrs=false), text_signature = "(self, nodes, /, preserve_attrs=False)")]
     pub fn subgraph_with_nodemap(
