@@ -389,12 +389,16 @@ pub fn graph_single_source_all_shortest_paths(
     }
 
     // Define cost function using precomputed costs
+    let edge_cost_fn = move |edge_id: EdgeIndex| -> Result<f64, PyErr> {
+        let pos = edge_id.index();
+        edge_costs[pos].ok_or_else(|| PyTypeError::new_err("Edge cost not found"))
+    };
+
+    // Adapt for single_source_all_shortest_paths, which expects EdgeReference
     let cost_fn =
         move |edge: petgraph::stable_graph::EdgeReference<'_, Py<PyAny>>| -> Result<f64, PyErr> {
-            let pos = edge.id().index();
-            edge_costs[pos].ok_or_else(|| PyTypeError::new_err("Edge cost not found"))
+            edge_cost_fn(edge.id())
         };
-
     // Compute all shortest paths
     let all_paths = single_source_all_shortest_paths(&graph.graph, start, cost_fn)?;
 
@@ -474,11 +478,16 @@ pub fn digraph_single_source_all_shortest_paths(
         edge_costs[pos] = Some(cost);
     }
 
-    // Define cost function using precomputed costs
+    // Define cost function using EdgeIndex
+    let edge_cost_fn = move |edge_id: EdgeIndex| -> Result<f64, PyErr> {
+        let pos = edge_id.index();
+        edge_costs[pos].ok_or_else(|| PyTypeError::new_err("Edge cost not found"))
+    };
+
+    // Adapter for single_source_all_shortest_paths, which expects EdgeReference
     let cost_fn_closure =
         move |edge: petgraph::stable_graph::EdgeReference<'_, Py<PyAny>>| -> Result<f64, PyErr> {
-            let pos = edge.id().index();
-            edge_costs[pos].ok_or_else(|| PyTypeError::new_err("Edge cost not found"))
+            edge_cost_fn(edge.id())
         };
 
     let all_paths = if as_undirected {

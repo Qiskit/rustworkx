@@ -2259,7 +2259,7 @@ def single_source_all_shortest_paths(
     This function will generate all possible shortest paths from a source node to all other nodes
     using Dijkstra's algorithm. If ``as_undirected`` is True for directed graphs, it will be treated as undirected.
 
-    :param graph: The input graph (PyGraph or PyDiGraph).
+    :param graph: The input graph :class:`~rustworkx.PyGraph` or :class:`~rustworkx.PyDiGraph`.
     :param int source: The node index to find paths from.
     :param weight_fn: An optional weight function for an edge. It will accept
         a single argument, the edge's weight object and will return a float which

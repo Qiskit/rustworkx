@@ -4,7 +4,6 @@ use fixedbitset::FixedBitSet;
 use petgraph::visit::{EdgeRef, IntoEdgesDirected, IntoNodeIdentifiers, NodeIndexable, Visitable};
 use petgraph::Direction::Incoming;
 use std::hash::Hash;
-
 type AllShortestPathsMap<N> = DictMap<N, Vec<Vec<N>>>;
 pub fn single_source_all_shortest_paths<G, F, K, E>(
     graph: G,

@@ -396,6 +396,13 @@ def all_shortest_paths(
     default_weight: float = ...,
     as_undirected: bool = ...,
 ) -> list[list[int]]: ...
+def single_source_all_shortest_paths(
+    graph: PyGraph[_S, _T] | PyDiGraph[_S, _T],
+    source: int,
+    weight_fn: Callable[[_T], float] | None = ...,
+    default_weight: float = 1.0,
+    as_undirected: bool = False,
+) -> dict[int, list[list[int]]]: ...
 def dfs_edges(graph: PyGraph[_S, _T] | PyDiGraph[_S, _T], source: int | None = ...) -> EdgeList: ...
 @overload
 def is_isomorphic(
