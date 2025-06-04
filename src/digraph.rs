@@ -3013,7 +3013,13 @@ impl PyDiGraph {
         Ok(res.index())
     }
 
-    /// Return a new PyDiGraph object for a subgraph of this graph
+    /// Return a new PyDiGraph object for a subgraph of this graph and a NodeMap
+    /// object that maps the nodes of the subgraph to the nodes of the original graph.
+    ///
+    /// .. note::
+    ///     This method is identical to :meth:`.subgraph()` but includes a
+    ///     NodeMap object that maps the nodes of the subgraph to the nodes of
+    ///     the original graph.
     ///
     /// :param list[int] nodes: A list of node indices to generate the subgraph
     ///     from. If a node index is included that is not present in the graph
@@ -3023,24 +3029,33 @@ impl PyDiGraph {
     ///     subgraph. By default this is set to ``False`` and the :attr:`~.PyDiGraph.attrs`
     ///     attribute will be ``None`` in the subgraph.
     ///
-    /// :returns: A new PyDiGraph object representing a subgraph of this graph.
+    /// :returns: A tuple containing a new PyDiGraph object representing a subgraph of this graph
+    ///     and a NodeMap object that maps the nodes of the subgraph to the nodes of the original graph.
     ///     It is worth noting that node and edge weight/data payloads are
     ///     passed by reference so if you update (not replace) an object used
     ///     as the weight in graph or the subgraph it will also be updated in
-    ///     the other. Node and edge the indices will be recreated for the subgraph for compactness.
-    ///     Therefore, do not access data using the original graph's indices.
-    /// :rtype: PyGraph
+    ///     the other.
+    /// :rtype: tuple[PyDiGraph, NodeMap]
     ///
-    #[pyo3(signature=(nodes, preserve_attrs=false),text_signature = "(self, nodes, /, preserve_attrs=False)")]
-    pub fn subgraph(&self, py: Python, nodes: Vec<usize>, preserve_attrs: bool) -> PyDiGraph {
+    #[pyo3(signature=(nodes, preserve_attrs=false), text_signature = "(self, nodes, /, preserve_attrs=False)")]
+    pub fn subgraph_with_nodemap(
+        &self,
+        py: Python,
+        nodes: Vec<usize>,
+        preserve_attrs: bool,
+    ) -> (PyDiGraph, NodeMap) {
         let node_set: HashSet<usize> = nodes.iter().cloned().collect();
+        // mapping from original node index to new node index
         let mut node_map: HashMap<NodeIndex, NodeIndex> = HashMap::with_capacity(nodes.len());
+        // mapping from new node index to original node index
+        let mut node_dict: DictMap<usize, usize> = DictMap::with_capacity(nodes.len());
         let node_filter = |node: NodeIndex| -> bool { node_set.contains(&node.index()) };
         let mut out_graph = StablePyGraph::<Directed>::new();
         let filtered = NodeFiltered(&self.graph, node_filter);
         for node in filtered.node_references() {
             let new_node = out_graph.add_node(node.1.clone_ref(py));
             node_map.insert(node.0, new_node);
+            node_dict.insert(new_node.index(), node.0.index());
         }
         for edge in filtered.edge_references() {
             let new_source = *node_map.get(&edge.source()).unwrap();
@@ -3052,14 +3067,45 @@ impl PyDiGraph {
         } else {
             py.None()
         };
-        PyDiGraph {
+        let node_map = NodeMap {
+            node_map: node_dict,
+        };
+        let subgraph = PyDiGraph {
             graph: out_graph,
             node_removed: false,
             cycle_state: algo::DfsSpace::default(),
             check_cycle: self.check_cycle,
             multigraph: self.multigraph,
             attrs,
-        }
+        };
+        (subgraph, node_map)
+    }
+
+    /// Return a new PyDiGraph object for a subgraph of this graph.
+    ///
+    /// .. note::
+    ///     To return a NodeMap object that maps the nodes of the subgraph to
+    ///     the nodes of the original graph, use :meth:`.subgraph_with_nodemap()`.
+    ///
+    /// :param list[int] nodes: A list of node indices to generate the subgraph
+    ///     from. If a node index is included that is not present in the graph
+    ///     it will silently be ignored.
+    /// :param bool preserve_attrs: If set to the True the attributes of the PyDiGraph
+    ///     will be copied by reference to be the attributes of the output
+    ///     subgraph. By default this is set to False and the :attr:`~.PyDiGraph.attrs`
+    ///     attribute will be ``None`` in the subgraph.
+    ///
+    /// :returns: A new PyDiGraph object representing a subgraph of this graph.
+    ///     It is worth noting that node and edge weight/data payloads are
+    ///     passed by reference so if you update (not replace) an object used
+    ///     as the weight in graph or the subgraph it will also be updated in
+    ///     the other.
+    /// :rtype: PyDiGraph
+    ///
+    #[pyo3(signature=(nodes, preserve_attrs=false), text_signature = "(self, nodes, /, preserve_attrs=False)")]
+    pub fn subgraph(&self, py: Python, nodes: Vec<usize>, preserve_attrs: bool) -> PyDiGraph {
+        let (subgraph, _) = self.subgraph_with_nodemap(py, nodes, preserve_attrs);
+        subgraph
     }
 
     /// Return a new PyDiGraph object for an edge induced subgraph of this graph

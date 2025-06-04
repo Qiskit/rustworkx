@@ -237,6 +237,12 @@ from .rustworkx import find_negative_cycle as find_negative_cycle
 from .rustworkx import negative_edge_cycle as negative_edge_cycle
 from .rustworkx import digraph_all_shortest_paths as digraph_all_shortest_paths
 from .rustworkx import graph_all_shortest_paths as graph_all_shortest_paths
+from .rustworkx import (
+    graph_single_source_all_shortest_paths as graph_single_source_all_shortest_paths,
+)
+from .rustworkx import (
+    digraph_single_source_all_shortest_paths as digraph_single_source_all_shortest_paths,
+)
 from .rustworkx import digraph_tensor_product as digraph_tensor_product
 from .rustworkx import graph_tensor_product as graph_tensor_product
 from .rustworkx import graph_token_swapper as graph_token_swapper
@@ -390,6 +396,13 @@ def all_shortest_paths(
     default_weight: float = ...,
     as_undirected: bool = ...,
 ) -> list[list[int]]: ...
+def single_source_all_shortest_paths(
+    graph: PyGraph[_S, _T] | PyDiGraph[_S, _T],
+    source: int,
+    weight_fn: Callable[[_T], float] | None = ...,
+    default_weight: float = 1.0,
+    as_undirected: bool = False,
+) -> dict[int, list[list[int]]]: ...
 def dfs_edges(graph: PyGraph[_S, _T] | PyDiGraph[_S, _T], source: int | None = ...) -> EdgeList: ...
 @overload
 def is_isomorphic(
