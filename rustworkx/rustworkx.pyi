@@ -970,6 +970,21 @@ def graph_all_shortest_paths(
     weight_fn: Callable[[_T], float] | None = ...,
     default_weight: float = ...,
 ) -> list[list[int]]: ...
+def graph_single_source_all_shortest_paths(
+    graph: PyGraph[_S, _T],
+    source: int,
+    /,
+    weight_fn: Callable[[_T], float] | None = ...,
+    default_weight: float = 1.0,
+) -> dict[int, list[list[int]]]: ...
+def digraph_single_source_all_shortest_paths(
+    graph: PyDiGraph[_S, _T],
+    source: int,
+    /,
+    weight_fn: Callable[[_T], float] | None = ...,
+    default_weight: float = 1.0,
+    as_undirected: bool = False,
+) -> dict[int, list[list[int]]]: ...
 
 # Tensor Product
 
