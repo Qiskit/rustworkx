@@ -74,16 +74,16 @@ source.
      - :ref:`tier-1`
      - Distributions compatible with the `manylinux 2014`_ packaging specification
    * - Linux
-     - i686 
-     - :ref:`tier-2` (Python < 3.10), :ref:`tier-3` (Python >= 3.10)
+     - aarch64
+     - :ref:`tier-1`
      - Distributions compatible with the `manylinux 2014`_ packaging specification
    * - Linux
-     - aarch64
-     - :ref:`tier-2`
+     - i686 
+     - :ref:`tier-4`
      - Distributions compatible with the `manylinux 2014`_ packaging specification
    * - Linux
      - pp64le
-     - :ref:`tier-3`
+     - :ref:`tier-4`
      - Distributions compatible with the `manylinux 2014`_ packaging specification
    * - Linux
      - s390x
@@ -91,11 +91,11 @@ source.
      - Distributions compatible with the `manylinux 2014`_ packaging specification
    * - Linux (musl)
      - x86_64
-     - :ref:`tier-3`
+     - :ref:`tier-2`
      -
    * - Linux (musl)
      - aarch64
-     - :ref:`tier-4`
+     - :ref:`tier-2`
      - 
    * - macOS (10.12 or newer)
      - x86_64
@@ -111,7 +111,7 @@ source.
      -
    * - Windows 32bit 
      - i686 or x86_64
-     - :ref:`tier-2` (Python < 3.10), :ref:`tier-3` (Python >= 3.10)
+     - :ref:`tier-4`
      -
 
 
