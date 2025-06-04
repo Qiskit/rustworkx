@@ -153,7 +153,7 @@ class TestSubgraph(unittest.TestCase):
         graph = rustworkx.PyDiGraph()
         graph.add_nodes_from(list(range(6)))
         graph.add_edges_from([(0, 1, 1), (1, 2, 2), (2, 3, 3), (3, 4, 4), (4, 5, 5)])
-        
+
         # Test basic subgraph with node mapping
         subgraph, node_map = graph.subgraph_with_nodemap([0, 2, 4])
         self.assertEqual([], subgraph.weighted_edge_list())  # No edges between disconnected nodes
@@ -170,25 +170,25 @@ class TestSubgraph(unittest.TestCase):
         graph = rustworkx.PyDiGraph()
         graph.add_nodes_from(["a", "b", "c"])
         graph.add_edges_from([(0, 1, 1), (1, 2, 2)])
-        
+
         # Test empty node list
         subgraph, node_map = graph.subgraph_with_nodemap([])
         self.assertEqual([], subgraph.weighted_edge_list())
         self.assertEqual(0, len(subgraph))
         self.assertEqual(dict(node_map), {})
-        
+
         # Test invalid node indices (should be silently ignored)
         subgraph, node_map = graph.subgraph_with_nodemap([42, 100])
         self.assertEqual([], subgraph.weighted_edge_list())
         self.assertEqual(0, len(subgraph))
         self.assertEqual(dict(node_map), {})
-        
+
         # Test single node (no edges in subgraph)
         subgraph, node_map = graph.subgraph_with_nodemap([1])
         self.assertEqual([], subgraph.weighted_edge_list())
         self.assertEqual(["b"], subgraph.nodes())
         self.assertEqual(dict(node_map), {0: 1})
-        
+
         # Test all nodes
         subgraph, node_map = graph.subgraph_with_nodemap([0, 1, 2])
         self.assertEqual([(0, 1, 1), (1, 2, 2)], subgraph.weighted_edge_list())
@@ -199,11 +199,11 @@ class TestSubgraph(unittest.TestCase):
         graph = rustworkx.PyDiGraph(attrs="test_attrs")
         graph.add_nodes_from(["a", "b", "c"])
         graph.add_edges_from([(0, 1, 1), (1, 2, 2)])
-        
+
         # Test preserve_attrs=False (default)
         subgraph, node_map = graph.subgraph_with_nodemap([0, 1])
         self.assertIsNone(subgraph.attrs)
-        
+
         # Test preserve_attrs=True
         subgraph2, node_map2 = graph.subgraph_with_nodemap([0, 1], preserve_attrs=True)
         self.assertEqual(graph.attrs, subgraph2.attrs)

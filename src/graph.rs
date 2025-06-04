@@ -1926,7 +1926,12 @@ impl PyGraph {
     /// :rtype: PyGraph
     ///
     #[pyo3(signature=(nodes, preserve_attrs=false), text_signature = "(self, nodes, /, preserve_attrs=False)")]
-    pub fn subgraph_with_nodemap(&self, py: Python, nodes: Vec<usize>, preserve_attrs: bool) -> (PyGraph, NodeMap) {
+    pub fn subgraph_with_nodemap(
+        &self,
+        py: Python,
+        nodes: Vec<usize>,
+        preserve_attrs: bool,
+    ) -> (PyGraph, NodeMap) {
         let node_set: HashSet<usize> = nodes.iter().cloned().collect();
         // mapping from original node index to new node index
         let mut node_map: HashMap<NodeIndex, NodeIndex> = HashMap::with_capacity(nodes.len());
@@ -1950,7 +1955,9 @@ impl PyGraph {
         } else {
             py.None()
         };
-        let node_map = NodeMap { node_map: node_dict };
+        let node_map = NodeMap {
+            node_map: node_dict,
+        };
         let subgraph = PyGraph {
             graph: out_graph,
             node_removed: false,
