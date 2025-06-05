@@ -1,8 +1,4 @@
 ---
-prelude: >
-  Added a new method to check if contracting a set of nodes in a directed graph would introduce a cycle.
 features:
   - |
     Exposed the `can_contract_without_cycle` method on `PyDiGraph` object. This method enables users to check, prior to contraction, whether merging a set of nodes into a single node would introduce a cycle in the graph. This is especially useful for applications that require maintaining acyclic properties, such as working with DAGs.
-fixes: []
-other: []
