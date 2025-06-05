@@ -516,6 +516,7 @@ where
 /// ```rust
 /// use petgraph::stable_graph::StableDiGraph;
 /// use indexmap::IndexSet;
+/// use foldhash::fast::RandomState;
 /// use rustworkx_core::graph_ext::contraction::can_contract_without_cycle;
 ///
 /// // Create a simple DAG: a -> b -> c
@@ -527,7 +528,7 @@ where
 /// graph.add_edge(b, c, ());
 ///
 /// // Try to contract nodes b and c
-/// let mut nodes = IndexSet::new();
+/// let mut nodes = IndexSet::with_hasher(RandomState::default());
 /// nodes.insert(b);
 /// nodes.insert(c);
 ///
