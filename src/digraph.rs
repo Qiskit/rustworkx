@@ -44,7 +44,7 @@ use numpy::PyReadonlyArray2;
 use petgraph::algo;
 use petgraph::graph::{EdgeIndex, NodeIndex};
 use petgraph::prelude::*;
-use rustworkx_core::graph_ext::contraction::can_contract_without_cycle;
+use rustworkx_core::graph_ext::contraction::can_contract;
 
 use crate::RxPyResult;
 use petgraph::visit::{
@@ -3023,7 +3023,7 @@ impl PyDiGraph {
     pub fn can_contract_without_cycle(&self, nodes: Vec<usize>) -> bool {
         let index_set: IndexSet<NodeIndex, RandomState> =
             nodes.into_iter().map(NodeIndex::new).collect();
-        can_contract_without_cycle(&self.graph, &index_set)
+        can_contract(&self.graph, &index_set)
     }
 
     /// Return a new PyDiGraph object for a subgraph of this graph and a NodeMap

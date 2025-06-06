@@ -109,7 +109,7 @@ where
         I: IntoIterator<Item = Self::NodeId>,
     {
         let nodes = IndexSet::from_iter(nodes);
-        if check_cycle && !can_contract_without_cycle(self.deref(), &nodes) {
+        if check_cycle && !can_contract(self.deref(), &nodes) {
             return Err(ContractError::DAGWouldCycle);
         }
         Ok(contract_stable(self, nodes, obj, NoCallback::None).unwrap())
@@ -133,7 +133,7 @@ where
         I: IntoIterator<Item = Self::NodeId>,
     {
         let nodes = IndexSet::from_iter(nodes);
-        if check_cycle && !can_contract_without_cycle(self.deref(), &nodes) {
+        if check_cycle && !can_contract(self.deref(), &nodes) {
             return Err(ContractError::DAGWouldCycle);
         }
         Ok(contract_stable(self, nodes, obj, NoCallback::None).unwrap())
@@ -223,7 +223,7 @@ where
         F: FnMut(&Self::EdgeWeight, &Self::EdgeWeight) -> Result<Self::EdgeWeight, C>,
     {
         let nodes = IndexSet::from_iter(nodes);
-        if check_cycle && !can_contract_without_cycle(self.deref(), &nodes) {
+        if check_cycle && !can_contract(self.deref(), &nodes) {
             return Err(ContractSimpleError::DAGWouldCycle);
         }
         contract_stable(self, nodes, weight, Some(weight_combo_fn))
@@ -250,7 +250,7 @@ where
         F: FnMut(&Self::EdgeWeight, &Self::EdgeWeight) -> Result<Self::EdgeWeight, C>,
     {
         let nodes = IndexSet::from_iter(nodes);
-        if check_cycle && !can_contract_without_cycle(self.deref(), &nodes) {
+        if check_cycle && !can_contract(self.deref(), &nodes) {
             return Err(ContractSimpleError::DAGWouldCycle);
         }
         contract_stable(self, nodes, weight, Some(weight_combo_fn))
@@ -517,7 +517,7 @@ where
 /// use petgraph::stable_graph::StableDiGraph;
 /// use indexmap::IndexSet;
 /// use foldhash::fast::RandomState;
-/// use rustworkx_core::graph_ext::contraction::can_contract_without_cycle;
+/// use rustworkx_core::graph_ext::contraction::can_contract;
 ///
 /// // Create a simple DAG: a -> b -> c
 /// let mut graph = StableDiGraph::<&str, ()>::default();
@@ -532,13 +532,10 @@ where
 /// nodes.insert(b);
 /// nodes.insert(c);
 ///
-/// let can_contract = can_contract_without_cycle(&graph, &nodes);
+/// let can_contract = can_contract(&graph, &nodes);
 /// assert!(can_contract); // true: contracting b and c does not introduce a cycle
 /// ```
-pub fn can_contract_without_cycle<G>(
-    graph: G,
-    nodes: &IndexSet<G::NodeId, foldhash::fast::RandomState>,
-) -> bool
+pub fn can_contract<G>(graph: G, nodes: &IndexSet<G::NodeId, foldhash::fast::RandomState>) -> bool
 where
     G: Data + Visitable + IntoEdgesDirected,
     G::NodeId: Eq + Hash,

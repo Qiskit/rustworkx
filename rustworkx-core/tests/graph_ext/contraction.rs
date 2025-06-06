@@ -20,7 +20,7 @@ use petgraph::visit::{
     Data, EdgeCount, EdgeRef, GraphBase, IntoEdgeReferences, IntoNodeIdentifiers,
 };
 use rustworkx_core::err::ContractError;
-use rustworkx_core::graph_ext::contraction::can_contract_without_cycle;
+use rustworkx_core::graph_ext::contraction::can_contract;
 use rustworkx_core::graph_ext::*;
 use std::convert::Infallible;
 use std::fmt::Debug;
@@ -419,7 +419,7 @@ fn test_can_contract_without_cycle_true() {
     nodes.insert(b);
     nodes.insert(c);
 
-    assert!(can_contract_without_cycle(&graph, &nodes));
+    assert!(can_contract(&graph, &nodes));
 }
 
 #[test]
@@ -436,5 +436,5 @@ fn test_can_contract_without_cycle_false() {
     nodes.insert(a);
     nodes.insert(c);
 
-    assert!(!can_contract_without_cycle(&graph, &nodes));
+    assert!(!can_contract(&graph, &nodes));
 }
