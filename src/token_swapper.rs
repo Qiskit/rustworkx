@@ -28,7 +28,8 @@ use rustworkx_core::token_swapper;
 /// The inputs are a partial ``mapping`` to be implemented in swaps, and the number of ``trials``
 /// to perform the mapping. It's minimized over the trials.
 ///
-/// It returns a list of tuples representing the swaps to perform.
+/// It returns a list of tuples representing the swaps to perform, where each tuple contains
+/// the node identifiers (integers) of the nodes to swap.
 ///
 /// :param PyGraph graph: The input graph
 /// :param dict[int: int] mapping: Map of (node, token)
@@ -44,8 +45,8 @@ use rustworkx_core::token_swapper;
 /// the ``RAYON_NUM_THREADS`` environment variable. For example, setting ``RAYON_NUM_THREADS=4``
 /// would limit the thread pool to 4 threads.
 ///
-/// :returns: A list of tuples which are the swaps to be applied to the mapping to rearrange
-///      the tokens.
+/// :returns: A list of tuples containing the node identifiers (integers) of the swaps to be
+///      applied to the mapping to rearrange the tokens.
 /// :rtype: EdgeList
 #[pyfunction]
 #[pyo3(
