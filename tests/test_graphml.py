@@ -10,6 +10,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import math
 import unittest
 import tempfile
 import gzip
@@ -98,7 +99,42 @@ class TestGraphML(unittest.TestCase):
                 ("n0", "n1", {"fidelity": 0.98}),
                 ("n0", "n2", {"fidelity": 0.95}),
             ]
-            self.assertGraphEqual(graph, nodes, edges, directed=False)
+            self.assertGraphEqual(graph, nodes, edges, attrs={"id": "G"}, directed=False)
+
+    def test_write(self):
+        graph_xml = self.graphml_xml_example()
+        with tempfile.NamedTemporaryFile("wt") as fd:
+            fd.write(graph_xml)
+            fd.flush()
+            graphml = rustworkx.read_graphml(fd.name)
+        graph = graphml[0]
+        with tempfile.NamedTemporaryFile("wt") as fd:
+            keys = [
+                ("d0", rustworkx.Domain.Node, "color", rustworkx.Type.String, "yellow"),
+                ("d1", rustworkx.Domain.Edge, "fidelity", rustworkx.Type.Float, 0.95),
+            ]
+            rustworkx.write_graphml([graph], keys, fd.name)
+            graphml = rustworkx.read_graphml(fd.name)
+        graph_reread = graphml[0]
+        edges = [(graph[s]["id"], graph[t]["id"], weight) for s, t, weight in graph.weighted_edge_list()]
+        self.assertGraphEqual(graph_reread, graph.nodes(), edges, attrs={"id": "G"}, directed=False)
+
+    def test_write_with_keys(self):
+        graph_xml = self.graphml_xml_example()
+        with tempfile.NamedTemporaryFile("wt") as fd:
+            fd.write(graph_xml)
+            fd.flush()
+            keys, graphml = rustworkx.read_graphml_with_keys(fd.name)
+        assert keys[0] == ("d0", rustworkx.Domain.Node, "color", rustworkx.Type.String, "yellow")
+        assert keys[1][0:4] == ("d1", rustworkx.Domain.Edge, "fidelity", rustworkx.Type.Float)
+        assert math.isclose(keys[1][4], 0.95, rel_tol=1e-7)
+        graph = graphml[0]
+        with tempfile.NamedTemporaryFile("wt") as fd:
+            rustworkx.write_graphml([graph], keys, fd.name)
+            graphml = rustworkx.read_graphml(fd.name)
+        graph_reread = graphml[0]
+        edges = [(graph[s]["id"], graph[t]["id"], weight) for s, t, weight in graph.weighted_edge_list()]
+        self.assertGraphEqual(graph_reread, graph.nodes(), edges, attrs={"id": "G"}, directed=False)
 
     def test_gzipped(self):
         graph_xml = self.graphml_xml_example()
@@ -121,7 +157,7 @@ class TestGraphML(unittest.TestCase):
                 ("n0", "n1", {"fidelity": 0.98}),
                 ("n0", "n2", {"fidelity": 0.95}),
             ]
-            self.assertGraphEqual(graph, nodes, edges, directed=False)
+            self.assertGraphEqual(graph, nodes, edges, attrs={"id": "G"}, directed=False)
 
     def test_gzipped_force(self):
         graph_xml = self.graphml_xml_example()
@@ -145,10 +181,29 @@ class TestGraphML(unittest.TestCase):
                 ("n0", "n1", {"fidelity": 0.98}),
                 ("n0", "n2", {"fidelity": 0.95}),
             ]
-            self.assertGraphEqual(graph, nodes, edges, directed=False)
+            self.assertGraphEqual(graph, nodes, edges, attrs={"id": "G"}, directed=False)
 
-    def test_multiple_graphs_in_single_file(self):
-        graph_xml = self.HEADER.format(
+    def test_write_gzipped(self):
+        graph_xml = self.graphml_xml_example()
+        with tempfile.NamedTemporaryFile("wt") as fd:
+            fd.write(graph_xml)
+            fd.flush()
+            graphml = rustworkx.read_graphml(fd.name)
+        graph = graphml[0]
+        with tempfile.NamedTemporaryFile("wt") as fd:
+            keys = [
+                ("d0", rustworkx.Domain.Node, "color", rustworkx.Type.String, "yellow"),
+                ("d1", rustworkx.Domain.Edge, "fidelity", rustworkx.Type.Float, 0.95),
+            ]
+            newname = f"{fd.name}.gz"
+            rustworkx.write_graphml([graph], keys, newname)
+            graphml = rustworkx.read_graphml(newname)
+        graph_reread = graphml[0]
+        edges = [(graph[s]["id"], graph[t]["id"], weight) for s, t, weight in graph.weighted_edge_list()]
+        self.assertGraphEqual(graph_reread, graph.nodes(), edges, attrs={"id": "G"}, directed=False)
+
+    def graphml_xml_example_multiple_graphs(self):
+        return self.HEADER.format(
             """
             <key id="d0" for="node" attr.name="color" attr.type="string">
             <default>yellow</default>
@@ -175,6 +230,9 @@ class TestGraphML(unittest.TestCase):
             """
         )
 
+    def test_multiple_graphs_in_single_file(self):
+        graph_xml = self.graphml_xml_example_multiple_graphs()
+
         with tempfile.NamedTemporaryFile("wt") as fd:
             fd.write(graph_xml)
             fd.flush()
@@ -188,7 +246,7 @@ class TestGraphML(unittest.TestCase):
             edges = [
                 ("n0", "n1", {"id": "e01", "fidelity": 0.98}),
             ]
-            self.assertGraphEqual(graph, nodes, edges, directed=False)
+            self.assertGraphEqual(graph, nodes, edges, attrs={"id": "G"}, directed=False)
             graph = graphml[1]
             nodes = [
                 {"id": "n0", "color": "red"},
@@ -197,7 +255,32 @@ class TestGraphML(unittest.TestCase):
             edges = [
                 ("n0", "n1", {"id": "e01", "fidelity": 0.95}),
             ]
-            self.assertGraphEqual(graph, nodes, edges, directed=True)
+            self.assertGraphEqual(graph, nodes, edges, attrs={"id": "H"}, directed=True)
+
+    def test_write_multiple_graphs(self):
+        graph_xml = self.graphml_xml_example_multiple_graphs()
+        with tempfile.NamedTemporaryFile("wt") as fd:
+            fd.write(graph_xml)
+            fd.flush()
+            graphml = rustworkx.read_graphml(fd.name)
+        with tempfile.NamedTemporaryFile("wt") as fd:
+            keys = [
+                ("d0", rustworkx.Domain.Node, "color", rustworkx.Type.String, "yellow"),
+                ("d1", rustworkx.Domain.Edge, "fidelity", rustworkx.Type.Float, 0.95),
+            ]
+            rustworkx.write_graphml(graphml, keys, fd.name)
+            graphml_reread = rustworkx.read_graphml(fd.name)
+        for graph, graph_reread in zip(graphml, graphml_reread):
+            edges = [
+                (graph[s]["id"], graph[t]["id"], weight) for s, t, weight in graph.weighted_edge_list()
+            ]
+            self.assertGraphEqual(
+                graph_reread,
+                graph.nodes(),
+                edges,
+                attrs=graph.attrs,
+                directed=isinstance(graph, rustworkx.PyDiGraph),
+            )
 
     def test_key_for_graph(self):
         graph_xml = self.HEADER.format(
@@ -217,7 +300,31 @@ class TestGraphML(unittest.TestCase):
             graph = graphml[0]
             nodes = [{"id": "n0"}]
             edges = []
-            self.assertGraphEqual(graph, nodes, edges, directed=True, attrs={"test": True})
+            self.assertGraphEqual(graph, nodes, edges, directed=True, attrs={"id": "G", "test": True})
+
+    def test_write_key_for_graph(self):
+        graph_xml = self.HEADER.format(
+            """
+            <key id="d0" for="graph" attr.name="test" attr.type="boolean"/>
+            <graph id="G" edgedefault="directed">
+            <data key="d0">true</data>
+            <node id="n0"/>
+            </graph>
+            """
+        )
+
+        with tempfile.NamedTemporaryFile("wt") as fd:
+            fd.write(graph_xml)
+            fd.flush()
+            keys, graphml = rustworkx.read_graphml_with_keys(fd.name)
+        assert keys[0] == ("d0", rustworkx.Domain.Graph, "test", rustworkx.Type.Boolean, None)
+        with tempfile.NamedTemporaryFile("wt") as fd:
+            rustworkx.write_graphml(graphml, keys, fd.name)
+            graphml = rustworkx.read_graphml(fd.name)
+        graph = graphml[0]
+        nodes = [{"id": "n0"}]
+        edges = []
+        self.assertGraphEqual(graph, nodes, edges, directed=True, attrs={"id": "G", "test": True})
 
     def test_key_for_all(self):
         graph_xml = self.HEADER.format(
@@ -249,8 +356,45 @@ class TestGraphML(unittest.TestCase):
             ]
             edges = [("n0", "n1", {"test": "I'm an edge."})]
             self.assertGraphEqual(
-                graph, nodes, edges, directed=True, attrs={"test": "I'm a graph."}
+                graph, nodes, edges, directed=True, attrs={"id": "G", "test": "I'm a graph."}
             )
+
+    def test_write_key_for_all(self):
+        graph_xml = self.HEADER.format(
+            """
+            <key id="d0" for="all" attr.name="test" attr.type="string"/>
+            <graph id="G" edgedefault="directed">
+            <data key="d0">I'm a graph.</data>
+            <node id="n0">
+                <data key="d0">I'm a node.</data>
+            </node>
+            <node id="n1">
+                <data key="d0">I'm a node.</data>
+            </node>
+            <edge source="n0" target="n1">
+                <data key="d0">I'm an edge.</data>
+            </edge>
+            </graph>
+            """
+        )
+
+        with tempfile.NamedTemporaryFile("wt") as fd:
+            fd.write(graph_xml)
+            fd.flush()
+            keys, graphml = rustworkx.read_graphml_with_keys(fd.name)
+        assert keys[0] == ("d0", rustworkx.Domain.All, "test", rustworkx.Type.String, None)
+        with tempfile.NamedTemporaryFile("wt") as fd:
+            rustworkx.write_graphml(graphml, keys, fd.name)
+            graphml = rustworkx.read_graphml(fd.name)
+        graph = graphml[0]
+        nodes = [
+            {"id": "n0", "test": "I'm a node."},
+            {"id": "n1", "test": "I'm a node."},
+        ]
+        edges = [("n0", "n1", {"test": "I'm an edge."})]
+        self.assertGraphEqual(
+            graph, nodes, edges, directed=True, attrs={"id": "G", "test": "I'm a graph."}
+        )
 
     def test_key_default_undefined(self):
         graph_xml = self.HEADER.format(
@@ -275,7 +419,36 @@ class TestGraphML(unittest.TestCase):
                 {"id": "n1", "test": None},
             ]
             edges = []
-            self.assertGraphEqual(graph, nodes, edges, directed=True)
+            self.assertGraphEqual(graph, nodes, edges, directed=True, attrs={"id": "G"})
+
+    def test_write_key_undefined(self):
+        graph_xml = self.HEADER.format(
+            """
+            <key id="d0" for="node" attr.name="test" attr.type="boolean"/>
+            <graph id="G" edgedefault="directed">
+            <node id="n0">
+                <data key="d0">true</data>
+            </node>
+            <node id="n1"/>
+            </graph>
+            """
+        )
+
+        with tempfile.NamedTemporaryFile("wt") as fd:
+            fd.write(graph_xml)
+            fd.flush()
+            keys, graphml = rustworkx.read_graphml_with_keys(fd.name)
+        assert keys[0] == ("d0", rustworkx.Domain.Node, "test", rustworkx.Type.Boolean, None)
+        with tempfile.NamedTemporaryFile("wt") as fd:
+            rustworkx.write_graphml(graphml, keys, fd.name)
+            graphml = rustworkx.read_graphml(fd.name)
+        graph = graphml[0]
+        nodes = [
+            {"id": "n0", "test": True},
+            {"id": "n1", "test": None},
+        ]
+        edges = []
+        self.assertGraphEqual(graph, nodes, edges, directed=True, attrs={"id": "G"})
 
     def test_bool(self):
         graph_xml = self.HEADER.format(
@@ -306,7 +479,7 @@ class TestGraphML(unittest.TestCase):
                 {"id": "n2", "test": False},
             ]
             edges = []
-            self.assertGraphEqual(graph, nodes, edges, directed=True)
+            self.assertGraphEqual(graph, nodes, edges, directed=True, attrs={"id": "G"})
 
     def test_int(self):
         graph_xml = self.HEADER.format(
@@ -337,7 +510,7 @@ class TestGraphML(unittest.TestCase):
                 {"id": "n2", "test": 42},
             ]
             edges = []
-            self.assertGraphEqual(graph, nodes, edges, directed=True)
+            self.assertGraphEqual(graph, nodes, edges, directed=True, attrs={"id": "G"})
 
     def test_float(self):
         graph_xml = self.HEADER.format(
@@ -368,7 +541,7 @@ class TestGraphML(unittest.TestCase):
                 {"id": "n2", "test": 4.2},
             ]
             edges = []
-            self.assertGraphEqual(graph, nodes, edges, directed=True)
+            self.assertGraphEqual(graph, nodes, edges, directed=True, attrs={"id": "G"})
 
     def test_double(self):
         graph_xml = self.HEADER.format(
@@ -399,7 +572,7 @@ class TestGraphML(unittest.TestCase):
                 {"id": "n2", "test": 4.2},
             ]
             edges = []
-            self.assertGraphEqual(graph, nodes, edges, directed=True)
+            self.assertGraphEqual(graph, nodes, edges, directed=True, attrs={"id": "G"})
 
     def test_string(self):
         graph_xml = self.HEADER.format(
@@ -430,7 +603,7 @@ class TestGraphML(unittest.TestCase):
                 {"id": "n2", "test": "yellow"},
             ]
             edges = []
-            self.assertGraphEqual(graph, nodes, edges, directed=True)
+            self.assertGraphEqual(graph, nodes, edges, directed=True, attrs={"id": "G"})
 
     def test_long(self):
         graph_xml = self.HEADER.format(
@@ -461,7 +634,7 @@ class TestGraphML(unittest.TestCase):
                 {"id": "n2", "test": 42},
             ]
             edges = []
-            self.assertGraphEqual(graph, nodes, edges, directed=True)
+            self.assertGraphEqual(graph, nodes, edges, attrs={"id": "G"}, directed=True)
 
     def test_convert_error(self):
         graph_xml = self.HEADER.format(
