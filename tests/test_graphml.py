@@ -110,8 +110,8 @@ class TestGraphML(unittest.TestCase):
         graph = graphml[0]
         with tempfile.NamedTemporaryFile("wt") as fd:
             keys = [
-                ("d0", rustworkx.Domain.Node, "color", rustworkx.Type.String, "yellow"),
-                ("d1", rustworkx.Domain.Edge, "fidelity", rustworkx.Type.Float, 0.95),
+                rustworkx.KeySpec("d0", rustworkx.Domain.Node, "color", rustworkx.Type.String, "yellow"),
+                rustworkx.KeySpec("d1", rustworkx.Domain.Edge, "fidelity", rustworkx.Type.Float, 0.95),
             ]
             rustworkx.write_graphml([graph], keys, fd.name)
             graphml = rustworkx.read_graphml(fd.name)
@@ -125,9 +125,16 @@ class TestGraphML(unittest.TestCase):
             fd.write(graph_xml)
             fd.flush()
             keys, graphml = rustworkx.read_graphml_with_keys(fd.name)
-        assert keys[0] == ("d0", rustworkx.Domain.Node, "color", rustworkx.Type.String, "yellow")
-        assert keys[1][0:4] == ("d1", rustworkx.Domain.Edge, "fidelity", rustworkx.Type.Float)
-        assert math.isclose(keys[1][4], 0.95, rel_tol=1e-7)
+        assert keys[0].id == "d0"
+        assert keys[0].domain == rustworkx.Domain.Node
+        assert keys[0].name == "color"
+        assert keys[0].ty == rustworkx.Type.String
+        assert keys[0].default == "yellow"
+        assert keys[1].id == "d1"
+        assert keys[1].domain == rustworkx.Domain.Edge
+        assert keys[1].name == "fidelity"
+        assert keys[1].ty == rustworkx.Type.Float
+        assert math.isclose(keys[1].default, 0.95, rel_tol=1e-7)
         graph = graphml[0]
         with tempfile.NamedTemporaryFile("wt") as fd:
             rustworkx.write_graphml([graph], keys, fd.name)
@@ -192,8 +199,8 @@ class TestGraphML(unittest.TestCase):
         graph = graphml[0]
         with tempfile.NamedTemporaryFile("wt") as fd:
             keys = [
-                ("d0", rustworkx.Domain.Node, "color", rustworkx.Type.String, "yellow"),
-                ("d1", rustworkx.Domain.Edge, "fidelity", rustworkx.Type.Float, 0.95),
+                rustworkx.KeySpec("d0", rustworkx.Domain.Node, "color", rustworkx.Type.String, "yellow"),
+                rustworkx.KeySpec("d1", rustworkx.Domain.Edge, "fidelity", rustworkx.Type.Float, 0.95),
             ]
             newname = f"{fd.name}.gz"
             rustworkx.write_graphml([graph], keys, newname)
@@ -265,8 +272,8 @@ class TestGraphML(unittest.TestCase):
             graphml = rustworkx.read_graphml(fd.name)
         with tempfile.NamedTemporaryFile("wt") as fd:
             keys = [
-                ("d0", rustworkx.Domain.Node, "color", rustworkx.Type.String, "yellow"),
-                ("d1", rustworkx.Domain.Edge, "fidelity", rustworkx.Type.Float, 0.95),
+                rustworkx.KeySpec("d0", rustworkx.Domain.Node, "color", rustworkx.Type.String, "yellow"),
+                rustworkx.KeySpec("d1", rustworkx.Domain.Edge, "fidelity", rustworkx.Type.Float, 0.95),
             ]
             rustworkx.write_graphml(graphml, keys, fd.name)
             graphml_reread = rustworkx.read_graphml(fd.name)
@@ -317,7 +324,11 @@ class TestGraphML(unittest.TestCase):
             fd.write(graph_xml)
             fd.flush()
             keys, graphml = rustworkx.read_graphml_with_keys(fd.name)
-        assert keys[0] == ("d0", rustworkx.Domain.Graph, "test", rustworkx.Type.Boolean, None)
+        assert keys[0].id == "d0"
+        assert keys[0].domain == rustworkx.Domain.Graph
+        assert keys[0].name == "test"
+        assert keys[0].ty == rustworkx.Type.Boolean
+        assert keys[0].default is None
         with tempfile.NamedTemporaryFile("wt") as fd:
             rustworkx.write_graphml(graphml, keys, fd.name)
             graphml = rustworkx.read_graphml(fd.name)
@@ -382,7 +393,11 @@ class TestGraphML(unittest.TestCase):
             fd.write(graph_xml)
             fd.flush()
             keys, graphml = rustworkx.read_graphml_with_keys(fd.name)
-        assert keys[0] == ("d0", rustworkx.Domain.All, "test", rustworkx.Type.String, None)
+        assert keys[0].id == "d0"
+        assert keys[0].domain == rustworkx.Domain.All
+        assert keys[0].name == "test"
+        assert keys[0].ty == rustworkx.Type.String
+        assert keys[0].default is None
         with tempfile.NamedTemporaryFile("wt") as fd:
             rustworkx.write_graphml(graphml, keys, fd.name)
             graphml = rustworkx.read_graphml(fd.name)
@@ -438,7 +453,11 @@ class TestGraphML(unittest.TestCase):
             fd.write(graph_xml)
             fd.flush()
             keys, graphml = rustworkx.read_graphml_with_keys(fd.name)
-        assert keys[0] == ("d0", rustworkx.Domain.Node, "test", rustworkx.Type.Boolean, None)
+        assert keys[0].id == "d0"
+        assert keys[0].domain == rustworkx.Domain.Node
+        assert keys[0].name == "test"
+        assert keys[0].ty == rustworkx.Type.Boolean
+        assert keys[0].default is None
         with tempfile.NamedTemporaryFile("wt") as fd:
             rustworkx.write_graphml(graphml, keys, fd.name)
             graphml = rustworkx.read_graphml(fd.name)

@@ -158,9 +158,9 @@ pub enum Type {
     Long,
 }
 
-impl Into<&'static str> for Type {
-    fn into(self) -> &'static str {
-        match self {
+impl From<Type> for &'static str {
+    fn from(ty: Type) -> Self {
+        match ty {
             Type::Boolean => "boolean",
             Type::Int => "int",
             Type::Float => "float",
@@ -222,7 +222,7 @@ impl<'py> IntoPyObject<'py> for Value {
 }
 
 impl Value {
-    fn from_pyobject<'py>(ob: &Bound<'py, PyAny>, ty: Type) -> PyResult<Self> {
+    fn from_pyobject(ob: &Bound<'_, PyAny>, ty: Type) -> PyResult<Self> {
         let value = match ty {
             Type::Boolean => Value::Boolean(ob.extract::<bool>()?),
             Type::Int => Value::Int(ob.extract::<isize>()?),
@@ -471,12 +471,7 @@ impl<Index: std::cmp::Eq + std::hash::Hash> GraphElementInfos<Index> {
         }
     }
 
-    fn insert<'py>(
-        &mut self,
-        py: Python<'py>,
-        index: Index,
-        weight: Option<&Py<PyAny>>,
-    ) -> PyResult<()> {
+    fn insert(&mut self, py: Python<'_>, index: Index, weight: Option<&Py<PyAny>>) -> PyResult<()> {
         let element_info = weight
             .and_then(|data| {
                 data.extract::<std::collections::HashMap<String, Value>>(py)
@@ -508,8 +503,8 @@ impl<Index: std::cmp::Eq + std::hash::Hash> GraphElementInfos<Index> {
 }
 
 impl Graph {
-    fn try_from_stable<'py, Ty: EdgeType>(
-        py: Python<'py>,
+    fn try_from_stable<Ty: EdgeType>(
+        py: Python<'_>,
         dir: Direction,
         pygraph: &StablePyGraph<Ty>,
         attrs: &PyObject,
@@ -578,12 +573,12 @@ impl<'py> TryFrom<&Bound<'py, PyGraph>> for Graph {
 
     fn try_from(value: &Bound<'py, PyGraph>) -> PyResult<Self> {
         let pygraph = value.borrow();
-        return Graph::try_from_stable(
+        Graph::try_from_stable(
             value.py(),
             Direction::UnDirected,
             &pygraph.graph,
             &pygraph.attrs,
-        );
+        )
     }
 }
 
@@ -592,12 +587,12 @@ impl<'py> TryFrom<&Bound<'py, PyDiGraph>> for Graph {
 
     fn try_from(value: &Bound<'py, PyDiGraph>) -> PyResult<Self> {
         let pygraph = value.borrow();
-        return Graph::try_from_stable(
+        Graph::try_from_stable(
             value.py(),
             Direction::Directed,
             &pygraph.graph,
             &pygraph.attrs,
-        );
+        )
     }
 }
 
@@ -1178,26 +1173,61 @@ pub fn read_graphml<'py>(
     Ok(out)
 }
 
+/// Key definition: id, domain, name of the key, type, default value.
+#[pyclass]
+pub struct KeySpec {
+    #[pyo3(get)]
+    id: String,
+    #[pyo3(get)]
+    domain: Domain,
+    #[pyo3(get)]
+    name: String,
+    #[pyo3(get)]
+    ty: Type,
+    #[pyo3(get)]
+    default: Py<PyAny>,
+}
+
+#[pymethods]
+impl KeySpec {
+    #[new]
+    pub fn new(id: String, domain: Domain, name: String, ty: Type, default: Py<PyAny>) -> Self {
+        KeySpec {
+            id,
+            domain,
+            name,
+            ty,
+            default,
+        }
+    }
+}
+
+type GraphMLWithKeys<'py> = PyResult<(Vec<Py<KeySpec>>, Vec<Bound<'py, PyAny>>)>;
+
 /// Read a list of graphs from a file in GraphML format and return the pair containing the list of key definitions and the graph.
-///
-/// Each key definition is a tuple: id, domain, name of the key, type, default value.
 #[pyfunction]
 #[pyo3(signature=(path, compression=None),text_signature = "(path, /, compression=None)")]
 pub fn read_graphml_with_keys<'py>(
     py: Python<'py>,
     path: &str,
     compression: Option<String>,
-) -> PyResult<(
-    Vec<(String, Domain, String, Type, Bound<'py, PyAny>)>,
-    Vec<Bound<'py, PyAny>>,
-)> {
+) -> GraphMLWithKeys<'py> {
     let graphml = GraphML::from_file(path, &compression.unwrap_or_default())?;
 
     let mut keys = Vec::new();
     for domain in [Domain::Node, Domain::Edge, Domain::Graph, Domain::All] {
         for (id, key) in graphml.get_keys(domain) {
             let default = key.default.clone().into_pyobject(py)?.into_any();
-            keys.push((id.clone(), domain, key.name.clone(), key.ty, default));
+            keys.push(Py::new(
+                py,
+                KeySpec {
+                    id: id.clone(),
+                    domain,
+                    name: key.name.clone(),
+                    ty: key.ty,
+                    default: default.into(),
+                },
+            )?);
         }
     }
 
@@ -1212,24 +1242,30 @@ pub fn read_graphml_with_keys<'py>(
 /// Write a list of graphs to a file in GraphML format given the list of key definitions.
 #[pyfunction]
 #[pyo3(signature=(graphs, keys, path, compression=None),text_signature = "(graphs, keys, path, /, compression=None)")]
-pub fn write_graphml<'py>(
-    py: Python<'py>,
+pub fn write_graphml(
+    py: Python<'_>,
     graphs: Vec<Py<PyAny>>,
-    keys: Vec<(String, Domain, String, Type, Py<PyAny>)>,
+    keys: Vec<Py<KeySpec>>,
     path: &str,
     compression: Option<String>,
 ) -> PyResult<()> {
     let mut graphml = GraphML::default();
-    for (id, domain, name, ty, default) in keys {
-        let bound_default = default.bind(py);
+    for pykey in keys {
+        let key = pykey.borrow(py);
+        let bound_default = key.default.bind(py);
         let default = if bound_default.is_none() {
             Value::UnDefined
         } else {
-            Value::from_pyobject(bound_default, ty)?
+            Value::from_pyobject(bound_default, key.ty)?
         };
-        graphml
-            .get_keys_mut(domain)
-            .insert(id, Key { name, ty, default });
+        graphml.get_keys_mut(key.domain).insert(
+            key.id.clone(),
+            Key {
+                name: key.name.clone(),
+                ty: key.ty,
+                default,
+            },
+        );
     }
     for graph in graphs {
         graphml.graphs.push(Graph::extract_bound(graph.bind(py))?)

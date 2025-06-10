@@ -708,6 +708,7 @@ fn rustworkx(py: Python<'_>, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_class::<ColoringStrategy>()?;
     m.add_class::<Domain>()?;
     m.add_class::<Type>()?;
+    m.add_class::<KeySpec>()?;
     m.add_wrapped(wrap_pymodule!(generators::generators))?;
     Ok(())
 }

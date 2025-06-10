@@ -82,6 +82,14 @@ class Type:
     Float: Type
     Long: Type
 
+@final
+class KeySpec:
+    id: str
+    domain: Domain
+    name: str
+    ty: Type
+    default: Any
+
 # Cartesian product
 
 def digraph_cartesian_product(
@@ -698,7 +706,7 @@ def read_graphml_with_keys(
     path: str,
     /,
     compression: str | None = ...,
-) -> tuple[list[tuple[str, Domain, str, Type, Any]], list[PyGraph | PyDiGraph]]: ...
+) -> tuple[list[KeySpec], list[PyGraph | PyDiGraph]]: ...
 def read_graphml(
     path: str,
     /,
@@ -706,7 +714,7 @@ def read_graphml(
 ) -> list[PyGraph | PyDiGraph]: ...
 def write_graphml(
     graphs: list[PyGraph | PyDiGraph],
-    keys: list[tuple[str, Domain, str, Type, Any]],
+    keys: list[KeySpec],
     path: str,
     /,
     compression: str | None = ...,
