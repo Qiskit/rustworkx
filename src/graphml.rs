@@ -124,7 +124,7 @@ fn xml_attribute<'a>(element: &'a BytesStart<'a>, key: &[u8]) -> Result<String, 
         })
 }
 
-#[pyclass(eq)]
+#[pyclass(eq, name = "GraphMLDomain")]
 #[derive(Clone, Copy, PartialEq)]
 pub enum Domain {
     Node,
@@ -147,7 +147,7 @@ impl TryFrom<&[u8]> for Domain {
     }
 }
 
-#[pyclass(eq)]
+#[pyclass(eq, name = "GraphMLType")]
 #[derive(Clone, Copy, PartialEq)]
 pub enum Type {
     Boolean,
@@ -1174,7 +1174,7 @@ pub fn read_graphml<'py>(
 }
 
 /// Key definition: id, domain, name of the key, type, default value.
-#[pyclass]
+#[pyclass(name = "GraphMLKey")]
 pub struct KeySpec {
     #[pyo3(get)]
     id: String,

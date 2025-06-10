@@ -69,25 +69,25 @@ class ColoringStrategy:
     IndependentSet: Any
 
 @final
-class Domain:
-    Node: Domain
-    Edge: Domain
-    Graph: Domain
-    All: Domain
+class GraphMLDomain:
+    Node: GraphMLDomain
+    Edge: GraphMLDomain
+    Graph: GraphMLDomain
+    All: GraphMLDomain
 
 @final
-class Type:
-    Boolean: Type
-    Int: Type
-    Float: Type
-    Long: Type
+class GraphMLType:
+    Boolean: GraphMLType
+    Int: GraphMLType
+    Float: GraphMLType
+    Long: GraphMLType
 
 @final
-class KeySpec:
+class GraphMLKey:
     id: str
-    domain: Domain
+    domain: GraphMLDomain
     name: str
-    ty: Type
+    ty: GraphMLType
     default: Any
 
 # Cartesian product
@@ -706,7 +706,7 @@ def read_graphml_with_keys(
     path: str,
     /,
     compression: str | None = ...,
-) -> tuple[list[KeySpec], list[PyGraph | PyDiGraph]]: ...
+) -> tuple[list[GraphMLKeySpec], list[PyGraph | PyDiGraph]]: ...
 def read_graphml(
     path: str,
     /,
@@ -714,7 +714,7 @@ def read_graphml(
 ) -> list[PyGraph | PyDiGraph]: ...
 def write_graphml(
     graphs: list[PyGraph | PyDiGraph],
-    keys: list[KeySpec],
+    keys: list[GraphMLKeySpec],
     path: str,
     /,
     compression: str | None = ...,
