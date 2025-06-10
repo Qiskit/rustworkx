@@ -50,14 +50,34 @@ impl fmt::Display for MapNotPossible {
     }
 }
 
-struct TokenSwapper<G: GraphBase>
+// Define a trait for mapping providers
+pub trait MappingProvider<G: GraphBase> {
+    fn get(&self, key: &G::NodeId) -> Option<&G::NodeId>;
+    fn iter(&self) -> Box<dyn Iterator<Item = (&G::NodeId, &G::NodeId)> + '_>;
+}
+
+// Implement the trait for HashMap
+impl<G: GraphBase> MappingProvider<G> for HashMap<G::NodeId, G::NodeId>
+where
+    G::NodeId: Eq + Hash,
+{
+    fn get(&self, key: &G::NodeId) -> Option<&G::NodeId> {
+        HashMap::get(self, key)
+    }
+
+    fn iter(&self) -> Box<dyn Iterator<Item = (&G::NodeId, &G::NodeId)> + '_> {
+        Box::new(HashMap::iter(self))
+    }
+}
+
+struct TokenSwapper<G: GraphBase, M: MappingProvider<G>>
 where
     G::NodeId: Eq + Hash,
 {
     // The input graph
     graph: G,
     // The user-supplied mapping to use for swapping tokens
-    mapping: HashMap<G::NodeId, G::NodeId>,
+    mapping: M,
     // Number of trials
     trials: usize,
     // Seed for random selection of a node for a trial
@@ -66,7 +86,7 @@ where
     parallel_threshold: usize,
 }
 
-impl<G> TokenSwapper<G>
+impl<G, M> TokenSwapper<G, M>
 where
     G: NodeCount
         + EdgeCount
@@ -78,10 +98,11 @@ where
         + Send
         + Sync,
     G::NodeId: Hash + Eq + Send + Sync,
+    M: MappingProvider<G> + Send + Sync,
 {
     fn new(
         graph: G,
-        mapping: HashMap<G::NodeId, G::NodeId>,
+        mapping: M,
         trials: Option<usize>,
         seed: Option<u64>,
         parallel_threshold: Option<usize>,
@@ -95,7 +116,7 @@ where
         }
     }
 
-    fn map(&mut self) -> SwapResult<G::NodeId> {
+    fn map(&self) -> SwapResult<G::NodeId> {
         let num_nodes = self.graph.node_bound();
         let num_edges = self.graph.edge_count();
 
@@ -455,7 +476,7 @@ where
         + Sync,
     G::NodeId: Hash + Eq + Send + Sync,
 {
-    let mut swapper = TokenSwapper::new(graph, mapping, trials, seed, parallel_threshold);
+    let swapper = TokenSwapper::new(graph, mapping, trials, seed, parallel_threshold);
     swapper.map()
 }
 
