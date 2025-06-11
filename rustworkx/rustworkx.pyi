@@ -706,7 +706,7 @@ def read_graphml_with_keys(
     path: str,
     /,
     compression: str | None = ...,
-) -> tuple[list[GraphMLKeySpec], list[PyGraph | PyDiGraph]]: ...
+) -> tuple[list[GraphMLKey], list[PyGraph | PyDiGraph]]: ...
 def read_graphml(
     path: str,
     /,
@@ -714,7 +714,7 @@ def read_graphml(
 ) -> list[PyGraph | PyDiGraph]: ...
 def write_graphml(
     graphs: list[PyGraph | PyDiGraph],
-    keys: list[GraphMLKeySpec],
+    keys: list[GraphMLKey],
     path: str,
     /,
     compression: str | None = ...,

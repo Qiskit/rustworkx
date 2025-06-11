@@ -110,13 +110,27 @@ class TestGraphML(unittest.TestCase):
         graph = graphml[0]
         with tempfile.NamedTemporaryFile("wt") as fd:
             keys = [
-                rustworkx.GraphMLKey("d0", rustworkx.GraphMLDomain.Node, "color", rustworkx.GraphMLType.String, "yellow"),
-                rustworkx.GraphMLKey("d1", rustworkx.GraphMLDomain.Edge, "fidelity", rustworkx.GraphMLType.Float, 0.95),
+                rustworkx.GraphMLKey(
+                    "d0",
+                    rustworkx.GraphMLDomain.Node,
+                    "color",
+                    rustworkx.GraphMLType.String,
+                    "yellow",
+                ),
+                rustworkx.GraphMLKey(
+                    "d1",
+                    rustworkx.GraphMLDomain.Edge,
+                    "fidelity",
+                    rustworkx.GraphMLType.Float,
+                    0.95,
+                ),
             ]
             rustworkx.write_graphml([graph], keys, fd.name)
             graphml = rustworkx.read_graphml(fd.name)
         graph_reread = graphml[0]
-        edges = [(graph[s]["id"], graph[t]["id"], weight) for s, t, weight in graph.weighted_edge_list()]
+        edges = [
+            (graph[s]["id"], graph[t]["id"], weight) for s, t, weight in graph.weighted_edge_list()
+        ]
         self.assertGraphEqual(graph_reread, graph.nodes(), edges, attrs={"id": "G"}, directed=False)
 
     def test_write_with_keys(self):
@@ -140,7 +154,9 @@ class TestGraphML(unittest.TestCase):
             rustworkx.write_graphml([graph], keys, fd.name)
             graphml = rustworkx.read_graphml(fd.name)
         graph_reread = graphml[0]
-        edges = [(graph[s]["id"], graph[t]["id"], weight) for s, t, weight in graph.weighted_edge_list()]
+        edges = [
+            (graph[s]["id"], graph[t]["id"], weight) for s, t, weight in graph.weighted_edge_list()
+        ]
         self.assertGraphEqual(graph_reread, graph.nodes(), edges, attrs={"id": "G"}, directed=False)
 
     def test_gzipped(self):
@@ -199,14 +215,28 @@ class TestGraphML(unittest.TestCase):
         graph = graphml[0]
         with tempfile.NamedTemporaryFile("wt") as fd:
             keys = [
-                rustworkx.GraphMLKey("d0", rustworkx.GraphMLDomain.Node, "color", rustworkx.GraphMLType.String, "yellow"),
-                rustworkx.GraphMLKey("d1", rustworkx.GraphMLDomain.Edge, "fidelity", rustworkx.GraphMLType.Float, 0.95),
+                rustworkx.GraphMLKey(
+                    "d0",
+                    rustworkx.GraphMLDomain.Node,
+                    "color",
+                    rustworkx.GraphMLType.String,
+                    "yellow",
+                ),
+                rustworkx.GraphMLKey(
+                    "d1",
+                    rustworkx.GraphMLDomain.Edge,
+                    "fidelity",
+                    rustworkx.GraphMLType.Float,
+                    0.95,
+                ),
             ]
             newname = f"{fd.name}.gz"
             rustworkx.write_graphml([graph], keys, newname)
             graphml = rustworkx.read_graphml(newname)
         graph_reread = graphml[0]
-        edges = [(graph[s]["id"], graph[t]["id"], weight) for s, t, weight in graph.weighted_edge_list()]
+        edges = [
+            (graph[s]["id"], graph[t]["id"], weight) for s, t, weight in graph.weighted_edge_list()
+        ]
         self.assertGraphEqual(graph_reread, graph.nodes(), edges, attrs={"id": "G"}, directed=False)
 
     def graphml_xml_example_multiple_graphs(self):
@@ -272,14 +302,27 @@ class TestGraphML(unittest.TestCase):
             graphml = rustworkx.read_graphml(fd.name)
         with tempfile.NamedTemporaryFile("wt") as fd:
             keys = [
-                rustworkx.GraphMLKey("d0", rustworkx.GraphMLDomain.Node, "color", rustworkx.GraphMLType.String, "yellow"),
-                rustworkx.GraphMLKey("d1", rustworkx.GraphMLDomain.Edge, "fidelity", rustworkx.GraphMLType.Float, 0.95),
+                rustworkx.GraphMLKey(
+                    "d0",
+                    rustworkx.GraphMLDomain.Node,
+                    "color",
+                    rustworkx.GraphMLType.String,
+                    "yellow",
+                ),
+                rustworkx.GraphMLKey(
+                    "d1",
+                    rustworkx.GraphMLDomain.Edge,
+                    "fidelity",
+                    rustworkx.GraphMLType.Float,
+                    0.95,
+                ),
             ]
             rustworkx.write_graphml(graphml, keys, fd.name)
             graphml_reread = rustworkx.read_graphml(fd.name)
         for graph, graph_reread in zip(graphml, graphml_reread):
             edges = [
-                (graph[s]["id"], graph[t]["id"], weight) for s, t, weight in graph.weighted_edge_list()
+                (graph[s]["id"], graph[t]["id"], weight)
+                for s, t, weight in graph.weighted_edge_list()
             ]
             self.assertGraphEqual(
                 graph_reread,
@@ -307,7 +350,9 @@ class TestGraphML(unittest.TestCase):
             graph = graphml[0]
             nodes = [{"id": "n0"}]
             edges = []
-            self.assertGraphEqual(graph, nodes, edges, directed=True, attrs={"id": "G", "test": True})
+            self.assertGraphEqual(
+                graph, nodes, edges, directed=True, attrs={"id": "G", "test": True}
+            )
 
     def test_write_key_for_graph(self):
         graph_xml = self.HEADER.format(
