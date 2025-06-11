@@ -163,6 +163,8 @@ from .rustworkx import directed_barabasi_albert_graph as directed_barabasi_alber
 from .rustworkx import undirected_random_bipartite_graph as undirected_random_bipartite_graph
 from .rustworkx import directed_random_bipartite_graph as directed_random_bipartite_graph
 from .rustworkx import read_graphml as read_graphml
+from .rustworkx import read_graphml_with_keys as read_graphml_with_keys
+from .rustworkx import write_graphml as write_graphml
 from .rustworkx import digraph_node_link_json as digraph_node_link_json
 from .rustworkx import graph_node_link_json as graph_node_link_json
 from .rustworkx import from_node_link_json_file as from_node_link_json_file

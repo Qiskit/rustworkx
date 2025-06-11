@@ -80,6 +80,8 @@ class GraphMLType:
     Boolean: GraphMLType
     Int: GraphMLType
     Float: GraphMLType
+    Double: GraphMLType
+    String: GraphMLType
     Long: GraphMLType
 
 @final
