@@ -457,9 +457,9 @@ where
 ///  assert_eq!(3, output.len());
 ///
 /// ```
-pub fn token_swapper<G>(
+pub fn token_swapper<G, M>(
     graph: G,
-    mapping: HashMap<G::NodeId, G::NodeId>,
+    mapping: M,
     trials: Option<usize>,
     seed: Option<u64>,
     parallel_threshold: Option<usize>,
@@ -475,6 +475,7 @@ where
         + Send
         + Sync,
     G::NodeId: Hash + Eq + Send + Sync,
+    M: MappingProvider<G> + Send + Sync,
 {
     let swapper = TokenSwapper::new(graph, mapping, trials, seed, parallel_threshold);
     swapper.map()
@@ -484,9 +485,11 @@ where
 mod test_token_swapper {
 
     use crate::petgraph;
-    use crate::token_swapper::token_swapper;
+    use crate::token_swapper::{token_swapper, MappingProvider};
     use hashbrown::HashMap;
     use petgraph::graph::NodeIndex;
+    use petgraph::visit::GraphBase;
+    use std::hash::Hash;
 
     fn do_swap(mapping: &mut HashMap<NodeIndex, NodeIndex>, swaps: &Vec<(NodeIndex, NodeIndex)>) {
         // Apply the swaps to the mapping to get final result
@@ -509,6 +512,80 @@ mod test_token_swapper {
                 mapping.insert(*swap1, t2);
             }
         }
+    }
+
+    struct VecMappingProvider<N> {
+        pairs: Vec<(N, N)>,
+    }
+
+    impl<N> VecMappingProvider<N> {
+        fn new(pairs: Vec<(N, N)>) -> Self {
+            VecMappingProvider { pairs }
+        }
+    }
+
+    // Implement MappingProvider for any G where G::NodeId = N
+    impl<G, N> MappingProvider<G> for VecMappingProvider<N>
+    where
+        G: GraphBase<NodeId = N>,
+        N: Eq + Hash + 'static, // 'static bound for Box<dyn Iterator>
+    {
+        fn get(&self, key: &N) -> Option<&N> {
+            self.pairs.iter().find(|(k, _)| k == key).map(|(_, v)| v)
+        }
+
+        fn iter(&self) -> Box<dyn Iterator<Item = (&N, &N)> + '_> {
+            Box::new(self.pairs.iter().map(|(k, v)| (k, v)))
+        }
+    }
+
+    #[test]
+    fn test_vec_mapping_provider() {
+        let g = petgraph::graph::UnGraph::<(), ()>::from_edges([(0, 1), (1, 2), (2, 3)]);
+        let pairs = vec![
+            (NodeIndex::new(0), NodeIndex::new(0)),
+            (NodeIndex::new(1), NodeIndex::new(3)),
+            (NodeIndex::new(3), NodeIndex::new(1)),
+            (NodeIndex::new(2), NodeIndex::new(2)),
+        ];
+        let mapping_provider = VecMappingProvider::new(pairs.clone());
+        let swaps = token_swapper(&g, mapping_provider, Some(4), Some(4), Some(50))
+            .expect("swap mapping errored");
+        assert_eq!(3, swaps.len());
+
+        let mut applied_map: HashMap<_, _> = pairs.into_iter().collect();
+        do_swap(&mut applied_map, &swaps);
+        let expected: HashMap<_, _> = vec![
+            (NodeIndex::new(0), NodeIndex::new(0)),
+            (NodeIndex::new(3), NodeIndex::new(3)),
+            (NodeIndex::new(1), NodeIndex::new(1)),
+            (NodeIndex::new(2), NodeIndex::new(2)),
+        ]
+        .into_iter()
+        .collect();
+        assert_eq!(expected, applied_map);
+    }
+
+    #[test]
+    fn test_return_type_is_node_id() {
+        let g = petgraph::graph::UnGraph::<(), ()>::from_edges([(0, 1), (1, 2)]);
+        let mapping = HashMap::from([
+            (NodeIndex::new(0), NodeIndex::new(2)),
+            (NodeIndex::new(2), NodeIndex::new(0)),
+        ]);
+        let swaps = token_swapper(&g, mapping.clone(), Some(4), Some(4), Some(50))
+            .expect("swap mapping errored");
+        assert_eq!(swaps.len(), 3); // Adjusted to 3 steps for path graph
+        let first_swap = swaps[0];
+        // Explicitly check that swaps are (NodeIndex, NodeIndex), which is G::NodeId
+        let _: (NodeIndex, NodeIndex) = first_swap; // Type assertion
+        let mut new_map = mapping;
+        do_swap(&mut new_map, &swaps);
+        let expected = HashMap::from([
+            (NodeIndex::new(0), NodeIndex::new(0)),
+            (NodeIndex::new(2), NodeIndex::new(2)),
+        ]);
+        assert_eq!(new_map, expected);
     }
 
     #[test]
