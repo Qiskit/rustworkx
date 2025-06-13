@@ -68,6 +68,30 @@ class ColoringStrategy:
     Saturation: Any
     IndependentSet: Any
 
+@final
+class GraphMLDomain:
+    Node: GraphMLDomain
+    Edge: GraphMLDomain
+    Graph: GraphMLDomain
+    All: GraphMLDomain
+
+@final
+class GraphMLType:
+    Boolean: GraphMLType
+    Int: GraphMLType
+    Float: GraphMLType
+    Double: GraphMLType
+    String: GraphMLType
+    Long: GraphMLType
+
+@final
+class GraphMLKey:
+    id: str
+    domain: GraphMLDomain
+    name: str
+    ty: GraphMLType
+    default: Any
+
 # Cartesian product
 
 def digraph_cartesian_product(
@@ -680,11 +704,23 @@ def directed_random_bipartite_graph(
 
 # Read Write
 
+def read_graphml_with_keys(
+    path: str,
+    /,
+    compression: str | None = ...,
+) -> tuple[list[GraphMLKey], list[PyGraph | PyDiGraph]]: ...
 def read_graphml(
     path: str,
     /,
     compression: str | None = ...,
 ) -> list[PyGraph | PyDiGraph]: ...
+def write_graphml(
+    graphs: list[PyGraph | PyDiGraph],
+    keys: list[GraphMLKey],
+    path: str,
+    /,
+    compression: str | None = ...,
+) -> None: ...
 def digraph_node_link_json(
     graph: PyDiGraph[_S, _T],
     /,
