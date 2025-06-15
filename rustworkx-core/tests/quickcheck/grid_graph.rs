@@ -53,7 +53,7 @@ fn prop_grid_graph_validity() {
         if bidirectional_flag {
             let mut bfs = Bfs::new(&graph, graph.from_index(0));
             let mut visited = 0;
-            while let Some(_) = bfs.next(&graph) {
+            while bfs.next(&graph).is_some() {
                 visited += 1;
             }
             if visited != expected_nodes {
