@@ -489,9 +489,8 @@ impl<Index: std::cmp::Eq + std::hash::Hash> GraphElementInfos<Index> {
     fn insert(&mut self, py: Python<'_>, index: Index, weight: Option<&Py<PyAny>>) -> PyResult<()> {
         let element_info = weight
             .and_then(|data| {
-                data.extract::<DictMap<String, Value>>(py)
-                    .ok()
-                    .map(|mut attributes| -> PyResult<GraphElementInfo> {
+                data.extract::<DictMap<String, Value>>(py).ok().map(
+                    |mut attributes| -> PyResult<GraphElementInfo> {
                         let id = attributes
                             .shift_remove_entry("id")
                             .map(|(id, value)| -> PyResult<Option<String>> {
@@ -509,7 +508,8 @@ impl<Index: std::cmp::Eq + std::hash::Hash> GraphElementInfos<Index> {
                             attributes: attributes.into_iter().collect(),
                             id,
                         })
-                    })
+                    },
+                )
             })
             .unwrap_or_else(|| Ok(GraphElementInfo::default()))?;
         self.vec.push((index, element_info));
@@ -1168,37 +1168,26 @@ impl GraphML {
     fn infer_keys(&mut self) -> Result<(), Error> {
         infer_keys_for_attributes(
             &mut self.key_for_graph,
-            self.graphs
-                .iter()
-                .map(|graph| graph.attributes.iter())
-                .flatten(),
+            self.graphs.iter().flat_map(|graph| graph.attributes.iter()),
         )?;
         infer_keys_for_attributes(
             &mut self.key_for_nodes,
             self.graphs
                 .iter()
-                .map(|graph| graph.nodes.iter())
-                .flatten()
-                .map(|nodes| nodes.data.iter())
-                .flatten(),
+                .flat_map(|graph| graph.nodes.iter())
+                .flat_map(|nodes| nodes.data.iter()),
         )?;
         infer_keys_for_attributes(
             &mut self.key_for_edges,
             self.graphs
                 .iter()
-                .map(|graph| graph.edges.iter())
-                .flatten()
-                .map(|edges| edges.data.iter())
-                .flatten(),
+                .flat_map(|graph| graph.edges.iter())
+                .flat_map(|edges| edges.data.iter()),
         )?;
         Ok(())
     }
 
-    fn set_keys<'py>(
-        &mut self,
-        py: Python<'py>,
-        keys: Vec<Py<KeySpec>>,
-    ) -> Result<(), pyo3::PyErr> {
+    fn set_keys(&mut self, py: Python<'_>, keys: Vec<Py<KeySpec>>) -> Result<(), pyo3::PyErr> {
         for pykey in keys {
             let key = pykey.borrow(py);
             let bound_default = key.default.bind(py);
@@ -1219,9 +1208,9 @@ impl GraphML {
         Ok(())
     }
 
-    fn set_or_infer_keys<'py>(
+    fn set_or_infer_keys(
         &mut self,
-        py: Python<'py>,
+        py: Python<'_>,
         keys: Option<Vec<Py<KeySpec>>>,
     ) -> Result<(), pyo3::PyErr> {
         match keys {
