@@ -17,7 +17,7 @@ use std::convert::From;
 use std::ffi::OsStr;
 use std::fs::File;
 use std::io::{BufRead, BufReader, BufWriter};
-use std::iter::FromIterator;
+use std::iter::{FromIterator, Iterator};
 use std::num::{ParseFloatError, ParseIntError};
 use std::path::Path;
 use std::str::ParseBoolError;
@@ -26,7 +26,8 @@ use flate2::bufread::GzDecoder;
 use flate2::write::GzEncoder;
 use flate2::Compression;
 use hashbrown::{HashMap, HashSet};
-use indexmap::IndexMap;
+
+use indexmap::map::Entry;
 
 use quick_xml::events::{BytesDecl, BytesStart, BytesText, Event};
 use quick_xml::name::QName;
@@ -40,6 +41,8 @@ use pyo3::exceptions::PyException;
 use pyo3::prelude::*;
 use pyo3::IntoPyObjectExt;
 use pyo3::PyErr;
+
+use rustworkx_core::dictmap::{DictMap, InitWithHasher};
 
 use crate::{digraph::PyDiGraph, graph::PyGraph, StablePyGraph};
 
@@ -148,7 +151,7 @@ impl TryFrom<&[u8]> for Domain {
 }
 
 #[pyclass(eq, name = "GraphMLType")]
-#[derive(Clone, Copy, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub enum Type {
     Boolean,
     Int,
@@ -199,6 +202,18 @@ impl Value {
         match self {
             Value::String(value_str) => Ok(value_str),
             _ => Err(PyException::new_err("Expected string value for id")),
+        }
+    }
+
+    fn ty(&self) -> Option<Type> {
+        match self {
+            Value::Boolean(_) => Some(Type::Boolean),
+            Value::Int(_) => Some(Type::Int),
+            Value::Float(_) => Some(Type::Float),
+            Value::Double(_) => Some(Type::Double),
+            Value::String(_) => Some(Type::String),
+            Value::Long(_) => Some(Type::Long),
+            Value::UnDefined => None,
         }
     }
 }
@@ -596,15 +611,6 @@ impl<'py> TryFrom<&Bound<'py, PyDiGraph>> for Graph {
     }
 }
 
-impl<'py> FromPyObject<'py> for Graph {
-    fn extract_bound(ob: &Bound<'py, PyAny>) -> PyResult<Self> {
-        match ob.downcast::<PyGraph>() {
-            Ok(graph) => Graph::try_from(graph),
-            Err(_) => Graph::try_from(ob.downcast::<PyDiGraph>()?),
-        }
-    }
-}
-
 enum State {
     Start,
     Graph,
@@ -633,28 +639,28 @@ macro_rules! matches {
 
 struct GraphML {
     graphs: Vec<Graph>,
-    key_for_nodes: IndexMap<String, Key>,
-    key_for_edges: IndexMap<String, Key>,
-    key_for_graph: IndexMap<String, Key>,
-    key_for_all: IndexMap<String, Key>,
+    key_for_nodes: DictMap<String, Key>,
+    key_for_edges: DictMap<String, Key>,
+    key_for_graph: DictMap<String, Key>,
+    key_for_all: DictMap<String, Key>,
 }
 
 impl Default for GraphML {
     fn default() -> Self {
         Self {
             graphs: Vec::new(),
-            key_for_nodes: IndexMap::new(),
-            key_for_edges: IndexMap::new(),
-            key_for_graph: IndexMap::new(),
-            key_for_all: IndexMap::new(),
+            key_for_nodes: DictMap::new(),
+            key_for_edges: DictMap::new(),
+            key_for_graph: DictMap::new(),
+            key_for_all: DictMap::new(),
         }
     }
 }
 
 /// Given maps from ids to keys, return a map from key name to ids and keys.
 fn build_key_name_map<'a>(
-    key_for_items: &'a IndexMap<String, Key>,
-    key_for_all: &'a IndexMap<String, Key>,
+    key_for_items: &'a DictMap<String, Key>,
+    key_for_all: &'a DictMap<String, Key>,
 ) -> HashMap<String, (&'a String, &'a Key)> {
     // `key_for_items` is iterated before `key_for_all` since last
     // items take precedence in the collected map. Similarly,
@@ -666,6 +672,42 @@ fn build_key_name_map<'a>(
         .chain(key_for_items.iter())
         .map(|(id, key)| (key.name.clone(), (id, key)))
         .collect()
+}
+
+fn infer_keys_for_attributes<'a>(
+    target: &mut DictMap<String, Key>,
+    attributes: impl Iterator<Item = (&'a String, &'a Value)>,
+) -> Result<(), Error> {
+    let mut inferred = DictMap::new();
+    let mut counter = 0;
+    for (name, value) in attributes {
+        if let Some(ty) = value.ty() {
+            match inferred.entry(name.clone()) {
+                Entry::Vacant(entry) => {
+                    counter += 1;
+                    let id = format!("d{counter}");
+                    entry.insert(ty);
+                    target.insert(
+                        id,
+                        Key {
+                            name: name.to_string(),
+                            ty,
+                            default: Value::UnDefined,
+                        },
+                    );
+                }
+                Entry::Occupied(entry) => {
+                    let other_ty = entry.get();
+                    if *other_ty != ty {
+                        return Err(Error::InvalidDoc(format!(
+                            "Mismatch type for key {name}: {ty:?} and {other_ty:?}"
+                        )));
+                    }
+                }
+            }
+        }
+    }
+    Ok(())
 }
 
 impl GraphML {
@@ -711,16 +753,7 @@ impl GraphML {
         Ok(())
     }
 
-    fn get_keys(&self, domain: Domain) -> &IndexMap<String, Key> {
-        match domain {
-            Domain::Node => &self.key_for_nodes,
-            Domain::Edge => &self.key_for_edges,
-            Domain::Graph => &self.key_for_graph,
-            Domain::All => &self.key_for_all,
-        }
-    }
-
-    fn get_keys_mut(&mut self, domain: Domain) -> &mut IndexMap<String, Key> {
+    fn get_keys_mut(&mut self, domain: Domain) -> &mut DictMap<String, Key> {
         match domain {
             Domain::Node => &mut self.key_for_nodes,
             Domain::Edge => &mut self.key_for_edges,
@@ -1039,7 +1072,7 @@ impl GraphML {
     fn write_keys<W: std::io::Write>(
         writer: &mut Writer<W>,
         key_for: &str,
-        map: &IndexMap<String, Key>,
+        map: &DictMap<String, Key>,
     ) -> Result<(), quick_xml::Error> {
         for (id, key) in map {
             let mut elem = BytesStart::new("key");
@@ -1131,6 +1164,72 @@ impl GraphML {
         }
         Ok(())
     }
+
+    fn infer_keys(&mut self) -> Result<(), Error> {
+        infer_keys_for_attributes(
+            &mut self.key_for_graph,
+            self.graphs
+                .iter()
+                .map(|graph| graph.attributes.iter())
+                .flatten(),
+        )?;
+        infer_keys_for_attributes(
+            &mut self.key_for_nodes,
+            self.graphs
+                .iter()
+                .map(|graph| graph.nodes.iter())
+                .flatten()
+                .map(|nodes| nodes.data.iter())
+                .flatten(),
+        )?;
+        infer_keys_for_attributes(
+            &mut self.key_for_edges,
+            self.graphs
+                .iter()
+                .map(|graph| graph.edges.iter())
+                .flatten()
+                .map(|edges| edges.data.iter())
+                .flatten(),
+        )?;
+        Ok(())
+    }
+
+    fn set_keys<'py>(
+        &mut self,
+        py: Python<'py>,
+        keys: Vec<Py<KeySpec>>,
+    ) -> Result<(), pyo3::PyErr> {
+        for pykey in keys {
+            let key = pykey.borrow(py);
+            let bound_default = key.default.bind(py);
+            let default = if bound_default.is_none() {
+                Value::UnDefined
+            } else {
+                Value::from_pyobject(bound_default, key.ty)?
+            };
+            self.get_keys_mut(key.domain).insert(
+                key.id.clone(),
+                Key {
+                    name: key.name.clone(),
+                    ty: key.ty,
+                    default,
+                },
+            );
+        }
+        Ok(())
+    }
+
+    fn set_or_infer_keys<'py>(
+        &mut self,
+        py: Python<'py>,
+        keys: Option<Vec<Py<KeySpec>>>,
+    ) -> Result<(), pyo3::PyErr> {
+        match keys {
+            None => self.infer_keys()?,
+            Some(keys) => self.set_keys(py, keys)?,
+        }
+        Ok(())
+    }
 }
 
 /// Read a list of graphs from a file in GraphML format.
@@ -1202,74 +1301,36 @@ impl KeySpec {
     }
 }
 
-type GraphMLWithKeys<'py> = PyResult<(Vec<Py<KeySpec>>, Vec<Bound<'py, PyAny>>)>;
-
-/// Read a list of graphs from a file in GraphML format and return the pair containing the list of key definitions and the graph.
+/// Write a graph to a file in GraphML format given the list of key definitions.
 #[pyfunction]
-#[pyo3(signature=(path, compression=None),text_signature = "(path, /, compression=None)")]
-pub fn read_graphml_with_keys<'py>(
-    py: Python<'py>,
-    path: &str,
-    compression: Option<String>,
-) -> GraphMLWithKeys<'py> {
-    let graphml = GraphML::from_file(path, &compression.unwrap_or_default())?;
-
-    let mut keys = Vec::new();
-    for domain in [Domain::Node, Domain::Edge, Domain::Graph, Domain::All] {
-        for (id, key) in graphml.get_keys(domain) {
-            let default = key.default.clone().into_pyobject(py)?.into_any();
-            keys.push(Py::new(
-                py,
-                KeySpec {
-                    id: id.clone(),
-                    domain,
-                    name: key.name.clone(),
-                    ty: key.ty,
-                    default: default.into(),
-                },
-            )?);
-        }
-    }
-
-    let mut out = Vec::new();
-    for graph in graphml.graphs {
-        out.push(graph.into_pyobject(py)?)
-    }
-
-    Ok((keys, out))
-}
-
-/// Write a list of graphs to a file in GraphML format given the list of key definitions.
-#[pyfunction]
-#[pyo3(signature=(graphs, keys, path, compression=None),text_signature = "(graphs, keys, path, /, compression=None)")]
-pub fn write_graphml(
+#[pyo3(signature=(graph, path, keys, compression=None),text_signature = "(graph, path, /, keys=None, compression=None)")]
+pub fn graph_write_graphml(
     py: Python<'_>,
-    graphs: Vec<Py<PyAny>>,
-    keys: Vec<Py<KeySpec>>,
+    graph: Py<PyGraph>,
     path: &str,
+    keys: Option<Vec<Py<KeySpec>>>,
     compression: Option<String>,
 ) -> PyResult<()> {
     let mut graphml = GraphML::default();
-    for pykey in keys {
-        let key = pykey.borrow(py);
-        let bound_default = key.default.bind(py);
-        let default = if bound_default.is_none() {
-            Value::UnDefined
-        } else {
-            Value::from_pyobject(bound_default, key.ty)?
-        };
-        graphml.get_keys_mut(key.domain).insert(
-            key.id.clone(),
-            Key {
-                name: key.name.clone(),
-                ty: key.ty,
-                default,
-            },
-        );
-    }
-    for graph in graphs {
-        graphml.graphs.push(Graph::extract_bound(graph.bind(py))?)
-    }
+    graphml.graphs.push(Graph::try_from(graph.bind(py))?);
+    graphml.set_or_infer_keys(py, keys)?;
+    graphml.to_file(path, &compression.unwrap_or_default())?;
+    Ok(())
+}
+
+/// Write a digraph to a file in GraphML format given the list of key definitions.
+#[pyfunction]
+#[pyo3(signature=(graph, path, keys, compression=None),text_signature = "(graph, path, /, keys=None, compression=None)")]
+pub fn digraph_write_graphml(
+    py: Python<'_>,
+    graph: Py<PyDiGraph>,
+    path: &str,
+    keys: Option<Vec<Py<KeySpec>>>,
+    compression: Option<String>,
+) -> PyResult<()> {
+    let mut graphml = GraphML::default();
+    graphml.graphs.push(Graph::try_from(graph.bind(py))?);
+    graphml.set_or_infer_keys(py, keys)?;
     graphml.to_file(path, &compression.unwrap_or_default())?;
     Ok(())
 }

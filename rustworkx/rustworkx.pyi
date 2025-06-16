@@ -704,21 +704,23 @@ def directed_random_bipartite_graph(
 
 # Read Write
 
-def read_graphml_with_keys(
-    path: str,
-    /,
-    compression: str | None = ...,
-) -> tuple[list[GraphMLKey], list[PyGraph | PyDiGraph]]: ...
 def read_graphml(
     path: str,
     /,
     compression: str | None = ...,
 ) -> list[PyGraph | PyDiGraph]: ...
-def write_graphml(
-    graphs: list[PyGraph | PyDiGraph],
-    keys: list[GraphMLKey],
+def graph_write_graphml(
+    graph: PyGraph,
     path: str,
     /,
+    keys: list[GraphMLKey] | None = ...,
+    compression: str | None = ...,
+) -> None: ...
+def digraph_write_graphml(
+    graph: PyDiGraph,
+    path: str,
+    /,
+    keys: list[GraphMLKey] | None = ...,
     compression: str | None = ...,
 ) -> None: ...
 def digraph_node_link_json(

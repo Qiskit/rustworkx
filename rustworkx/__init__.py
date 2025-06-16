@@ -2279,3 +2279,17 @@ def single_source_all_shortest_paths(
         For most use cases, consider using `dijkstra_shortest_paths` for a single shortest path, which runs much faster.
     """
     raise TypeError(f"Invalid Input Type {type(graph)} for graph")
+
+
+def write_graphml(
+    graph: PyGraph | PyDiGraph,
+    path: str,
+    /,
+    keys: list[GraphMLKey] | None = None,
+    compression: str | None = None,
+) -> None:
+    """ """
+    if isinstance(graph, PyGraph):
+        graph_write_graphml(graph, path, keys, compression)
+        return
+    digraph_write_graphml(graph, path, keys, compression)
