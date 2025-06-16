@@ -1,0 +1,6 @@
+{
+  "name": "rustworkx-pyodide",
+  "dependencies": {
+    "pyodide": "^0.27.6"
+  }
+}
