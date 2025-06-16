@@ -25,7 +25,7 @@ use std::str::ParseBoolError;
 use flate2::bufread::GzDecoder;
 use flate2::write::GzEncoder;
 use flate2::Compression;
-use hashbrown::{HashMap, HashSet};
+use hashbrown::HashSet;
 
 use indexmap::map::Entry;
 
@@ -297,14 +297,14 @@ impl Key {
 
 struct Node {
     id: String,
-    data: HashMap<String, Value>,
+    data: DictMap<String, Value>,
 }
 
 struct Edge {
     id: Option<String>,
     source: String,
     target: String,
-    data: HashMap<String, Value>,
+    data: DictMap<String, Value>,
 }
 
 enum Direction {
@@ -317,7 +317,7 @@ struct Graph {
     dir: Direction,
     nodes: Vec<Node>,
     edges: Vec<Edge>,
-    attributes: HashMap<String, Value>,
+    attributes: DictMap<String, Value>,
 }
 
 impl Graph {
@@ -330,7 +330,7 @@ impl Graph {
             dir,
             nodes: Vec::new(),
             edges: Vec::new(),
-            attributes: HashMap::from_iter(
+            attributes: DictMap::from_iter(
                 default_attrs.map(|key| (key.name.clone(), key.default.clone())),
             ),
         }
@@ -342,7 +342,7 @@ impl Graph {
     {
         self.nodes.push(Node {
             id: xml_attribute(element, b"id")?,
-            data: HashMap::from_iter(
+            data: DictMap::from_iter(
                 default_data.map(|key| (key.name.clone(), key.default.clone())),
             ),
         });
@@ -358,7 +358,7 @@ impl Graph {
             id: xml_attribute(element, b"id").ok(),
             source: xml_attribute(element, b"source")?,
             target: xml_attribute(element, b"target")?,
-            data: HashMap::from_iter(
+            data: DictMap::from_iter(
                 default_data.map(|key| (key.name.clone(), key.default.clone())),
             ),
         });
@@ -395,7 +395,7 @@ impl<'py> IntoPyObject<'py> for Graph {
                 if let Some(id) = self.id {
                     self.attributes.insert(String::from("id"), Value::String(id.clone()));
                 }
-                let mut mapping = HashMap::with_capacity(self.nodes.len());
+                let mut mapping = DictMap::with_capacity(self.nodes.len());
                 for mut node in self.nodes {
                     // Write the node id from GraphML doc into the node data payload
                     // since in rustworkx nodes are indexed by an unsigned integer and
@@ -460,14 +460,14 @@ impl<'py> IntoPyObject<'py> for Graph {
 }
 
 struct GraphElementInfo {
-    attributes: HashMap<String, Value>,
+    attributes: DictMap<String, Value>,
     id: Option<String>,
 }
 
 impl Default for GraphElementInfo {
     fn default() -> Self {
         Self {
-            attributes: HashMap::new(),
+            attributes: DictMap::new(),
             id: None,
         }
     }
@@ -489,11 +489,11 @@ impl<Index: std::cmp::Eq + std::hash::Hash> GraphElementInfos<Index> {
     fn insert(&mut self, py: Python<'_>, index: Index, weight: Option<&Py<PyAny>>) -> PyResult<()> {
         let element_info = weight
             .and_then(|data| {
-                data.extract::<std::collections::HashMap<String, Value>>(py)
+                data.extract::<DictMap<String, Value>>(py)
                     .ok()
                     .map(|mut attributes| -> PyResult<GraphElementInfo> {
                         let id = attributes
-                            .remove_entry("id")
+                            .shift_remove_entry("id")
                             .map(|(id, value)| -> PyResult<Option<String>> {
                                 let value_str = value.to_id()?;
                                 if self.id_taken.contains(value_str) {
@@ -524,12 +524,12 @@ impl Graph {
         pygraph: &StablePyGraph<Ty>,
         attrs: &PyObject,
     ) -> PyResult<Self> {
-        let mut attrs: Option<std::collections::HashMap<String, Value>> = attrs.extract(py).ok();
+        let mut attrs: Option<DictMap<String, Value>> = attrs.extract(py).ok();
         let id = attrs
             .as_mut()
             .and_then(|attributes| {
                 attributes
-                    .remove("id")
+                    .shift_remove("id")
                     .map(|v| v.to_id().map(|id| id.to_string()))
             })
             .transpose()?;
@@ -545,7 +545,7 @@ impl Graph {
         for edge_index in pygraph.edge_indices() {
             edge_infos.insert(py, edge_index, pygraph.edge_weight(edge_index))?;
         }
-        let mut node_ids = HashMap::new();
+        let mut node_ids = DictMap::new();
         let mut fresh_index_counter = 0;
         for (node_index, element_info) in node_infos.vec {
             let id = element_info.id.unwrap_or_else(|| loop {
@@ -661,7 +661,7 @@ impl Default for GraphML {
 fn build_key_name_map<'a>(
     key_for_items: &'a DictMap<String, Key>,
     key_for_all: &'a DictMap<String, Key>,
-) -> HashMap<String, (&'a String, &'a Key)> {
+) -> DictMap<String, (&'a String, &'a Key)> {
     // `key_for_items` is iterated before `key_for_all` since last
     // items take precedence in the collected map. Similarly,
     // the map `for_all` take precedence over kind-specific maps in
@@ -1032,8 +1032,8 @@ impl GraphML {
 
     fn write_data<W: std::io::Write>(
         writer: &mut Writer<W>,
-        keys: &HashMap<String, (&String, &Key)>,
-        data: &HashMap<String, Value>,
+        keys: &DictMap<String, (&String, &Key)>,
+        data: &DictMap<String, Value>,
     ) -> Result<(), Error> {
         for (key_name, value) in data {
             let (id, key) = keys
@@ -1055,9 +1055,9 @@ impl GraphML {
 
     fn write_elem_data<W: std::io::Write>(
         writer: &mut Writer<W>,
-        keys: &HashMap<String, (&String, &Key)>,
+        keys: &DictMap<String, (&String, &Key)>,
         elem: BytesStart,
-        data: &HashMap<String, Value>,
+        data: &DictMap<String, Value>,
     ) -> Result<(), Error> {
         if data.is_empty() {
             writer.write_event(Event::Empty(elem))?;
@@ -1110,11 +1110,11 @@ impl GraphML {
         Self::write_keys(writer, "edge", &self.key_for_edges)?;
         Self::write_keys(writer, "graph", &self.key_for_graph)?;
         Self::write_keys(writer, "all", &self.key_for_all)?;
-        let graph_keys: HashMap<String, (&String, &Key)> =
+        let graph_keys: DictMap<String, (&String, &Key)> =
             build_key_name_map(&self.key_for_graph, &self.key_for_all);
-        let node_keys: HashMap<String, (&String, &Key)> =
+        let node_keys: DictMap<String, (&String, &Key)> =
             build_key_name_map(&self.key_for_nodes, &self.key_for_all);
-        let edge_keys: HashMap<String, (&String, &Key)> =
+        let edge_keys: DictMap<String, (&String, &Key)> =
             build_key_name_map(&self.key_for_edges, &self.key_for_all);
         for graph in self.graphs.iter() {
             let mut elem = BytesStart::new("graph");
