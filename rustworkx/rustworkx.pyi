@@ -1003,7 +1003,7 @@ def graph_tensor_product(
 
 def graph_token_swapper(
     graph: PyGraph,
-    mapping: dict[int, int],
+    mapping: Mapping[int, int],
     /,
     trials: int | None = ...,
     seed: int | None = ...,
