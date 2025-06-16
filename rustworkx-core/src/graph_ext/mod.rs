@@ -75,12 +75,14 @@ use petgraph::{EdgeType, Graph};
 
 pub mod contraction;
 pub mod multigraph;
+pub mod substitution;
 
 pub use contraction::{
     can_contract, ContractNodesDirected, ContractNodesSimpleDirected,
     ContractNodesSimpleUndirected, ContractNodesUndirected,
 };
 pub use multigraph::{HasParallelEdgesDirected, HasParallelEdgesUndirected};
+pub use substitution::SubstituteNodeWithGraph;
 
 /// A graph whose nodes may be removed.
 pub trait NodeRemovable: Data {
