@@ -8,7 +8,6 @@ Serialization
 
    rustworkx.node_link_json
    rustworkx.read_graphml
-   rustworkx.read_graphml_with_keys
    rustworkx.write_graphml
    rustworkx.from_node_link_json_file
    rustworkx.parse_node_link_json
