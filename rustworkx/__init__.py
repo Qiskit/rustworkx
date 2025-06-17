@@ -2279,3 +2279,9 @@ def single_source_all_shortest_paths(
         For most use cases, consider using `dijkstra_shortest_paths` for a single shortest path, which runs much faster.
     """
     raise TypeError(f"Invalid Input Type {type(graph)} for graph")
+
+
+@_rustworkx_dispatch
+def write_graphml(graph, path, /, keys=None, compression=None):
+    """ """
+    raise TypeError(f"Invalid Input Type {type(graph)} for graph")

@@ -68,6 +68,30 @@ class ColoringStrategy:
     Saturation: Any
     IndependentSet: Any
 
+@final
+class GraphMLDomain:
+    Node: GraphMLDomain
+    Edge: GraphMLDomain
+    Graph: GraphMLDomain
+    All: GraphMLDomain
+
+@final
+class GraphMLType:
+    Boolean: GraphMLType
+    Int: GraphMLType
+    Float: GraphMLType
+    Double: GraphMLType
+    String: GraphMLType
+    Long: GraphMLType
+
+@final
+class GraphMLKey:
+    id: str
+    domain: GraphMLDomain
+    name: str
+    ty: GraphMLType
+    default: Any
+
 # Cartesian product
 
 def digraph_cartesian_product(
@@ -685,6 +709,20 @@ def read_graphml(
     /,
     compression: str | None = ...,
 ) -> list[PyGraph | PyDiGraph]: ...
+def graph_write_graphml(
+    graph: PyGraph,
+    path: str,
+    /,
+    keys: list[GraphMLKey] | None = ...,
+    compression: str | None = ...,
+) -> None: ...
+def digraph_write_graphml(
+    graph: PyDiGraph,
+    path: str,
+    /,
+    keys: list[GraphMLKey] | None = ...,
+    compression: str | None = ...,
+) -> None: ...
 def digraph_node_link_json(
     graph: PyDiGraph[_S, _T],
     /,
