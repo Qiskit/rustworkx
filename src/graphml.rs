@@ -1292,7 +1292,7 @@ impl KeySpec {
 
 /// Write a graph to a file in GraphML format given the list of key definitions.
 #[pyfunction]
-#[pyo3(signature=(graph, path, keys, compression=None),text_signature = "(graph, path, /, keys=None, compression=None)")]
+#[pyo3(signature=(graph, path, keys=None, compression=None),text_signature = "(graph, path, /, keys=None, compression=None)")]
 pub fn graph_write_graphml(
     py: Python<'_>,
     graph: Py<PyGraph>,
@@ -1309,7 +1309,7 @@ pub fn graph_write_graphml(
 
 /// Write a digraph to a file in GraphML format given the list of key definitions.
 #[pyfunction]
-#[pyo3(signature=(graph, path, keys, compression=None),text_signature = "(graph, path, /, keys=None, compression=None)")]
+#[pyo3(signature=(graph, path, keys=None, compression=None),text_signature = "(graph, path, /, keys=None, compression=None)")]
 pub fn digraph_write_graphml(
     py: Python<'_>,
     graph: Py<PyDiGraph>,
