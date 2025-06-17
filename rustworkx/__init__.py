@@ -2282,6 +2282,6 @@ def single_source_all_shortest_paths(
 
 
 @_rustworkx_dispatch
-def write_graphml(graph, path, /, keys, compression):
+def write_graphml(graph, path, /, keys=None, compression=None):
     """ """
     raise TypeError(f"Invalid Input Type {type(graph)} for graph")
