@@ -165,6 +165,7 @@ from .rustworkx import directed_random_bipartite_graph as directed_random_bipart
 from .rustworkx import read_graphml as read_graphml
 from .rustworkx import graph_write_graphml as graph_write_graphml
 from .rustworkx import digraph_write_graphml as digraph_write_graphml
+from .rustworkx import GraphMLKey as GraphMLKey
 from .rustworkx import digraph_node_link_json as digraph_node_link_json
 from .rustworkx import graph_node_link_json as graph_node_link_json
 from .rustworkx import from_node_link_json_file as from_node_link_json_file
@@ -664,3 +665,10 @@ def is_bipartite(graph: PyGraph[_S, _T] | PyDiGraph[_S, _T]) -> bool: ...
 def condensation(
     graph: PyDiGraph | PyGraph, /, sccs: list[int] | None = ...
 ) -> PyDiGraph | PyGraph: ...
+def write_graphml(
+    graph: PyGraph | PyDiGraph,
+    path: str,
+    /,
+    keys: list[GraphMLKey] | None = ...,
+    compression: str | None = ...,
+) -> None: ...
