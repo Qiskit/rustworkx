@@ -6,7 +6,6 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-from __future__ import annotations
 
 import importlib
 import sys
@@ -2282,15 +2281,7 @@ def single_source_all_shortest_paths(
     raise TypeError(f"Invalid Input Type {type(graph)} for graph")
 
 
-def write_graphml(
-    graph: PyGraph | PyDiGraph,
-    path: str,
-    /,
-    keys: list[GraphMLKey] | None = None,
-    compression: str | None = None,
-) -> None:
+@_rustworkx_dispatch
+def write_graphml(graph, path, /, keys, compression):
     """ """
-    if isinstance(graph, PyGraph):
-        graph_write_graphml(graph, path, keys, compression)
-        return
-    digraph_write_graphml(graph, path, keys, compression)
+    raise TypeError(f"Invalid Input Type {type(graph)} for graph")
