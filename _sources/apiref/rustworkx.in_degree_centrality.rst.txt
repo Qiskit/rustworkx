@@ -1,0 +1,6 @@
+﻿rustworkx.in\_degree\_centrality
+================================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: in_degree_centrality
