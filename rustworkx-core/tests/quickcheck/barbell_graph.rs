@@ -1,5 +1,4 @@
 use petgraph::graph::UnGraph;
-use petgraph::visit::EdgeRef;
 use quickcheck::{quickcheck, TestResult};
 use rustworkx_core::generators::barbell_graph;
 
