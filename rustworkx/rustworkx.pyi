@@ -68,6 +68,30 @@ class ColoringStrategy:
     Saturation: Any
     IndependentSet: Any
 
+@final
+class GraphMLDomain:
+    Node: GraphMLDomain
+    Edge: GraphMLDomain
+    Graph: GraphMLDomain
+    All: GraphMLDomain
+
+@final
+class GraphMLType:
+    Boolean: GraphMLType
+    Int: GraphMLType
+    Float: GraphMLType
+    Double: GraphMLType
+    String: GraphMLType
+    Long: GraphMLType
+
+@final
+class GraphMLKey:
+    id: str
+    domain: GraphMLDomain
+    name: str
+    ty: GraphMLType
+    default: Any
+
 # Cartesian product
 
 def digraph_cartesian_product(
@@ -685,6 +709,20 @@ def read_graphml(
     /,
     compression: str | None = ...,
 ) -> list[PyGraph | PyDiGraph]: ...
+def graph_write_graphml(
+    graph: PyGraph,
+    path: str,
+    /,
+    keys: list[GraphMLKey] | None = ...,
+    compression: str | None = ...,
+) -> None: ...
+def digraph_write_graphml(
+    graph: PyDiGraph,
+    path: str,
+    /,
+    keys: list[GraphMLKey] | None = ...,
+    compression: str | None = ...,
+) -> None: ...
 def digraph_node_link_json(
     graph: PyDiGraph[_S, _T],
     /,
@@ -970,6 +1008,21 @@ def graph_all_shortest_paths(
     weight_fn: Callable[[_T], float] | None = ...,
     default_weight: float = ...,
 ) -> list[list[int]]: ...
+def graph_single_source_all_shortest_paths(
+    graph: PyGraph[_S, _T],
+    source: int,
+    /,
+    weight_fn: Callable[[_T], float] | None = ...,
+    default_weight: float = 1.0,
+) -> dict[int, list[list[int]]]: ...
+def digraph_single_source_all_shortest_paths(
+    graph: PyDiGraph[_S, _T],
+    source: int,
+    /,
+    weight_fn: Callable[[_T], float] | None = ...,
+    default_weight: float = 1.0,
+    as_undirected: bool = False,
+) -> dict[int, list[list[int]]]: ...
 
 # Tensor Product
 
@@ -1305,6 +1358,9 @@ class PyGraph(Generic[_S, _T]):
     def remove_node(self, node: int, /) -> None: ...
     def remove_nodes_from(self, index_list: Iterable[int], /) -> None: ...
     def subgraph(self, nodes: Sequence[int], /, preserve_attrs: bool = ...) -> PyGraph[_S, _T]: ...
+    def subgraph_with_nodemap(
+        self, nodes: Sequence[int], /, preserve_attrs: bool = ...
+    ) -> tuple[PyGraph[_S, _T], NodeMap]: ...
     def substitute_node_with_subgraph(
         self,
         node: int,
@@ -1408,6 +1464,7 @@ class PyDiGraph(Generic[_S, _T]):
         check_cycle: bool | None = ...,
         weight_combo_fn: Callable[[_T, _T], _T] | None = ...,
     ) -> int: ...
+    def can_contract_without_cycle(self, nodes: Sequence[int], /) -> bool: ...
     def copy(self) -> Self: ...
     def edge_index_map(self) -> EdgeIndexMap[_T]: ...
     def edge_indices(self) -> EdgeIndices: ...
@@ -1513,6 +1570,9 @@ class PyDiGraph(Generic[_S, _T]):
     def subgraph(
         self, nodes: Sequence[int], /, preserve_attrs: bool = ...
     ) -> PyDiGraph[_S, _T]: ...
+    def subgraph_with_nodemap(
+        self, nodes: Sequence[int], /, preserve_attrs: bool = ...
+    ) -> tuple[PyDiGraph[_S, _T], NodeMap]: ...
     def substitute_node_with_subgraph(
         self,
         node: int,
