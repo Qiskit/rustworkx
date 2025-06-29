@@ -1,4 +1,5 @@
 #![no_main]
+#![allow(clippy::uninlined_format_args)]
 
 use arbitrary::{Arbitrary, Unstructured};
 use libfuzzer_sys::fuzz_target;
