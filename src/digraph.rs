@@ -895,8 +895,7 @@ impl PyDiGraph {
             Some(data) => data,
             None => {
                 return Err(PyIndexError::new_err(format!(
-                    "Provided edge index {} is not present in the graph",
-                    edge_index
+                    "Provided edge index {edge_index} is not present in the graph"
                 )));
             }
         };
@@ -917,8 +916,7 @@ impl PyDiGraph {
             Some(endpoints) => (endpoints.0.index(), endpoints.1.index()),
             None => {
                 return Err(PyIndexError::new_err(format!(
-                    "Provided edge index {} is not present in the graph",
-                    edge_index
+                    "Provided edge index {edge_index} is not present in the graph"
                 )));
             }
         };
@@ -2622,7 +2620,7 @@ impl PyDiGraph {
                 .as_bytes(),
             )?;
             match weight_callable(py, &weight_fn, edge.weight(), None as Option<String>)? {
-                Some(weight) => buf_writer.write_all(format!("{}{}\n", delim, weight).as_bytes()),
+                Some(weight) => buf_writer.write_all(format!("{delim}{weight}\n").as_bytes()),
                 None => buf_writer.write_all(b"\n"),
             }?;
         }
@@ -2875,8 +2873,7 @@ impl PyDiGraph {
         let node_index: NodeIndex = NodeIndex::new(node);
         if self.graph.node_weight(node_index).is_none() {
             return Err(PyIndexError::new_err(format!(
-                "Specified node {} is not in this graph",
-                node
+                "Specified node {node} is not in this graph"
             )));
         }
         // Copy nodes from other to self
@@ -2927,8 +2924,7 @@ impl PyDiGraph {
                     Some(new_index) => NodeIndex::new(*new_index),
                     None => {
                         return Err(PyIndexError::new_err(format!(
-                            "No mapped index {} found",
-                            old_index
+                            "No mapped index {old_index} found"
                         )))
                     }
                 },
@@ -2943,8 +2939,7 @@ impl PyDiGraph {
                     Some(new_index) => NodeIndex::new(*new_index),
                     None => {
                         return Err(PyIndexError::new_err(format!(
-                            "No mapped index {} found",
-                            old_index
+                            "No mapped index {old_index} found"
                         )))
                     }
                 },

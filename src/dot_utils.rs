@@ -38,7 +38,7 @@ where
     writeln!(file, "{} {{", TYPE[graph.is_directed() as usize])?;
     if let Some(graph_attr_map) = graph_attrs {
         for (key, value) in graph_attr_map.iter() {
-            writeln!(file, "{}={} ;", key, value)?;
+            writeln!(file, "{key}={value} ;")?;
         }
     }
 
@@ -88,12 +88,12 @@ fn attr_map_to_string<'a>(
         .iter()
         .map(|(key, value)| {
             if ATTRS_TO_ESCAPE.contains(&key.as_str()) {
-                format!("{}=\"{}\"", key, value)
+                format!("{key}=\"{value}\"")
             } else {
-                format!("{}={}", key, value)
+                format!("{key}={value}")
             }
         })
         .collect::<Vec<String>>()
         .join(", ");
-    Ok(format!("[{}]", attr_string))
+    Ok(format!("[{attr_string}]"))
 }
