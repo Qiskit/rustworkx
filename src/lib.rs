@@ -10,6 +10,8 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
+#![allow(clippy::uninlined_format_args)]
+
 mod bisimulation;
 mod cartesian_product;
 mod centrality;
