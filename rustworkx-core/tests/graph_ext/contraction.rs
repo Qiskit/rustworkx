@@ -253,7 +253,7 @@ where
                 assert_eq!(*seen.entry('e').or_insert(e), e);
                 assert_eq!(*seen.entry('m').or_insert(m), m);
             }
-            (_, _, w) => panic!("Unexpected edge weight: {}", w),
+            (_, _, w) => panic!("Unexpected edge weight: {w}"),
         }
     }
 
