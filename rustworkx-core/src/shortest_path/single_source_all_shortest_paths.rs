@@ -369,9 +369,7 @@ mod tests {
                 for &n in path {
                     assert!(
                         seen.insert(n),
-                        "Path {:?} contains repeated node {:?}",
-                        path,
-                        n
+                        "Path {path:?} contains repeated node {n:?}"
                     );
                 }
             }
