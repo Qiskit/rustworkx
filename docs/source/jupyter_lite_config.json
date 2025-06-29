@@ -1,0 +1,10 @@
+{
+  "LiteBuildConfig": {
+    "no_sourcemaps": true,
+    "no_unused_shared_packages": true,
+    "apps": ["repl"]
+  },
+  "PipliteAddon": {
+    "piplite_urls": ["rustworkx-0.17.0-cp39-abi3-pyodide_2024_0_wasm32.whl"]
+  }
+}
