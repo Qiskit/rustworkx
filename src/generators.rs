@@ -955,8 +955,7 @@ pub fn binomial_tree_graph(
 ) -> PyResult<graph::PyGraph> {
     if order >= MAX_ORDER {
         return Err(PyOverflowError::new_err(format!(
-            "An order of {} exceeds the max allowable size",
-            order
+            "An order of {order} exceeds the max allowable size"
         )));
     }
     let default_fn = || py.None();
@@ -1022,8 +1021,7 @@ pub fn directed_binomial_tree_graph(
 ) -> PyResult<digraph::PyDiGraph> {
     if order >= MAX_ORDER {
         return Err(PyOverflowError::new_err(format!(
-            "An order of {} exceeds the max allowable size",
-            order
+            "An order of {order} exceeds the max allowable size"
         )));
     }
     let default_fn = || py.None();

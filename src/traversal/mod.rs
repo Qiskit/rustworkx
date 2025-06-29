@@ -255,8 +255,7 @@ pub fn ancestors(graph: &digraph::PyDiGraph, node: usize) -> PyResult<HashSet<us
     let index = NodeIndex::new(node);
     if !graph.graph.contains_node(index) {
         return Err(PyIndexError::new_err(format!(
-            "Node source index \"{}\" out of graph bound",
-            node
+            "Node source index \"{node}\" out of graph bound"
         )));
     }
     Ok(core_ancestors(&graph.graph, index)
@@ -298,8 +297,7 @@ pub fn descendants(graph: &digraph::PyDiGraph, node: usize) -> PyResult<HashSet<
     let index = NodeIndex::new(node);
     if !graph.graph.contains_node(index) {
         return Err(PyIndexError::new_err(format!(
-            "Node source index \"{}\" out of graph bound",
-            node
+            "Node source index \"{node}\" out of graph bound"
         )));
     }
     Ok(core_descendants(&graph.graph, index)

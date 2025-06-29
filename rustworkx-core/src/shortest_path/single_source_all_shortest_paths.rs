@@ -367,12 +367,7 @@ mod tests {
                 // Check no repeated nodes
                 let mut seen = HashSet::new();
                 for &n in path {
-                    assert!(
-                        seen.insert(n),
-                        "Path {:?} contains repeated node {:?}",
-                        path,
-                        n
-                    );
+                    assert!(seen.insert(n), "Path {path:?} contains repeated node {n:?}");
                 }
             }
         }

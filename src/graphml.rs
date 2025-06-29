@@ -58,35 +58,35 @@ pub enum Error {
 impl From<XmlError> for Error {
     #[inline]
     fn from(e: XmlError) -> Error {
-        Error::Xml(format!("Xml document not well-formed: {}", e))
+        Error::Xml(format!("Xml document not well-formed: {e}"))
     }
 }
 
 impl From<ParseBoolError> for Error {
     #[inline]
     fn from(e: ParseBoolError) -> Error {
-        Error::ParseValue(format!("Failed conversion to 'bool': {}", e))
+        Error::ParseValue(format!("Failed conversion to 'bool': {e}"))
     }
 }
 
 impl From<ParseIntError> for Error {
     #[inline]
     fn from(e: ParseIntError) -> Error {
-        Error::ParseValue(format!("Failed conversion to 'int' or 'long': {}", e))
+        Error::ParseValue(format!("Failed conversion to 'int' or 'long': {e}"))
     }
 }
 
 impl From<ParseFloatError> for Error {
     #[inline]
     fn from(e: ParseFloatError) -> Error {
-        Error::ParseValue(format!("Failed conversion to 'float' or 'double': {}", e))
+        Error::ParseValue(format!("Failed conversion to 'float' or 'double': {e}"))
     }
 }
 
 impl From<std::io::Error> for Error {
     #[inline]
     fn from(e: std::io::Error) -> Error {
-        Error::IO(format!("Input/output error: {}", e))
+        Error::IO(format!("Input/output error: {e}"))
     }
 }
 
@@ -773,8 +773,7 @@ impl GraphML {
             b"long" => Type::Long,
             _ => {
                 return Err(Error::InvalidDoc(format!(
-                    "Invalid 'attr.type' attribute in key with id={}.",
-                    id,
+                    "Invalid 'attr.type' attribute in key with id={id}.",
                 )));
             }
         };
@@ -788,7 +787,7 @@ impl GraphML {
             .as_bytes()
             .try_into()
             .map_err(|()| {
-                Error::InvalidDoc(format!("Invalid 'for' attribute in key with id={}.", id,))
+                Error::InvalidDoc(format!("Invalid 'for' attribute in key with id={id}.",))
             })?;
         self.get_keys_mut(domain).insert(id, key);
         Ok(domain)
@@ -810,7 +809,7 @@ impl GraphML {
             None => self
                 .key_for_nodes
                 .get(key)
-                .ok_or_else(|| Error::NotFound(format!("Key '{}' for nodes not found.", key)))?,
+                .ok_or_else(|| Error::NotFound(format!("Key '{key}' for nodes not found.")))?,
         };
 
         if let Some(graph) = self.graphs.last_mut() {
@@ -826,7 +825,7 @@ impl GraphML {
             None => self
                 .key_for_edges
                 .get(key)
-                .ok_or_else(|| Error::NotFound(format!("Key '{}' for edges not found.", key)))?,
+                .ok_or_else(|| Error::NotFound(format!("Key '{key}' for edges not found.")))?,
         };
 
         if let Some(graph) = self.graphs.last_mut() {
@@ -842,7 +841,7 @@ impl GraphML {
             None => self
                 .key_for_graph
                 .get(key)
-                .ok_or_else(|| Error::NotFound(format!("Key '{}' for graph not found.", key)))?,
+                .ok_or_else(|| Error::NotFound(format!("Key '{key}' for graph not found.")))?,
         };
 
         if let Some(graph) = self.graphs.last_mut() {

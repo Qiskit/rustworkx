@@ -10,8 +10,6 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-#![allow(clippy::uninlined_format_args)]
-
 mod bisimulation;
 mod cartesian_product;
 mod centrality;
@@ -125,7 +123,7 @@ pub struct RxPyErr {
 pub type RxPyResult<T> = Result<T, RxPyErr>;
 
 fn map_dag_would_cycle<E: std::error::Error>(value: E) -> PyErr {
-    DAGWouldCycle::new_err(format!("{}", value))
+    DAGWouldCycle::new_err(format!("{value}"))
 }
 
 impl From<ContractError> for RxPyErr {
@@ -154,7 +152,7 @@ impl From<TopologicalSortError<PyErr>> for RxPyErr {
         RxPyErr {
             pyerr: match value {
                 TopologicalSortError::CycleOrBadInitialState => {
-                    PyValueError::new_err(format!("{}", value))
+                    PyValueError::new_err(format!("{value}"))
                 }
                 TopologicalSortError::KeyError(e) => e,
             },

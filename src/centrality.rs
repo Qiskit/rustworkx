@@ -748,8 +748,7 @@ pub fn graph_eigenvector_centrality(
                 .collect(),
         }),
         None => Err(FailedToConverge::new_err(format!(
-            "Function failed to converge on a solution in {} iterations",
-            max_iter
+            "Function failed to converge on a solution in {max_iter} iterations"
         ))),
     }
 }
@@ -836,8 +835,7 @@ pub fn digraph_eigenvector_centrality(
                 .collect(),
         }),
         None => Err(FailedToConverge::new_err(format!(
-            "Function failed to converge on a solution in {} iterations",
-            max_iter
+            "Function failed to converge on a solution in {max_iter} iterations"
         ))),
     }
 }
@@ -966,8 +964,7 @@ pub fn graph_katz_centrality(
                 .collect(),
         }),
         None => Err(FailedToConverge::new_err(format!(
-            "Function failed to converge on a solution in {} iterations",
-            max_iter
+            "Function failed to converge on a solution in {max_iter} iterations"
         ))),
     }
 }
@@ -1097,8 +1094,7 @@ pub fn digraph_katz_centrality(
                 .collect(),
         }),
         None => Err(FailedToConverge::new_err(format!(
-            "Function failed to converge on a solution in {} iterations",
-            max_iter
+            "Function failed to converge on a solution in {max_iter} iterations"
         ))),
     }
 }

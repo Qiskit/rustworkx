@@ -58,8 +58,7 @@ pub fn from_node_link_json_file<'py>(
         Ok(v) => v,
         Err(e) => {
             return Err(JSONDeserializationError::new_err(format!(
-                "JSON Deserialization Error {}",
-                e
+                "JSON Deserialization Error {e}"
             )));
         }
     };
@@ -136,8 +135,7 @@ pub fn parse_node_link_json<'py>(
         Ok(v) => v,
         Err(e) => {
             return Err(JSONDeserializationError::new_err(format!(
-                "JSON Deserialization Error {}",
-                e
+                "JSON Deserialization Error {e}"
             )));
         }
     };

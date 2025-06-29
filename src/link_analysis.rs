@@ -210,8 +210,7 @@ pub fn pagerank(
     // Convert to custom return type
     if !has_converged {
         return Err(FailedToConverge::new_err(format!(
-            "Function failed to converge on a solution in {} iterations",
-            max_iter
+            "Function failed to converge on a solution in {max_iter} iterations"
         )));
     }
 
@@ -359,8 +358,7 @@ pub fn hits(
     // Convert to custom return type
     if !has_converged {
         return Err(FailedToConverge::new_err(format!(
-            "Function failed to converge on a solution in {} iterations",
-            max_iter
+            "Function failed to converge on a solution in {max_iter} iterations"
         )));
     }
 

@@ -31,8 +31,7 @@ pub fn num_shortest_paths_unweighted<Ty: EdgeType>(
     let node_index = NodeIndex::new(source);
     if graph.node_weight(node_index).is_none() {
         return Err(PyIndexError::new_err(format!(
-            "No node found for index {}",
-            source
+            "No node found for index {source}"
         )));
     }
     let mut bfs = Bfs::new(graph, node_index);

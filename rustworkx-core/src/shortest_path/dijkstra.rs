@@ -191,7 +191,7 @@ mod tests {
         g.add_edge(b, f, 15);
         g.add_edge(c, f, 11);
         g.add_edge(e, f, 6);
-        println!("{:?}", g);
+        println!("{g:?}");
         let scores: Result<DictMap<NodeIndex, usize>> =
             dijkstra(&g, a, None, |e| Ok(*e.weight()), None);
         let exp_scores: DictMap<NodeIndex, usize> =
@@ -220,7 +220,7 @@ mod tests {
         g.add_edge(b, f, 15);
         g.add_edge(c, f, 11);
         g.add_edge(e, f, 6);
-        println!("{:?}", g);
+        println!("{g:?}");
 
         let scores: Result<DictMap<NodeIndex, usize>> =
             dijkstra(&g, a, Some(c), |e| Ok(*e.weight()), None);
