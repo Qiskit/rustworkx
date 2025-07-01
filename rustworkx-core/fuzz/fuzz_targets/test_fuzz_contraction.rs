@@ -1,5 +1,4 @@
 #![no_main]
-#![allow(clippy::uninlined_format_args)]
 
 use arbitrary::{Arbitrary, Unstructured};
 use libfuzzer_sys::fuzz_target;
@@ -66,7 +65,7 @@ fn fuzz_contract_nodes(input: ContractFuzzInput) {
             // Expected error — no-op
         }
         Err(err) => {
-            panic!("Unexpected error during node contraction: {:?}", err);
+            panic!("Unexpected error during node contraction: {err:?}");
         }
     }
 }

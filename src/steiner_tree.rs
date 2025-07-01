@@ -133,8 +133,7 @@ pub fn steiner_tree(
         let index = NodeIndex::new(*n);
         if graph.graph.node_weight(index).is_none() {
             return Err(PyValueError::new_err(format!(
-                "Provided terminal node index {} is not present in graph",
-                n
+                "Provided terminal node index {n} is not present in graph"
             )));
         }
         terminal_n.push(index);
