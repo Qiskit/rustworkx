@@ -82,8 +82,6 @@
 //!
 //! <https://www.rustworkx.org/release_notes.html>
 
-#![allow(clippy::uninlined_format_args)]
-
 use std::convert::Infallible;
 
 /// A convenient type alias that by default assumes no error can happen.
