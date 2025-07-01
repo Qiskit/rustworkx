@@ -301,8 +301,7 @@ pub fn layers(
     for layer_node in &first_layer {
         if !dag.graph.contains_node(NodeIndex::new(*layer_node)) {
             return Err(InvalidNode::new_err(format!(
-                "An index input in 'first_layer' {} is not a valid node index in the graph",
-                layer_node
+                "An index input in 'first_layer' {layer_node} is not a valid node index in the graph"
             )));
         }
     }

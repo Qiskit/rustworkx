@@ -59,7 +59,7 @@ impl<E: Error> Display for TopologicalSortError<E> {
                 write!(f, "At least one initial node is reachable from another")
             }
             TopologicalSortError::KeyError(ref e) => {
-                write!(f, "The key callback failed with: {:?}", e)
+                write!(f, "The key callback failed with: {e:?}")
             }
         }
     }
@@ -420,12 +420,11 @@ where
             self.first_iter = false;
             for node in &self.cur_layer {
                 if self.graph.to_index(*node) >= self.graph.node_bound() {
-                    panic!("Node {:#?} is not present in the graph.", node);
+                    panic!("Node {node:#?} is not present in the graph.");
                 }
                 if self.cycle_check.contains(node) {
                     return Some(Err(LayersError(format!(
-                        "An invalid first layer was provided: {:#?} appears more than once.",
-                        node
+                        "An invalid first layer was provided: {node:#?} appears more than once."
                     ))));
                 }
                 self.cycle_check.insert(*node);
@@ -436,7 +435,7 @@ where
         } else {
             for node in &self.cur_layer {
                 if self.graph.to_index(*node) >= self.graph.node_bound() {
-                    panic!("Node {:#?} is not present in the graph.", node);
+                    panic!("Node {node:#?} is not present in the graph.");
                 }
                 let children = self
                     .graph
