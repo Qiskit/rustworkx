@@ -14,10 +14,12 @@ use std::hash::Hash;
 
 use hashbrown::{HashMap, HashSet};
 
+use fixedbitset::FixedBitSet;
 use ndarray::prelude::*;
 use petgraph::visit::{
     GraphProp, IntoNeighborsDirected, IntoNodeIdentifiers, NodeCount, NodeIndexable,
 };
+use petgraph::{Incoming, Outgoing};
 use rayon::prelude::*;
 
 /// Get the distance matrix for a graph
@@ -95,37 +97,42 @@ where
         ))
     }
     let mut matrix = Array2::<f64>::from_elem((n, n), null_value);
-    let bfs_traversal = |index: usize, mut row: ArrayViewMut1<f64>| {
-        let mut seen: HashMap<G::NodeId, usize> = HashMap::with_capacity(n);
-        let start_index = graph.from_index(index);
-        let mut level = 0;
-        let mut next_level: HashSet<G::NodeId> = HashSet::with_capacity(1);
-        next_level.insert(start_index);
-        while !next_level.is_empty() {
-            let this_level = next_level;
-            next_level = HashSet::new();
-            let mut found: Vec<G::NodeId> = Vec::new();
-            for v in this_level {
-                if !seen.contains_key(&v) {
-                    seen.insert(v, level);
-                    found.push(v);
-                    row[graph.to_index(v)] = level as f64;
-                }
+    let neighbors = if as_undirected {
+        (0..n)
+            .map(|index| {
+                graph
+                    .neighbors_directed(graph.from_index(index), Incoming)
+                    .chain(graph.neighbors_directed(graph.from_index(index), Outgoing))
+                    .map(|neighbor| graph.to_index(neighbor))
+                    .collect::<FixedBitSet>()
+            })
+            .collect::<Vec<_>>()
+    } else {
+        (0..n)
+            .map(|index| {
+                graph
+                    .neighbors(graph.from_index(index))
+                    .map(|neighbor| graph.to_index(neighbor))
+                    .collect::<FixedBitSet>()
+            })
+            .collect::<Vec<_>>()
+    };
+    let bfs_traversal = |start: usize, mut row: ArrayViewMut1<f64>| {
+        let mut distance = 0.0;
+        let mut seen = FixedBitSet::with_capacity(n);
+        let mut next = FixedBitSet::with_capacity(n);
+        let mut cur = FixedBitSet::with_capacity(n);
+        cur.put(start);
+        while !cur.is_clear() {
+            next.clear();
+            for found in cur.ones() {
+                row[[found]] = distance;
+                next |= &neighbors[found];
             }
-            if seen.len() == n {
-                return;
-            }
-            for node in found {
-                for v in graph.neighbors_directed(node, petgraph::Direction::Outgoing) {
-                    next_level.insert(v);
-                }
-                if graph.is_directed() && as_undirected {
-                    for v in graph.neighbors_directed(node, petgraph::Direction::Incoming) {
-                        next_level.insert(v);
-                    }
-                }
-            }
-            level += 1
+            seen.union_with(&cur);
+            next.difference_with(&seen);
+            distance += 1.0;
+            ::std::mem::swap(&mut cur, &mut next);
         }
     };
     if n < parallel_threshold {
@@ -203,7 +210,6 @@ where
 /// ];
 /// assert_eq!(distance_matrix, expected)
 /// ```
-
 pub fn distance_matrix_compacted<G>(
     graph: G,
     parallel_threshold: usize,
