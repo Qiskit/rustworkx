@@ -3,25 +3,11 @@ import nox
 nox.options.reuse_existing_virtualenvs = True
 nox.options.stop_on_first_error = True
 
-deps = [
-  "setuptools-rust",
-  "fixtures",
-  "testtools>=2.5.0",
-  "networkx>=2.5",
-  "stestr>=4.1",
-]
+pyproject = nox.project.load_toml("pyproject.toml")
 
-lint_deps = [
-    "black~=24.8",
-    "ruff~=0.6",
-    "setuptools-rust",
-    "typos~=1.28",
-]
-
-stubs_deps = [
-    "mypy==1.11.2",
-    "typing-extensions>=4.4",
-]
+deps = nox.project.dependency_groups(pyproject, "test")
+lint_deps = nox.project.dependency_groups(pyproject, "lint")
+stubs_deps = nox.project.dependency_groups(pyproject, "stubs")
 
 def install_rustworkx(session):
     session.install(*deps)
@@ -52,16 +38,35 @@ def lint(session):
     session.run("cargo", "fmt", "--all", "--", "--check", external=True)
     session.run("python", "tools/find_stray_release_notes.py")
 
-@nox.session(python=["3"])
+# For uv environments, we keep the virtualenvs separate to avoid conflicts
+@nox.session(python=["3"], venv_backend="uv", reuse_venv=False, default=False)
 def docs(session):
-    install_rustworkx(session)
-    session.install("-r", "docs/source/requirements.txt", "-c", "constraints.txt")
-    session.run("python", "-m", "ipykernel", "install", "--user")
-    session.run("jupyter", "kernelspec", "list")
+    session.env["UV_PROJECT_ENVIRONMENT"] = session.virtualenv.location
+    session.env["UV_FROZEN"] = "1"
+    # faster build as generating docs already takes some time and we discard the env
+    session.env["SETUPTOOLS_RUST_CARGO_PROFILE"] = "dev"
+    session.run("uv", "sync", "--only-group", "docs")
+    session.install(".")
+    session.run(
+        "uv", "run", "--", "python", "-m", "ipykernel", "install", "--user"
+    )
+    session.run("uv", "run", "jupyter", "kernelspec", "list")
     session.chdir("docs")
-    session.run("sphinx-build", "-W", "-d", "build/.doctrees", "-b", "html", "source", "build/html", *session.posargs)
+    session.run(
+        "uv",
+        "run",
+        "sphinx-build",
+        "-W",
+        "-d",
+        "build/.doctrees",
+        "-b",
+        "html",
+        "source",
+        "build/html",
+        *session.posargs,
+    )
 
-@nox.session(python=["3"])
+@nox.session(python=["3"], default=False)
 def docs_clean(session):
     session.chdir("docs")
     session.run("rm", "-rf", "build", "source/apiref", external=True)

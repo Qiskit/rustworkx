@@ -43,8 +43,22 @@ doc = false
 bench = false
 
 [[bin]]
+name = "test_fuzz_planar"
+path = "fuzz_targets/test_fuzz_planar.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
 name = "test_fuzz_contraction"
 path = "fuzz_targets/test_fuzz_contraction.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "test_fuzz_centrality"
+path = "fuzz_targets/test_fuzz_centrality.rs"
 test = false
 doc = false
 bench = false

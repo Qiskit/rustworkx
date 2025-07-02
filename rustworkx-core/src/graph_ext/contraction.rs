@@ -471,7 +471,7 @@ where
 
 fn contract_stable<G, F, E: Error>(
     graph: &mut G,
-    mut nodes: IndexSet<G::NodeId, ahash::RandomState>,
+    mut nodes: IndexSet<G::NodeId, foldhash::fast::RandomState>,
     weight: G::NodeWeight,
     weight_combo_fn: Option<F>,
 ) -> Result<G::NodeId, E>
@@ -498,8 +498,44 @@ where
 
     Ok(node_index)
 }
-
-fn can_contract<G>(graph: G, nodes: &IndexSet<G::NodeId, ahash::RandomState>) -> bool
+/// Check if a set of nodes in a directed graph can be contracted without introducing a cycle.
+///
+/// This function determines whether contracting the given set of nodes into a single node
+/// would introduce a cycle in the graph. It is typically used to check the feasibility of the contraction before performing
+/// the actual operation.
+///
+/// # Arguments
+///
+/// * `graph` - The graph to check.
+/// * `nodes` - A set of node indices to be contracted.
+///
+/// A bool whether the graph can be contracted based on the given nodes is returned.
+///
+/// # Example
+///
+/// ```rust
+/// use petgraph::stable_graph::StableDiGraph;
+/// use indexmap::IndexSet;
+/// use foldhash::fast::RandomState;
+/// use rustworkx_core::graph_ext::contraction::can_contract;
+///
+/// // Create a simple DAG: a -> b -> c
+/// let mut graph = StableDiGraph::<&str, ()>::default();
+/// let a = graph.add_node("a");
+/// let b = graph.add_node("b");
+/// let c = graph.add_node("c");
+/// graph.add_edge(a, b, ());
+/// graph.add_edge(b, c, ());
+///
+/// // Try to contract nodes b and c
+/// let mut nodes = IndexSet::with_hasher(RandomState::default());
+/// nodes.insert(b);
+/// nodes.insert(c);
+///
+/// let can_contract = can_contract(&graph, &nodes);
+/// assert!(can_contract); // true: contracting b and c does not introduce a cycle
+/// ```
+pub fn can_contract<G>(graph: G, nodes: &IndexSet<G::NodeId, foldhash::fast::RandomState>) -> bool
 where
     G: Data + Visitable + IntoEdgesDirected,
     G::NodeId: Eq + Hash,
@@ -536,7 +572,7 @@ type NoCallback<E> = Option<fn(&E, &E) -> Result<E, Infallible>>;
 fn add_edges<G, F, E>(
     graph: &mut G,
     new_node: G::NodeId,
-    nodes: &IndexSet<G::NodeId, ahash::RandomState>,
+    nodes: &IndexSet<G::NodeId, foldhash::fast::RandomState>,
     mut weight_combo_fn: Option<F>,
 ) -> Result<(), E>
 where

@@ -68,6 +68,30 @@ class ColoringStrategy:
     Saturation: Any
     IndependentSet: Any
 
+@final
+class GraphMLDomain:
+    Node: GraphMLDomain
+    Edge: GraphMLDomain
+    Graph: GraphMLDomain
+    All: GraphMLDomain
+
+@final
+class GraphMLType:
+    Boolean: GraphMLType
+    Int: GraphMLType
+    Float: GraphMLType
+    Double: GraphMLType
+    String: GraphMLType
+    Long: GraphMLType
+
+@final
+class GraphMLKey:
+    id: str
+    domain: GraphMLDomain
+    name: str
+    ty: GraphMLType
+    default: Any
+
 # Cartesian product
 
 def digraph_cartesian_product(
@@ -219,6 +243,8 @@ def number_strongly_connected_components(graph: PyDiGraph, /) -> int: ...
 def number_weakly_connected_components(graph: PyDiGraph, /) -> int: ...
 def node_connected_component(graph: PyGraph, node: int, /) -> set[int]: ...
 def strongly_connected_components(graph: PyDiGraph, /) -> list[list[int]]: ...
+def digraph_condensation(graph: PyDiGraph, /, sccs: list[int] | None = ...) -> PyDiGraph: ...
+def graph_condensation(graph: PyDiGraph, /) -> PyGraph: ...
 def weakly_connected_components(graph: PyDiGraph, /) -> list[set[int]]: ...
 def digraph_adjacency_matrix(
     graph: PyDiGraph[_S, _T],
@@ -683,6 +709,20 @@ def read_graphml(
     /,
     compression: str | None = ...,
 ) -> list[PyGraph | PyDiGraph]: ...
+def graph_write_graphml(
+    graph: PyGraph,
+    path: str,
+    /,
+    keys: list[GraphMLKey] | None = ...,
+    compression: str | None = ...,
+) -> None: ...
+def digraph_write_graphml(
+    graph: PyDiGraph,
+    path: str,
+    /,
+    keys: list[GraphMLKey] | None = ...,
+    compression: str | None = ...,
+) -> None: ...
 def digraph_node_link_json(
     graph: PyDiGraph[_S, _T],
     /,
@@ -968,6 +1008,21 @@ def graph_all_shortest_paths(
     weight_fn: Callable[[_T], float] | None = ...,
     default_weight: float = ...,
 ) -> list[list[int]]: ...
+def graph_single_source_all_shortest_paths(
+    graph: PyGraph[_S, _T],
+    source: int,
+    /,
+    weight_fn: Callable[[_T], float] | None = ...,
+    default_weight: float = 1.0,
+) -> dict[int, list[list[int]]]: ...
+def digraph_single_source_all_shortest_paths(
+    graph: PyDiGraph[_S, _T],
+    source: int,
+    /,
+    weight_fn: Callable[[_T], float] | None = ...,
+    default_weight: float = 1.0,
+    as_undirected: bool = False,
+) -> dict[int, list[list[int]]]: ...
 
 # Tensor Product
 
@@ -1238,7 +1293,7 @@ class PyGraph(Generic[_S, _T]):
         /,
         weight_combo_fn: Callable[[_T, _T], _T] | None = ...,
     ) -> int: ...
-    def copy(self) -> PyGraph[_S, _T]: ...
+    def copy(self) -> Self: ...
     def degree(self, node: int, /) -> int: ...
     def edge_index_map(self) -> EdgeIndexMap[_T]: ...
     def edge_indices(self) -> EdgeIndices: ...
@@ -1303,6 +1358,9 @@ class PyGraph(Generic[_S, _T]):
     def remove_node(self, node: int, /) -> None: ...
     def remove_nodes_from(self, index_list: Iterable[int], /) -> None: ...
     def subgraph(self, nodes: Sequence[int], /, preserve_attrs: bool = ...) -> PyGraph[_S, _T]: ...
+    def subgraph_with_nodemap(
+        self, nodes: Sequence[int], /, preserve_attrs: bool = ...
+    ) -> tuple[PyGraph[_S, _T], NodeMap]: ...
     def substitute_node_with_subgraph(
         self,
         node: int,
@@ -1312,14 +1370,24 @@ class PyGraph(Generic[_S, _T]):
         node_filter: Callable[[_S], bool] | None = ...,
         edge_weight_map: Callable[[_T], _T] | None = ...,
     ) -> NodeMap: ...
+    @overload
     def to_dot(
         self,
         /,
         node_attr: Callable[[_S], dict[str, str]] | None = ...,
         edge_attr: Callable[[_T], dict[str, str]] | None = ...,
         graph_attr: dict[str, str] | None = ...,
-        filename: str | None = None,
-    ) -> str | None: ...
+        filename: None = ...,
+    ) -> str: ...
+    @overload
+    def to_dot(
+        self,
+        /,
+        node_attr: Callable[[_S], dict[str, str]] | None = ...,
+        edge_attr: Callable[[_T], dict[str, str]] | None = ...,
+        graph_attr: dict[str, str] | None = ...,
+        filename: str = ...,
+    ) -> None: ...
     def to_directed(self) -> PyDiGraph[_S, _T]: ...
     def update_edge(
         self,
@@ -1396,7 +1464,8 @@ class PyDiGraph(Generic[_S, _T]):
         check_cycle: bool | None = ...,
         weight_combo_fn: Callable[[_T, _T], _T] | None = ...,
     ) -> int: ...
-    def copy(self) -> PyDiGraph[_S, _T]: ...
+    def can_contract_without_cycle(self, nodes: Sequence[int], /) -> bool: ...
+    def copy(self) -> Self: ...
     def edge_index_map(self) -> EdgeIndexMap[_T]: ...
     def edge_indices(self) -> EdgeIndices: ...
     def edge_indices_from_endpoints(self, node_a: int, node_b: int) -> EdgeIndices: ...
@@ -1501,6 +1570,9 @@ class PyDiGraph(Generic[_S, _T]):
     def subgraph(
         self, nodes: Sequence[int], /, preserve_attrs: bool = ...
     ) -> PyDiGraph[_S, _T]: ...
+    def subgraph_with_nodemap(
+        self, nodes: Sequence[int], /, preserve_attrs: bool = ...
+    ) -> tuple[PyDiGraph[_S, _T], NodeMap]: ...
     def substitute_node_with_subgraph(
         self,
         node: int,
@@ -1512,14 +1584,24 @@ class PyDiGraph(Generic[_S, _T]):
     ) -> NodeMap: ...
     def successor_indices(self, node: int, /) -> NodeIndices: ...
     def successors(self, node: int, /) -> list[_S]: ...
+    @overload
     def to_dot(
         self,
         /,
         node_attr: Callable[[_S], dict[str, str]] | None = ...,
         edge_attr: Callable[[_T], dict[str, str]] | None = ...,
         graph_attr: dict[str, str] | None = ...,
-        filename: str | None = None,
-    ) -> str | None: ...
+        filename: None = ...,
+    ) -> str: ...
+    @overload
+    def to_dot(
+        self,
+        /,
+        node_attr: Callable[[_S], dict[str, str]] | None = ...,
+        edge_attr: Callable[[_T], dict[str, str]] | None = ...,
+        graph_attr: dict[str, str] | None = ...,
+        filename: str = ...,
+    ) -> None: ...
     def to_undirected(
         self,
         /,

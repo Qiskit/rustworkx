@@ -5,7 +5,7 @@ API functions for PyDigraph
 
 These functions are algorithm functions that are type specific for
 :class:`~rustworkx.PyDiGraph` or :class:`~rustworkx.PyDAG` objects. Universal
-functions from Retworkx API that work for both graph types internally call
+functions from Rustworkx API that work for both graph types internally call
 the functions from the explicitly typed based on the data type.
 
 .. autosummary::
@@ -32,6 +32,7 @@ the functions from the explicitly typed based on the data type.
    rustworkx.digraph_all_pairs_bellman_ford_path_lengths
    rustworkx.digraph_k_shortest_path_lengths
    rustworkx.digraph_all_shortest_paths
+   rustworkx.digraph_single_source_all_shortest_paths
    rustworkx.digraph_dfs_edges
    rustworkx.digraph_dfs_search
    rustworkx.digraph_find_cycle

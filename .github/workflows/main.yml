@@ -26,7 +26,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.10"
-      - run: pip install -U ruff==0.6.8 black~=24.8
+      - run: |
+          pip install -U --group lint
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: rustfmt, clippy
@@ -37,9 +38,9 @@ jobs:
       - name: Clippy
         run: cargo clippy --workspace --all-targets -- -D warnings
       - name: Black Codestyle Format
-        run: black --check --diff retworkx rustworkx retworkx tests
+        run: black --check --diff rustworkx tests retworkx
       - name: Python Lint
-        run: ruff check rustworkx retworkx setup.py tests
+        run: ruff check rustworkx setup.py tests retworkx
       - name: Check stray release notes
         run: python tools/find_stray_release_notes.py
       - name: rustworkx-core Rust Tests
@@ -96,7 +97,8 @@ jobs:
           toolchain: ${{ matrix.rust }}
           targets: ${{ matrix.platform.rust-target }}
       - name: 'Install dependencies'
-        run: python -m pip install --upgrade nox
+        run: |
+          python -m pip install -U --group testinfra
       - name: 'Install binary dependencies'
         run: sudo apt-get install -y graphviz
         if: runner.os == 'Linux'
@@ -120,7 +122,8 @@ jobs:
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
       - name: 'Install dependencies'
-        run: python -m pip install --upgrade nox
+        run: |
+          python -m pip install -U --group testinfra
       - name: 'Run rustworkx stub tests'
         run: nox -estubs
   coverage:
@@ -141,21 +144,23 @@ jobs:
       - name: Download grcov
         run: curl -L https://github.com/mozilla/grcov/releases/download/v0.8.7/grcov-x86_64-unknown-linux-gnu.tar.bz2 | tar jxf -
       - name: Install deps
-        run: pip install -U setuptools-rust networkx testtools fixtures stestr
-      - name: Build retworkx
-        run: python setup.py develop
+        run: |
+          pip install -U --group test
+      - name: Build rustworkx
+        run: pip install .
         env:
+          SETUPTOOLS_RUST_CARGO_PROFILE: "dev"
           CARGO_INCREMENTAL: 0
           RUSTFLAGS: "-Cinstrument-coverage"
-          LLVM_PROFILE_FILE: "retworkx-%p-%m.profraw"
+          LLVM_PROFILE_FILE: "rustworkx-%p-%m.profraw"
       - name: Run tests
         run: cd tests && stestr run && cd ..
         env:
-          LLVM_PROFILE_FILE: "retworkx-%p-%m.profraw"
+          LLVM_PROFILE_FILE: "rustworkx-%p-%m.profraw"
       - name: Run grcov
         run: |
           set -e
-          mv tests/retworkx*profraw .
+          mv tests/rustworkx*profraw .
           ./grcov . --binary-path ./target/debug/ -s . -t lcov --branch --ignore-not-existing --ignore "/*" -o ./coveralls.lcov
       - uses: actions/upload-artifact@v4
         with:
@@ -185,7 +190,8 @@ jobs:
       - name: Install binary deps
         run: sudo apt-get install -y graphviz
       - name: Install deps
-        run: pip install -U nox
+        run: |
+          pip install -U --group testinfra
       - name: Build Docs
         run: nox -e docs
       - uses: actions/upload-artifact@v4

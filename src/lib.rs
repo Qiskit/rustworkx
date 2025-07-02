@@ -123,7 +123,7 @@ pub struct RxPyErr {
 pub type RxPyResult<T> = Result<T, RxPyErr>;
 
 fn map_dag_would_cycle<E: std::error::Error>(value: E) -> PyErr {
-    DAGWouldCycle::new_err(format!("{}", value))
+    DAGWouldCycle::new_err(format!("{value}"))
 }
 
 impl From<ContractError> for RxPyErr {
@@ -152,7 +152,7 @@ impl From<TopologicalSortError<PyErr>> for RxPyErr {
         RxPyErr {
             pyerr: match value {
                 TopologicalSortError::CycleOrBadInitialState => {
-                    PyValueError::new_err(format!("{}", value))
+                    PyValueError::new_err(format!("{value}"))
                 }
                 TopologicalSortError::KeyError(e) => e,
             },
@@ -615,11 +615,15 @@ fn rustworkx(py: Python<'_>, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(number_strongly_connected_components))?;
     m.add_wrapped(wrap_pyfunction!(strongly_connected_components))?;
     m.add_wrapped(wrap_pyfunction!(is_strongly_connected))?;
+    m.add_wrapped(wrap_pyfunction!(digraph_condensation))?;
+    m.add_wrapped(wrap_pyfunction!(graph_condensation))?;
     m.add_wrapped(wrap_pyfunction!(digraph_dfs_edges))?;
     m.add_wrapped(wrap_pyfunction!(graph_dfs_edges))?;
     m.add_wrapped(wrap_pyfunction!(digraph_find_cycle))?;
     m.add_wrapped(wrap_pyfunction!(digraph_k_shortest_path_lengths))?;
     m.add_wrapped(wrap_pyfunction!(graph_k_shortest_path_lengths))?;
+    m.add_wrapped(wrap_pyfunction!(digraph_single_source_all_shortest_paths))?;
+    m.add_wrapped(wrap_pyfunction!(graph_single_source_all_shortest_paths))?;
     m.add_wrapped(wrap_pyfunction!(is_matching))?;
     m.add_wrapped(wrap_pyfunction!(is_maximal_matching))?;
     m.add_wrapped(wrap_pyfunction!(max_weight_matching))?;
@@ -667,6 +671,8 @@ fn rustworkx(py: Python<'_>, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(connected_subgraphs))?;
     m.add_wrapped(wrap_pyfunction!(is_planar))?;
     m.add_wrapped(wrap_pyfunction!(read_graphml))?;
+    m.add_wrapped(wrap_pyfunction!(graph_write_graphml))?;
+    m.add_wrapped(wrap_pyfunction!(digraph_write_graphml))?;
     m.add_wrapped(wrap_pyfunction!(digraph_node_link_json))?;
     m.add_wrapped(wrap_pyfunction!(graph_node_link_json))?;
     m.add_wrapped(wrap_pyfunction!(from_node_link_json_file))?;
@@ -700,6 +706,9 @@ fn rustworkx(py: Python<'_>, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_class::<iterators::ProductNodeMap>()?;
     m.add_class::<iterators::BiconnectedComponents>()?;
     m.add_class::<ColoringStrategy>()?;
+    m.add_class::<Domain>()?;
+    m.add_class::<Type>()?;
+    m.add_class::<KeySpec>()?;
     m.add_wrapped(wrap_pymodule!(generators::generators))?;
     Ok(())
 }

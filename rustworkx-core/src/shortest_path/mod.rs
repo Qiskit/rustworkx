@@ -21,6 +21,7 @@ mod bellman_ford;
 mod dijkstra;
 mod distance_matrix;
 mod k_shortest_path;
+mod single_source_all_shortest_paths;
 
 pub use all_shortest_paths::all_shortest_paths;
 pub use astar::astar;
@@ -29,3 +30,4 @@ pub use dijkstra::dijkstra;
 pub use distance_matrix::distance_matrix;
 pub use distance_matrix::distance_matrix_compacted;
 pub use k_shortest_path::k_shortest_path;
+pub use single_source_all_shortest_paths::single_source_all_shortest_paths;

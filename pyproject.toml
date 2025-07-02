@@ -1,14 +1,117 @@
+[project]
+name = "rustworkx"
+version = "0.17.0"
+description = "A High-Performance Graph Library for Python"
+requires-python = ">=3.9"
+dependencies = [
+    "numpy>=1.16.0,<3"
+]
+readme = {file = "README.md", content-type = "text/markdown"}
+license-files = ["LICENSE"]
+license = "Apache-2.0"
+classifiers=[
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "Programming Language :: Rust",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Operating System :: MacOS :: MacOS X",
+    "Operating System :: Microsoft :: Windows",
+    "Operating System :: POSIX :: Linux",
+    "Development Status ::  5 - Production/Stable",
+]
+keywords = ["Networks", "network", "graph", "Graph Theory", "DAG"]
+
+[tool.setuptools]
+packages = ["rustworkx", "rustworkx.visualization"]
+include-package-data = true
+
+[tool.distutils.bdist_wheel]
+py-limited-api = "cp39"
+
+[[tool.setuptools-rust.ext-modules]]
+target = "rustworkx.rustworkx"
+path = "Cargo.toml"
+binding = "PyO3"
+
+[project.optional-dependencies]
+mpl = ["matplotlib>=3.0"]
+graphviz = ["pillow>=5.4"]
+# TODO: use self-referential rustworkx[mpl] and rustworkx[graphivz]
+# once it is better suported.
+all = [
+    "matplotlib>=3.0",
+    "pillow>=5.4",
+]
+
+[project.urls]
+issues = "https://github.com/Qiskit/rustworkx/issues"
+source = "https://github.com/Qiskit/rustworkx"
+documentation ="https://www.rustworkx.org/"
+releasenotes = "https://www.rustworkx.org/release_notes.html"
+
+[[project.authors]]
+name = "Matthew Treinish"
+email = "mtreinish@kortar.org"
+
+[[project.maintainers]]
+name = "Ivan Carvalho"
+email = "ivancarvalho@gatech.edu"
+
 [build-system]
-requires = ["setuptools", "wheel", "setuptools-rust"]
+requires = ["setuptools>=77.0.0", "setuptools-rust>=1.9"]
 build-backend = "setuptools.build_meta"
+
+[dependency-groups]
+testinfra = [
+    "nox==2025.5.1",
+    "uv==0.7.8",
+]
+test = [
+  "setuptools-rust",
+  "testtools>=2.5.0",
+  "networkx>=3.2",
+  "stestr>=4.1",
+]
+lint = [
+    "black~=24.8",
+    "ruff==0.11.9",
+    "setuptools-rust",
+    "typos~=1.28",
+]
+stubs = [
+    "mypy==1.11.2",
+    "typing-extensions>=4.4",
+]
+docs = [
+    "m2r2",
+    "sphinx>=5.0",
+    "jupyter-sphinx",
+    "pydot",
+    "pillow>=4.2.1",
+    "reno>=3.4.0",
+    "qiskit-sphinx-theme==1.16.1",
+    "matplotlib>=3.4",
+    "sphinx-reredirects",
+    "sphinxemoji",
+    "ipykernel",
+    "lxml_html_clean",
+]
+releaseinfra = [
+    "cibuildwheel==2.23.2",
+]
 
 [tool.black]
 line-length = 100
-target-version = ['py39', 'py310', 'py311', 'py312']
+target-version = ['py39', 'py310', 'py311', 'py312', 'py313']
 
 [tool.ruff]
 line-length = 105 # more lenient than black due to long function signatures
-src = ["rustworkx", "setup.py", "retworkx", "tests"]
+src = ["rustworkx", "setup.py", "tests"]
 lint.select = [
     "E",   # pycodestyle
     "F",   # pyflakes

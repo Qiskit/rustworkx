@@ -86,6 +86,8 @@ from .rustworkx import number_strongly_connected_components as number_strongly_c
 from .rustworkx import number_weakly_connected_components as number_weakly_connected_components
 from .rustworkx import node_connected_component as node_connected_component
 from .rustworkx import strongly_connected_components as strongly_connected_components
+from .rustworkx import digraph_condensation as digraph_condensation
+from .rustworkx import graph_condensation as graph_condensation
 from .rustworkx import weakly_connected_components as weakly_connected_components
 from .rustworkx import digraph_adjacency_matrix as digraph_adjacency_matrix
 from .rustworkx import graph_adjacency_matrix as graph_adjacency_matrix
@@ -161,6 +163,9 @@ from .rustworkx import directed_barabasi_albert_graph as directed_barabasi_alber
 from .rustworkx import undirected_random_bipartite_graph as undirected_random_bipartite_graph
 from .rustworkx import directed_random_bipartite_graph as directed_random_bipartite_graph
 from .rustworkx import read_graphml as read_graphml
+from .rustworkx import graph_write_graphml as graph_write_graphml
+from .rustworkx import digraph_write_graphml as digraph_write_graphml
+from .rustworkx import GraphMLKey as GraphMLKey
 from .rustworkx import digraph_node_link_json as digraph_node_link_json
 from .rustworkx import graph_node_link_json as graph_node_link_json
 from .rustworkx import from_node_link_json_file as from_node_link_json_file
@@ -235,6 +240,12 @@ from .rustworkx import find_negative_cycle as find_negative_cycle
 from .rustworkx import negative_edge_cycle as negative_edge_cycle
 from .rustworkx import digraph_all_shortest_paths as digraph_all_shortest_paths
 from .rustworkx import graph_all_shortest_paths as graph_all_shortest_paths
+from .rustworkx import (
+    graph_single_source_all_shortest_paths as graph_single_source_all_shortest_paths,
+)
+from .rustworkx import (
+    digraph_single_source_all_shortest_paths as digraph_single_source_all_shortest_paths,
+)
 from .rustworkx import digraph_tensor_product as digraph_tensor_product
 from .rustworkx import graph_tensor_product as graph_tensor_product
 from .rustworkx import graph_token_swapper as graph_token_swapper
@@ -388,6 +399,13 @@ def all_shortest_paths(
     default_weight: float = ...,
     as_undirected: bool = ...,
 ) -> list[list[int]]: ...
+def single_source_all_shortest_paths(
+    graph: PyGraph[_S, _T] | PyDiGraph[_S, _T],
+    source: int,
+    weight_fn: Callable[[_T], float] | None = ...,
+    default_weight: float = 1.0,
+    as_undirected: bool = False,
+) -> dict[int, list[list[int]]]: ...
 def dfs_edges(graph: PyGraph[_S, _T] | PyDiGraph[_S, _T], source: int | None = ...) -> EdgeList: ...
 @overload
 def is_isomorphic(
@@ -644,3 +662,13 @@ def longest_simple_path(graph: PyGraph[_S, _T] | PyDiGraph[_S, _T]) -> NodeIndic
 def isolates(graph: PyGraph[_S, _T] | PyDiGraph[_S, _T]) -> NodeIndices: ...
 def two_color(graph: PyGraph[_S, _T] | PyDiGraph[_S, _T]) -> dict[int, int]: ...
 def is_bipartite(graph: PyGraph[_S, _T] | PyDiGraph[_S, _T]) -> bool: ...
+def condensation(
+    graph: PyDiGraph | PyGraph, /, sccs: list[int] | None = ...
+) -> PyDiGraph | PyGraph: ...
+def write_graphml(
+    graph: PyGraph | PyDiGraph,
+    path: str,
+    /,
+    keys: list[GraphMLKey] | None = ...,
+    compression: str | None = ...,
+) -> None: ...

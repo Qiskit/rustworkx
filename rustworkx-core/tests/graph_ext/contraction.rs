@@ -10,13 +10,17 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-use ahash::HashSet;
+use foldhash::fast::RandomState;
+use foldhash::HashSet;
 use hashbrown::HashMap;
+use indexmap::IndexSet;
 use petgraph::data::Build;
+use petgraph::prelude::*;
 use petgraph::visit::{
     Data, EdgeCount, EdgeRef, GraphBase, IntoEdgeReferences, IntoNodeIdentifiers,
 };
 use rustworkx_core::err::ContractError;
+use rustworkx_core::graph_ext::contraction::can_contract;
 use rustworkx_core::graph_ext::*;
 use std::convert::Infallible;
 use std::fmt::Debug;
@@ -249,7 +253,7 @@ where
                 assert_eq!(*seen.entry('e').or_insert(e), e);
                 assert_eq!(*seen.entry('m').or_insert(m), m);
             }
-            (_, _, w) => panic!("Unexpected edge weight: {}", w),
+            (_, _, w) => panic!("Unexpected edge weight: {w}"),
         }
     }
 
@@ -400,4 +404,37 @@ where
 
     assert_eq!(dag.node_count(), 1);
     assert_eq!(dag.edge_count(), 0);
+}
+
+#[test]
+fn test_can_contract_without_cycle_true() {
+    // a -> b -> c (contract b and c, should be allowed)
+    let mut graph = StableDiGraph::<&str, ()>::default();
+    let a = graph.add_node("a");
+    let b = graph.add_node("b");
+    let c = graph.add_node("c");
+    graph.add_edge(a, b, ());
+    graph.add_edge(b, c, ());
+    let mut nodes: IndexSet<_, RandomState> = IndexSet::with_hasher(RandomState::default());
+    nodes.insert(b);
+    nodes.insert(c);
+
+    assert!(can_contract(&graph, &nodes));
+}
+
+#[test]
+fn test_can_contract_without_cycle_false() {
+    // a -> b -> c, c -> a (contract a and c, would create a cycle)
+    let mut graph = StableDiGraph::<&str, ()>::default();
+    let a = graph.add_node("a");
+    let b = graph.add_node("b");
+    let c = graph.add_node("c");
+    graph.add_edge(a, b, ());
+    graph.add_edge(b, c, ());
+    graph.add_edge(c, a, ());
+    let mut nodes: IndexSet<_, RandomState> = IndexSet::with_hasher(RandomState::default());
+    nodes.insert(a);
+    nodes.insert(c);
+
+    assert!(!can_contract(&graph, &nodes));
 }

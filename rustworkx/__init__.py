@@ -2224,3 +2224,64 @@ def all_shortest_paths(
         is provided.
     """
     raise TypeError(f"Invalid Input Type {type(graph)} for graph")
+
+
+@_rustworkx_dispatch
+def condensation(graph, /, sccs=None):
+    """Return the condensation of a directed or undirected graph
+    The condensation of a directed graph is a directed acyclic graph (DAG) in which
+    each node represents a strongly connected component (SCC) of the original graph.
+    The edges of the DAG represent the connections between these components.
+    The condensation of an undirected graph is a directed graph in which each node
+    represents a connected component of the original graph. The edges of the DAG
+    represent the connections between these components.
+
+    The condensation is computed using Tarjan's algorithm.
+
+    :param graph: The input graph to condense. This can be a
+        :class:`~rustworkx.PyGraph` or :class:`~rustworkx.PyDiGraph`.
+    :param sccs: An optional list of strongly connected components (SCCs) to use.
+        If not specified, the function will compute the SCCs internally.
+        If the input graph is undirected, this parameter is ignored.
+    :returns: A PyGraph or PyDiGraph object representing the condensation of the input graph.
+    :rtype: PyGraph or PyDiGraph
+    """
+    raise TypeError(f"Invalid Input Type {type(graph)} for graph")
+
+
+@_rustworkx_dispatch
+def single_source_all_shortest_paths(
+    graph, source, weight_fn=None, default_weight=1.0, as_undirected=False
+):
+    """
+    Find all shortest paths from a single source node to all other nodes.
+
+    This function will generate all possible shortest paths from a source node to all other nodes
+    using Dijkstra's algorithm. If ``as_undirected`` is True for directed graphs, it will be treated as undirected.
+
+    :param graph: The input graph :class:`~rustworkx.PyGraph` or :class:`~rustworkx.PyDiGraph`.
+    :param int source: The node index to find paths from.
+    :param weight_fn: An optional weight function for an edge. It will accept
+        a single argument, the edge's weight object and will return a float which
+        will be used to represent the weight/cost of the edge.
+    :param float default_weight: If ``weight_fn`` isn't specified this optional
+        float value will be used for the weight/cost of each edge.
+    :param bool as_undirected: If True, treat the directed graph as undirected (only for PyDiGraph).
+
+    :return: A dictionary where keys are node indices and values are lists of all shortest paths
+        from the source to that node. Each path is a list of node indices starting with the source.
+    :rtype: dict
+    :raises ValueError: when an edge weight with NaN or negative value is provided.
+    :raises IndexError: if the source node index is out of range.
+
+    .. warning::
+        This function can return an exponential number of paths in certain graphs, especially with zero-weight edges.
+        For most use cases, consider using `dijkstra_shortest_paths` for a single shortest path, which runs much faster.
+    """
+    raise TypeError(f"Invalid Input Type {type(graph)} for graph")
+
+
+@_rustworkx_dispatch
+def write_graphml(graph, path, /, keys=None, compression=None):
+    """ """
+    raise TypeError(f"Invalid Input Type {type(graph)} for graph")

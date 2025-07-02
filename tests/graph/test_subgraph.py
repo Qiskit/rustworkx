@@ -148,3 +148,63 @@ class TestSubgraph(unittest.TestCase):
         self.assertEqual([(0, 1, 4)], subgraph.weighted_edge_list())
         self.assertEqual(["b", "d"], subgraph.nodes())
         self.assertEqual(graph.attrs, subgraph.attrs)
+
+    def test_subgraph_with_nodemap(self):
+        graph = rustworkx.PyGraph()
+        graph.add_nodes_from(list(range(6)))
+        # Create a more complex graph: 0-1-2-3-4-5 with additional edges 1-4, 2-5
+        graph.extend_from_edge_list([(0, 1), (1, 2), (2, 3), (3, 4), (4, 5), (1, 4), (2, 5)])
+
+        # Test subset with multiple edges
+        subgraph, node_map = graph.subgraph_with_nodemap([1, 2, 4])
+        self.assertEqual(set(subgraph.node_indices()), {0, 1, 2})
+
+        # Check that we have the correct edges: 1-2 and 1-4 from original
+        edge_list = list(subgraph.edge_list())
+        self.assertEqual(len(edge_list), 2)
+        self.assertIn((0, 1), edge_list)  # 1-2 in original
+        self.assertIn((0, 2), edge_list)  # 1-4 in original
+
+        # Verify node mapping
+        node_map_dict = dict(node_map)
+        self.assertEqual(len(node_map_dict), 3)
+        self.assertEqual(set(node_map_dict.values()), {1, 2, 4})
+
+        # Test disconnected nodes (nodes with no edges between them)
+        graph2 = rustworkx.PyGraph()
+        graph2.add_nodes_from(["a", "b", "c", "d", "e"])
+        graph2.add_edges_from([(0, 1, 1), (2, 3, 2)])  # Two separate components
+        subgraph, node_map = graph2.subgraph_with_nodemap([0, 2, 4])
+
+        self.assertEqual([], subgraph.weighted_edge_list())  # No edges between selected nodes
+        self.assertEqual(["a", "c", "e"], subgraph.nodes())
+        self.assertEqual(dict(node_map), {0: 0, 1: 2, 2: 4})
+
+    def test_subgraph_with_nodemap_edge_cases(self):
+        graph = rustworkx.PyGraph()
+        graph.add_nodes_from(["a", "b", "c"])
+        graph.add_edges_from([(0, 1, 1), (1, 2, 2)])
+
+        # Test empty node list
+        subgraph, node_map = graph.subgraph_with_nodemap([])
+        self.assertEqual([], subgraph.weighted_edge_list())
+        self.assertEqual(0, len(subgraph))
+        self.assertEqual(dict(node_map), {})
+
+        # Test invalid node indices (should be silently ignored)
+        subgraph, node_map = graph.subgraph_with_nodemap([42, 100])
+        self.assertEqual([], subgraph.weighted_edge_list())
+        self.assertEqual(0, len(subgraph))
+        self.assertEqual(dict(node_map), {})
+
+        # Test single node (no edges in subgraph)
+        subgraph, node_map = graph.subgraph_with_nodemap([1])
+        self.assertEqual([], subgraph.weighted_edge_list())
+        self.assertEqual(["b"], subgraph.nodes())
+        self.assertEqual(dict(node_map), {0: 1})
+
+        # Test all nodes
+        subgraph, node_map = graph.subgraph_with_nodemap([0, 1, 2])
+        self.assertEqual([(0, 1, 1), (1, 2, 2)], subgraph.weighted_edge_list())
+        self.assertEqual(["a", "b", "c"], subgraph.nodes())
+        self.assertEqual(dict(node_map), {0: 0, 1: 1, 2: 2})
