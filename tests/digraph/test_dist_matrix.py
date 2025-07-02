@@ -137,4 +137,5 @@ class TestDistanceMatrix(unittest.TestCase):
         graph.remove_node(0)
         dist = rustworkx.digraph_distance_matrix(graph)
         expected = np.array([[0.0, 1.0, 2.0], [0.0, 0.0, 1.0], [0.0, 0.0, 0.0]])
+        print(dist)
         self.assertTrue(np.array_equal(dist, expected))

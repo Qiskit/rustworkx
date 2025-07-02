@@ -28,6 +28,5 @@ pub use astar::astar;
 pub use bellman_ford::{bellman_ford, negative_cycle_finder};
 pub use dijkstra::dijkstra;
 pub use distance_matrix::distance_matrix;
-pub use distance_matrix::distance_matrix_compacted;
 pub use k_shortest_path::k_shortest_path;
 pub use single_source_all_shortest_paths::single_source_all_shortest_paths;

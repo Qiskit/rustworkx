@@ -13,7 +13,6 @@
 use ndarray::prelude::*;
 use petgraph::EdgeType;
 
-use crate::NodesRemoved;
 use crate::StablePyGraph;
 
 use rustworkx_core::shortest_path;
@@ -24,14 +23,5 @@ pub fn compute_distance_matrix<Ty: EdgeType + Sync>(
     as_undirected: bool,
     null_value: f64,
 ) -> Array2<f64> {
-    if graph.nodes_removed() {
-        shortest_path::distance_matrix_compacted(
-            graph,
-            parallel_threshold,
-            as_undirected,
-            null_value,
-        )
-    } else {
-        shortest_path::distance_matrix(graph, parallel_threshold, as_undirected, null_value)
-    }
+    shortest_path::distance_matrix(graph, parallel_threshold, as_undirected, null_value)
 }
