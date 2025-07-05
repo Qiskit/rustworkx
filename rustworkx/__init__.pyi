@@ -170,6 +170,8 @@ from .rustworkx import digraph_node_link_json as digraph_node_link_json
 from .rustworkx import graph_node_link_json as graph_node_link_json
 from .rustworkx import from_node_link_json_file as from_node_link_json_file
 from .rustworkx import parse_node_link_json as parse_node_link_json
+from .rustworkx import hyperbolic_greedy_routing as hyperbolic_greedy_routing
+from .rustworkx import hyperbolic_greedy_success_rate as hyperbolic_greedy_success_rate
 from .rustworkx import digraph_bellman_ford_shortest_paths as digraph_bellman_ford_shortest_paths
 from .rustworkx import graph_bellman_ford_shortest_paths as graph_bellman_ford_shortest_paths
 from .rustworkx import (

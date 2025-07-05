@@ -752,6 +752,19 @@ def from_node_link_json_file(
     edge_attrs: Callable[[dict[str, str]], _T] | None = ...,
 ) -> PyDiGraph[_S, _T] | PyGraph[_S, _T]: ...
 
+# Geometry
+
+def hyperbolic_greedy_routing(
+    graph: PyGraph[_S, _T],
+    pos: list[list[float]],
+    source: int,
+    target: int,
+) -> tuple[list[int], float] | None: ...
+def hyperbolic_greedy_success_rate(
+    graph: PyGraph[_S, _T],
+    pos: list[list[float]],
+) -> float: ...
+
 # Shortest Path
 
 def digraph_bellman_ford_shortest_paths(
