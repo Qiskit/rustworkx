@@ -14,7 +14,7 @@
 # rustworkx documentation build configuration file
 #
 
-import sys, os
+import sys, os, json, pathlib
 import subprocess
 
 # General configuration:
@@ -41,6 +41,7 @@ extensions = ['sphinx.ext.autodoc',
               'sphinxemoji.sphinxemoji',
               'sphinx_reredirects',
               'qiskit_sphinx_theme',
+              'jupyterlite_sphinx',
              ]
 templates_path = ['_templates']
 extra_css_files = ["overrides.css"]
@@ -110,6 +111,18 @@ latex_documents = [
 
 # Jupyter Sphinx options
 jupyter_execute_default_kernel = "python3"
+
+# JupyterLite Sphinx options for the Playground
+jupyterlite_config = "jupyter_lite_config.json"
+with open(jupyterlite_config, "r") as test_json_config:
+    # If there are syntax errors, jupyterlite fails silently
+    # so we validate with Python
+    test_config_dictionary = json.load(test_json_config)
+    playground_url = test_config_dictionary["PipliteAddon"]["piplite_urls"][0]
+    playground_wheel = pathlib.Path(__file__).parent / playground_url
+    # If the wheel does not exist, jupyterlite fails silently. So we check
+    # ourselves.
+    assert playground_wheel.is_file()
 
 # Texinfo options
 
