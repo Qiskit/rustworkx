@@ -7,4 +7,5 @@ mod full_rary_tree_graph;
 mod grid_graph;
 mod heavy_hex_graph;
 mod heavy_square_graph;
+mod hexagonal_lattice_graph;
 mod lollipop_graph;
