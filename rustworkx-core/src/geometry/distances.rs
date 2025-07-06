@@ -172,7 +172,7 @@ mod tests {
     #[test]
     fn test_l1_dist() {
         assert!(
-            (lp_distance(&[1., 2., 3.], &[5., 3., 1.], 1).unwrap() - (4. + 1. + 2.)).abs() < 1e-15
+            (lp_distance(&[1., 2., 3.], &[5., 3., 1.], 1).unwrap() - (4. + 1. + 2_f64)).abs() < 1e-15
         );
     }
 
