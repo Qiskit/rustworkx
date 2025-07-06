@@ -758,7 +758,7 @@ def hyperbolic_greedy_routing(
     graph: PyGraph[_S, _T],
     pos: list[list[float]],
     source: int,
-    target: int,
+    destination: int,
 ) -> tuple[list[int], float] | None: ...
 def hyperbolic_greedy_success_rate(
     graph: PyGraph[_S, _T],

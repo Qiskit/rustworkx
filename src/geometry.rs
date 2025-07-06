@@ -61,7 +61,7 @@ where
 ///
 /// :returns: A tuple ``(path, length)`` where ``path`` is the path followed and ``length`` is the
 ///     sum of the distance between nodes on the path. Returns ``None`` if the greedy algorithm fails.
-/// to reach ``destination``.
+///     to reach ``destination``.
 /// :rtype: Optional[tuple[list[int], float]]
 #[pyfunction]
 #[pyo3(
