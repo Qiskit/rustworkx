@@ -1,0 +1,6 @@
+---
+fixes:
+  - |
+    Fixed a bug where the random graph generator functions,
+    :func:`.directed_barabasi_albert_graph` and :func:`.barabasi_albert_graph`
+    would generate different graphs when the same input seed was used.
