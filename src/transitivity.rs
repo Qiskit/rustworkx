@@ -14,7 +14,7 @@ use super::{digraph, graph};
 
 use pyo3::prelude::*;
 
-use rustworkx_core::transitivity as core;
+use rustworkx_core::transitivity as core_transitivity;
 
 /// Compute the transitivity of an undirected graph.
 ///
@@ -45,7 +45,7 @@ use rustworkx_core::transitivity as core;
 #[pyfunction]
 #[pyo3(text_signature = "(graph, /)")]
 pub fn graph_transitivity(graph: &graph::PyGraph) -> f64 {
-    core::graph_transitivity(&graph.graph)
+    core_transitivity::graph_transitivity(&graph.graph)
 }
 
 /// Compute the transitivity of a directed graph.
@@ -80,5 +80,5 @@ pub fn graph_transitivity(graph: &graph::PyGraph) -> f64 {
 #[pyfunction]
 #[pyo3(text_signature = "(graph, /)")]
 pub fn digraph_transitivity(graph: &digraph::PyDiGraph) -> f64 {
-    core::digraph_transitivity(&graph.graph)
+    core_transitivity::digraph_transitivity(&graph.graph)
 }

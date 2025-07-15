@@ -150,7 +150,7 @@ where
 }
 
 #[cfg(test)]
-mod test_token_swapper {
+mod test_transitivity {
     use petgraph::{
         graph::{DiGraph, UnGraph},
         Graph,
