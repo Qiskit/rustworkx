@@ -10,3 +10,4 @@ mod heavy_square_graph;
 mod hexagonal_lattice_graph;
 mod karate_club;
 mod lollipop_graph;
+mod path_graph;
