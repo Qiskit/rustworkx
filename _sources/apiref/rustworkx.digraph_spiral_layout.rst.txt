@@ -1,0 +1,6 @@
+﻿rustworkx.digraph\_spiral\_layout
+=================================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: digraph_spiral_layout

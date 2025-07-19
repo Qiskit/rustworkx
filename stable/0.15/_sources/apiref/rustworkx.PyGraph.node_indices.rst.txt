@@ -1,0 +1,6 @@
+rustworkx.PyGraph.node\_indices
+===============================
+
+.. currentmodule:: rustworkx
+
+.. automethod:: PyGraph.node_indices

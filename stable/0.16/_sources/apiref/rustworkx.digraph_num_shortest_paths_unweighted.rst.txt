@@ -1,0 +1,6 @@
+﻿rustworkx.digraph\_num\_shortest\_paths\_unweighted
+===================================================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: digraph_num_shortest_paths_unweighted
