@@ -11,3 +11,4 @@ mod hexagonal_lattice_graph;
 mod karate_club;
 mod lollipop_graph;
 mod path_graph;
+mod petersen_graph;
