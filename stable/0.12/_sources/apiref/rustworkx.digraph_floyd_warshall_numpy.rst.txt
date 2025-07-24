@@ -1,0 +1,6 @@
+﻿rustworkx.digraph\_floyd\_warshall\_numpy
+=========================================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: digraph_floyd_warshall_numpy
