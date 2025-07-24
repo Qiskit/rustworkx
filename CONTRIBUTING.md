@@ -122,10 +122,16 @@ rust code (or packaged python code) changes to the repo since then. Otherwise
 the rustworkx package Nox installs in its virtualenv will be out of date (or
 missing).
 
-Note, if you run tests outside of Nox that you can **not** run the tests from
+> [!NOTE]
+> If you run tests outside of Nox that you can **not** run the tests from
 the root of the repo, this is because rustworkx packaging shim will conflict
 with imports from rustworkx the installed version of rustworkx (which contains
 the compiled extension).
+
+
+> [!NOTE]
+> For compatibility purposes, rustworkx tests can also be run with `tox`.
+Most commands should work by just replacing `nox` with `tox`.
 
 #### Running tests with a specific Python version
 
