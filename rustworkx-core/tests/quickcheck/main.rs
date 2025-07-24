@@ -12,3 +12,4 @@ mod karate_club;
 mod lollipop_graph;
 mod path_graph;
 mod petersen_graph;
+mod star_graph;
