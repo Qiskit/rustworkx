@@ -1075,15 +1075,16 @@ pub fn digraph_all_simple_paths(
                 "The input index for 'to' is not a valid node index",
             ));
         }
-        let result: Vec<Vec<usize>> = algo::all_simple_paths::<Vec<_>, _, foldhash::fast::RandomState>(
-            &graph.graph,
-            from_index,
-            to_index,
-            min_intermediate_nodes,
-            cutoff_petgraph,
-        )
-        .map(|v: Vec<NodeIndex>| v.into_iter().map(|i| i.index()).collect())
-        .collect();
+        let result: Vec<Vec<usize>> =
+            algo::all_simple_paths::<Vec<_>, _, foldhash::fast::RandomState>(
+                &graph.graph,
+                from_index,
+                to_index,
+                min_intermediate_nodes,
+                cutoff_petgraph,
+            )
+            .map(|v: Vec<NodeIndex>| v.into_iter().map(|i| i.index()).collect())
+            .collect();
         return Ok(result);
     }
 
