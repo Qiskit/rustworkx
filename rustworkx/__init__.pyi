@@ -13,7 +13,7 @@ import sys
 import numpy as np
 import numpy.typing as npt
 
-from typing import Generic, Any, Callable, overload
+from typing import Generic, Any, Callable, Iterable, overload
 from collections.abc import Iterator, Sequence
 
 if sys.version_info >= (3, 13):
@@ -325,7 +325,7 @@ def adjacency_matrix(
 def all_simple_paths(
     graph: PyGraph | PyDiGraph,
     from_: int,
-    to: int,
+    to: int | Iterable[int],
     min_depth: int | None = ...,
     cutoff: int | None = ...,
 ) -> list[list[int]]: ...
