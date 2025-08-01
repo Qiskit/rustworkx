@@ -1,0 +1,18 @@
+---
+features:
+  - |
+    The :func:`~rustworkx.all_simple_paths` function now supports multiple
+    target nodes passed as an iterable. You can now pass either a single target
+    node (int) or multiple target nodes (iterable of ints) to find all simple
+    paths from a source node to any of the specified targets. For example::
+
+        import rustworkx as rx
+
+        graph = rx.generators.path_graph(4)
+        # Multiple targets - new functionality
+        paths = rx.all_simple_paths(graph, 0, [2, 3])
+        # paths: [[0, 1, 2], [0, 1, 2, 3]]
+
+    This enhancement maintains backward compatibility while providing more
+    flexibility for pathfinding operations in both :class:`~.PyGraph` and
+    :class:`~.PyDiGraph` objects.
