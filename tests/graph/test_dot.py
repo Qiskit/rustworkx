@@ -128,3 +128,17 @@ class TestDot(unittest.TestCase):
         graph = rustworkx.undirected_gnp_random_graph(3, 0.95, seed=24)
         dot_str = graph.to_dot()
         self.assertEqual("graph {\n0 ;\n1 ;\n2 ;\n2 -- 0 ;\n2 -- 1 ;\n}\n", dot_str)
+
+
+def test_from_dot():
+    expected = (
+            'graph {\n0 [color=black, fillcolor=green, label="a", '
+            'style=filled];\n1 [color=black, fillcolor=red, label="a", '
+            'style=filled];\n0 -- 1 [label="1", name=1];\n}\n'
+        )
+    g = rustworkx.from_dot(expected)
+    print(g)
+    print(g.nodes())
+    print(g.edges())
+
+test_from_dot()

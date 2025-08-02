@@ -39,6 +39,7 @@ mod token_swapper;
 mod toposort;
 mod transitivity;
 mod traversal;
+mod dot_parser;
 mod tree;
 mod union;
 
@@ -65,6 +66,7 @@ use tensor_product::*;
 use token_swapper::*;
 use transitivity::*;
 use traversal::*;
+use dot_parser::*;
 use tree::*;
 use union::*;
 
@@ -679,6 +681,7 @@ fn rustworkx(py: Python<'_>, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(parse_node_link_json))?;
     m.add_wrapped(wrap_pyfunction!(pagerank))?;
     m.add_wrapped(wrap_pyfunction!(hits))?;
+    m.add_wrapped(wrap_pyfunction!(from_dot))?;
     m.add_class::<digraph::PyDiGraph>()?;
     m.add_class::<graph::PyGraph>()?;
     m.add_class::<toposort::TopologicalSorter>()?;

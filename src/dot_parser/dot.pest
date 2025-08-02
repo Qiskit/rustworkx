@@ -1,0 +1,26 @@
+WHITESPACE = _{ " " | "\t" | "\r" | "\n" }
+
+graph_file = { SOI ~ graph_decl ~ EOI }   // <-- New top-level rule
+
+graph_decl = { graph_type ~ ident? ~ "{" ~ stmt_list ~ "}" }
+
+graph_type = { "graph" | "digraph" }
+
+stmt_list = { stmt* }
+stmt = _{ node_stmt | edge_stmt | attr_stmt | ";" }
+
+ident = @{ (ASCII_ALPHANUMERIC | "_" | ".")+ }
+
+node_stmt = { ident ~ attr_list? ~ ";"? }
+
+edge_stmt = { ident ~ edge_op ~ ident ~ attr_list? ~ ";"? }
+
+edge_op = { "--" | "->" }
+
+attr_stmt = { ident ~ "=" ~ ident ~ ";"? }
+
+attr_list = { "[" ~ attr_pair ~ ("," ~ attr_pair)* ~ "]" }
+
+attr_pair = { ident ~ "=" ~ (ident | quoted_string) }
+
+quoted_string = @{ "\"" ~ (!( "\"" ) ~ ANY)* ~ "\"" }
