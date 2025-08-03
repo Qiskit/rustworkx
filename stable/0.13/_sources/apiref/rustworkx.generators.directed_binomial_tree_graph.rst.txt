@@ -1,0 +1,6 @@
+﻿rustworkx.generators.directed\_binomial\_tree\_graph
+====================================================
+
+.. currentmodule:: rustworkx.generators
+
+.. autofunction:: directed_binomial_tree_graph
