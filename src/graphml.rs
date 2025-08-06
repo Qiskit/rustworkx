@@ -1289,7 +1289,32 @@ impl KeySpec {
     }
 }
 
-/// Write a graph to a file in GraphML format given the list of key definitions.
+/// Write a graph to a file in GraphML format.
+///
+/// GraphML is a comprehensive and easy-to-use file format for graphs. It consists
+/// of a language core to describe the structural properties of a graph and a flexible
+/// extension mechanism to add application-specific data.
+///
+/// For more information see:
+/// http://graphml.graphdrawing.org/
+///
+/// .. note::
+///
+///     This implementation does not support mixed graphs (directed and undirected edges together),
+///     hyperedges, nested graphs, or ports.
+///
+/// .. note::
+///
+///     GraphML attributes with `graph` domain are written from :attr:`~.PyGraph.attrs` field.
+///
+/// :param PyGraph graph: The graph to write to the file.
+/// :param str path: The path of the output file to write.
+/// :param Optional[list[GraphMLKey]] keys: Optional list of key definitions for GraphML attributes.
+///                                         If None, keys will be inferred from the graph data.
+/// :param Optional[str] compression: Optional compression format for the output file.
+///                                  If None, no compression is applied.
+///
+/// :raises RuntimeError: when an error is encountered while writing the GraphML file.
 #[pyfunction]
 #[pyo3(signature=(graph, path, keys=None, compression=None),text_signature = "(graph, path, /, keys=None, compression=None)")]
 pub fn graph_write_graphml(
@@ -1306,7 +1331,32 @@ pub fn graph_write_graphml(
     Ok(())
 }
 
-/// Write a digraph to a file in GraphML format given the list of key definitions.
+/// Write a graph to a file in GraphML format.
+///
+/// GraphML is a comprehensive and easy-to-use file format for graphs. It consists
+/// of a language core to describe the structural properties of a graph and a flexible
+/// extension mechanism to add application-specific data.
+///
+/// For more information see:
+/// http://graphml.graphdrawing.org/
+///
+/// .. note::
+///
+///     This implementation does not support mixed graphs (directed and undirected edges together),
+///     hyperedges, nested graphs, or ports.
+///
+/// .. note::
+///
+///     GraphML attributes with `graph` domain are written from :attr:`~.PyGraph.attrs` field.
+///
+/// :param PyDiGraph graph: The graph to write to the file.
+/// :param str path: The path of the output file to write.
+/// :param Optional[list[GraphMLKey]] keys: Optional list of key definitions for GraphML attributes.
+///                                         If None, keys will be inferred from the graph data.
+/// :param Optional[str] compression: Optional compression format for the output file.
+///                                  If None, no compression is applied.
+///
+/// :raises RuntimeError: when an error is encountered while writing the GraphML file.
 #[pyfunction]
 #[pyo3(signature=(graph, path, keys=None, compression=None),text_signature = "(graph, path, /, keys=None, compression=None)")]
 pub fn digraph_write_graphml(
