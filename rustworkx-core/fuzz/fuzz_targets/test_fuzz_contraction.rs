@@ -65,7 +65,7 @@ fn fuzz_contract_nodes(input: ContractFuzzInput) {
             // Expected error — no-op
         }
         Err(err) => {
-            panic!("Unexpected error during node contraction: {:?}", err);
+            panic!("Unexpected error during node contraction: {err:?}");
         }
     }
 }

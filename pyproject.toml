@@ -69,17 +69,17 @@ build-backend = "setuptools.build_meta"
 [dependency-groups]
 testinfra = [
     "nox==2025.5.1",
+    "uv==0.7.8",
 ]
 test = [
   "setuptools-rust",
-  "fixtures",
   "testtools>=2.5.0",
-  "networkx>=2.5",
+  "networkx>=3.2",
   "stestr>=4.1",
 ]
 lint = [
     "black~=24.8",
-    "ruff~=0.6",
+    "ruff==0.11.9",
     "setuptools-rust",
     "typos~=1.28",
 ]
@@ -94,11 +94,12 @@ docs = [
     "pydot",
     "pillow>=4.2.1",
     "reno>=3.4.0",
-    "qiskit-sphinx-theme~=1.14.0rc1",
+    "qiskit-sphinx-theme==1.16.1",
     "matplotlib>=3.4",
     "sphinx-reredirects",
     "sphinxemoji",
     "ipykernel",
+    "lxml_html_clean",
 ]
 releaseinfra = [
     "cibuildwheel==2.23.2",
@@ -106,7 +107,7 @@ releaseinfra = [
 
 [tool.black]
 line-length = 100
-target-version = ['py39', 'py310', 'py311', 'py312']
+target-version = ['py39', 'py310', 'py311', 'py312', 'py313']
 
 [tool.ruff]
 line-length = 105 # more lenient than black due to long function signatures
@@ -137,7 +138,7 @@ skip = "pp* cp36-* cp37-* cp38-* *win32 *musllinux*i686"
 test-requires = "networkx"
 test-command = "python -m unittest discover {project}/tests"
 before-build = "pip install -U setuptools-rust"
-test-skip = "*linux_s390x *ppc64le *musllinux*aarch64"
+test-skip = "*linux_s390x *ppc64le *i686 *win32"
 
 [tool.cibuildwheel.linux]
 before-all = "yum install -y wget && {package}/tools/install_rust.sh"
@@ -147,10 +148,6 @@ repair-wheel-command = "auditwheel repair -w {dest_dir} {wheel} && pipx run abi3
 [[tool.cibuildwheel.overrides]]
 select = "*-musllinux*"
 before-all = "apk add --no-cache curl gcc && curl https://sh.rustup.rs -sSf | sh -s -- -y && source $HOME/.cargo/env && rustup install stable && rustup default stable"
-
-[[tool.cibuildwheel.overrides]]
-select = "*i686"
-before-test = 'python -m pip install numpy --config-settings=setup-args="-Dallow-noblas=true"'
 
 [tool.cibuildwheel.macos]
 environment = "MACOSX_DEPLOYMENT_TARGET=10.12"

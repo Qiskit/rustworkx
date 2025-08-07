@@ -167,19 +167,13 @@ pub fn node_link_data<Ty: EdgeType>(
     match path {
         None => match serde_json::to_string(&output_struct) {
             Ok(v) => Ok(Some(v)),
-            Err(e) => Err(JSONSerializationError::new_err(format!(
-                "JSON Error: {}",
-                e
-            ))),
+            Err(e) => Err(JSONSerializationError::new_err(format!("JSON Error: {e}"))),
         },
         Some(filename) => {
             let file = File::create(filename)?;
             match serde_json::to_writer(file, &output_struct) {
                 Ok(_) => Ok(None),
-                Err(e) => Err(JSONSerializationError::new_err(format!(
-                    "JSON Error: {}",
-                    e
-                ))),
+                Err(e) => Err(JSONSerializationError::new_err(format!("JSON Error: {e}"))),
             }
         }
     }

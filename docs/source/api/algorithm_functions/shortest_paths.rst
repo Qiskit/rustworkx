@@ -26,3 +26,4 @@ Shortest Paths
    rustworkx.unweighted_average_shortest_path_length
    rustworkx.all_shortest_paths
    rustworkx.digraph_all_shortest_paths
+   rustworkx.single_source_all_shortest_paths
