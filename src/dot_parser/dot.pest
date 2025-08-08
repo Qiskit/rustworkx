@@ -1,26 +1,44 @@
 WHITESPACE = _{ " " | "\t" | "\r" | "\n" }
+COMMENT = _{ "#" ~ (!NEWLINE ~ ANY)* | "//" ~ (!NEWLINE ~ ANY)* | "/*" ~ (!"*/" ~ ANY)* ~ "*/" }
+NEWLINE = _{ "\n" | "\r\n" }
 
-graph_file = { SOI ~ graph_decl ~ EOI }   // <-- New top-level rule
+graph_file = { SOI ~ strict? ~ graph_type ~ id? ~ "{" ~ stmt_list? ~ "}" ~ EOI }
 
-graph_decl = { graph_type ~ ident? ~ "{" ~ stmt_list ~ "}" }
-
+strict = { "strict" }
 graph_type = { "graph" | "digraph" }
 
-stmt_list = { stmt* }
-stmt = _{ node_stmt | edge_stmt | attr_stmt | ";" }
+id = _{ number | identifier | quoted_id | html_id }
 
-ident = @{ (ASCII_ALPHANUMERIC | "_" | ".")+ }
+number = @{ ASCII_DIGIT+ }
+identifier = @{ (ASCII_ALPHANUMERIC | "_" | "." | "/" | "\\") + }
+quoted_id = @{ "\"" ~ (("\\\"" | (!"\"" ~ ANY))*) ~ "\"" }
+html_id = @{ "<" ~ (!">" ~ ANY)* ~ ">" }
 
-node_stmt = { ident ~ attr_list? ~ ";"? }
+stmt_list = { (stmt ~ ";"?)* }
 
-edge_stmt = { ident ~ edge_op ~ ident ~ attr_list? ~ ";"? }
+stmt = _{
+      node_stmt
+    | edge_stmt
+    | attr_stmt
+    | assignment
+    | subgraph
+}
 
-edge_op = { "--" | "->" }
+node_stmt = { node_id ~ attr_list* }
 
-attr_stmt = { ident ~ "=" ~ ident ~ ";"? }
+edge_stmt = { edge_point ~ (edge_op ~ edge_point)+ ~ attr_list* }
 
-attr_list = { "[" ~ attr_pair ~ ("," ~ attr_pair)* ~ "]" }
+edge_op = { "->" | "--" }
 
-attr_pair = { ident ~ "=" ~ (ident | quoted_string) }
+edge_point = { node_id | subgraph }
 
-quoted_string = @{ "\"" ~ (!( "\"" ) ~ ANY)* ~ "\"" }
+attr_stmt = { ("graph" | "node" | "edge") ~ attr_list+ }
+
+attr_list = { "[" ~ a_list? ~ "]" }
+a_list = { (id ~ ("=" ~ id)? ~ (","?))* }
+
+assignment = { id ~ "=" ~ id }
+
+subgraph = { "subgraph" ~ id? ~ "{" ~ stmt_list? ~ "}" }
+
+node_id = { id ~ (":" ~ id)? ~ (":" ~ id)? }
