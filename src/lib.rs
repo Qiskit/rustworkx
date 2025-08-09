@@ -18,6 +18,7 @@ mod connectivity;
 mod dag_algo;
 mod digraph;
 mod dominance;
+mod dot_parser;
 mod dot_utils;
 mod generators;
 mod graph;
@@ -39,7 +40,6 @@ mod token_swapper;
 mod toposort;
 mod transitivity;
 mod traversal;
-mod dot_parser;
 mod tree;
 mod union;
 
@@ -57,6 +57,7 @@ use layout::*;
 use line_graph::*;
 use link_analysis::*;
 
+use dot_parser::*;
 use matching::*;
 use planar::*;
 use random_graph::*;
@@ -66,7 +67,6 @@ use tensor_product::*;
 use token_swapper::*;
 use transitivity::*;
 use traversal::*;
-use dot_parser::*;
 use tree::*;
 use union::*;
 

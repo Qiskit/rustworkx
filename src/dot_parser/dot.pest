@@ -10,22 +10,21 @@ graph_type = { "graph" | "digraph" }
 id = _{ number | identifier | quoted_id | html_id }
 
 number = @{ ASCII_DIGIT+ }
-identifier = @{ (ASCII_ALPHANUMERIC | "_" | "." | "/" | "\\") + }
+identifier = @{ (ASCII_ALPHANUMERIC | "_" | "." | "/" | "\\" | "-")+ }
 quoted_id = @{ "\"" ~ (("\\\"" | (!"\"" ~ ANY))*) ~ "\"" }
 html_id = @{ "<" ~ (!">" ~ ANY)* ~ ">" }
 
-stmt_list = { (stmt ~ ";"?)* }
+stmt_list = { (stmt ~ (";" | NEWLINE)*)* }
 
 stmt = _{
-      node_stmt
-    | edge_stmt
+      edge_stmt
+    | node_stmt
     | attr_stmt
     | assignment
     | subgraph
 }
 
 node_stmt = { node_id ~ attr_list* }
-
 edge_stmt = { edge_point ~ (edge_op ~ edge_point)+ ~ attr_list* }
 
 edge_op = { "->" | "--" }
@@ -35,7 +34,7 @@ edge_point = { node_id | subgraph }
 attr_stmt = { ("graph" | "node" | "edge") ~ attr_list+ }
 
 attr_list = { "[" ~ a_list? ~ "]" }
-a_list = { (id ~ ("=" ~ id)? ~ (","?))* }
+a_list = { (id ~ ("=" ~ id)? ~ ("," | ";")?)* }
 
 assignment = { id ~ "=" ~ id }
 
