@@ -186,7 +186,7 @@ enum Value {
 }
 
 impl Value {
-    fn serialize(&self) -> Option<Cow<str>> {
+    fn serialize(&self) -> Option<Cow<'_, str>> {
         match self {
             Value::Boolean(val) => Some(Cow::from(val.to_string())),
             Value::Int(val) => Some(Cow::from(val.to_string())),
