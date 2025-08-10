@@ -285,7 +285,7 @@ def local_complement(
 def digraph_all_simple_paths(
     graph: PyDiGraph,
     origin: int,
-    to: int,
+    to: int | Iterable[int],
     /,
     min_depth: int | None = ...,
     cutoff: int | None = ...,
@@ -293,7 +293,7 @@ def digraph_all_simple_paths(
 def graph_all_simple_paths(
     graph: PyGraph,
     origin: int,
-    to: int,
+    to: int | Iterable[int],
     /,
     min_depth: int | None = ...,
     cutoff: int | None = ...,
