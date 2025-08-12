@@ -82,8 +82,6 @@
 //!
 //! <https://www.rustworkx.org/release_notes.html>
 
-#![allow(clippy::uninlined_format_args)]
-
 use std::convert::Infallible;
 
 /// A convenient type alias that by default assumes no error can happen.
@@ -109,6 +107,7 @@ pub mod line_graph;
 pub mod max_weight_matching;
 pub mod planar;
 pub mod shortest_path;
+pub mod transitivity;
 pub mod traversal;
 // These modules define additional data structures
 pub mod dictmap;

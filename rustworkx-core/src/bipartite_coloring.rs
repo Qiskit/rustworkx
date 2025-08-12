@@ -666,7 +666,7 @@ mod test_bipartite_coloring {
                 .map(|edge| *colors.get(&edge.id()).unwrap())
                 .collect();
             if node_colors.len() != node_degree {
-                panic!("Node {:?} does not have correct number of colors.", node);
+                panic!("Node {node:?} does not have correct number of colors.");
             }
         }
 
@@ -708,7 +708,7 @@ mod test_bipartite_coloring {
                 .map(|edge| *colors.get(&edge.id()).unwrap())
                 .collect();
             if node_colors.len() != node_degree {
-                panic!("Node {:?} does not have correct number of colors.", node);
+                panic!("Node {node:?} does not have correct number of colors.");
             }
         }
 

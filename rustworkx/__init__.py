@@ -263,7 +263,7 @@ def all_simple_paths(graph, from_, to, min_depth=None, cutoff=None):
     :param graph: The graph to find the path in. Can either be a
         class:`~rustworkx.PyGraph` or :class:`~rustworkx.PyDiGraph`
     :param int from_: The node index to find the paths from
-    :param int to: The node index to find the paths to
+    :param int | Iterable[int] to: The node index(es) to find the paths to
     :param int min_depth: The minimum depth of the path to include in the
         output list of paths. By default all paths are included regardless of
         depth, setting to 0 will behave like the default.
