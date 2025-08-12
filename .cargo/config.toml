@@ -10,13 +10,5 @@ rustflags = [
   "-C", "link-arg=dynamic_lookup",
 ]
 
-[target.wasm32-unknown-emscripten]
-rustflags = [
-  "-C", "target-feature=+atomics,+bulk-memory,+mutable-globals",
-  "-C", "link-arg=-sSIDE_MODULE=2",
-  "-C", "link-arg=-sWASM_BIGINT",
-  "-Z", "emscripten-wasm-eh",
-]
-
 [unstable]
 build-std = ["std", "panic_abort"]
