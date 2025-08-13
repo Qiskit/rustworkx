@@ -1,0 +1,6 @@
+﻿rustworkx.core\_number
+======================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: core_number

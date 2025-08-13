@@ -1,0 +1,6 @@
+rustworkx.PyDAG.can\_contract\_without\_cycle
+=============================================
+
+.. currentmodule:: rustworkx
+
+.. automethod:: PyDAG.can_contract_without_cycle

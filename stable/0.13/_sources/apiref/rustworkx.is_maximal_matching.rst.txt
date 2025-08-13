@@ -1,0 +1,6 @@
+﻿rustworkx.is\_maximal\_matching
+===============================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: is_maximal_matching

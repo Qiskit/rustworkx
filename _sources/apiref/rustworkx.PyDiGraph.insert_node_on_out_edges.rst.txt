@@ -1,0 +1,6 @@
+rustworkx.PyDiGraph.insert\_node\_on\_out\_edges
+================================================
+
+.. currentmodule:: rustworkx
+
+.. automethod:: PyDiGraph.insert_node_on_out_edges

@@ -1,0 +1,6 @@
+rustworkx.PyDiGraph.incident\_edge\_index\_map
+==============================================
+
+.. currentmodule:: rustworkx
+
+.. automethod:: PyDiGraph.incident_edge_index_map

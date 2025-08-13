@@ -1,0 +1,6 @@
+﻿rustworkx.graph\_bipartite\_layout
+==================================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: graph_bipartite_layout
