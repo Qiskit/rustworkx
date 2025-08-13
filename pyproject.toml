@@ -138,7 +138,7 @@ skip = "pp* cp36-* cp37-* cp38-* *win32 *musllinux*i686"
 test-requires = "networkx"
 test-command = "python -m unittest discover {project}/tests"
 before-build = "pip install -U setuptools-rust"
-test-skip = "*linux_s390x *ppc64le *musllinux*aarch64"
+test-skip = "*linux_s390x *ppc64le *i686 *win32"
 
 [tool.cibuildwheel.linux]
 before-all = "yum install -y wget && {package}/tools/install_rust.sh"
@@ -148,10 +148,6 @@ repair-wheel-command = "auditwheel repair -w {dest_dir} {wheel} && pipx run abi3
 [[tool.cibuildwheel.overrides]]
 select = "*-musllinux*"
 before-all = "apk add --no-cache curl gcc && curl https://sh.rustup.rs -sSf | sh -s -- -y && source $HOME/.cargo/env && rustup install stable && rustup default stable"
-
-[[tool.cibuildwheel.overrides]]
-select = "*i686"
-before-test = 'python -m pip install numpy --config-settings=setup-args="-Dallow-noblas=true"'
 
 [tool.cibuildwheel.macos]
 environment = "MACOSX_DEPLOYMENT_TARGET=10.12"

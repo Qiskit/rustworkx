@@ -133,7 +133,7 @@ where
     }
 
     // Build path from predecessors
-    if path.is_some() {
+    if let Some(path) = &mut path {
         for node in graph.node_identifiers() {
             if scores.get_item(node).is_some() {
                 let mut node_path = Vec::<G::NodeId>::new();
@@ -144,7 +144,7 @@ where
                     node_path.push(current_node);
                 }
                 node_path.reverse();
-                path.as_mut().unwrap().insert(node, node_path);
+                path.insert(node, node_path);
             }
         }
     }

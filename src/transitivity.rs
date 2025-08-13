@@ -11,36 +11,10 @@
 // under the License.
 
 use super::{digraph, graph};
-use hashbrown::HashSet;
 
 use pyo3::prelude::*;
 
-use petgraph::graph::NodeIndex;
-use rayon::prelude::*;
-
-fn _graph_triangles(graph: &graph::PyGraph, node: usize) -> (usize, usize) {
-    let mut triangles: usize = 0;
-
-    let index = NodeIndex::new(node);
-    let mut neighbors: HashSet<NodeIndex> = graph.graph.neighbors(index).collect();
-    neighbors.remove(&index);
-
-    for nodev in &neighbors {
-        triangles += graph
-            .graph
-            .neighbors(*nodev)
-            .filter(|&x| (x != *nodev) && neighbors.contains(&x))
-            .count();
-    }
-
-    let d: usize = neighbors.len();
-    let triples: usize = match d {
-        0 => 0,
-        _ => (d * (d - 1)) / 2,
-    };
-
-    (triangles / 2, triples)
-}
+use rustworkx_core::transitivity as core_transitivity;
 
 /// Compute the transitivity of an undirected graph.
 ///
@@ -52,7 +26,7 @@ fn _graph_triangles(graph: &graph::PyGraph, node: usize) -> (usize, usize) {
 /// A “connected triple” means a single vertex with
 /// edges running to an unordered pair of others.
 ///
-/// This function is multithreaded and will run
+/// This function is multithreaded and will
 /// launch a thread pool with threads equal to the number of CPUs by default.
 /// You can tune the number of threads with the ``RAYON_NUM_THREADS``
 /// environment variable. For example, setting ``RAYON_NUM_THREADS=4`` would
@@ -71,73 +45,7 @@ fn _graph_triangles(graph: &graph::PyGraph, node: usize) -> (usize, usize) {
 #[pyfunction]
 #[pyo3(text_signature = "(graph, /)")]
 pub fn graph_transitivity(graph: &graph::PyGraph) -> f64 {
-    let node_indices: Vec<NodeIndex> = graph.graph.node_indices().collect();
-    let (triangles, triples) = node_indices
-        .par_iter()
-        .map(|node| _graph_triangles(graph, node.index()))
-        .reduce(
-            || (0, 0),
-            |(sumx, sumy), (resx, resy)| (sumx + resx, sumy + resy),
-        );
-
-    match triangles {
-        0 => 0.0,
-        _ => triangles as f64 / triples as f64,
-    }
-}
-
-fn _digraph_triangles(graph: &digraph::PyDiGraph, node: usize) -> (usize, usize) {
-    let mut triangles: usize = 0;
-
-    let index = NodeIndex::new(node);
-    let mut out_neighbors: HashSet<NodeIndex> = graph
-        .graph
-        .neighbors_directed(index, petgraph::Direction::Outgoing)
-        .collect();
-    out_neighbors.remove(&index);
-
-    let mut in_neighbors: HashSet<NodeIndex> = graph
-        .graph
-        .neighbors_directed(index, petgraph::Direction::Incoming)
-        .collect();
-    in_neighbors.remove(&index);
-
-    let neighbors = out_neighbors.iter().chain(in_neighbors.iter());
-
-    for nodev in neighbors {
-        triangles += graph
-            .graph
-            .neighbors_directed(*nodev, petgraph::Direction::Outgoing)
-            .chain(
-                graph
-                    .graph
-                    .neighbors_directed(*nodev, petgraph::Direction::Incoming),
-            )
-            .map(|x| {
-                let mut res: usize = 0;
-
-                if (x != *nodev) && out_neighbors.contains(&x) {
-                    res += 1;
-                }
-                if (x != *nodev) && in_neighbors.contains(&x) {
-                    res += 1;
-                }
-                res
-            })
-            .sum::<usize>();
-    }
-
-    let d_in: usize = in_neighbors.len();
-    let d_out: usize = out_neighbors.len();
-
-    let d_tot = d_out + d_in;
-    let d_bil: usize = out_neighbors.intersection(&in_neighbors).count();
-    let triples: usize = match d_tot {
-        0 => 0,
-        _ => d_tot * (d_tot - 1) - 2 * d_bil,
-    };
-
-    (triangles / 2, triples)
+    core_transitivity::graph_transitivity(&graph.graph)
 }
 
 /// Compute the transitivity of a directed graph.
@@ -150,7 +58,7 @@ fn _digraph_triangles(graph: &digraph::PyDiGraph, node: usize) -> (usize, usize)
 /// A triangle is a connected triple of nodes.
 /// Different edge orientations counts as different triangles.
 ///
-/// This function is multithreaded and will run
+/// This function is multithreaded and will
 /// launch a thread pool with threads equal to the number of CPUs by default.
 /// You can tune the number of threads with the ``RAYON_NUM_THREADS``
 /// environment variable. For example, setting ``RAYON_NUM_THREADS=4`` would
@@ -172,17 +80,5 @@ fn _digraph_triangles(graph: &digraph::PyDiGraph, node: usize) -> (usize, usize)
 #[pyfunction]
 #[pyo3(text_signature = "(graph, /)")]
 pub fn digraph_transitivity(graph: &digraph::PyDiGraph) -> f64 {
-    let node_indices: Vec<NodeIndex> = graph.graph.node_indices().collect();
-    let (triangles, triples) = node_indices
-        .par_iter()
-        .map(|node| _digraph_triangles(graph, node.index()))
-        .reduce(
-            || (0, 0),
-            |(sumx, sumy), (resx, resy)| (sumx + resx, sumy + resy),
-        );
-
-    match triangles {
-        0 => 0.0,
-        _ => triangles as f64 / triples as f64,
-    }
+    core_transitivity::digraph_transitivity(&graph.graph)
 }
