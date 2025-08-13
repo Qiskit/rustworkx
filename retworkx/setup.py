@@ -42,7 +42,7 @@ setup(
     long_description_content_type="text/markdown",
     author=pyproject["project"]["authors"][0]["name"],
     author_email=pyproject["project"]["authors"][0]["email"],
-    license=pyproject["project"]["license"],
+    license="Apache-2.0",
     classifiers=pyproject["project"]["classifiers"],
     keywords=pyproject["project"]["keywords"],
     project_urls=pyproject["project"]["urls"],
