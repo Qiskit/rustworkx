@@ -22,9 +22,8 @@ classifiers=[
     "Operating System :: MacOS :: MacOS X",
     "Operating System :: Microsoft :: Windows",
     "Operating System :: POSIX :: Linux",
-    "Development Status ::  5 - Production/Stable",
 ]
-keywords = ["Networks", "network", "graph", "Graph Theory", "DAG"]
+keywords = ["Networks", "Network", "Graph", "Graph Theory", "DAG"]
 
 [tool.setuptools]
 packages = ["rustworkx", "rustworkx.visualization"]
