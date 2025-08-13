@@ -45,7 +45,7 @@ jobs:
         run: pushd retworkx && python setup.py bdist_wheel && popd
       - uses: actions/upload-artifact@v4
         with:
-          path: ./retworkx/dist/*
+          path: ./dist/*
           name: sdist-retworkx
       - name: Publish package distributions to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
