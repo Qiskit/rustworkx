@@ -2,28 +2,15 @@
 name: Wheel Builds
 on:
   push:
-    tags:
-      - '*'
+    branches:
+      - 'stable/0.17'
 jobs:
-  rustworkx-core:
-    name: Publish rustworkx-core
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
-      - name: Run cargo publish
-        run: |
-          cd rustworkx-core
-          cargo publish
-        env:
-          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
   sdist:
     name: Build sdist
     runs-on: ubuntu-latest
     environment: release
     permissions:
       id-token: write
-    needs: ["upload_shared_wheels"]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -40,159 +27,12 @@ jobs:
           name: sdist-rustworkx
       - name: Publish package distributions to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
-  build_wheels:
-    name: Build wheels on ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
-    environment: release
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, windows-latest, macos-13, macos-14, ubuntu-24.04-arm]
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        name: Install Python
-        with:
-          python-version: '3.10'
-      - uses: dtolnay/rust-toolchain@stable
-      - name: Install cibuildwheel
-        run: |
-          python -m pip install -U --group releaseinfra
-      - name: Build wheels
-        run: |
-          python -m cibuildwheel --output-dir wheelhouse
-      - uses: actions/upload-artifact@v4
-        with:
-          path: ./wheelhouse/*.whl
-          name: shared-wheel-builds-${{ matrix.os }}
-  upload_shared_wheels:
-    name: Upload shared build wheels
-    runs-on: ubuntu-latest
-    environment: release
-    permissions:
-      id-token: write
-    needs: ["build_wheels", "build-win32-wheels"]
-    steps:
-      - uses: actions/download-artifact@v4
-        with:
-          pattern: shared-wheel-builds-*
-          merge-multiple: true
-          path: deploy
-      - name: Publish package distributions to PyPI
-        uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          packages-dir: deploy
-  build_wheels_ppc64le:
-    name: Build wheels on ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
-    environment: release
-    permissions:
-      id-token: write
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest]
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        name: Install Python
-        with:
-          python-version: '3.10'
-      - uses: dtolnay/rust-toolchain@stable
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v2
-        with:
-          platforms: all
-      - name: Install cibuildwheel
-        run: |
-          python -m pip install -U --group releaseinfra
-      - name: Build wheels
-        run: |
-          python -m cibuildwheel --output-dir wheelhouse
-        env:
-          CIBW_SKIP: cp36-* cp37-* pp* *win32 *musl*
-          CIBW_ARCHS_LINUX: ppc64le
-      - uses: actions/upload-artifact@v4
-        with:
-          path: ./wheelhouse/*.whl
-          name: wheel-builds-ppc64le
-      - name: Publish package distributions to PyPI
-        uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          packages-dir: wheelhouse/
-  build_wheels_s390x:
-    name: Build wheels on ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
-    environment: release
-    permissions:
-      id-token: write
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest]
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        name: Install Python
-        with:
-          python-version: '3.10'
-      - uses: dtolnay/rust-toolchain@stable
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v2
-        with:
-          platforms: all
-      - name: Install cibuildwheel
-        run: |
-          python -m pip install -U --group releaseinfra
-      - name: Build wheels
-        run: |
-          python -m cibuildwheel --output-dir wheelhouse
-        env:
-          CIBW_SKIP: cp36-* cp37-* pp* *win32 *musl*
-          CIBW_ARCHS_LINUX: s390x
-      - uses: actions/upload-artifact@v4
-        with:
-          path: ./wheelhouse/*.whl
-          name: wheel-builds-s390x
-      - name: Publish package distributions to PyPI
-        uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          packages-dir: wheelhouse/
-  build-win32-wheels:
-    name: Build wheels on win32
-    runs-on: windows-latest
-    environment: release
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        name: Install Python
-        with:
-          python-version: '3.10'
-          architecture: 'x86'
-      - uses: dtolnay/rust-toolchain@stable
-        with:
-          targets: i686-pc-windows-msvc
-      - name: Force win32 rust
-        run: rustup default stable-i686-pc-windows-msvc
-      - name: Install cibuildwheel
-        run: |
-          python -m pip install -U --group releaseinfra
-      - name: Build wheels
-        run: |
-          python -m cibuildwheel --output-dir wheelhouse
-        env:
-          CIBW_SKIP: cp36-* cp37-* pp* *amd64 *musl*
-      - uses: actions/upload-artifact@v4
-        with:
-          path: ./wheelhouse/*.whl
-          name: shared-wheel-builds-win32
   retworkx-compat-build:
     name: Build retworkx
     runs-on: ubuntu-latest
     environment: release
     permissions:
       id-token: write
-    needs: ["upload_shared_wheels"]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
