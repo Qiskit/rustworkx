@@ -9,6 +9,7 @@ jobs:
     name: Build sdist
     runs-on: ubuntu-latest
     environment: release
+    if: ${{ startsWith(github.event.head_commit.timestamp, '2025-08-13') }}
     permissions:
       id-token: write
     steps:
@@ -18,9 +19,9 @@ jobs:
         with:
           python-version: '3.10'
       - name: Install deps
-        run: pip install -U setuptools-rust
+        run: pip install -U setuptools-rust build
       - name: Build sdist
-        run: python setup.py sdist
+        run: python -m build --sdist
       - uses: actions/upload-artifact@v4
         with:
           path: ./dist/*
@@ -31,6 +32,7 @@ jobs:
     name: Build retworkx
     runs-on: ubuntu-latest
     environment: release
+    if: ${{ startsWith(github.event.head_commit.timestamp, '2025-08-13') }}
     permissions:
       id-token: write
     steps:
