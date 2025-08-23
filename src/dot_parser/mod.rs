@@ -43,9 +43,12 @@ impl DotGraph {
             }
         }
     }
+
+    #[allow(dead_code)]
     fn is_directed(&self) -> bool {
         matches!(self, DotGraph::Directed(_))
     }
+
     fn into_inner(self) -> Result<StablePyGraph<Directed>, StablePyGraph<Undirected>> {
         match self {
             DotGraph::Directed(g) => Ok(g),
