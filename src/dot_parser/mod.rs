@@ -14,6 +14,46 @@ use std::collections::HashMap;
 #[grammar = "dot_parser/dot.pest"]
 pub struct DotParser;
 
+/// Keep a single graph value that can be either directed or undirected. This avoids generic return-type mismatches.
+enum DotGraph {
+    Directed(StablePyGraph<Directed>),
+    Undirected(StablePyGraph<Undirected>),
+}
+
+impl DotGraph {
+    fn new_directed() -> Self {
+        DotGraph::Directed(StablePyGraph::<Directed>::with_capacity(0, 0))
+    }
+    fn new_undirected() -> Self {
+        DotGraph::Undirected(StablePyGraph::<Undirected>::with_capacity(0, 0))
+    }
+    fn add_node(&mut self, w: PyObject) -> NodeIndex {
+        match self {
+            DotGraph::Directed(g) => g.add_node(w),
+            DotGraph::Undirected(g) => g.add_node(w),
+        }
+    }
+    fn add_edge(&mut self, a: NodeIndex, b: NodeIndex, w: PyObject) {
+        match self {
+            DotGraph::Directed(g) => {
+                g.add_edge(a, b, w);
+            }
+            DotGraph::Undirected(g) => {
+                g.add_edge(a, b, w);
+            }
+        }
+    }
+    fn is_directed(&self) -> bool {
+        matches!(self, DotGraph::Directed(_))
+    }
+    fn into_inner(self) -> Result<StablePyGraph<Directed>, StablePyGraph<Undirected>> {
+        match self {
+            DotGraph::Directed(g) => Ok(g),
+            DotGraph::Undirected(g) => Err(g),
+        }
+    }
+}
+
 /// Unquote a quoted string
 fn unquote_str(s: &str) -> String {
     let t = s.trim();
@@ -36,9 +76,6 @@ fn parse_attr_list_to_map(pair: pest::iterators::Pair<Rule>) -> HashMap<String, 
         let tokens: Vec<_> = a_list.into_inner().collect();
         let mut i = 0usize;
         while i < tokens.len() {
-            // tokens are (id) (maybe "=") (maybe id), but pyparsing/pest flattening depends on grammar.
-            // The simple approach here: take token i as key; if token i+1 exists and is not a comma (we filtered commas out in grammar),
-            // treat it as value.
             let key = tokens[i].as_str().trim().to_string();
             if i + 1 < tokens.len() {
                 let val = tokens[i + 1].as_str().trim().to_string();
@@ -67,27 +104,13 @@ pub fn from_dot(py: Python<'_>, dot_str: &str) -> PyResult<PyObject> {
         PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("DOT parse error: {}", e))
     })?;
 
+    // Detect directedness from a clone of the iterator so we don't consume it.
     let mut is_directed = false;
-    let mut node_map: HashMap<String, NodeIndex> = HashMap::new();
-
-    let mut di_graph: Option<PyDiGraph> = None;
-    let mut undi_graph: Option<PyGraph> = None;
-
-    let graph_attrs = PyDict::new(py);
-
-    let mut default_node_attrs: HashMap<String, String> = HashMap::new();
-    let mut default_edge_attrs: HashMap<String, String> = HashMap::new();
-
-    let mut node_attrs_map: HashMap<String, PyObject> = HashMap::new();
-
-    for pair in pairs {
+    for pair in pairs.clone() {
         if pair.as_rule() != Rule::graph_file {
             continue;
         }
-
         let mut inner = pair.into_inner();
-
-        // handle graph_type
         let first = inner.next().unwrap();
         let graph_type_str = if first.as_rule() == Rule::strict {
             inner.next().unwrap().as_str()
@@ -95,28 +118,41 @@ pub fn from_dot(py: Python<'_>, dot_str: &str) -> PyResult<PyObject> {
             first.as_str()
         };
         is_directed = graph_type_str == "digraph";
+        break;
+    }
 
-        if is_directed {
-            let graph = StablePyGraph::<Directed>::with_capacity(0, 0);
-            di_graph = Some(PyDiGraph {
-                graph,
-                cycle_state: rustworkx_core::petgraph::algo::DfsSpace::default(),
-                check_cycle: false,
-                node_removed: false,
-                multigraph: true,
-                attrs: graph_attrs.clone().into(),
-            });
-        } else {
-            let graph = StablePyGraph::<Undirected>::with_capacity(0, 0);
-            undi_graph = Some(PyGraph {
-                graph,
-                node_removed: false,
-                multigraph: true,
-                attrs: graph_attrs.clone().into(),
-            });
+    build_graph_enum(py, pairs, is_directed)
+}
+
+fn build_graph_enum(
+    py: Python<'_>,
+    pairs: pest::iterators::Pairs<Rule>,
+    is_directed: bool,
+) -> PyResult<PyObject> {
+    let mut node_map: HashMap<String, NodeIndex> = HashMap::new();
+    let graph_attrs = PyDict::new(py);
+
+    let mut default_node_attrs: HashMap<String, String> = HashMap::new();
+    let mut default_edge_attrs: HashMap<String, String> = HashMap::new();
+
+    let mut node_attrs_map: HashMap<String, PyObject> = HashMap::new();
+
+    let mut graph = if is_directed {
+        DotGraph::new_directed()
+    } else {
+        DotGraph::new_undirected()
+    };
+
+    for pair in pairs {
+        if pair.as_rule() != Rule::graph_file {
+            continue;
+        }
+        let mut inner = pair.into_inner();
+        let first = inner.next().unwrap();
+        if first.as_rule() == Rule::strict {
+            inner.next();
         }
 
-        // handle stmt_list
         for rest in inner {
             if rest.as_rule() != Rule::stmt_list {
                 continue;
@@ -128,27 +164,21 @@ pub fn from_dot(py: Python<'_>, dot_str: &str) -> PyResult<PyObject> {
                         let mut it = stmt.into_inner();
                         let nid = it.next().unwrap();
                         let name = node_id_to_string(nid);
-                        // create python node object
-                        let py_node_obj = PyString::new(py, &name).into();
+                        let py_node_obj: PyObject = PyString::new(py, &name).into();
 
-                        // add node to graph
-                        let idx = if is_directed {
-                            di_graph.as_mut().unwrap().graph.add_node(py_node_obj)
-                        } else {
-                            undi_graph.as_mut().unwrap().graph.add_node(py_node_obj)
-                        };
+                        let idx = graph.add_node(py_node_obj);
                         node_map.insert(name.clone(), idx);
 
-                        // produce merged attrs
+                        // Merge default node attrs + node's attr_list
                         let merged = PyDict::new(py);
                         for (k, v) in default_node_attrs.iter() {
-                            merged.set_item(k, v)?;
+                            merged.set_item(k.as_str(), v.as_str())?;
                         }
                         for maybe_attr in it {
                             if maybe_attr.as_rule() == Rule::attr_list {
                                 let map = parse_attr_list_to_map(maybe_attr);
                                 for (k, v) in map {
-                                    merged.set_item(k, v)?;
+                                    merged.set_item(k.as_str(), v.as_str())?;
                                 }
                             }
                         }
@@ -156,14 +186,12 @@ pub fn from_dot(py: Python<'_>, dot_str: &str) -> PyResult<PyObject> {
                     }
 
                     Rule::edge_stmt => {
-                        // edge_stmt
                         let mut endpoints: Vec<String> = Vec::new();
-                        let mut operators: Vec<String> = Vec::new();
 
-                        // start collected edge attrs from defaults
+                        // Start collected edge attrs from defaults
                         let collected = PyDict::new(py);
                         for (k, v) in default_edge_attrs.iter() {
-                            collected.set_item(k, v)?;
+                            collected.set_item(k.as_str(), v.as_str())?;
                         }
 
                         for child in stmt.into_inner() {
@@ -177,60 +205,40 @@ pub fn from_dot(py: Python<'_>, dot_str: &str) -> PyResult<PyObject> {
                                     }
                                 }
                                 Rule::edge_op => {
-                                    operators.push(child.as_str().trim().to_string());
+                                    // we already know directedness
                                 }
                                 Rule::attr_list => {
                                     let map = parse_attr_list_to_map(child);
                                     for (k, v) in map {
-                                        collected.set_item(k, v)?;
+                                        collected.set_item(k.as_str(), v.as_str())?;
                                     }
                                 }
                                 _ => {}
                             }
                         }
 
-                        // create pairwise edges and add them to the graph
+                        // Pairwise edges along the chain
                         for i in 0..endpoints.len().saturating_sub(1) {
                             let src = endpoints[i].clone();
                             let dst = endpoints[i + 1].clone();
 
                             let src_idx = *node_map.entry(src.clone()).or_insert_with(|| {
-                                let py_node = PyString::new(py, &src).into();
-                                if is_directed {
-                                    di_graph.as_mut().unwrap().graph.add_node(py_node)
-                                } else {
-                                    undi_graph.as_mut().unwrap().graph.add_node(py_node)
-                                }
+                                let py_node: PyObject = PyString::new(py, &src).into();
+                                graph.add_node(py_node)
                             });
 
                             let dst_idx = *node_map.entry(dst.clone()).or_insert_with(|| {
-                                let py_node = PyString::new(py, &dst).into();
-                                if is_directed {
-                                    di_graph.as_mut().unwrap().graph.add_node(py_node)
-                                } else {
-                                    undi_graph.as_mut().unwrap().graph.add_node(py_node)
-                                }
+                                let py_node: PyObject = PyString::new(py, &dst).into();
+                                graph.add_node(py_node)
                             });
 
                             let edge_attrs_obj: PyObject = collected.clone().into();
-
-                            if is_directed {
-                                di_graph.as_mut().unwrap().graph.add_edge(
-                                    src_idx,
-                                    dst_idx,
-                                    edge_attrs_obj.clone(),
-                                );
-                            } else {
-                                undi_graph.as_mut().unwrap().graph.add_edge(
-                                    src_idx,
-                                    dst_idx,
-                                    edge_attrs_obj.clone(),
-                                );
-                            }
+                            graph.add_edge(src_idx, dst_idx, edge_attrs_obj);
                         }
                     }
 
                     Rule::attr_stmt => {
+                        // attr_stmt = ("graph" | "node" | "edge") ~ attr_list+
                         let mut it = stmt.into_inner();
                         if let Some(target_pair) = it.next() {
                             let target = target_pair.as_str();
@@ -240,13 +248,7 @@ pub fn from_dot(py: Python<'_>, dot_str: &str) -> PyResult<PyObject> {
                                     match target {
                                         "graph" => {
                                             for (k, v) in map {
-                                                graph_attrs.set_item(k, v)?;
-                                            }
-                                            if let Some(dg) = di_graph.as_mut() {
-                                                dg.attrs = graph_attrs.clone().into();
-                                            }
-                                            if let Some(ug) = undi_graph.as_mut() {
-                                                ug.attrs = graph_attrs.clone().into();
+                                                graph_attrs.set_item(k.as_str(), v.as_str())?;
                                             }
                                         }
                                         "node" => {
@@ -274,7 +276,9 @@ pub fn from_dot(py: Python<'_>, dot_str: &str) -> PyResult<PyObject> {
                     }
 
                     Rule::subgraph => {
-                        // TODO: subgraph handling
+                        return Err(PyErr::new::<pyo3::exceptions::PyNotImplementedError, _>(
+                            "subgraph parsing is not supported",
+                        ));
                     }
 
                     _ => {}
@@ -283,17 +287,27 @@ pub fn from_dot(py: Python<'_>, dot_str: &str) -> PyResult<PyObject> {
         }
     }
 
-    if is_directed {
-        let dg = di_graph
-            .take()
-            .expect("directed graph was created but now missing");
-        let py_obj = Py::new(py, dg)?.into();
-        Ok(py_obj)
-    } else {
-        let ug = undi_graph
-            .take()
-            .expect("undirected graph was created but now missing");
-        let py_obj = Py::new(py, ug)?.into();
-        Ok(py_obj)
+    // Wrap into the a Python class
+    match graph.into_inner() {
+        Ok(directed_graph) => {
+            let dg = PyDiGraph {
+                graph: directed_graph,
+                cycle_state: rustworkx_core::petgraph::algo::DfsSpace::default(),
+                check_cycle: false,
+                node_removed: false,
+                multigraph: true,
+                attrs: graph_attrs.clone().into(),
+            };
+            Ok(Py::new(py, dg)?.into())
+        }
+        Err(undirected_graph) => {
+            let ug = PyGraph {
+                graph: undirected_graph,
+                node_removed: false,
+                multigraph: true,
+                attrs: graph_attrs.clone().into(),
+            };
+            Ok(Py::new(py, ug)?.into())
+        }
     }
 }

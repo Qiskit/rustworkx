@@ -148,3 +148,59 @@ class TestDot(unittest.TestCase):
         g = rustworkx.from_dot(dot_str)
         self.assertEqual(len(g.nodes()), 2)
         self.assertEqual(len(g.edges()), 1)
+
+    def test_graph_roundtrip_with_attrs(self):
+
+        graph = rustworkx.PyGraph()
+        graph.add_node(
+            {
+                "color": "black",
+                "fillcolor": "green",
+                "label": "a",
+                "style": "filled",
+            }
+        )
+        graph.add_node(
+            {
+                "color": "black",
+                "fillcolor": "red",
+                "label": "a",
+                "style": "filled",
+            }
+        )
+        graph.add_edge(0, 1, dict(label="1", name="1"))
+
+        res = graph.to_dot(lambda node: node, lambda edge: edge)
+
+        g2 = rustworkx.from_dot(res)
+
+        self.assertEqual(len(g2.nodes()), 2)
+        self.assertEqual(len(g2.edges()), 1)
+
+    def test_digraph_roundtrip_with_attrs(self):
+        graph = rustworkx.PyGraph()
+        graph.add_node(
+            {
+                "color": "black",
+                "fillcolor": "green",
+                "label": "a",
+                "style": "filled",
+            }
+        )
+        graph.add_node(
+            {
+                "color": "black",
+                "fillcolor": "red",
+                "label": "a",
+                "style": "filled",
+            }
+        )
+        graph.add_edge(0, 1, dict(label="1", name="1"))
+        graph.add_edge(1, 0, dict(label="2", name="2"))
+
+        res = graph.to_dot(lambda node: node, lambda edge: edge)
+
+        g2 = rustworkx.from_dot(res)
+
+        self.assertEqual(len(g2.nodes()), 2)
+        self.assertEqual(len(g2.edges()), 2)
