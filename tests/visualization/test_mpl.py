@@ -204,3 +204,15 @@ class TestMPLDraw(unittest.TestCase):
         plt.close("all")
         mpl_draw(graph, pos=[graph.get_node_data(n) for n in range(len(graph))])
         _save_images(plt.gcf(), "test_hexagonal_lattice_directed.png")
+
+    def test_connectionstyles(self):
+        G = rustworkx.generators.directed_path_graph(25)
+        mpl_draw(G, connectionstyle='bar')
+        _save_images(plt.gcf(), "test_connectionstyle_bar.png")
+        plt.clf()
+        mpl_draw(G, connectionstyle='angle, angleA=30, angleB=150, rad=1.3')
+        _save_images(plt.gcf(), "test_connectionstyle_angle.png")
+        plt.clf()
+        mpl_draw(G, connectionstyle='angle3, angleA=20, angleB=60')
+        _save_images(plt.gcf(), "test_connectionstyle_angle3.png")
+        plt.clf()
