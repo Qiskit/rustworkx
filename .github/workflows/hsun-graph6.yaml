@@ -1,0 +1,75 @@
+---
+name: hsun-graph6 CI
+on:
+  push:
+    branches: [ main, 'stable/*' ]
+  pull_request:
+    branches: [ main, 'stable/*' ]
+concurrency:
+  group: ${{ github.repository }}-${{ github.ref }}-${{ github.head_ref }}
+  cancel-in-progress: true
+jobs:
+  build_lint:
+    if: github.repository_owner == 'hsunwenfang'
+    name: Build, rustfmt, and python lint (Self-Hosted)
+    runs-on: self-hosted
+    steps:
+      - name: Print Concurrency Group
+        env:
+          CONCURRENCY_GROUP: ${{ github.repository }}-${{ github.ref }}-${{ github.head_ref }}
+        run: |
+          echo -e "\033[31;1;4mConcurrency Group\033[0m"
+          echo -e "$CONCURRENCY_GROUP\n"
+        shell: bash
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+      - run: |
+          pip install -U --group lint
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - name: Test Build
+        run: cargo build
+      - name: Rust Format
+        run: cargo fmt --all -- --check
+      - name: Clippy
+        run: cargo clippy --workspace --all-targets -- -D warnings
+      - name: Black Codestyle Format
+        run: black --check --diff rustworkx tests retworkx
+      - name: Python Lint
+        run: ruff check rustworkx setup.py tests retworkx
+      - name: Check stray release notes
+        run: python tools/find_stray_release_notes.py
+      - name: rustworkx-core Rust Tests
+        run: cargo test --workspace
+      - name: rustworkx-core Docs
+        run: cargo doc -p rustworkx-core
+        env:
+          RUSTDOCFLAGS: '-D warnings'
+      - uses: actions/upload-artifact@v4
+        with:
+          name: rustworkx_core_docs
+          path: target/doc/rustworkx_core
+  tests:
+    if: github.repository_owner == 'hsunwenfang'
+    needs: [build_lint]
+    name: python3.10-macOS-self-hosted
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+      - name: Install Python dependencies
+        run: |
+          pip install -e .
+          pip install -U --group test
+      - name: Run Python tests
+        run: pytest -v
