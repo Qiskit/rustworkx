@@ -225,10 +225,16 @@ pub mod write {
 
     pub fn write_graph6(bit_vec: Vec<usize>, n: usize, is_directed: bool) -> String {
         let mut repr = String::new();
-        let mut bit_vec = if is_directed {
-            bit_vec
+        let mut bit_vec = if !is_directed {
+            if n < 2 {
+                // For n=0 or n=1, upper triangle is empty.
+                // This avoids an underflow in upper_triangle.
+                Vec::new()
+            } else {
+                upper_triangle(&bit_vec, n)
+            }
         } else {
-            upper_triangle(&bit_vec, n)
+            bit_vec
         };
         write_header(&mut repr, is_directed);
         write_size(&mut repr, n);
@@ -247,6 +253,11 @@ use petgraph::graph::NodeIndex;
 use petgraph::prelude::*;
 use pyo3::exceptions::PyException;
 use pyo3::prelude::*;
+use std::fs::File;
+use std::io::{BufWriter, Write};
+use std::path::Path;
+use flate2::write::GzEncoder;
+use flate2::Compression;
 
 /// Undirected graph implementation
 #[derive(Debug)]
@@ -289,6 +300,9 @@ impl Graph {
 
     /// Builds the bitvector from the graph6 representation
     fn build_bitvector(bytes: &[u8], n: usize) -> Result<Vec<usize>, IOError> {
+        if n < 2 {
+            return Ok(Vec::new());
+        }
         let bv_len = n * (n - 1) / 2;
         let Some(bit_vec) = utils::fill_bitvector(bytes, bv_len, 1) else {
             return Err(IOError::NonCanonicalEncoding);
@@ -407,7 +421,7 @@ fn graph_to_pygraph<'py>(py: Python<'py>, g: &Graph) -> PyResult<Bound<'py, PyAn
     }
     // add edges
     for i in 0..g.size() {
-        for j in 0..g.size() {
+        for j in i..g.size() {
             if g.bit_vec[i * g.size() + j] == 1 {
                 let u = NodeIndex::new(i);
                 let v = NodeIndex::new(j);
@@ -450,6 +464,21 @@ fn digraph_to_pydigraph<'py>(py: Python<'py>, g: &DiGraph) -> PyResult<Bound<'py
     Ok(out.into_pyobject(py)?.into_any())
 }
 
+/// Write a graph6 string to a file path. Supports gzip if the extension is `.gz`.
+fn to_file(path: impl AsRef<Path>, content: &str) -> std::io::Result<()> {
+    let extension = path.as_ref().extension().and_then(|e| e.to_str()).unwrap_or("");
+    if extension == "gz" {
+        let file = File::create(path)?;
+        let buf_writer = BufWriter::new(file);
+        let mut encoder = GzEncoder::new(buf_writer, Compression::default());
+        encoder.write_all(content.as_bytes())?;
+        encoder.finish()?;
+    } else {
+        std::fs::write(path, content)?;
+    }
+    Ok(())
+}
+
 #[pyfunction]
 #[pyo3(signature=(repr))]
 pub fn read_graph6_str<'py>(py: Python<'py>, repr: &str) -> PyResult<Bound<'py, PyAny>> {
@@ -474,6 +503,7 @@ pub fn write_graph6_from_pygraph(pygraph: Py<PyGraph>) -> PyResult<String> {
         let mut bit_vec = vec![0usize; n * n];
         for (i, j, _w) in get_edge_iter_with_weights(&g.graph) {
             bit_vec[i * n + j] = 1;
+            bit_vec[j * n + i] = 1;
         }
         let graph6 = write::write_graph6(bit_vec, n, false);
         Ok(graph6)
@@ -512,7 +542,7 @@ pub fn read_graph6_file<'py>(py: Python<'py>, path: &str) -> PyResult<Bound<'py,
 #[pyo3(signature=(graph, path))]
 pub fn graph_write_graph6_file(graph: Py<PyGraph>, path: &str) -> PyResult<()> {
     let s = write_graph6_from_pygraph(graph)?;
-    std::fs::write(path, s).map_err(|e| PyException::new_err(format!("IO error: {}", e)))?;
+    to_file(path, &s).map_err(|e| PyException::new_err(format!("IO error: {}", e)))?;
     Ok(())
 }
 
@@ -521,7 +551,7 @@ pub fn graph_write_graph6_file(graph: Py<PyGraph>, path: &str) -> PyResult<()> {
 #[pyo3(signature=(digraph, path))]
 pub fn digraph_write_graph6_file(digraph: Py<PyDiGraph>, path: &str) -> PyResult<()> {
     let s = write_graph6_from_pydigraph(digraph)?;
-    std::fs::write(path, s).map_err(|e| PyException::new_err(format!("IO error: {}", e)))?;
+    to_file(path, &s).map_err(|e| PyException::new_err(format!("IO error: {}", e)))?;
     Ok(())
 }
 
