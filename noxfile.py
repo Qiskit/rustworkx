@@ -1,5 +1,4 @@
 import nox
-import os
 
 nox.options.reuse_existing_virtualenvs = True
 nox.options.stop_on_first_error = True
@@ -20,30 +19,7 @@ def install_rustworkx(session):
 def base_test(session):
     install_rustworkx(session)
     session.chdir("tests")
-    # Convert file path style args (e.g. tests/test_graph6.py) to dotted module names
-    # which stestr/unittest expects (e.g. tests.test_graph6). Leave other args alone.
-    def _convert_arg(arg: str) -> str:
-        if arg.endswith(".py"):
-            p = os.path.normpath(arg)
-            module = os.path.splitext(p)[0]
-            # strip any leading ./
-            if module.startswith("./"):
-                module = module[2:]
-            # replace path separators with dots
-            module = module.replace(os.sep, ".")
-            return module
-        return arg
-
-    converted = [_convert_arg(a) for a in session.posargs]
-    # If we've chdir'ed into the tests directory, stestr expects module names
-    # relative to that directory (e.g. 'test_graph6' instead of 'tests.test_graph6').
-    def _strip_tests_prefix(name: str) -> str:
-        if name.startswith("tests."):
-            return name[len("tests."):]
-        return name
-
-    converted = [_strip_tests_prefix(c) for c in converted]
-    session.run("stestr", "run", *converted)
+    session.run("stestr", "run", *session.posargs)
 
 @nox.session(python=["3"])
 def test(session):

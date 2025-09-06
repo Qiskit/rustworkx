@@ -10,17 +10,15 @@ real parsing while giving users a discoverable namespace today.
 """
 from __future__ import annotations
 
-from typing import NoReturn
+from . import read_sparse6_str as _read_sparse6_str
+from . import write_sparse6_from_pygraph as _write_sparse6_from_pygraph
 
-__all__ = ["read_sparse6_str"]
-
-
-class Sparse6Unsupported(RuntimeError):
-    pass
+__all__ = ["read_sparse6_str", "write_sparse6_from_pygraph"]
 
 
-def read_sparse6_str(repr: str) -> NoReturn:
-    """Attempt to read a sparse6 string (always unsupported for now)."""
-    raise Sparse6Unsupported(
-        "sparse6 parsing not yet implemented; contributions welcome."
-    )
+def read_sparse6_str(repr: str):
+    return _read_sparse6_str(repr)
+
+
+def write_sparse6_from_pygraph(pygraph, header: bool = True):
+    return _write_sparse6_from_pygraph(pygraph, header)

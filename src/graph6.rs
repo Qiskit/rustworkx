@@ -267,11 +267,10 @@ pub mod write {
 // WriteGraph is only used in tests via the tests module's imports
 
 use crate::get_edge_iter_with_weights;
-use crate::{digraph::PyDiGraph, graph::PyGraph, StablePyGraph};
+use crate::{graph::PyGraph, StablePyGraph};
 use crate::{Graph6OverflowError, Graph6PanicError, Graph6ParseError};
 use flate2::write::GzEncoder;
 use flate2::Compression;
-use petgraph::algo;
 use petgraph::graph::NodeIndex;
 use petgraph::prelude::*;
 use pyo3::prelude::*;
@@ -366,70 +365,7 @@ impl GraphConversion for Graph {
 #[cfg(test)]
 impl write::WriteGraph for Graph {}
 
-/// Directed graph implementation
-#[derive(Debug)]
-pub struct DiGraph {
-    pub bit_vec: Vec<usize>,
-    pub n: usize,
-}
-impl DiGraph {
-    /// Creates a new DiGraph from a graph6 representation string
-    pub fn from_d6(repr: &str) -> Result<Self, IOError> {
-        let bytes = repr.as_bytes();
-        Self::valid_digraph(bytes)?;
-        let n = utils::get_size(bytes, 1)?;
-        let Some(bit_vec) = Self::build_bitvector(bytes, n) else {
-            return Err(IOError::NonCanonicalEncoding);
-        };
-        Ok(Self { bit_vec, n })
-    }
-
-    /// Creates a new DiGraph from a flattened adjacency matrix
-    #[cfg(test)]
-    pub fn from_adj(adj: &[usize]) -> Result<Self, IOError> {
-        let n2 = adj.len();
-        let n = (n2 as f64).sqrt() as usize;
-        if n * n != n2 {
-            return Err(IOError::InvalidAdjacencyMatrix);
-        }
-        let bit_vec = adj.to_vec();
-        Ok(Self { bit_vec, n })
-    }
-
-    /// Validates graph6 directed representation
-    fn valid_digraph(repr: &[u8]) -> Result<bool, IOError> {
-        if repr[0] == b'&' {
-            Ok(true)
-        } else {
-            Err(IOError::InvalidDigraphHeader)
-        }
-    }
-
-    /// Iteratores through the bytes and builds a bitvector
-    /// representing the adjaceny matrix of the graph
-    fn build_bitvector(bytes: &[u8], n: usize) -> Option<Vec<usize>> {
-        let bv_len = n * n;
-        utils::fill_bitvector(bytes, bv_len, 2)
-    }
-}
-#[allow(dead_code)]
-impl GraphConversion for DiGraph {
-    fn bit_vec(&self) -> &[usize] {
-        &self.bit_vec
-    }
-
-    fn size(&self) -> usize {
-        self.n
-    }
-
-    fn is_directed(&self) -> bool {
-        true
-    }
-}
-
-#[cfg(test)]
-#[cfg(test)]
-impl write::WriteGraph for DiGraph {}
+use crate::digraph6::{DiGraph, digraph_to_pydigraph};
 
 // End of combined module
 
@@ -459,34 +395,10 @@ fn graph_to_pygraph<'py>(py: Python<'py>, g: &Graph) -> PyResult<Bound<'py, PyAn
     Ok(out.into_pyobject(py)?.into_any())
 }
 
-/// Convert internal DiGraph to PyDiGraph
-fn digraph_to_pydigraph<'py>(py: Python<'py>, g: &DiGraph) -> PyResult<Bound<'py, PyAny>> {
-    let mut graph = StablePyGraph::<Directed>::with_capacity(g.size(), 0);
-    for _ in 0..g.size() {
-        graph.add_node(py.None());
-    }
-    for i in 0..g.size() {
-        for j in 0..g.size() {
-            if g.bit_vec[i * g.size() + j] == 1 {
-                let u = NodeIndex::new(i);
-                let v = NodeIndex::new(j);
-                graph.add_edge(u, v, py.None());
-            }
-        }
-    }
-    let out = PyDiGraph {
-        graph,
-        cycle_state: algo::DfsSpace::default(),
-        check_cycle: false,
-        node_removed: false,
-        multigraph: true,
-        attrs: py.None(),
-    };
-    Ok(out.into_pyobject(py)?.into_any())
-}
+// digraph_to_pydigraph provided by crate::digraph6
 
 /// Write a graph6 string to a file path. Supports gzip if the extension is `.gz`.
-fn to_file(path: impl AsRef<Path>, content: &str) -> std::io::Result<()> {
+pub(crate) fn to_file(path: impl AsRef<Path>, content: &str) -> std::io::Result<()> {
     let extension = path
         .as_ref()
         .extension()
@@ -560,20 +472,6 @@ pub fn write_graph6_from_pygraph(pygraph: Py<PyGraph>) -> PyResult<String> {
     })
 }
 
-#[pyfunction]
-#[pyo3(signature=(pydigraph))]
-pub fn write_graph6_from_pydigraph(pydigraph: Py<PyDiGraph>) -> PyResult<String> {
-    Python::with_gil(|py| {
-        let g = pydigraph.borrow(py);
-        let n = g.graph.node_count();
-        let mut bit_vec = vec![0usize; n * n];
-        for (i, j, _w) in get_edge_iter_with_weights(&g.graph) {
-            bit_vec[i * n + j] = 1;
-        }
-        let graph6 = write::write_graph6(bit_vec, n, true);
-        Ok(graph6)
-    })
-}
 
 /// Read a graph6 file from disk and return a PyGraph or PyDiGraph
 #[pyfunction]
@@ -598,20 +496,14 @@ pub fn graph_write_graph6_file(graph: Py<PyGraph>, path: &str) -> PyResult<()> {
 }
 
 /// Write a PyDiGraph to a graph6 file
-#[pyfunction]
-#[pyo3(signature=(digraph, path))]
-pub fn digraph_write_graph6_file(digraph: Py<PyDiGraph>, path: &str) -> PyResult<()> {
-    let s = write_graph6_from_pydigraph(digraph)?;
-    to_file(path, &s)
-        .map_err(|e| PyErr::new::<pyo3::exceptions::PyIOError, _>(format!("IO error: {}", e)))?;
-    Ok(())
-}
+// digraph write helpers are provided by crate::digraph6
 
 #[cfg(test)]
 mod testing {
     use super::utils::{fill_bitvector, get_size, upper_triangle};
     use super::write::{write_graph6, WriteGraph};
-    use super::{DiGraph, Graph, GraphConversion, IOError};
+    use super::{Graph, GraphConversion, IOError};
+    use crate::digraph6::DiGraph;
 
     // Tests from error.rs
     #[test]
