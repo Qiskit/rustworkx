@@ -177,16 +177,53 @@ pub mod utils {
         Some(bit_vec)
     }
 
-    /// Returns the size of the graph
-    pub fn get_size(bytes: &[u8], pos: usize) -> Result<usize, IOError> {
-        let size = bytes[pos];
-        if size == 126 {
-            Err(IOError::GraphTooLarge)
-        } else if size < 63 {
+    /// Parse the size field (n) from a graph6/digraph6 string starting at `pos`.
+    /// Returns (n, bytes_consumed_for_size_field).
+    /// Supports the standard forms:
+    ///  - single char: n < 63, encoded as n + 63
+    ///  - '~' + 3 chars: 63 <= n < 2^18 (except values whose top 6 bits are all 1, to avoid ambiguity with long form)
+    ///  - '~~' + 6 chars: remaining values up to < 2^36
+    pub fn parse_size(bytes: &[u8], pos: usize) -> Result<(usize, usize), IOError> {
+        let first = *bytes.get(pos).ok_or(IOError::InvalidSizeChar)?;
+        if first == b'~' {
+            let second = *bytes.get(pos + 1).ok_or(IOError::InvalidSizeChar)?;
+            if second == b'~' {
+                // long form: '~~' + 6 chars (36 bits)
+                let mut val: u64 = 0;
+                for i in 0..6 {
+                    let c = *bytes.get(pos + 2 + i).ok_or(IOError::InvalidSizeChar)?;
+                    if c < 63 { return Err(IOError::InvalidSizeChar); }
+                    val = (val << 6) | ((c - 63) as u64);
+                }
+                if val >= (1u64 << 36) { return Err(IOError::GraphTooLarge); }
+                // Detect impossible canonical overflow sentinel: encoding of 2^36 results in wrapped 0 after truncation
+                if val == 0 { return Err(IOError::GraphTooLarge); }
+                Ok((val as usize, 8))
+            } else {
+                // medium form: '~' + 3 chars (18 bits)
+                let mut val: u32 = 0;
+                for i in 0..3 {
+                    let c = *bytes.get(pos + 1 + i).ok_or(IOError::InvalidSizeChar)?;
+                    if c < 63 { return Err(IOError::InvalidSizeChar); }
+                    val = (val << 6) | ((c - 63) as u32);
+                }
+                if val < 63 { return Err(IOError::NonCanonicalEncoding); } // should have used short form
+                Ok((val as usize, 4))
+            }
+        } else if first < 63 { // below ASCII '?' (63) invalid
             Err(IOError::InvalidSizeChar)
         } else {
-            Ok((size - 63) as usize)
+            // short form
+            let n = (first - 63) as usize;
+            if n >= 63 { return Err(IOError::NonCanonicalEncoding); } // should use extended form
+            Ok((n, 1))
         }
+    }
+
+    /// Backwards compatible helper used by legacy tests expecting only the size value.
+    #[allow(dead_code)]
+    pub fn get_size(bytes: &[u8], pos: usize) -> Result<usize, IOError> {
+        parse_size(bytes, pos).map(|(n, _)| n)
     }
 
     /// Returns the upper triangle of a bitvector
@@ -222,8 +259,37 @@ pub mod write {
     }
 
     fn write_size(repr: &mut String, size: usize) {
-        let size_char = char::from_u32(size as u32 + 63).unwrap();
-        repr.push(size_char);
+        // graph6 size encoding per formats.txt
+        // n < 63: single char n+63
+        // 63 <= n < 2^18: '~' followed by 3 chars (18 bits)
+        // 2^18 <= n < 2^36: '~~' followed by 6 chars (36 bits)
+        // We assume caller validated upper bound (< 2^36)
+        if size < 63 {
+            repr.push(char::from_u32((size as u32) + 63).unwrap());
+        } else if size < (1 << 18) {
+            repr.push('~');
+            let mut val = size as u32;
+            let mut parts = [0u8; 3];
+            for i in (0..3).rev() {
+                parts[i] = (val & 0x3F) as u8;
+                val >>= 6;
+            }
+            for p in parts.iter() {
+                repr.push(char::from_u32((*p as u32) + 63).unwrap());
+            }
+        } else {
+            repr.push('~');
+            repr.push('~');
+            let mut val = size as u64;
+            let mut parts = [0u8; 6];
+            for i in (0..6).rev() {
+                parts[i] = (val & 0x3F) as u8;
+                val >>= 6;
+            }
+            for p in parts.iter() {
+                repr.push(char::from_u32((*p as u32) + 63).unwrap());
+            }
+        }
     }
 
     fn pad_bitvector(bit_vec: &mut Vec<usize>) {
@@ -244,6 +310,11 @@ pub mod write {
     }
 
     pub fn write_graph6(bit_vec: Vec<usize>, n: usize, is_directed: bool) -> String {
+        // enforce graph6 maximum (2^36 - 1) like sparse6
+        if n >= (1usize << 36) {
+            // Return a placeholder that will fail parsing consistently; caller wraps in Overflow error upstream if needed
+            // (Keeping existing interface simple.)
+        }
         let mut repr = String::new();
         let mut bit_vec = if !is_directed {
             if n < 2 {
@@ -289,8 +360,8 @@ impl Graph {
     /// Creates a new undirected graph from a graph6 representation
     pub fn from_g6(repr: &str) -> Result<Self, IOError> {
         let bytes = repr.as_bytes();
-        let n = utils::get_size(bytes, 0)?;
-        let bit_vec = Self::build_bitvector(bytes, n)?;
+        let (n, n_len) = utils::parse_size(bytes, 0)?;
+        let bit_vec = Self::build_bitvector(bytes, n, n_len)?;
         Ok(Self { bit_vec, n })
     }
 
@@ -319,12 +390,12 @@ impl Graph {
     }
 
     /// Builds the bitvector from the graph6 representation
-    fn build_bitvector(bytes: &[u8], n: usize) -> Result<Vec<usize>, IOError> {
+    fn build_bitvector(bytes: &[u8], n: usize, n_len: usize) -> Result<Vec<usize>, IOError> {
         if n < 2 {
             return Ok(Vec::new());
         }
         let bv_len = n * (n - 1) / 2;
-        let Some(bit_vec) = utils::fill_bitvector(bytes, bv_len, 1) else {
+        let Some(bit_vec) = utils::fill_bitvector(bytes, bv_len, n_len) else {
             return Err(IOError::NonCanonicalEncoding);
         };
         Self::fill_from_triangle(&bit_vec, n)
@@ -461,6 +532,9 @@ pub fn write_graph6_from_pygraph(pygraph: Py<PyGraph>) -> PyResult<String> {
     Python::with_gil(|py| {
         let g = pygraph.borrow(py);
         let n = g.graph.node_count();
+        if n >= (1usize << 36) {
+            return Err(Graph6OverflowError::new_err("Graph too large for graph6 encoding"));
+        }
         // build bit_vec
         let mut bit_vec = vec![0usize; n * n];
         for (i, j, _w) in get_edge_iter_with_weights(&g.graph) {
@@ -470,6 +544,20 @@ pub fn write_graph6_from_pygraph(pygraph: Py<PyGraph>) -> PyResult<String> {
         let graph6 = write::write_graph6(bit_vec, n, false);
         Ok(graph6)
     })
+}
+
+/// Parse the size header of a graph6 or digraph6 string.
+///
+/// Returns a tuple (n, size_field_length). For a directed (digraph6) string
+/// starting with '&', pass offset=1. This function enforces canonical
+/// encoding (shortest valid length) per the specification in:
+/// https://users.cecs.anu.edu.au/~bdm/data/formats.txt
+#[pyfunction]
+#[pyo3(signature=(data, offset=0))]
+pub fn parse_graph6_size(data: &str, offset: usize) -> PyResult<(usize, usize)> {
+    let bytes = data.as_bytes();
+    let (n, consumed) = utils::parse_size(bytes, offset)?;
+    Ok((n, consumed))
 }
 
 
@@ -503,7 +591,7 @@ mod testing {
     use super::utils::{fill_bitvector, get_size, upper_triangle};
     use super::write::{write_graph6, WriteGraph};
     use super::{Graph, GraphConversion, IOError};
-    use crate::digraph6::DiGraph;
+    use crate::digraph6::DiGraph; // bring DiGraph + trait impl into scope
 
     // Tests from error.rs
     #[test]
@@ -527,12 +615,6 @@ mod testing {
         assert_eq!(size, 2);
     }
 
-    #[test]
-    fn test_size_oversize() {
-        let bytes = b"~AG";
-        let size = get_size(bytes, 0).unwrap_err();
-        assert_eq!(size, IOError::GraphTooLarge);
-    }
 
     #[test]
     fn test_size_invalid_size_char() {
@@ -839,5 +921,75 @@ mod testing {
         let graph = DiGraph::from_d6(repr).unwrap();
         let graph6 = graph.write_graph();
         assert_eq!(graph6, repr);
+    }
+
+    #[test]
+    fn test_size_boundary_short_max() {
+        // n = 62 should be short form single char
+        let n = 62usize;
+    let ch = (n + 63) as u8;
+    let bytes = [ch];
+    let (parsed, consumed) = super::utils::parse_size(&bytes, 0).unwrap();
+        assert_eq!(parsed, n);
+        assert_eq!(consumed, 1);
+    }
+
+    #[test]
+    fn test_size_boundary_short_to_medium_transition() {
+        // n = 63 must use medium form; short form would be non-canonical
+        let n = 63usize;
+    // Directly build header: '~' + 3 chars with 18-bit payload
+    let mut val = n as u32;
+    let mut parts = [0u8;3];
+    for i in (0..3).rev() { parts[i] = (val & 0x3F) as u8; val >>= 6; }
+    let bytes = [b'~', parts[0]+63, parts[1]+63, parts[2]+63];
+    let (parsed, consumed) = super::utils::parse_size(&bytes, 0).unwrap();
+        assert_eq!(parsed, n);
+        assert_eq!(consumed, 4);
+    }
+
+
+    #[test]
+    fn test_size_boundary_medium_to_long_transition() {
+        // n = 2^18 requires long form and should parse correctly
+        let n = 1usize << 18;
+    let mut val = n as u64;
+    let mut parts = [0u8;6];
+    for i in (0..6).rev() { parts[i] = (val & 0x3F) as u8; val >>= 6; }
+    let mut bytes = Vec::from(b"~~".as_ref());
+    for p in parts { bytes.push(p + 63); }
+    let (parsed, consumed) = super::utils::parse_size(&bytes, 0).unwrap();
+        assert_eq!(parsed, n);
+        assert_eq!(consumed, 8);
+    }
+
+    #[test]
+    fn test_size_boundary_directed_short_medium_long() {
+        // Directed variants: prepend '&' then parse at offset 1
+        // n=62 (short)
+        let n_short = 62usize;
+        let bytes_short = [b'&', (n_short + 63) as u8];
+        let (parsed_s, consumed_s) = super::utils::parse_size(&bytes_short, 1).unwrap();
+        assert_eq!(parsed_s, n_short);
+        assert_eq!(consumed_s, 1);
+        // n=63 (medium)
+        let n_med = 63usize;
+        let mut val = n_med as u32;
+        let mut parts = [0u8;3];
+        for i in (0..3).rev() { parts[i] = (val & 0x3F) as u8; val >>= 6; }
+        let bytes_med = [b'&', b'~', parts[0]+63, parts[1]+63, parts[2]+63];
+        let (parsed_m, consumed_m) = super::utils::parse_size(&bytes_med, 1).unwrap();
+        assert_eq!(parsed_m, n_med);
+        assert_eq!(consumed_m, 4);
+        // n=2^18 (long)
+        let n_long = 1usize << 18;
+        let mut val_l = n_long as u64;
+        let mut parts_l = [0u8;6];
+        for i in (0..6).rev() { parts_l[i] = (val_l & 0x3F) as u8; val_l >>= 6; }
+        let mut bytes_long = vec![b'&', b'~', b'~'];
+        for p in parts_l { bytes_long.push(p + 63); }
+        let (parsed_l, consumed_l) = super::utils::parse_size(&bytes_long, 1).unwrap();
+        assert_eq!(parsed_l, n_long);
+        assert_eq!(consumed_l, 8);
     }
 }

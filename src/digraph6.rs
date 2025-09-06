@@ -16,8 +16,8 @@ impl DiGraph {
     pub fn from_d6(repr: &str) -> Result<Self, IOError> {
         let bytes = repr.as_bytes();
         Self::valid_digraph(bytes)?;
-        let n = utils::get_size(bytes, 1)?;
-        let Some(bit_vec) = Self::build_bitvector(bytes, n) else {
+    let (n, n_len) = utils::parse_size(bytes, 1)?;
+    let Some(bit_vec) = Self::build_bitvector(bytes, n, 1 + n_len) else {
             return Err(IOError::NonCanonicalEncoding);
         };
         Ok(Self { bit_vec, n })
@@ -46,9 +46,9 @@ impl DiGraph {
 
     /// Iteratores through the bytes and builds a bitvector
     /// representing the adjaceny matrix of the graph
-    fn build_bitvector(bytes: &[u8], n: usize) -> Option<Vec<usize>> {
+    fn build_bitvector(bytes: &[u8], n: usize, offset: usize) -> Option<Vec<usize>> {
         let bv_len = n * n;
-        utils::fill_bitvector(bytes, bv_len, 2)
+        utils::fill_bitvector(bytes, bv_len, offset)
     }
 }
 
@@ -116,3 +116,7 @@ pub fn digraph_write_graph6_file(digraph: Py<crate::digraph::PyDiGraph>, path: &
         .map_err(|e| pyo3::exceptions::PyIOError::new_err(format!("IO error: {}", e)))?;
     Ok(())
 }
+
+// Enable write_graph() in tests for DiGraph via the WriteGraph trait
+#[cfg(test)]
+impl crate::graph6::write::WriteGraph for DiGraph {}

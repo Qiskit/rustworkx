@@ -718,6 +718,7 @@ fn rustworkx(py: Python<'_>, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(crate::graph6::read_graph6_file))?;
     m.add_wrapped(wrap_pyfunction!(crate::graph6::graph_write_graph6_file))?;
     m.add_wrapped(wrap_pyfunction!(crate::digraph6::digraph_write_graph6_file))?;
+    m.add_wrapped(wrap_pyfunction!(crate::graph6::parse_graph6_size))?;
     m.add_wrapped(wrap_pyfunction!(crate::sparse6::read_sparse6_str))?;
     m.add_wrapped(wrap_pyfunction!(crate::sparse6::write_sparse6_from_pygraph))?;
     m.add_wrapped(wrap_pyfunction!(digraph_node_link_json))?;

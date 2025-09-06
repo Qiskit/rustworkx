@@ -192,3 +192,71 @@ class TestGraph6FormatExtras(unittest.TestCase):
     def test_invalid_string_format(self):
         with self.assertRaises(Exception):
             rx_graph6.read_graph6_str('invalid_string')
+
+
+# ---- Size parse tests (merged from test_graph6_size_parse.py) ----
+
+def _encode_medium(n: int) -> str:
+    assert 63 <= n < (1 << 18)
+    parts = [0, 0, 0]
+    val = n
+    for i in range(2, -1, -1):
+        parts[i] = val & 0x3F
+        val >>= 6
+    return "~" + "".join(chr(p + 63) for p in parts)
+
+
+def _encode_long(n: int) -> str:
+    assert 0 <= n < (1 << 36)
+    parts = [0] * 6
+    val = n
+    for i in range(5, -1, -1):
+        parts[i] = val & 0x3F
+        val >>= 6
+    return "~~" + "".join(chr(p + 63) for p in parts)
+
+
+class TestGraph6SizeParse(unittest.TestCase):
+    def test_parse_short_boundary(self):
+        n, consumed = rx.parse_graph6_size("}")
+        self.assertEqual((n, consumed), (62, 1))
+
+    def test_parse_medium_start(self):
+        hdr = _encode_medium(63)
+        n, consumed = rx.parse_graph6_size(hdr)
+        self.assertEqual((n, consumed), (63, 4))
+
+    def test_parse_long_start(self):
+        n_val = 1 << 18
+        hdr = _encode_long(n_val)
+        n, consumed = rx.parse_graph6_size(hdr)
+        self.assertEqual((n, consumed), (n_val, 8))
+
+    def test_parse_directed_variants(self):
+        n, consumed = rx.parse_graph6_size("&}", offset=1)
+        self.assertEqual((n, consumed), (62, 1))
+        hdr = "&" + _encode_medium(63)
+        n2, consumed2 = rx.parse_graph6_size(hdr, offset=1)
+        self.assertEqual((n2, consumed2), (63, 4))
+
+    def test_non_canonical_medium_for_short(self):
+        n = 62
+        val = n
+        parts = [0, 0, 0]
+        for i in range(2, -1, -1):
+            parts[i] = val & 0x3F
+            val >>= 6
+        bad_hdr = "~" + "".join(chr(p + 63) for p in parts)
+        with self.assertRaises(rx.Graph6ParseError):
+            rx.parse_graph6_size(bad_hdr)
+
+    def test_overflow(self):
+        overflow_val = 1 << 36
+        parts = [0] * 6
+        val = overflow_val
+        for i in range(5, -1, -1):
+            parts[i] = val & 0x3F
+            val >>= 6
+        hdr = "~~" + "".join(chr(p + 63) for p in parts)
+        with self.assertRaises((rx.Graph6OverflowError, rx.Graph6ParseError)):
+            rx.parse_graph6_size(hdr)
