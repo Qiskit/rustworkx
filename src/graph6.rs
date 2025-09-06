@@ -134,6 +134,26 @@ pub enum IOError {
     NonCanonicalEncoding,
 }
 
+impl From<IOError> for PyErr {
+    fn from(e: IOError) -> PyErr {
+        match e {
+            IOError::InvalidDigraphHeader => Graph6ParseError::new_err("Invalid digraph header"),
+            IOError::InvalidSizeChar => {
+                Graph6ParseError::new_err("Invalid size character in header")
+            }
+            IOError::GraphTooLarge => {
+                Graph6OverflowError::new_err("Graph too large for graph6 encoding")
+            }
+            IOError::InvalidAdjacencyMatrix => {
+                Graph6ParseError::new_err("Invalid adjacency matrix")
+            }
+            IOError::NonCanonicalEncoding => {
+                Graph6ParseError::new_err("Non-canonical graph6 encoding")
+            }
+        }
+    }
+}
+
 /// Utility functions used by parsers and writers
 pub mod utils {
     use super::IOError;
@@ -248,16 +268,17 @@ pub mod write {
 
 use crate::get_edge_iter_with_weights;
 use crate::{digraph::PyDiGraph, graph::PyGraph, StablePyGraph};
+use crate::{Graph6OverflowError, Graph6PanicError, Graph6ParseError};
+use flate2::write::GzEncoder;
+use flate2::Compression;
 use petgraph::algo;
 use petgraph::graph::NodeIndex;
 use petgraph::prelude::*;
-use pyo3::exceptions::PyException;
 use pyo3::prelude::*;
+use pyo3::PyErr;
 use std::fs::File;
 use std::io::{BufWriter, Write};
 use std::path::Path;
-use flate2::write::GzEncoder;
-use flate2::Compression;
 
 /// Undirected graph implementation
 #[derive(Debug)]
@@ -466,7 +487,11 @@ fn digraph_to_pydigraph<'py>(py: Python<'py>, g: &DiGraph) -> PyResult<Bound<'py
 
 /// Write a graph6 string to a file path. Supports gzip if the extension is `.gz`.
 fn to_file(path: impl AsRef<Path>, content: &str) -> std::io::Result<()> {
-    let extension = path.as_ref().extension().and_then(|e| e.to_str()).unwrap_or("");
+    let extension = path
+        .as_ref()
+        .extension()
+        .and_then(|e| e.to_str())
+        .unwrap_or("");
     if extension == "gz" {
         let file = File::create(path)?;
         let buf_writer = BufWriter::new(file);
@@ -482,15 +507,40 @@ fn to_file(path: impl AsRef<Path>, content: &str) -> std::io::Result<()> {
 #[pyfunction]
 #[pyo3(signature=(repr))]
 pub fn read_graph6_str<'py>(py: Python<'py>, repr: &str) -> PyResult<Bound<'py, PyAny>> {
-    // try undirected first
-    if let Ok(g) = Graph::from_g6(repr) {
-        return graph_to_pygraph(py, &g);
+    // Wrap parser calls to catch Rust panics and convert IO errors to PyErr
+    // Helper enum used to return either a Graph or DiGraph from the parser.
+    enum ParserResult {
+        Graph(Graph),
+        DiGraph(DiGraph),
     }
-    // try directed
-    if let Ok(dg) = DiGraph::from_d6(repr) {
-        return digraph_to_pydigraph(py, &dg);
+
+    let wrapped = std::panic::catch_unwind(|| {
+        // try undirected first
+        if let Ok(g) = Graph::from_g6(repr) {
+            return Ok::<_, IOError>(ParserResult::Graph(g));
+        }
+        // try directed
+        if let Ok(dg) = DiGraph::from_d6(repr) {
+            return Ok(ParserResult::DiGraph(dg));
+        }
+        Err(IOError::NonCanonicalEncoding)
+    });
+
+    match wrapped {
+        Ok(Ok(ParserResult::Graph(g))) => graph_to_pygraph(py, &g),
+        Ok(Ok(ParserResult::DiGraph(dg))) => digraph_to_pydigraph(py, &dg),
+        Ok(Err(io_err)) => Err(PyErr::from(io_err)),
+        Err(panic_payload) => {
+            let msg = if let Some(s) = panic_payload.downcast_ref::<&str>() {
+                format!("Rust panic in graph6 parser: {}", s)
+            } else if let Some(s) = panic_payload.downcast_ref::<String>() {
+                format!("Rust panic in graph6 parser: {}", s)
+            } else {
+                "Rust panic in graph6 parser (non-string payload)".to_string()
+            };
+            Err(Graph6PanicError::new_err(msg))
+        }
     }
-    Err(PyException::new_err("Failed to parse graph6 string"))
 }
 
 #[pyfunction]
@@ -530,8 +580,8 @@ pub fn write_graph6_from_pydigraph(pydigraph: Py<PyDiGraph>) -> PyResult<String>
 #[pyo3(signature=(path))]
 pub fn read_graph6_file<'py>(py: Python<'py>, path: &str) -> PyResult<Bound<'py, PyAny>> {
     use std::fs;
-    let data =
-        fs::read_to_string(path).map_err(|e| PyException::new_err(format!("IO error: {}", e)))?;
+    let data = fs::read_to_string(path)
+        .map_err(|e| PyErr::new::<pyo3::exceptions::PyIOError, _>(format!("IO error: {}", e)))?;
     // graph6 files may contain newlines; take first non-empty line
     let line = data.lines().find(|l| !l.trim().is_empty()).unwrap_or("");
     read_graph6_str(py, line)
@@ -542,7 +592,8 @@ pub fn read_graph6_file<'py>(py: Python<'py>, path: &str) -> PyResult<Bound<'py,
 #[pyo3(signature=(graph, path))]
 pub fn graph_write_graph6_file(graph: Py<PyGraph>, path: &str) -> PyResult<()> {
     let s = write_graph6_from_pygraph(graph)?;
-    to_file(path, &s).map_err(|e| PyException::new_err(format!("IO error: {}", e)))?;
+    to_file(path, &s)
+        .map_err(|e| PyErr::new::<pyo3::exceptions::PyIOError, _>(format!("IO error: {}", e)))?;
     Ok(())
 }
 
@@ -551,7 +602,8 @@ pub fn graph_write_graph6_file(graph: Py<PyGraph>, path: &str) -> PyResult<()> {
 #[pyo3(signature=(digraph, path))]
 pub fn digraph_write_graph6_file(digraph: Py<PyDiGraph>, path: &str) -> PyResult<()> {
     let s = write_graph6_from_pydigraph(digraph)?;
-    to_file(path, &s).map_err(|e| PyException::new_err(format!("IO error: {}", e)))?;
+    to_file(path, &s)
+        .map_err(|e| PyErr::new::<pyo3::exceptions::PyIOError, _>(format!("IO error: {}", e)))?;
     Ok(())
 }
 

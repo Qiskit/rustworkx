@@ -457,6 +457,37 @@ create_exception!(
     "Graph is not bipartite"
 );
 
+create_exception!(
+    rustworkx,
+    Graph6Error,
+    PyException,
+    "Base exception for graph6/digraph6/sparse6 parsing and formatting"
+);
+create_exception!(
+    rustworkx,
+    Graph6ParseError,
+    Graph6Error,
+    "Parser error when reading graph6/digraph6 strings"
+);
+create_exception!(
+    rustworkx,
+    Graph6OverflowError,
+    Graph6Error,
+    "Graph too large for graph6 encoding"
+);
+create_exception!(
+    rustworkx,
+    Graph6PanicError,
+    Graph6Error,
+    "Unexpected Rust panic during graph6/digraph6 parsing"
+);
+create_exception!(
+    rustworkx,
+    Sparse6Unsupported,
+    Graph6Error,
+    "sparse6 parsing not implemented"
+);
+
 #[pymodule]
 fn rustworkx(py: Python<'_>, m: &Bound<PyModule>) -> PyResult<()> {
     m.add("__version__", env!("CARGO_PKG_VERSION"))?;
@@ -479,6 +510,11 @@ fn rustworkx(py: Python<'_>, m: &Bound<PyModule>) -> PyResult<()> {
         "JSONDeserializationError",
         py.get_type::<JSONDeserializationError>(),
     )?;
+    m.add("Graph6Error", py.get_type::<Graph6Error>())?;
+    m.add("Graph6ParseError", py.get_type::<Graph6ParseError>())?;
+    m.add("Graph6OverflowError", py.get_type::<Graph6OverflowError>())?;
+    m.add("Graph6PanicError", py.get_type::<Graph6PanicError>())?;
+    m.add("Sparse6Unsupported", py.get_type::<Sparse6Unsupported>())?;
     m.add_wrapped(wrap_pyfunction!(bfs_successors))?;
     m.add_wrapped(wrap_pyfunction!(bfs_predecessors))?;
     m.add_wrapped(wrap_pyfunction!(graph_bfs_search))?;
