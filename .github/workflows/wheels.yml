@@ -9,7 +9,7 @@ jobs:
     name: Build sdist
     runs-on: ubuntu-latest
     environment: release
-    if: ${{ startsWith(github.event.head_commit.timestamp, '2025-08-13') }}
+    if: ${{ startsWith(github.event.head_commit.timestamp, '2025-09-08') }}
     permissions:
       id-token: write
     steps:
@@ -32,7 +32,7 @@ jobs:
     name: Build retworkx
     runs-on: ubuntu-latest
     environment: release
-    if: ${{ startsWith(github.event.head_commit.timestamp, '2025-08-13') }}
+    if: ${{ startsWith(github.event.head_commit.timestamp, '2025-09-08') }}
     permissions:
       id-token: write
     steps:
