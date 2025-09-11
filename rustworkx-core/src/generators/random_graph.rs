@@ -24,7 +24,6 @@ use petgraph::visit::{
 };
 use petgraph::{Incoming, Outgoing};
 
-use hashbrown::HashSet;
 use rand::prelude::*;
 use rand_distr::{Distribution, Uniform};
 use rand_pcg::Pcg64;
@@ -814,7 +813,8 @@ where
     let mut source = graph.node_count();
     while source < n {
         let source_index = graph.add_node(default_node_weight());
-        let mut targets: HashSet<G::NodeId> = HashSet::with_capacity(m);
+        let mut targets: IndexSet<G::NodeId, foldhash::fast::RandomState> =
+            IndexSet::with_capacity_and_hasher(m, foldhash::fast::RandomState::default());
         while targets.len() < m {
             targets.insert(*repeated_nodes.choose(&mut rng).unwrap());
         }
@@ -1400,6 +1400,27 @@ mod tests {
             Ok(_) => panic!("Returned a non-error"),
             Err(e) => assert_eq!(e, InvalidInputError),
         };
+    }
+
+    #[test]
+    fn test_barabasi_albert_graph_seeding() {
+        use petgraph::visit::EdgeRef;
+        let g1: petgraph::graph::UnGraph<(), ()> =
+            barabasi_albert_graph(7, 2, Some(42), None, || (), || ()).unwrap();
+        let g2: petgraph::graph::UnGraph<(), ()> =
+            barabasi_albert_graph(7, 2, Some(42), None, || (), || ()).unwrap();
+        // Same seeds should yield the same graph
+        let edges1: std::collections::BTreeSet<_> = g1
+            .edge_references()
+            .map(|e| (e.source(), e.target()))
+            .collect();
+        let edges2: std::collections::BTreeSet<_> = g2
+            .edge_references()
+            .map(|e| (e.source(), e.target()))
+            .collect();
+        for (e1, e2) in edges1.iter().zip(edges2.iter()) {
+            assert_eq!(e1, e2);
+        }
     }
 
     #[test]
