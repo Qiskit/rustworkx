@@ -7,8 +7,8 @@ use crate::digraph::PyDiGraph;
 use crate::graph::PyGraph;
 use crate::StablePyGraph;
 
+use hashbrown::HashMap;
 use rustworkx_core::petgraph::prelude::{Directed, NodeIndex, Undirected};
-use std::collections::HashMap;
 
 #[derive(Parser)]
 #[grammar = "dot_parser/dot.pest"]
@@ -151,7 +151,9 @@ fn build_graph_enum(
             continue;
         }
         let mut inner = pair.into_inner();
-        let first = inner.next().unwrap();
+        let first = inner.next().ok_or_else(|| {
+            PyErr::new::<pyo3::exceptions::PyValueError, _>("Missing graph type in DOT")
+        })?;
         if first.as_rule() == Rule::strict {
             inner.next();
         }
@@ -165,7 +167,11 @@ fn build_graph_enum(
                 match stmt.as_rule() {
                     Rule::node_stmt => {
                         let mut it = stmt.into_inner();
-                        let nid = it.next().unwrap();
+                        let nid = it.next().ok_or_else(|| {
+                            PyErr::new::<pyo3::exceptions::PyValueError, _>(
+                                "Missing node id in DOT",
+                            )
+                        })?;
                         let name = node_id_to_string(nid);
                         let py_node_obj: PyObject = PyString::new(py, &name).into();
 
