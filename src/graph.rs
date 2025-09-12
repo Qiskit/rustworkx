@@ -1899,6 +1899,7 @@ impl PyGraph {
             }
             (None, true) => self.graph.contract_nodes(nodes, obj),
         };
+        self.node_removed = true;
         Ok(res.index())
     }
 
