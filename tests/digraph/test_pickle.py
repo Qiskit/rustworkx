@@ -46,18 +46,18 @@ class TestPickleDiGraph(unittest.TestCase):
         g.add_node("A")  # Node 0
         g.add_node("B")  # Node 1
         g.add_node("C")  # Node 2
-        
+
         # Contract nodes 0 and 1 into a new node
         contracted_idx = g.contract_nodes([0, 1], "AB")
         g.add_edge(2, contracted_idx, "C -> AB")
-        
+
         # Verify initial state
         self.assertEqual([2, contracted_idx], g.node_indices())
         self.assertEqual([(2, contracted_idx)], g.edge_list())
-        
+
         # Test pickle/unpickle
         gprime = pickle.loads(pickle.dumps(g))
-        
+
         # Verify the unpickled graph matches
         self.assertEqual(g.node_indices(), gprime.node_indices())
         self.assertEqual(g.edge_list(), gprime.edge_list())
