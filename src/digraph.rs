@@ -3007,6 +3007,7 @@ impl PyDiGraph {
             }
             (None, true) => self.graph.contract_nodes(nodes, obj, check_cycle)?,
         };
+        self.node_removed = true;
         Ok(res.index())
     }
 
