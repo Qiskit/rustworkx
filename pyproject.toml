@@ -8,7 +8,6 @@ dependencies = [
 ]
 readme = {file = "README.md", content-type = "text/markdown"}
 license-files = ["LICENSE"]
-license = "Apache-2.0"
 classifiers=[
     "Intended Audience :: Developers",
     "Intended Audience :: Science/Research",
