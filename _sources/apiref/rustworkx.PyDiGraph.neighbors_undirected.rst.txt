@@ -1,0 +1,6 @@
+rustworkx.PyDiGraph.neighbors\_undirected
+=========================================
+
+.. currentmodule:: rustworkx
+
+.. automethod:: PyDiGraph.neighbors_undirected

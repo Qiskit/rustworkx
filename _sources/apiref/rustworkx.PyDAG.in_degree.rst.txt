@@ -1,0 +1,6 @@
+rustworkx.PyDAG.in\_degree
+==========================
+
+.. currentmodule:: rustworkx
+
+.. automethod:: PyDAG.in_degree

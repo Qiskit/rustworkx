@@ -1,0 +1,6 @@
+rustworkx.PyDiGraph.copy
+========================
+
+.. currentmodule:: rustworkx
+
+.. automethod:: PyDiGraph.copy

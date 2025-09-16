@@ -1,0 +1,6 @@
+rustworkx.PyDiGraph.merge\_nodes
+================================
+
+.. currentmodule:: rustworkx
+
+.. automethod:: PyDiGraph.merge_nodes
