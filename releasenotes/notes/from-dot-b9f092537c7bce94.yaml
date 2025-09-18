@@ -1,0 +1,21 @@
+features:
+  - |
+    Added feature for importing graphs from the GraphViz DOT format via the new
+    :func:`~rustworkx.from_dot` function. This function takes a DOT string and
+    constructs either a :class:`~rustworkx.PyGraph` or
+    :class:`~rustworkx.PyDiGraph` object, automatically detecting the graph type
+    from the DOT input. Node attributes, edge attributes, and graph-level
+    attributes are preserved.For example::
+
+      import rustworkx
+
+      dot_str = '''
+      digraph {
+        0 [label="a", color=red];
+        1 [label="b", color=blue];
+        0 -> 1 [weight=1];
+      }
+      '''
+      g = rustworkx.from_dot(dot_str)
+      assert len(g.nodes()) == 2
+      assert len(g.edges()) == 1
