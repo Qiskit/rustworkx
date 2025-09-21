@@ -18,6 +18,7 @@ mod connectivity;
 mod dag_algo;
 mod digraph;
 mod dominance;
+mod dot_parser;
 mod dot_utils;
 mod generators;
 mod graph;
@@ -56,6 +57,7 @@ use layout::*;
 use line_graph::*;
 use link_analysis::*;
 
+use dot_parser::*;
 use matching::*;
 use planar::*;
 use random_graph::*;
@@ -679,6 +681,7 @@ fn rustworkx(py: Python<'_>, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(parse_node_link_json))?;
     m.add_wrapped(wrap_pyfunction!(pagerank))?;
     m.add_wrapped(wrap_pyfunction!(hits))?;
+    m.add_wrapped(wrap_pyfunction!(from_dot))?;
     m.add_class::<digraph::PyDiGraph>()?;
     m.add_class::<graph::PyGraph>()?;
     m.add_class::<toposort::TopologicalSorter>()?;
