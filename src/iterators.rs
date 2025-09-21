@@ -34,7 +34,7 @@
 // don't store any python object, just use `impl PyGCProtocol for MyReadOnlyType {}`.
 //
 // Types `T, K, V` above should implement `PyHash`, `PyEq`, `PyDisplay` traits.
-// These are already implemented for many primitive rust types and `PyObject`.
+// These are already implemented for many primitive rust types and `Py<PyAny>`.
 
 #![allow(clippy::float_cmp, clippy::upper_case_acronyms)]
 
@@ -64,7 +64,7 @@ trait PyHash {
     fn hash<H: Hasher>(&self, py: Python, state: &mut H) -> PyResult<()>;
 }
 
-impl PyHash for PyObject {
+impl PyHash for Py<PyAny> {
     #[inline]
     fn hash<H: Hasher>(&self, py: Python, state: &mut H) -> PyResult<()> {
         state.write_isize(self.bind(py).hash()?);
@@ -183,7 +183,7 @@ trait PyEq<Rhs: ?Sized = Self> {
     fn eq(&self, other: &Rhs, py: Python) -> PyResult<bool>;
 }
 
-impl PyEq for PyObject {
+impl PyEq for Py<PyAny> {
     #[inline]
     fn eq(&self, other: &Self, py: Python) -> PyResult<bool> {
         Ok(self.bind(py).compare(other)? == std::cmp::Ordering::Equal)
@@ -325,7 +325,7 @@ trait PyDisplay {
     fn str(&self, py: Python) -> PyResult<String>;
 }
 
-impl PyDisplay for PyObject {
+impl PyDisplay for Py<PyAny> {
     fn str(&self, py: Python) -> PyResult<String> {
         Ok(format!("{}", self.bind(py).str()?))
     }
@@ -450,10 +450,10 @@ macro_rules! py_convert_to_py_array_obj_impl {
     ($t:ty) => {
         impl PyConvertToPyArray for Vec<$t> {
             fn convert_to_pyarray<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-                let pyobj_vec: Vec<PyObject> = self
+                let pyobj_vec: Vec<Py<PyAny>> = self
                     .iter()
                     .map(|x| x.clone().into_py_any(py))
-                    .collect::<PyResult<Vec<PyObject>>>()?;
+                    .collect::<PyResult<Vec<Py<PyAny>>>>()?;
                 Ok(pyobj_vec.into_pyarray(py).into_any())
             }
         }
@@ -463,7 +463,7 @@ macro_rules! py_convert_to_py_array_obj_impl {
 py_convert_to_py_array_impl! {usize u8 u16 u32 u64 isize i8 i16 i32 i64 f32 f64}
 
 py_convert_to_py_array_obj_impl! {EdgeList}
-py_convert_to_py_array_obj_impl! {(PyObject, Vec<PyObject>)}
+py_convert_to_py_array_obj_impl! {(Py<PyAny>, Vec<Py<PyAny>>)}
 
 impl PyConvertToPyArray for Vec<(usize, usize)> {
     fn convert_to_pyarray<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
@@ -478,9 +478,9 @@ impl PyConvertToPyArray for Vec<(usize, usize)> {
     }
 }
 
-impl PyConvertToPyArray for Vec<(usize, usize, PyObject)> {
+impl PyConvertToPyArray for Vec<(usize, usize, Py<PyAny>)> {
     fn convert_to_pyarray<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-        let mut mat = Array2::<PyObject>::from_elem((self.len(), 3), py.None());
+        let mut mat = Array2::<Py<PyAny>>::from_elem((self.len(), 3), py.None());
 
         for (index, element) in self.iter().enumerate() {
             mat[[index, 0]] = element.0.into_py_any(py)?;
@@ -565,7 +565,7 @@ macro_rules! custom_vec_iter_impl {
                 Ok(self.$data.len())
             }
 
-            fn __getitem__(&self, py: Python, idx: PySequenceIndex) -> PyResult<PyObject> {
+            fn __getitem__(&self, py: Python, idx: PySequenceIndex) -> PyResult<Py<PyAny>> {
                 match idx {
                     PySequenceIndex::Slice(slc) => {
                         let len = self.$data.len().try_into().unwrap();
@@ -626,7 +626,7 @@ macro_rules! custom_vec_iter_impl {
             fn __array__<'py>(
                 &self,
                 py: Python<'py>,
-                dtype: Option<PyObject>,
+                dtype: Option<Py<PyAny>>,
                 copy: Option<bool>,
             ) -> PyResult<Bound<'py, PyAny>> {
                 if copy == Some(false) {
@@ -763,7 +763,7 @@ custom_vec_iter_impl!(
     BFSSuccessorsIter,
     BFSSuccessorsRev,
     bfs_successors,
-    (PyObject, Vec<PyObject>),
+    (Py<PyAny>, Vec<Py<PyAny>>),
     "A custom class for the return from :func:`rustworkx.bfs_successors`
 
     The class can is a read-only sequence of tuples of the form::
@@ -817,7 +817,7 @@ custom_vec_iter_impl!(
     BFSPredecessorsIter,
     BFSPredecessorsRev,
     bfs_predecessors,
-    (PyObject, Vec<PyObject>),
+    (Py<PyAny>, Vec<Py<PyAny>>),
     "A custom class for the return from :func:`rustworkx.bfs_predecessors`
 
     The class can is a read-only sequence of tuples of the form::
@@ -945,7 +945,7 @@ custom_vec_iter_impl!(
     WeightedEdgeListIter,
     WeightedEdgeListRev,
     edges,
-    (usize, usize, PyObject),
+    (usize, usize, Py<PyAny>),
     "A custom class for the return of edge lists with weights
 
     This class is a read-only sequence of tuples representing the edge
@@ -1347,7 +1347,7 @@ custom_hash_map_iter_impl!(
     edge_map_values,
     edge_map_items,
     usize,
-    (usize, usize, PyObject),
+    (usize, usize, Py<PyAny>),
     "A class representing a mapping of edge indices to a tuple of node indices
     and weight/data payload
 

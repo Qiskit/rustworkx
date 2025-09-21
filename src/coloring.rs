@@ -104,9 +104,9 @@ pub enum ColoringStrategy {
 pub fn graph_greedy_color(
     py: Python,
     graph: &graph::PyGraph,
-    preset_color_fn: Option<PyObject>,
+    preset_color_fn: Option<Py<PyAny>>,
     strategy: ColoringStrategy,
-) -> PyResult<PyObject> {
+) -> PyResult<Py<PyAny>> {
     let inner_strategy = match strategy {
         ColoringStrategy::Saturation => ColoringStrategyCore::Saturation,
         ColoringStrategy::Degree => ColoringStrategyCore::Degree,
@@ -179,9 +179,9 @@ pub fn graph_greedy_color(
 pub fn graph_greedy_edge_color(
     py: Python,
     graph: &graph::PyGraph,
-    preset_color_fn: Option<PyObject>,
+    preset_color_fn: Option<Py<PyAny>>,
     strategy: ColoringStrategy,
-) -> PyResult<PyObject> {
+) -> PyResult<Py<PyAny>> {
     let inner_strategy = match strategy {
         ColoringStrategy::Saturation => ColoringStrategyCore::Saturation,
         ColoringStrategy::Degree => ColoringStrategyCore::Degree,
@@ -235,7 +235,7 @@ pub fn graph_greedy_edge_color(
 ///
 #[pyfunction]
 #[pyo3(text_signature = "(graph, /)")]
-pub fn graph_misra_gries_edge_color(py: Python, graph: &graph::PyGraph) -> PyResult<PyObject> {
+pub fn graph_misra_gries_edge_color(py: Python, graph: &graph::PyGraph) -> PyResult<Py<PyAny>> {
     let colors = misra_gries_edge_color(&graph.graph);
     let out_dict = PyDict::new(py);
     for (node, color) in colors {
@@ -255,7 +255,7 @@ pub fn graph_misra_gries_edge_color(py: Python, graph: &graph::PyGraph) -> PyRes
 /// integer (0 or 1)
 /// :rtype: dict
 #[pyfunction]
-pub fn graph_two_color(py: Python, graph: &graph::PyGraph) -> PyResult<Option<PyObject>> {
+pub fn graph_two_color(py: Python, graph: &graph::PyGraph) -> PyResult<Option<Py<PyAny>>> {
     match two_color(&graph.graph) {
         Some(colors) => {
             let out_dict = PyDict::new(py);
@@ -279,7 +279,7 @@ pub fn graph_two_color(py: Python, graph: &graph::PyGraph) -> PyResult<Option<Py
 /// integer (0 or 1)
 /// :rtype: dict
 #[pyfunction]
-pub fn digraph_two_color(py: Python, graph: &digraph::PyDiGraph) -> PyResult<Option<PyObject>> {
+pub fn digraph_two_color(py: Python, graph: &digraph::PyDiGraph) -> PyResult<Option<Py<PyAny>>> {
     match two_color(&graph.graph) {
         Some(colors) => {
             let out_dict = PyDict::new(py);
@@ -313,7 +313,7 @@ pub fn digraph_two_color(py: Python, graph: &digraph::PyDiGraph) -> PyResult<Opt
 /// :rtype: dict
 #[pyfunction]
 #[pyo3(text_signature = "(graph, /)")]
-pub fn graph_bipartite_edge_color(py: Python, graph: &graph::PyGraph) -> PyResult<PyObject> {
+pub fn graph_bipartite_edge_color(py: Python, graph: &graph::PyGraph) -> PyResult<Py<PyAny>> {
     let colors = match bipartite_edge_color(&graph.graph) {
         Ok(colors) => colors,
         Err(_) => return Err(GraphNotBipartite::new_err("Graph is not bipartite")),
