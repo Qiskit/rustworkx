@@ -58,7 +58,7 @@ impl<E: Error> Display for TopologicalSortError<E> {
             TopologicalSortError::CycleOrBadInitialState => {
                 write!(f, "At least one initial node is reachable from another")
             }
-            TopologicalSortError::KeyError(ref e) => {
+            TopologicalSortError::KeyError(e) => {
                 write!(f, "The key callback failed with: {e:?}")
             }
         }
@@ -580,7 +580,7 @@ where
 
     // Utility for ensuring pending_list has the color index
     macro_rules! ensure_vector_has_index {
-        ($pending_list: expr, $block_id: expr, $color: expr) => {
+        ($pending_list: expr_2021, $block_id: expr_2021, $color: expr_2021) => {
             if $color >= $pending_list.len() {
                 $pending_list.resize($color + 1, Vec::new());
                 $block_id.resize($color + 1, None);

@@ -40,7 +40,7 @@ impl<E: Error> Display for ContractSimpleError<E> {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
             ContractSimpleError::DAGWouldCycle => fmt_dag_would_cycle(f),
-            ContractSimpleError::MergeError(ref e) => fmt_merge_error(f, e),
+            ContractSimpleError::MergeError(e) => fmt_merge_error(f, e),
         }
     }
 }

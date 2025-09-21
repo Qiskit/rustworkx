@@ -546,7 +546,7 @@ where
             }
 
             // trim right interval
-            if let Some((pr_low, ref mut pr_high)) = c_pair.right.as_mut() {
+            if let Some((pr_low, pr_high)) = c_pair.right.as_mut() {
                 match self.follow_eref_until_is_target(*pr_high, v) {
                     Some(val) => {
                         *pr_high = val;

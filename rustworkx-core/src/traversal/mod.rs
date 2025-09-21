@@ -33,10 +33,10 @@ pub use dijkstra_visit::{dijkstra_search, DijkstraEvent};
 /// if it is a prune value.
 /// https://github.com/petgraph/petgraph/blob/0.6.0/src/visit/dfsvisit.rs#L27
 macro_rules! try_control {
-    ($e:expr, $p:stmt) => {
+    ($e:expr_2021, $p:stmt) => {
         try_control!($e, $p, ());
     };
-    ($e:expr, $p:stmt, $q:stmt) => {
+    ($e:expr_2021, $p:stmt, $q:stmt) => {
         match $e {
             x => {
                 if x.should_break() {

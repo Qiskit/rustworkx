@@ -525,7 +525,7 @@ mod test_edge_betweenness_centrality {
     use petgraph::Undirected;
 
     macro_rules! assert_almost_equal {
-        ($x:expr, $y:expr, $d:expr) => {
+        ($x:expr_2021, $y:expr_2021, $d:expr_2021) => {
             if ($x - $y).abs() >= $d {
                 panic!("{} != {} within delta of {}", $x, $y, $d);
             }
@@ -859,7 +859,7 @@ mod test_eigenvector_centrality {
     use crate::Result;
 
     macro_rules! assert_almost_equal {
-        ($x:expr, $y:expr, $d:expr) => {
+        ($x:expr_2021, $y:expr_2021, $d:expr_2021) => {
             if ($x - $y).abs() >= $d {
                 panic!("{} != {} within delta of {}", $x, $y, $d);
             }
@@ -949,7 +949,7 @@ mod test_katz_centrality {
     use hashbrown::HashMap;
 
     macro_rules! assert_almost_equal {
-        ($x:expr, $y:expr, $d:expr) => {
+        ($x:expr_2021, $y:expr_2021, $d:expr_2021) => {
             if ($x - $y).abs() >= $d {
                 panic!("{} != {} within delta of {}", $x, $y, $d);
             }
@@ -1311,7 +1311,7 @@ mod test_newman_weighted_closeness_centrality {
     use petgraph::visit::EdgeRef;
 
     macro_rules! assert_almost_equal {
-        ($x:expr, $y:expr, $d:expr) => {
+        ($x:expr_2021, $y:expr_2021, $d:expr_2021) => {
             if ($x - $y).abs() >= $d {
                 panic!("{} != {} within delta of {}", $x, $y, $d);
             }
@@ -1319,7 +1319,7 @@ mod test_newman_weighted_closeness_centrality {
     }
 
     macro_rules! assert_almost_equal_iter {
-        ($expected:expr, $computed:expr, $tolerance:expr) => {
+        ($expected:expr_2021, $computed:expr_2021, $tolerance:expr_2021) => {
             for (&expected, &computed) in $expected.iter().zip($computed.iter()) {
                 assert_almost_equal!(expected.unwrap(), computed.unwrap(), $tolerance);
             }
