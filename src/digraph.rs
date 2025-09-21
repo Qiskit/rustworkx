@@ -196,7 +196,7 @@ pub struct PyDiGraph {
     pub node_removed: bool,
     pub multigraph: bool,
     #[pyo3(get, set)]
-    pub attrs: PyObject,
+    pub attrs: Py<PyAny>,
 }
 
 impl GraphBase for PyDiGraph {
@@ -222,7 +222,7 @@ impl PyDiGraph {
         &mut self,
         p_index: NodeIndex,
         c_index: NodeIndex,
-        edge: PyObject,
+        edge: Py<PyAny>,
     ) -> usize {
         if !self.multigraph {
             let exists = self.graph.find_edge(p_index, c_index);
@@ -240,7 +240,7 @@ impl PyDiGraph {
         &mut self,
         p_index: NodeIndex,
         c_index: NodeIndex,
-        edge: PyObject,
+        edge: Py<PyAny>,
     ) -> PyResult<usize> {
         // Only check for cycles if instance attribute is set to true
         if self.check_cycle {
@@ -271,7 +271,7 @@ impl PyDiGraph {
         };
         let index = NodeIndex::new(node);
         let node_between_index = NodeIndex::new(node_between);
-        let edges: Vec<(NodeIndex, EdgeIndex, PyObject)> = self
+        let edges: Vec<(NodeIndex, EdgeIndex, Py<PyAny>)> = self
             .graph
             .edges_directed(node_between_index, dir)
             .map(|edge| {
@@ -281,7 +281,7 @@ impl PyDiGraph {
                     (edge.source(), edge.id(), edge.weight().clone_ref(py))
                 }
             })
-            .collect::<Vec<(NodeIndex, EdgeIndex, PyObject)>>();
+            .collect::<Vec<(NodeIndex, EdgeIndex, Py<PyAny>)>>();
         for (other_index, edge_index, weight) in edges {
             if direction {
                 self._add_edge(node_between_index, index, weight.clone_ref(py))?;
@@ -304,7 +304,7 @@ impl PyDiGraph {
         py: Python,
         check_cycle: bool,
         multigraph: bool,
-        attrs: Option<PyObject>,
+        attrs: Option<Py<PyAny>>,
         node_count_hint: Option<usize>,
         edge_count_hint: Option<usize>,
     ) -> Self {
@@ -335,9 +335,9 @@ impl PyDiGraph {
         ))
     }
 
-    fn __getstate__(&self, py: Python) -> PyResult<PyObject> {
-        let mut nodes: Vec<PyObject> = Vec::with_capacity(self.graph.node_bound());
-        let mut edges: Vec<PyObject> = Vec::with_capacity(self.graph.edge_bound());
+    fn __getstate__(&self, py: Python) -> PyResult<Py<PyAny>> {
+        let mut nodes: Vec<Py<PyAny>> = Vec::with_capacity(self.graph.node_bound());
+        let mut edges: Vec<Py<PyAny>> = Vec::with_capacity(self.graph.edge_bound());
 
         // save nodes to a list along with its index
         for node_idx in self.graph.node_indices() {
@@ -366,7 +366,7 @@ impl PyDiGraph {
         Ok(out_dict.into())
     }
 
-    fn __setstate__(&mut self, py: Python, state: PyObject) -> PyResult<()> {
+    fn __setstate__(&mut self, py: Python, state: Py<PyAny>) -> PyResult<()> {
         let dict_state = state.downcast_bound::<PyDict>(py)?;
         let binding = dict_state.get_item("nodes")?.unwrap();
         let nodes_lst = binding.downcast::<PyList>()?;
@@ -422,7 +422,7 @@ impl PyDiGraph {
             for item in nodes_lst {
                 let item = item.downcast::<PyTuple>().unwrap();
                 let next_index: usize = item.get_item(0).unwrap().extract().unwrap();
-                let weight: PyObject = item.get_item(1).unwrap().extract().unwrap();
+                let weight: Py<PyAny> = item.get_item(1).unwrap().extract().unwrap();
                 while next_index > self.graph.node_bound() {
                     // node does not exist
                     let tmp_node = self.graph.add_node(py.None());
@@ -532,7 +532,7 @@ impl PyDiGraph {
     /// :returns: A list of all the edge data objects in the graph
     /// :rtype: list[T]
     #[pyo3(text_signature = "(self)")]
-    pub fn edges(&self) -> Vec<&PyObject> {
+    pub fn edges(&self) -> Vec<&Py<PyAny>> {
         self.graph
             .edge_indices()
             .map(|edge| self.graph.edge_weight(edge).unwrap())
@@ -576,7 +576,7 @@ impl PyDiGraph {
     /// :returns: A list of all the node data objects in the graph
     /// :rtype: list[S]
     #[pyo3(text_signature = "(self)")]
-    pub fn nodes(&self) -> Vec<&PyObject> {
+    pub fn nodes(&self) -> Vec<&Py<PyAny>> {
         self.graph
             .node_indices()
             .map(|node| self.graph.node_weight(node).unwrap())
@@ -665,12 +665,12 @@ impl PyDiGraph {
     /// :returns: A list of the node data of all node's predecessors
     /// :rtype: list[S]
     #[pyo3(text_signature = "(self, node, /)")]
-    pub fn successors(&self, node: usize) -> Vec<&PyObject> {
+    pub fn successors(&self, node: usize) -> Vec<&Py<PyAny>> {
         let index = NodeIndex::new(node);
         let children = self
             .graph
             .neighbors_directed(index, petgraph::Direction::Outgoing);
-        let mut successors: Vec<&PyObject> = Vec::new();
+        let mut successors: Vec<&Py<PyAny>> = Vec::new();
         let mut used_indices: HashSet<NodeIndex> = HashSet::new();
         for succ in children {
             match used_indices.entry(succ) {
@@ -714,12 +714,12 @@ impl PyDiGraph {
     /// :returns: A list of the node data of all node's predecessors
     /// :rtype: list[S]
     #[pyo3(text_signature = "(self, node, /)")]
-    pub fn predecessors(&self, node: usize) -> Vec<&PyObject> {
+    pub fn predecessors(&self, node: usize) -> Vec<&Py<PyAny>> {
         let index = NodeIndex::new(node);
         let parents = self
             .graph
             .neighbors_directed(index, petgraph::Direction::Incoming);
-        let mut predec: Vec<&PyObject> = Vec::new();
+        let mut predec: Vec<&Py<PyAny>> = Vec::new();
         let mut used_indices: HashSet<NodeIndex> = HashSet::new();
         for pred in parents {
             match used_indices.entry(pred) {
@@ -767,13 +767,13 @@ impl PyDiGraph {
         &self,
         py: Python,
         node: usize,
-        filter_fn: PyObject,
-    ) -> PyResult<Vec<&PyObject>> {
+        filter_fn: Py<PyAny>,
+    ) -> PyResult<Vec<&Py<PyAny>>> {
         let index = NodeIndex::new(node);
-        let mut successors: Vec<&PyObject> = Vec::new();
+        let mut successors: Vec<&Py<PyAny>> = Vec::new();
         let mut used_indices: HashSet<NodeIndex> = HashSet::new();
 
-        let filter_edge = |edge: &PyObject| -> PyResult<bool> {
+        let filter_edge = |edge: &Py<PyAny>| -> PyResult<bool> {
             let res = filter_fn.call1(py, (edge,))?;
             res.extract(py)
         };
@@ -829,13 +829,13 @@ impl PyDiGraph {
         &self,
         py: Python,
         node: usize,
-        filter_fn: PyObject,
-    ) -> PyResult<Vec<&PyObject>> {
+        filter_fn: Py<PyAny>,
+    ) -> PyResult<Vec<&Py<PyAny>>> {
         let index = NodeIndex::new(node);
-        let mut predec: Vec<&PyObject> = Vec::new();
+        let mut predec: Vec<&Py<PyAny>> = Vec::new();
         let mut used_indices: HashSet<NodeIndex> = HashSet::new();
 
-        let filter_edge = |edge: &PyObject| -> PyResult<bool> {
+        let filter_edge = |edge: &Py<PyAny>| -> PyResult<bool> {
             let res = filter_fn.call1(py, (edge,))?;
             res.extract(py)
         };
@@ -869,7 +869,7 @@ impl PyDiGraph {
     /// :rtype: S
     /// :raises NoEdgeBetweenNodes: When there is no edge between the nodes
     #[pyo3(text_signature = "(self, node_a, node_b, /)")]
-    pub fn get_edge_data(&self, node_a: usize, node_b: usize) -> PyResult<&PyObject> {
+    pub fn get_edge_data(&self, node_a: usize, node_b: usize) -> PyResult<&Py<PyAny>> {
         let index_a = NodeIndex::new(node_a);
         let index_b = NodeIndex::new(node_b);
         let edge_index = match self.graph.find_edge(index_a, index_b) {
@@ -890,7 +890,7 @@ impl PyDiGraph {
     /// :raises IndexError: when there is no edge present with the provided
     ///     index
     #[pyo3(text_signature = "(self, edge_index, /)")]
-    pub fn get_edge_data_by_index(&self, edge_index: usize) -> PyResult<&PyObject> {
+    pub fn get_edge_data_by_index(&self, edge_index: usize) -> PyResult<&Py<PyAny>> {
         let data = match self.graph.edge_weight(EdgeIndex::new(edge_index)) {
             Some(data) => data,
             None => {
@@ -935,7 +935,7 @@ impl PyDiGraph {
     ///
     /// :raises NoEdgeBetweenNodes: When there is no edge between nodes
     #[pyo3(text_signature = "(self, source, target, edge, /)")]
-    pub fn update_edge(&mut self, source: usize, target: usize, edge: PyObject) -> PyResult<()> {
+    pub fn update_edge(&mut self, source: usize, target: usize, edge: Py<PyAny>) -> PyResult<()> {
         let index_a = NodeIndex::new(source);
         let index_b = NodeIndex::new(target);
         let edge_index = match self.graph.find_edge(index_a, index_b) {
@@ -955,7 +955,7 @@ impl PyDiGraph {
     /// :raises IndexError: when there is no edge present with the provided
     ///     index
     #[pyo3(text_signature = "(self, edge_index, edge, /)")]
-    pub fn update_edge_by_index(&mut self, edge_index: usize, edge: PyObject) -> PyResult<()> {
+    pub fn update_edge_by_index(&mut self, edge_index: usize, edge: Py<PyAny>) -> PyResult<()> {
         match self.graph.edge_weight_mut(EdgeIndex::new(edge_index)) {
             Some(data) => *data = edge,
             None => return Err(PyIndexError::new_err("No edge found for index")),
@@ -971,7 +971,7 @@ impl PyDiGraph {
     /// :rtype: S
     /// :raises IndexError: when an invalid node index is provided
     #[pyo3(text_signature = "(self, node, /)")]
-    pub fn get_node_data(&self, node: usize) -> PyResult<&PyObject> {
+    pub fn get_node_data(&self, node: usize) -> PyResult<&Py<PyAny>> {
         let index = NodeIndex::new(node);
         let node = match self.graph.node_weight(index) {
             Some(node) => node,
@@ -989,13 +989,13 @@ impl PyDiGraph {
     /// :rtype: list[T]
     /// :raises NoEdgeBetweenNodes: When there is no edge between nodes
     #[pyo3(text_signature = "(self, node_a, node_b, /)")]
-    pub fn get_all_edge_data(&self, node_a: usize, node_b: usize) -> PyResult<Vec<&PyObject>> {
+    pub fn get_all_edge_data(&self, node_a: usize, node_b: usize) -> PyResult<Vec<&Py<PyAny>>> {
         let index_a = NodeIndex::new(node_a);
         let index_b = NodeIndex::new(node_b);
         let raw_edges = self
             .graph
             .edges_directed(index_a, petgraph::Direction::Outgoing);
-        let out: Vec<&PyObject> = raw_edges
+        let out: Vec<&Py<PyAny>> = raw_edges
             .filter(|x| x.target() == index_b)
             .map(|edge| edge.weight())
             .collect();
@@ -1122,16 +1122,16 @@ impl PyDiGraph {
         py: Python,
         node: usize,
         use_outgoing: bool,
-        condition: Option<PyObject>,
+        condition: Option<Py<PyAny>>,
     ) -> PyResult<()> {
         let index = NodeIndex::new(node);
-        let mut edge_list: Vec<(NodeIndex, NodeIndex, PyObject)> = Vec::new();
+        let mut edge_list: Vec<(NodeIndex, NodeIndex, Py<PyAny>)> = Vec::new();
 
         fn check_condition(
             py: Python,
-            condition: &Option<PyObject>,
-            in_weight: &PyObject,
-            out_weight: &PyObject,
+            condition: &Option<Py<PyAny>>,
+            in_weight: &Py<PyAny>,
+            out_weight: &Py<PyAny>,
         ) -> PyResult<bool> {
             match condition {
                 Some(condition) => {
@@ -1355,7 +1355,7 @@ impl PyDiGraph {
     ///
     /// :raises: PyIndexError: When the new edge would create a cycle
     #[pyo3(text_signature = "(self, parent, child, edge, /)")]
-    pub fn add_edge(&mut self, parent: usize, child: usize, edge: PyObject) -> PyResult<usize> {
+    pub fn add_edge(&mut self, parent: usize, child: usize, edge: Py<PyAny>) -> PyResult<usize> {
         let p_index = NodeIndex::new(parent);
         let c_index = NodeIndex::new(child);
         if !self.graph.contains_node(p_index) || !self.graph.contains_node(c_index) {
@@ -1380,7 +1380,7 @@ impl PyDiGraph {
     pub fn add_edges_from(&mut self, obj_list: Bound<'_, PyAny>) -> PyResult<Vec<usize>> {
         let mut out_list = Vec::new();
         for py_obj in obj_list.try_iter()? {
-            let obj = py_obj?.extract::<(usize, usize, PyObject)>()?;
+            let obj = py_obj?.extract::<(usize, usize, Py<PyAny>)>()?;
             let edge = self.add_edge(obj.0, obj.1, obj.2)?;
             out_list.push(edge);
         }
@@ -1455,7 +1455,7 @@ impl PyDiGraph {
         edge_list: Bound<'_, PyAny>,
     ) -> PyResult<()> {
         for py_obj in edge_list.try_iter()? {
-            let (source, target, weight) = py_obj?.extract::<(usize, usize, PyObject)>()?;
+            let (source, target, weight) = py_obj?.extract::<(usize, usize, Py<PyAny>)>()?;
             let max_index = cmp::max(source, target);
             while max_index >= self.node_count() {
                 self.graph.add_node(py.None());
@@ -1622,7 +1622,7 @@ impl PyDiGraph {
     /// :returns: The index of the newly created node
     /// :rtype: int
     #[pyo3(text_signature = "(self, obj, /)")]
-    pub fn add_node(&mut self, obj: PyObject) -> PyResult<usize> {
+    pub fn add_node(&mut self, obj: Py<PyAny>) -> PyResult<usize> {
         let index = self.graph.add_node(obj);
         Ok(index.index())
     }
@@ -1639,7 +1639,7 @@ impl PyDiGraph {
     ///     weight. If no match is found ``None`` will be returned.
     /// :rtype: int
     #[pyo3(text_signature = "(self, obj, /)")]
-    pub fn find_node_by_weight(&self, py: Python, obj: PyObject) -> PyResult<Option<usize>> {
+    pub fn find_node_by_weight(&self, py: Python, obj: Py<PyAny>) -> PyResult<Option<usize>> {
         find_node_by_weight(py, &self.graph, &obj).map(|node| node.map(|x| x.index()))
     }
 
@@ -1674,7 +1674,7 @@ impl PyDiGraph {
             const DIRECTIONS: [petgraph::Direction; 2] =
                 [petgraph::Direction::Outgoing, petgraph::Direction::Incoming];
 
-            let mut edges_to_add: Vec<(usize, usize, PyObject)> = Vec::new();
+            let mut edges_to_add: Vec<(usize, usize, Py<PyAny>)> = Vec::new();
             for dir in &DIRECTIONS {
                 for edge in self.graph.edges_directed(NodeIndex::new(u), *dir) {
                     let s = edge.source();
@@ -1708,7 +1708,7 @@ impl PyDiGraph {
     /// :returns: The index of the newly created child node
     /// :rtype: int
     #[pyo3(text_signature = "(self, parent, obj, edge, /)")]
-    pub fn add_child(&mut self, parent: usize, obj: PyObject, edge: PyObject) -> PyResult<usize> {
+    pub fn add_child(&mut self, parent: usize, obj: Py<PyAny>, edge: Py<PyAny>) -> PyResult<usize> {
         let index = NodeIndex::new(parent);
         let child_node = self.graph.add_node(obj);
         self.graph.add_edge(index, child_node, edge);
@@ -1727,7 +1727,7 @@ impl PyDiGraph {
     /// :returns index: The index of the newly created parent node
     /// :rtype: int
     #[pyo3(text_signature = "(self, child, obj, edge, /)")]
-    pub fn add_parent(&mut self, child: usize, obj: PyObject, edge: PyObject) -> PyResult<usize> {
+    pub fn add_parent(&mut self, child: usize, obj: Py<PyAny>, edge: Py<PyAny>) -> PyResult<usize> {
         let index = NodeIndex::new(child);
         let parent_node = self.graph.add_node(obj);
         self.graph.add_edge(parent_node, index, edge);
@@ -1758,7 +1758,7 @@ impl PyDiGraph {
     ///     specified node.
     /// :rtype: dict[int, T]
     #[pyo3(text_signature = "(self, node, /)")]
-    pub fn adj(&mut self, node: usize) -> DictMap<usize, &PyObject> {
+    pub fn adj(&mut self, node: usize) -> DictMap<usize, &Py<PyAny>> {
         let index = NodeIndex::new(node);
         self.graph
             .edges_directed(index, petgraph::Direction::Incoming)
@@ -1799,7 +1799,7 @@ impl PyDiGraph {
     ///     edge with the specified node.
     /// :rtype: dict[int, T]
     #[pyo3(text_signature = "(self, node, direction, /)")]
-    pub fn adj_direction(&mut self, node: usize, direction: bool) -> DictMap<usize, &PyObject> {
+    pub fn adj_direction(&mut self, node: usize, direction: bool) -> DictMap<usize, &Py<PyAny>> {
         let index = NodeIndex::new(node);
         if direction {
             self.graph
@@ -2136,7 +2136,7 @@ impl PyDiGraph {
         let index = NodeIndex::new(node);
         let dir = petgraph::Direction::Incoming;
         let raw_edges = self.graph.edges_directed(index, dir);
-        let out_list: Vec<(usize, usize, PyObject)> = raw_edges
+        let out_list: Vec<(usize, usize, Py<PyAny>)> = raw_edges
             .map(|x| (x.source().index(), node, x.weight().clone_ref(py)))
             .collect();
         WeightedEdgeList { edges: out_list }
@@ -2157,7 +2157,7 @@ impl PyDiGraph {
         let index = NodeIndex::new(node);
         let dir = petgraph::Direction::Outgoing;
         let raw_edges = self.graph.edges_directed(index, dir);
-        let out_list: Vec<(usize, usize, PyObject)> = raw_edges
+        let out_list: Vec<(usize, usize, Py<PyAny>)> = raw_edges
             .map(|x| (node, x.target().index(), x.weight().clone_ref(py)))
             .collect();
         WeightedEdgeList { edges: out_list }
@@ -2173,7 +2173,7 @@ impl PyDiGraph {
     pub fn add_nodes_from(&mut self, obj_list: Bound<'_, PyAny>) -> PyResult<NodeIndices> {
         let mut out_list = Vec::new();
         for py_obj in obj_list.try_iter()? {
-            let obj = py_obj?.extract::<PyObject>()?;
+            let obj = py_obj?.extract::<Py<PyAny>>()?;
             out_list.push(self.graph.add_node(obj).index());
         }
         Ok(NodeIndices { nodes: out_list })
@@ -2250,9 +2250,9 @@ impl PyDiGraph {
         &self,
         py: Python,
         node: usize,
-        predicate: PyObject,
-    ) -> PyResult<&PyObject> {
-        let predicate_callable = |a: &PyObject| -> PyResult<PyObject> {
+        predicate: Py<PyAny>,
+    ) -> PyResult<&Py<PyAny>> {
+        let predicate_callable = |a: &Py<PyAny>| -> PyResult<Py<PyAny>> {
             let res = predicate.call1(py, (a,))?;
             res.into_py_any(py)
         };
@@ -2298,9 +2298,9 @@ impl PyDiGraph {
         &self,
         py: Python,
         node: usize,
-        predicate: PyObject,
-    ) -> PyResult<&PyObject> {
-        let predicate_callable = |a: &PyObject| -> PyResult<PyObject> {
+        predicate: Py<PyAny>,
+    ) -> PyResult<&Py<PyAny>> {
+        let predicate_callable = |a: &Py<PyAny>| -> PyResult<Py<PyAny>> {
             let res = predicate.call1(py, (a,))?;
             res.into_py_any(py)
         };
@@ -2346,9 +2346,9 @@ impl PyDiGraph {
         &self,
         py: Python,
         node: usize,
-        predicate: PyObject,
-    ) -> PyResult<&PyObject> {
-        let predicate_callable = |a: &PyObject| -> PyResult<PyObject> {
+        predicate: Py<PyAny>,
+    ) -> PyResult<&Py<PyAny>> {
+        let predicate_callable = |a: &Py<PyAny>| -> PyResult<Py<PyAny>> {
             let res = predicate.call1(py, (a,))?;
             res.into_py_any(py)
         };
@@ -2424,8 +2424,8 @@ impl PyDiGraph {
     pub fn to_dot<'py>(
         &self,
         py: Python<'py>,
-        node_attr: Option<PyObject>,
-        edge_attr: Option<PyObject>,
+        node_attr: Option<Py<PyAny>>,
+        edge_attr: Option<Py<PyAny>>,
         graph_attr: Option<BTreeMap<String, String>>,
         filename: Option<String>,
     ) -> PyResult<Option<Bound<'py, PyString>>> {
@@ -2600,7 +2600,7 @@ impl PyDiGraph {
         py: Python,
         path: &str,
         deliminator: Option<char>,
-        weight_fn: Option<PyObject>,
+        weight_fn: Option<Py<PyAny>>,
     ) -> PyResult<()> {
         let file = File::create(path)?;
         let mut buf_writer = BufWriter::new(file);
@@ -2767,10 +2767,10 @@ impl PyDiGraph {
         &mut self,
         py: Python,
         other: &PyDiGraph,
-        node_map: HashMap<usize, (usize, PyObject)>,
-        node_map_func: Option<PyObject>,
-        edge_map_func: Option<PyObject>,
-    ) -> PyResult<PyObject> {
+        node_map: HashMap<usize, (usize, Py<PyAny>)>,
+        node_map_func: Option<Py<PyAny>>,
+        edge_map_func: Option<Py<PyAny>>,
+    ) -> PyResult<Py<PyAny>> {
         let mut new_node_map: DictMap<NodeIndex, NodeIndex> =
             DictMap::with_capacity(other.node_count());
 
@@ -2847,21 +2847,21 @@ impl PyDiGraph {
         py: Python,
         node: usize,
         other: &PyDiGraph,
-        edge_map_fn: PyObject,
-        node_filter: Option<PyObject>,
-        edge_weight_map: Option<PyObject>,
+        edge_map_fn: Py<PyAny>,
+        node_filter: Option<Py<PyAny>>,
+        edge_weight_map: Option<Py<PyAny>>,
     ) -> PyResult<NodeMap> {
-        let weight_map_fn = |obj: &PyObject, weight_fn: &Option<PyObject>| -> PyResult<PyObject> {
+        let weight_map_fn = |obj: &Py<PyAny>, weight_fn: &Option<Py<PyAny>>| -> PyResult<Py<PyAny>> {
             match weight_fn {
                 Some(weight_fn) => weight_fn.call1(py, (obj,)),
                 None => Ok(obj.clone_ref(py)),
             }
         };
-        let map_fn = |source: usize, target: usize, weight: &PyObject| -> PyResult<Option<usize>> {
+        let map_fn = |source: usize, target: usize, weight: &Py<PyAny>| -> PyResult<Option<usize>> {
             let res = edge_map_fn.call1(py, (source, target, weight))?;
             res.extract(py)
         };
-        let filter_fn = |obj: &PyObject, filter_fn: &Option<PyObject>| -> PyResult<bool> {
+        let filter_fn = |obj: &Py<PyAny>, filter_fn: &Option<Py<PyAny>>| -> PyResult<bool> {
             match filter_fn {
                 Some(filter) => {
                     let res = filter.call1(py, (obj,))?;
@@ -2907,12 +2907,12 @@ impl PyDiGraph {
             )?;
         }
         // Add edges to/from node to nodes in other
-        let in_edges: Vec<(NodeIndex, NodeIndex, PyObject)> = self
+        let in_edges: Vec<(NodeIndex, NodeIndex, Py<PyAny>)> = self
             .graph
             .edges_directed(node_index, petgraph::Direction::Incoming)
             .map(|edge| (edge.source(), edge.target(), edge.weight().clone_ref(py)))
             .collect();
-        let out_edges: Vec<(NodeIndex, NodeIndex, PyObject)> = self
+        let out_edges: Vec<(NodeIndex, NodeIndex, Py<PyAny>)> = self
             .graph
             .edges_directed(node_index, petgraph::Direction::Outgoing)
             .map(|edge| (edge.source(), edge.target(), edge.weight().clone_ref(py)))
@@ -2985,9 +2985,9 @@ impl PyDiGraph {
         &mut self,
         py: Python,
         nodes: Vec<usize>,
-        obj: PyObject,
+        obj: Py<PyAny>,
         check_cycle: Option<bool>,
-        weight_combo_fn: Option<PyObject>,
+        weight_combo_fn: Option<Py<PyAny>>,
     ) -> RxPyResult<usize> {
         let nodes = nodes.into_iter().map(|i| NodeIndex::new(i));
         let check_cycle = check_cycle.unwrap_or(self.check_cycle);
@@ -3216,7 +3216,7 @@ impl PyDiGraph {
     pub fn make_symmetric(
         &mut self,
         py: Python,
-        edge_payload_fn: Option<PyObject>,
+        edge_payload_fn: Option<Py<PyAny>>,
     ) -> PyResult<()> {
         let edges: HashMap<[NodeIndex; 2], EdgeIndex> = self
             .graph
@@ -3226,7 +3226,7 @@ impl PyDiGraph {
         for ([edge_source, edge_target], edge_index) in edges.iter() {
             if !edges.contains_key(&[*edge_target, *edge_source]) {
                 let forward_weight = self.graph.edge_weight(*edge_index).unwrap();
-                let weight: PyObject = match edge_payload_fn.as_ref() {
+                let weight: Py<PyAny> = match edge_payload_fn.as_ref() {
                     Some(callback) => callback.call1(py, (forward_weight,))?,
                     None => forward_weight.clone_ref(py),
                 };
@@ -3270,7 +3270,7 @@ impl PyDiGraph {
         &self,
         py: Python,
         multigraph: bool,
-        weight_combo_fn: Option<PyObject>,
+        weight_combo_fn: Option<Py<PyAny>>,
     ) -> PyResult<crate::graph::PyGraph> {
         let node_count = self.node_count();
         let mut new_graph = if multigraph {
@@ -3284,10 +3284,10 @@ impl PyDiGraph {
 
         let mut node_map: HashMap<NodeIndex, NodeIndex> = HashMap::with_capacity(node_count);
 
-        let combine = |a: &PyObject,
-                       b: &PyObject,
-                       combo_fn: &Option<PyObject>|
-         -> PyResult<Option<PyObject>> {
+        let combine = |a: &Py<PyAny>,
+                       b: &Py<PyAny>,
+                       combo_fn: &Option<Py<PyAny>>|
+         -> PyResult<Option<Py<PyAny>>> {
             match combo_fn {
                 Some(combo_fn) => {
                     let res = combo_fn.call1(py, (a, b))?;
@@ -3401,7 +3401,7 @@ impl PyDiGraph {
     /// :returns: The node indices that match the filter
     /// :rtype: NodeIndices
     #[pyo3(text_signature = "(self, filter_function)")]
-    pub fn filter_nodes(&self, py: Python, filter_function: PyObject) -> PyResult<NodeIndices> {
+    pub fn filter_nodes(&self, py: Python, filter_function: Py<PyAny>) -> PyResult<NodeIndices> {
         let filter = |nindex: NodeIndex| -> PyResult<bool> {
             let res = filter_function.call1(py, (&self.graph[nindex],))?;
             res.extract(py)
@@ -3443,7 +3443,7 @@ impl PyDiGraph {
     /// :returns: The edge indices that match the filter
     /// :rtype: EdgeIndices
     #[pyo3(text_signature = "(self, filter_function)")]
-    pub fn filter_edges(&self, py: Python, filter_function: PyObject) -> PyResult<EdgeIndices> {
+    pub fn filter_edges(&self, py: Python, filter_function: Py<PyAny>) -> PyResult<EdgeIndices> {
         let filter = |eindex: EdgeIndex| -> PyResult<bool> {
             let res = filter_function.call1(py, (&self.graph[eindex],))?;
             res.extract(py)
@@ -3463,14 +3463,14 @@ impl PyDiGraph {
         Ok(self.graph.node_count())
     }
 
-    fn __getitem__(&self, idx: usize) -> PyResult<&PyObject> {
+    fn __getitem__(&self, idx: usize) -> PyResult<&Py<PyAny>> {
         match self.graph.node_weight(NodeIndex::new(idx)) {
             Some(data) => Ok(data),
             None => Err(PyIndexError::new_err("No node found for index")),
         }
     }
 
-    fn __setitem__(&mut self, idx: usize, value: PyObject) -> PyResult<()> {
+    fn __setitem__(&mut self, idx: usize, value: Py<PyAny>) -> PyResult<()> {
         let data = match self.graph.node_weight_mut(NodeIndex::new(idx)) {
             Some(node_data) => node_data,
             None => return Err(PyIndexError::new_err("No node found for index")),
@@ -3494,7 +3494,7 @@ impl PyDiGraph {
     pub fn __class_getitem__(
         cls: &Bound<'_, PyType>,
         key: &Bound<'_, PyAny>,
-    ) -> PyResult<PyObject> {
+    ) -> PyResult<Py<PyAny>> {
         let alias = PyGenericAlias::new(cls.py(), cls.as_any(), key)?;
         Ok(alias.into())
     }
@@ -3550,9 +3550,9 @@ fn is_cycle_check_required(dag: &PyDiGraph, a: NodeIndex, b: NodeIndex) -> bool 
 
 fn weight_transform_callable(
     py: Python,
-    map_fn: &Option<PyObject>,
-    value: &PyObject,
-) -> PyResult<PyObject> {
+    map_fn: &Option<Py<PyAny>>,
+    value: &Py<PyAny>,
+) -> PyResult<Py<PyAny>> {
     match map_fn {
         Some(map_fn) => {
             let res = map_fn.call1(py, (value,))?;
