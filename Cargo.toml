@@ -67,7 +67,7 @@ flate2 = "1.0.35"
 
 [dependencies.pyo3]
 version = "0.24"
-features = ["abi3-py39", "extension-module", "hashbrown", "num-bigint", "num-complex", "indexmap", "py-clone"]
+features = ["abi3-py310", "extension-module", "hashbrown", "num-bigint", "num-complex", "indexmap", "py-clone"]
 
 [dependencies.sprs]
 version = "^0.11"
