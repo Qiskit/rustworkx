@@ -32,7 +32,7 @@ ndarray = { version = "0.16.1", features = ["rayon"] }
 num-traits = "0.2"
 petgraph = "0.8"
 hashbrown = { version = ">=0.13, <0.16", features = ["rayon"] }
-numpy = "0.24"
+numpy = "0.25"
 rand = "0.9"
 rand_distr = "0.5"
 rand_pcg = "0.9"
@@ -68,7 +68,7 @@ pest = "=2.7.15"
 pest_derive = "=2.7.15"
 
 [dependencies.pyo3]
-version = "0.24"
+version = "0.25"
 features = ["abi3-py39", "extension-module", "hashbrown", "num-bigint", "num-complex", "indexmap", "py-clone"]
 
 [dependencies.sprs]
