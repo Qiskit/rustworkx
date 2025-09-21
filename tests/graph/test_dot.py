@@ -128,3 +128,79 @@ class TestDot(unittest.TestCase):
         graph = rustworkx.undirected_gnp_random_graph(3, 0.95, seed=24)
         dot_str = graph.to_dot()
         self.assertEqual("graph {\n0 ;\n1 ;\n2 ;\n2 -- 0 ;\n2 -- 1 ;\n}\n", dot_str)
+
+    def test_from_dot_graph(self):
+        dot_str = """graph {
+            0 [color=black, fillcolor=green, label="a", style=filled];
+            1 [color=black, fillcolor=red, label="a", style=filled];
+            0 -- 1 [label="1", name=1];
+        }"""
+        g = rustworkx.from_dot(dot_str)
+        self.assertEqual(len(g.nodes()), 2)
+        self.assertEqual(len(g.edges()), 1)
+
+    def test_from_dot_digraph(self):
+        dot_str = """digraph {
+            0 [color=black, fillcolor=green, label="a", style=filled];
+            1 [color=black, fillcolor=red, label="a", style=filled];
+            0 -> 1 [label="1", name=1];
+        }"""
+        g = rustworkx.from_dot(dot_str)
+        self.assertEqual(len(g.nodes()), 2)
+        self.assertEqual(len(g.edges()), 1)
+
+    def test_graph_roundtrip_with_attrs(self):
+
+        graph = rustworkx.PyGraph()
+        graph.add_node(
+            {
+                "color": "black",
+                "fillcolor": "green",
+                "label": "a",
+                "style": "filled",
+            }
+        )
+        graph.add_node(
+            {
+                "color": "black",
+                "fillcolor": "red",
+                "label": "a",
+                "style": "filled",
+            }
+        )
+        graph.add_edge(0, 1, dict(label="1", name="1"))
+
+        res = graph.to_dot(lambda node: node, lambda edge: edge)
+
+        g2 = rustworkx.from_dot(res)
+
+        self.assertEqual(len(g2.nodes()), 2)
+        self.assertEqual(len(g2.edges()), 1)
+
+    def test_digraph_roundtrip_with_attrs(self):
+        graph = rustworkx.PyGraph()
+        graph.add_node(
+            {
+                "color": "black",
+                "fillcolor": "green",
+                "label": "a",
+                "style": "filled",
+            }
+        )
+        graph.add_node(
+            {
+                "color": "black",
+                "fillcolor": "red",
+                "label": "a",
+                "style": "filled",
+            }
+        )
+        graph.add_edge(0, 1, dict(label="1", name="1"))
+        graph.add_edge(1, 0, dict(label="2", name="2"))
+
+        res = graph.to_dot(lambda node: node, lambda edge: edge)
+
+        g2 = rustworkx.from_dot(res)
+
+        self.assertEqual(len(g2.nodes()), 2)
+        self.assertEqual(len(g2.edges()), 2)
