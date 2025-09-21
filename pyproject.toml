@@ -28,7 +28,7 @@ packages = ["rustworkx", "rustworkx.visualization"]
 include-package-data = true
 
 [tool.distutils.bdist_wheel]
-py-limited-api = "cp39"
+py-limited-api = "cp310"
 
 [[tool.setuptools-rust.ext-modules]]
 target = "rustworkx.rustworkx"
@@ -104,7 +104,7 @@ releaseinfra = [
 
 [tool.black]
 line-length = 100
-target-version = ['py39', 'py310', 'py311', 'py312', 'py313']
+target-version = ['py310', 'py311', 'py312', 'py313']
 
 [tool.ruff]
 line-length = 105 # more lenient than black due to long function signatures
@@ -116,7 +116,7 @@ lint.select = [
     "PYI", # flake8-pyi
     "Q",   # flake8-quotes
 ]
-target-version = "py39"
+target-version = "py310"
 extend-exclude = ["doc"]
 
 [tool.ruff.lint.per-file-ignores]
