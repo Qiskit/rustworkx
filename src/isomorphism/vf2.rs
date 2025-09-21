@@ -1007,7 +1007,7 @@ macro_rules! vf2_mapping_impl {
             }
 
             fn __next__(mut slf: PyRefMut<Self>) -> PyResult<Option<NodeMap>> {
-                Python::with_gil(|py| match slf.vf2.next(py)? {
+                Python::attach(|py| match slf.vf2.next(py)? {
                     Some(mapping) => Ok(Some(mapping)),
                     None => Ok(None),
                 })

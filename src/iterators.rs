@@ -522,7 +522,7 @@ macro_rules! custom_vec_iter_impl {
                 op: pyo3::basic::CompareOp,
             ) -> PyResult<bool> {
                 let compare = |other: &Bound<PyAny>| -> PyResult<bool> {
-                    Python::with_gil(|py| {
+                    Python::attach(|py| {
                         if other.len()? as usize != self.$data.len() {
                             return Ok(false);
                         }
@@ -547,7 +547,7 @@ macro_rules! custom_vec_iter_impl {
             }
 
             fn __str__(&self) -> PyResult<String> {
-                Python::with_gil(|py| Ok(format!("{}{}", stringify!($name), self.$data.str(py)?)))
+                Python::attach(|py| Ok(format!("{}{}", stringify!($name), self.$data.str(py)?)))
             }
 
             fn __repr__(&self) -> PyResult<String> {
@@ -556,7 +556,7 @@ macro_rules! custom_vec_iter_impl {
 
             fn __hash__(&self) -> PyResult<u64> {
                 let mut hasher = DefaultHasher::new();
-                Python::with_gil(|py| PyHash::hash(&self.$data, py, &mut hasher))?;
+                Python::attach(|py| PyHash::hash(&self.$data, py, &mut hasher))?;
 
                 Ok(hasher.finish())
             }
@@ -1254,7 +1254,7 @@ macro_rules! custom_hash_map_iter_impl {
                 op: pyo3::basic::CompareOp,
             ) -> PyResult<bool> {
                 let compare = |other: &Bound<PyAny>| -> PyResult<bool> {
-                    Python::with_gil(|py| PyEq::eq(&self.$data, other, py))
+                    Python::attach(|py| PyEq::eq(&self.$data, other, py))
                 };
                 match op {
                     pyo3::basic::CompareOp::Eq => compare(other),
@@ -1267,12 +1267,12 @@ macro_rules! custom_hash_map_iter_impl {
             }
 
             fn __str__(&self) -> PyResult<String> {
-                Python::with_gil(|py| Ok(format!("{}{}", stringify!($name), self.$data.str(py)?)))
+                Python::attach(|py| Ok(format!("{}{}", stringify!($name), self.$data.str(py)?)))
             }
 
             fn __hash__(&self) -> PyResult<u64> {
                 let mut hasher = DefaultHasher::new();
-                Python::with_gil(|py| PyHash::hash(&self.$data, py, &mut hasher))?;
+                Python::attach(|py| PyHash::hash(&self.$data, py, &mut hasher))?;
 
                 Ok(hasher.finish())
             }
@@ -1459,7 +1459,7 @@ impl PathMapping {
 
     fn __richcmp__(&self, other: &Bound<PyAny>, op: pyo3::basic::CompareOp) -> PyResult<bool> {
         let compare = |other: &Bound<PyAny>| -> PyResult<bool> {
-            Python::with_gil(|py| PyEq::eq(&self.paths, other, py))
+            Python::attach(|py| PyEq::eq(&self.paths, other, py))
         };
         match op {
             pyo3::basic::CompareOp::Eq => compare(other),
@@ -1472,12 +1472,12 @@ impl PathMapping {
     }
 
     fn __str__(&self) -> PyResult<String> {
-        Python::with_gil(|py| Ok(format!("PathMapping{}", self.paths.str(py)?)))
+        Python::attach(|py| Ok(format!("PathMapping{}", self.paths.str(py)?)))
     }
 
     fn __hash__(&self) -> PyResult<u64> {
         let mut hasher = DefaultHasher::new();
-        Python::with_gil(|py| PyHash::hash(&self.paths, py, &mut hasher))?;
+        Python::attach(|py| PyHash::hash(&self.paths, py, &mut hasher))?;
 
         Ok(hasher.finish())
     }
@@ -1617,7 +1617,7 @@ impl MultiplePathMapping {
 
     fn __richcmp__(&self, other: &Bound<PyAny>, op: pyo3::basic::CompareOp) -> PyResult<bool> {
         let compare = |other: &Bound<PyAny>| -> PyResult<bool> {
-            Python::with_gil(|py| PyEq::eq(&self.paths, other, py))
+            Python::attach(|py| PyEq::eq(&self.paths, other, py))
         };
         match op {
             pyo3::basic::CompareOp::Eq => compare(other),
@@ -1630,12 +1630,12 @@ impl MultiplePathMapping {
     }
 
     fn __str__(&self) -> PyResult<String> {
-        Python::with_gil(|py| Ok(format!("MultiplePathMapping{}", self.paths.str(py)?)))
+        Python::attach(|py| Ok(format!("MultiplePathMapping{}", self.paths.str(py)?)))
     }
 
     fn __hash__(&self) -> PyResult<u64> {
         let mut hasher = DefaultHasher::new();
-        Python::with_gil(|py| PyHash::hash(&self.paths, py, &mut hasher))?;
+        Python::attach(|py| PyHash::hash(&self.paths, py, &mut hasher))?;
 
         Ok(hasher.finish())
     }
