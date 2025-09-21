@@ -25,7 +25,7 @@ def base_test(session):
 def test(session):
     base_test(session)
 
-@nox.session(python=["3.9", "3.10", "3.11", "3.12"])
+@nox.session(python=["3.10", "3.11", "3.12", "3.13"])
 def test_with_version(session):
     base_test(session)
 
