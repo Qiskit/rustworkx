@@ -949,7 +949,7 @@ pub fn digraph_dijkstra_search(
     py: Python,
     graph: &digraph::PyDiGraph,
     source: Option<Vec<usize>>,
-    weight_fn: Option<PyObject>,
+    weight_fn: Option<Py<PyAny>>,
     visitor: Option<PyDijkstraVisitor>,
 ) -> PyResult<()> {
     if visitor.is_none() {
@@ -1092,7 +1092,7 @@ pub fn graph_dijkstra_search(
     py: Python,
     graph: &graph::PyGraph,
     source: Option<Vec<usize>>,
-    weight_fn: Option<PyObject>,
+    weight_fn: Option<Py<PyAny>>,
     visitor: Option<PyDijkstraVisitor>,
 ) -> PyResult<()> {
     if visitor.is_none() {

@@ -91,7 +91,7 @@ pub fn pagerank(
     py: Python,
     graph: &PyDiGraph,
     alpha: f64,
-    weight_fn: Option<PyObject>,
+    weight_fn: Option<Py<PyAny>>,
     nstart: Option<HashMap<usize, f64>>,
     personalization: Option<HashMap<usize, f64>>,
     tol: f64,
@@ -272,7 +272,7 @@ pub fn pagerank(
 pub fn hits(
     py: Python,
     graph: &PyDiGraph,
-    weight_fn: Option<PyObject>,
+    weight_fn: Option<Py<PyAny>>,
     nstart: Option<HashMap<usize, f64>>,
     tol: f64,
     max_iter: usize,

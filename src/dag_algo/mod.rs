@@ -56,13 +56,13 @@ use num_traits::{Num, Zero};
 /// * `PyResult<(Vec<G::NodeId>, T)>` representing the longest path as a sequence of node indices and its total weight.
 fn longest_path<F, T>(graph: &digraph::PyDiGraph, mut weight_fn: F) -> PyResult<(Vec<usize>, T)>
 where
-    F: FnMut(usize, usize, &PyObject) -> PyResult<T>,
+    F: FnMut(usize, usize, &Py<PyAny>) -> PyResult<T>,
     T: Num + Zero + PartialOrd + Copy,
 {
     let dag = &graph.graph;
 
     // Create a new weight function that matches the required signature
-    let edge_cost = |edge_ref: EdgeReference<'_, PyObject>| -> Result<T, PyErr> {
+    let edge_cost = |edge_ref: EdgeReference<'_, Py<PyAny>>| -> Result<T, PyErr> {
         let source = edge_ref.source().index();
         let target = edge_ref.target().index();
         let weight = edge_ref.weight();
@@ -116,10 +116,10 @@ pub fn traversal_directions(reverse: bool) -> (petgraph::Direction, petgraph::Di
 pub fn dag_longest_path(
     py: Python,
     graph: &digraph::PyDiGraph,
-    weight_fn: Option<PyObject>,
+    weight_fn: Option<Py<PyAny>>,
 ) -> PyResult<NodeIndices> {
     let edge_weight_callable =
-        |source: usize, target: usize, weight: &PyObject| -> PyResult<usize> {
+        |source: usize, target: usize, weight: &Py<PyAny>| -> PyResult<usize> {
             match &weight_fn {
                 Some(weight_fn) => {
                     let res = weight_fn.call1(py, (source, target, weight))?;
@@ -156,10 +156,10 @@ pub fn dag_longest_path(
 pub fn dag_longest_path_length(
     py: Python,
     graph: &digraph::PyDiGraph,
-    weight_fn: Option<PyObject>,
+    weight_fn: Option<Py<PyAny>>,
 ) -> PyResult<usize> {
     let edge_weight_callable =
-        |source: usize, target: usize, weight: &PyObject| -> PyResult<usize> {
+        |source: usize, target: usize, weight: &Py<PyAny>| -> PyResult<usize> {
             match &weight_fn {
                 Some(weight_fn) => {
                     let res = weight_fn.call1(py, (source, target, weight))?;
@@ -199,16 +199,17 @@ pub fn dag_longest_path_length(
 pub fn dag_weighted_longest_path(
     py: Python,
     graph: &digraph::PyDiGraph,
-    weight_fn: PyObject,
+    weight_fn: Py<PyAny>,
 ) -> PyResult<NodeIndices> {
-    let edge_weight_callable = |source: usize, target: usize, weight: &PyObject| -> PyResult<f64> {
-        let res = weight_fn.call1(py, (source, target, weight))?;
-        let float_res: f64 = res.extract(py)?;
-        if float_res.is_nan() {
-            return Err(PyValueError::new_err("NaN is not a valid edge weight"));
-        }
-        Ok(float_res)
-    };
+    let edge_weight_callable =
+        |source: usize, target: usize, weight: &Py<PyAny>| -> PyResult<f64> {
+            let res = weight_fn.call1(py, (source, target, weight))?;
+            let float_res: f64 = res.extract(py)?;
+            if float_res.is_nan() {
+                return Err(PyValueError::new_err("NaN is not a valid edge weight"));
+            }
+            Ok(float_res)
+        };
     Ok(NodeIndices {
         nodes: longest_path(graph, edge_weight_callable)?.0,
     })
@@ -241,16 +242,17 @@ pub fn dag_weighted_longest_path(
 pub fn dag_weighted_longest_path_length(
     py: Python,
     graph: &digraph::PyDiGraph,
-    weight_fn: PyObject,
+    weight_fn: Py<PyAny>,
 ) -> PyResult<f64> {
-    let edge_weight_callable = |source: usize, target: usize, weight: &PyObject| -> PyResult<f64> {
-        let res = weight_fn.call1(py, (source, target, weight))?;
-        let float_res: f64 = res.extract(py)?;
-        if float_res.is_nan() {
-            return Err(PyValueError::new_err("NaN is not a valid edge weight"));
-        }
-        Ok(float_res)
-    };
+    let edge_weight_callable =
+        |source: usize, target: usize, weight: &Py<PyAny>| -> PyResult<f64> {
+            let res = weight_fn.call1(py, (source, target, weight))?;
+            let float_res: f64 = res.extract(py)?;
+            if float_res.is_nan() {
+                return Err(PyValueError::new_err("NaN is not a valid edge weight"));
+            }
+            Ok(float_res)
+        };
     let (_, path_weight) = longest_path(graph, edge_weight_callable)?;
     Ok(path_weight)
 }
@@ -297,7 +299,7 @@ pub fn layers(
     dag: &digraph::PyDiGraph,
     first_layer: Vec<usize>,
     index_output: bool,
-) -> PyResult<PyObject> {
+) -> PyResult<Py<PyAny>> {
     for layer_node in &first_layer {
         if !dag.graph.contains_node(NodeIndex::new(*layer_node)) {
             return Err(InvalidNode::new_err(format!(
@@ -334,7 +336,7 @@ pub fn layers(
                     layer
                         .iter()
                         .map(|x| dag.graph.node_weight(*x))
-                        .collect::<Vec<Option<&PyObject>>>(),
+                        .collect::<Vec<Option<&Py<PyAny>>>>(),
                 )?,
                 Err(e) => return Err(DAGHasCycle::new_err(e.0)),
             }
@@ -388,10 +390,10 @@ pub fn layers(
 pub fn lexicographical_topological_sort(
     py: Python,
     dag: &digraph::PyDiGraph,
-    key: PyObject,
+    key: Py<PyAny>,
     reverse: bool,
     initial: Option<&Bound<PyAny>>,
-) -> RxPyResult<PyObject> {
+) -> RxPyResult<Py<PyAny>> {
     let key_callable = |a: NodeIndex| -> PyResult<String> {
         let weight = &dag.graph[a];
         let res: String = key.call1(py, (weight,))?.extract(py)?;
@@ -537,8 +539,8 @@ pub fn topological_sort(graph: &digraph::PyDiGraph) -> PyResult<NodeIndices> {
 pub fn collect_runs(
     py: Python,
     graph: &digraph::PyDiGraph,
-    filter_fn: PyObject,
-) -> PyResult<Vec<Vec<PyObject>>> {
+    filter_fn: Py<PyAny>,
+) -> PyResult<Vec<Vec<Py<PyAny>>>> {
     let filter_node = |node_id| -> Result<bool, PyErr> {
         let py_node = graph.graph.node_weight(node_id);
         filter_fn.call1(py, (py_node,))?.extract::<bool>(py)
@@ -549,13 +551,13 @@ pub fn collect_runs(
         None => return Err(DAGHasCycle::new_err("The DAG contains a cycle")),
     };
 
-    let mut result: Vec<Vec<PyObject>> = Vec::with_capacity(core_runs.size_hint().1.unwrap_or(0));
+    let mut result: Vec<Vec<Py<PyAny>>> = Vec::with_capacity(core_runs.size_hint().1.unwrap_or(0));
     for run_result in core_runs {
         // This is where a filter function error will be returned, otherwise Result is stripped away
-        let py_run: Vec<PyObject> = run_result?
+        let py_run: Vec<Py<PyAny>> = run_result?
             .iter()
             .map(|node| graph.graph.node_weight(*node).into_py_any(py))
-            .collect::<PyResult<Vec<PyObject>>>()?;
+            .collect::<PyResult<Vec<Py<PyAny>>>>()?;
 
         result.push(py_run)
     }
@@ -590,9 +592,9 @@ pub fn collect_runs(
 pub fn collect_bicolor_runs(
     py: Python,
     graph: &digraph::PyDiGraph,
-    filter_fn: PyObject,
-    color_fn: PyObject,
-) -> PyResult<Vec<Vec<PyObject>>> {
+    filter_fn: Py<PyAny>,
+    color_fn: Py<PyAny>,
+) -> PyResult<Vec<Vec<Py<PyAny>>>> {
     let dag = &graph.graph;
 
     let filter_fn_wrapper = |node_index| -> Result<Option<bool>, PyErr> {

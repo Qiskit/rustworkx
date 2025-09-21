@@ -307,7 +307,7 @@ pub fn spring_layout<Ty>(
     adaptive_cooling: Option<bool>,
     num_iter: Option<usize>,
     tol: Option<f64>,
-    weight_fn: Option<PyObject>,
+    weight_fn: Option<Py<PyAny>>,
     default_weight: f64,
     scale: Option<f64>,
     center: Option<Point>,

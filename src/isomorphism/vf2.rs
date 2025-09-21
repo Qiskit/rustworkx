@@ -404,13 +404,13 @@ trait SemanticMatcher<T> {
     fn eq(&self, _: Python, _: &T, _: &T) -> PyResult<bool>;
 }
 
-impl SemanticMatcher<PyObject> for Option<PyObject> {
+impl SemanticMatcher<Py<PyAny>> for Option<Py<PyAny>> {
     #[inline]
     fn enabled(&self) -> bool {
         self.is_some()
     }
     #[inline]
-    fn eq(&self, py: Python, a: &PyObject, b: &PyObject) -> PyResult<bool> {
+    fn eq(&self, py: Python, a: &Py<PyAny>, b: &Py<PyAny>) -> PyResult<bool> {
         let res = self.as_ref().unwrap().call1(py, (a, b))?;
         res.is_truthy(py)
     }
@@ -426,8 +426,8 @@ pub fn is_isomorphic<Ty: EdgeType>(
     py: Python,
     g0: &StablePyGraph<Ty>,
     g1: &StablePyGraph<Ty>,
-    node_match: Option<PyObject>,
-    edge_match: Option<PyObject>,
+    node_match: Option<Py<PyAny>>,
+    edge_match: Option<Py<PyAny>>,
     id_order: bool,
     ordering: Ordering,
     induced: bool,
@@ -465,8 +465,8 @@ enum Frame<N: marker::Copy> {
 struct Vf2Algorithm<Ty, F, G>
 where
     Ty: EdgeType,
-    F: SemanticMatcher<PyObject>,
-    G: SemanticMatcher<PyObject>,
+    F: SemanticMatcher<Py<PyAny>>,
+    G: SemanticMatcher<Py<PyAny>>,
 {
     st: [Vf2State<Ty>; 2],
     node_match: F,
@@ -483,8 +483,8 @@ where
 impl<Ty, F, G> Vf2Algorithm<Ty, F, G>
 where
     Ty: EdgeType,
-    F: SemanticMatcher<PyObject>,
-    G: SemanticMatcher<PyObject>,
+    F: SemanticMatcher<Py<PyAny>>,
+    G: SemanticMatcher<Py<PyAny>>,
 {
     pub fn new(
         py: Python,
@@ -782,7 +782,7 @@ where
         // semantic feasibility: compare associated data for edges
         if edge_match.enabled() {
             let matcher =
-                |a: (NodeIndex, &PyObject), b: (NodeIndex, &PyObject)| -> PyResult<bool> {
+                |a: (NodeIndex, &Py<PyAny>), b: (NodeIndex, &Py<PyAny>)| -> PyResult<bool> {
                     let (nx, n_edge) = a;
                     let (mx, m_edge) = b;
                     if nx == mx && edge_match.eq(py, n_edge, m_edge)? {
@@ -794,7 +794,7 @@ where
             // outgoing edges
             let range = if induced { 0..2 } else { 1..2 };
             for j in range {
-                let e_first: Vec<(NodeIndex, &PyObject)> = st[j]
+                let e_first: Vec<(NodeIndex, &Py<PyAny>)> = st[j]
                     .graph
                     .edges(nodes[j])
                     .filter_map(|edge| {
@@ -811,7 +811,7 @@ where
                     })
                     .collect();
 
-                let e_second: Vec<(NodeIndex, &PyObject)> = st[1 - j]
+                let e_second: Vec<(NodeIndex, &Py<PyAny>)> = st[1 - j]
                     .graph
                     .edges(nodes[1 - j])
                     .map(|edge| (edge.target(), edge.weight()))
@@ -825,7 +825,7 @@ where
             if st[0].graph.is_directed() {
                 let range = if induced { 0..2 } else { 1..2 };
                 for j in range {
-                    let e_first: Vec<(NodeIndex, &PyObject)> = st[j]
+                    let e_first: Vec<(NodeIndex, &Py<PyAny>)> = st[j]
                         .graph
                         .edges_directed(nodes[j], Incoming)
                         .filter_map(|edge| {
@@ -842,7 +842,7 @@ where
                         })
                         .collect();
 
-                    let e_second: Vec<(NodeIndex, &PyObject)> = st[1 - j]
+                    let e_second: Vec<(NodeIndex, &Py<PyAny>)> = st[1 - j]
                         .graph
                         .edges_directed(nodes[1 - j], Incoming)
                         .map(|edge| (edge.source(), edge.weight()))
@@ -978,7 +978,7 @@ macro_rules! vf2_mapping_impl {
     ($name:ident, $Ty:ty) => {
         #[pyclass(module = "rustworkx")]
         pub struct $name {
-            vf2: Vf2Algorithm<$Ty, Option<PyObject>, Option<PyObject>>,
+            vf2: Vf2Algorithm<$Ty, Option<Py<PyAny>>, Option<Py<PyAny>>>,
         }
 
         impl $name {
@@ -986,8 +986,8 @@ macro_rules! vf2_mapping_impl {
                 py: Python,
                 g0: &StablePyGraph<$Ty>,
                 g1: &StablePyGraph<$Ty>,
-                node_match: Option<PyObject>,
-                edge_match: Option<PyObject>,
+                node_match: Option<Py<PyAny>>,
+                edge_match: Option<Py<PyAny>>,
                 id_order: bool,
                 ordering: Ordering,
                 induced: bool,

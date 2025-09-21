@@ -81,8 +81,8 @@ pub fn parse_node_link_data<Ty: EdgeType>(
     py: &Python,
     graph: GraphInput,
     out_graph: &mut StablePyGraph<Ty>,
-    node_attrs: Option<PyObject>,
-    edge_attrs: Option<PyObject>,
+    node_attrs: Option<Py<PyAny>>,
+    edge_attrs: Option<Py<PyAny>>,
 ) -> PyResult<()> {
     let mut id_mapping: HashMap<usize, NodeIndex> = HashMap::with_capacity(graph.nodes.len());
     for node in graph.nodes {
@@ -117,16 +117,17 @@ pub fn node_link_data<Ty: EdgeType>(
     py: Python,
     graph: &StablePyGraph<Ty>,
     multigraph: bool,
-    attrs: &PyObject,
+    attrs: &Py<PyAny>,
     path: Option<String>,
-    graph_attrs: Option<PyObject>,
-    node_attrs: Option<PyObject>,
-    edge_attrs: Option<PyObject>,
+    graph_attrs: Option<Py<PyAny>>,
+    node_attrs: Option<Py<PyAny>>,
+    edge_attrs: Option<Py<PyAny>>,
 ) -> PyResult<Option<String>> {
-    let attr_callable = |attrs: &PyObject, obj: &PyObject| -> PyResult<BTreeMap<String, String>> {
-        let res = attrs.call1(py, (obj,))?;
-        res.extract(py)
-    };
+    let attr_callable =
+        |attrs: &Py<PyAny>, obj: &Py<PyAny>| -> PyResult<BTreeMap<String, String>> {
+            let res = attrs.call1(py, (obj,))?;
+            res.extract(py)
+        };
     let mut nodes: Vec<Node> = Vec::with_capacity(graph.node_count());
     for n in graph.node_indices() {
         let data = match node_attrs {

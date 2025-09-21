@@ -522,7 +522,7 @@ impl Graph {
         py: Python<'_>,
         dir: Direction,
         pygraph: &StablePyGraph<Ty>,
-        attrs: &PyObject,
+        attrs: &Py<PyAny>,
     ) -> PyResult<Self> {
         let mut attrs: Option<DictMap<String, Value>> = attrs.extract(py).ok();
         let id = attrs

@@ -31,7 +31,7 @@ use crate::iterators::{AllPairsPathLengthMapping, PathLengthMapping};
 pub fn floyd_warshall<Ty: EdgeType>(
     py: Python,
     graph: &StablePyGraph<Ty>,
-    weight_fn: Option<PyObject>,
+    weight_fn: Option<Py<PyAny>>,
     as_undirected: bool,
     default_weight: f64,
     parallel_threshold: usize,
@@ -145,7 +145,7 @@ pub fn floyd_warshall<Ty: EdgeType>(
 pub fn floyd_warshall_numpy<Ty: EdgeType>(
     py: Python,
     graph: &StablePyGraph<Ty>,
-    weight_fn: Option<PyObject>,
+    weight_fn: Option<Py<PyAny>>,
     as_undirected: bool,
     default_weight: f64,
     generate_successors: bool,

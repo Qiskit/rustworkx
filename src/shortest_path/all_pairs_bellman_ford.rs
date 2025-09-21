@@ -33,7 +33,7 @@ use crate::{NegativeCycle, StablePyGraph, edge_weights_from_callable};
 pub fn all_pairs_bellman_ford_path_lengths<Ty: EdgeType + Sync>(
     py: Python,
     graph: &StablePyGraph<Ty>,
-    edge_cost_fn: PyObject,
+    edge_cost_fn: Py<PyAny>,
 ) -> PyResult<AllPairsPathLengthMapping> {
     if graph.node_count() == 0 {
         return Ok(AllPairsPathLengthMapping {
@@ -124,7 +124,7 @@ pub fn all_pairs_bellman_ford_path_lengths<Ty: EdgeType + Sync>(
 pub fn all_pairs_bellman_ford_shortest_paths<Ty: EdgeType + Sync>(
     py: Python,
     graph: &StablePyGraph<Ty>,
-    edge_cost_fn: PyObject,
+    edge_cost_fn: Py<PyAny>,
 ) -> PyResult<AllPairsPathMapping> {
     if graph.node_count() == 0 {
         return Ok(AllPairsPathMapping {

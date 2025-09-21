@@ -79,12 +79,12 @@ use crate::iterators::WeightedEdgeList;
 pub fn minimum_spanning_edges(
     py: Python,
     graph: &graph::PyGraph,
-    weight_fn: Option<PyObject>,
+    weight_fn: Option<Py<PyAny>>,
     default_weight: f64,
 ) -> PyResult<WeightedEdgeList> {
     let mut subgraphs = UnionFind::<usize>::new(graph.graph.node_bound());
 
-    let mut edge_list: Vec<(f64, EdgeReference<PyObject>)> =
+    let mut edge_list: Vec<(f64, EdgeReference<Py<PyAny>>)> =
         Vec::with_capacity(graph.graph.edge_count());
     for edge in graph.graph.edge_references() {
         let weight = weight_callable(py, &weight_fn, edge.weight(), default_weight)?;
@@ -98,7 +98,7 @@ pub fn minimum_spanning_edges(
         weight_a.partial_cmp(weight_b).unwrap_or(Ordering::Less)
     });
 
-    let mut mst_edges: Vec<(usize, usize, PyObject)> = Vec::new();
+    let mut mst_edges: Vec<(usize, usize, Py<PyAny>)> = Vec::new();
     for (_, edge) in edge_list.iter() {
         let u = edge.source().index();
         let v = edge.target().index();
@@ -165,7 +165,7 @@ pub fn minimum_spanning_edges(
 pub fn minimum_spanning_tree(
     py: Python,
     graph: &graph::PyGraph,
-    weight_fn: Option<PyObject>,
+    weight_fn: Option<Py<PyAny>>,
     default_weight: f64,
 ) -> PyResult<graph::PyGraph> {
     let mut spanning_tree = (*graph).clone();
