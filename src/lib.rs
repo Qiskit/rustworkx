@@ -194,7 +194,7 @@ impl IsNan for Complex64 {
         self.re.is_nan() || self.im.is_nan()
     }
 }
-pub type StablePyGraph<Ty> = StableGraph<PyObject, PyObject, Ty>;
+pub type StablePyGraph<Ty> = StableGraph<Py<PyAny>, Py<PyAny>, Ty>;
 
 pub trait NodesRemoved {
     fn nodes_removed(&self) -> bool;
@@ -209,7 +209,7 @@ where
     }
 }
 
-pub fn get_edge_iter_with_weights<G>(graph: G) -> impl Iterator<Item = (usize, usize, PyObject)>
+pub fn get_edge_iter_with_weights<G>(graph: G) -> impl Iterator<Item = (usize, usize, Py<PyAny>)>
 where
     G: GraphBase
         + IntoEdgeReferences
@@ -218,7 +218,7 @@ where
         + NodeCount
         + GraphProp
         + NodesRemoved,
-    G: Data<NodeWeight = PyObject, EdgeWeight = PyObject>,
+    G: Data<NodeWeight = Py<PyAny>, EdgeWeight = Py<PyAny>>,
 {
     let node_map: Option<HashMap<NodeIndex, usize>> = if graph.nodes_removed() {
         let mut node_hash_map: HashMap<NodeIndex, usize> =
@@ -253,8 +253,8 @@ where
 
 fn weight_callable<'p, T>(
     py: Python<'p>,
-    weight_fn: &'p Option<PyObject>,
-    weight: &PyObject,
+    weight_fn: &'p Option<Py<PyAny>>,
+    weight: &Py<PyAny>,
     default: T,
 ) -> PyResult<T>
 where
@@ -272,7 +272,7 @@ where
 pub fn edge_weights_from_callable<'p, T, Ty: EdgeType>(
     py: Python<'p>,
     graph: &StablePyGraph<Ty>,
-    weight_fn: &'p Option<PyObject>,
+    weight_fn: &'p Option<Py<PyAny>>,
     default_weight: T,
 ) -> PyResult<Vec<Option<T>>>
 where
@@ -310,11 +310,11 @@ fn is_valid_weight(val: f64) -> PyResult<f64> {
 
 pub enum CostFn {
     Default(f64),
-    PyFunction(PyObject),
+    PyFunction(Py<PyAny>),
 }
 
-impl From<PyObject> for CostFn {
-    fn from(obj: PyObject) -> Self {
+impl From<Py<PyAny>> for CostFn {
+    fn from(obj: Py<PyAny>) -> Self {
         CostFn::PyFunction(obj)
     }
 }
@@ -328,10 +328,10 @@ impl TryFrom<f64> for CostFn {
     }
 }
 
-impl TryFrom<(Option<PyObject>, f64)> for CostFn {
+impl TryFrom<(Option<Py<PyAny>>, f64)> for CostFn {
     type Error = PyErr;
 
-    fn try_from(func_or_default: (Option<PyObject>, f64)) -> Result<Self, Self::Error> {
+    fn try_from(func_or_default: (Option<Py<PyAny>>, f64)) -> Result<Self, Self::Error> {
         let (obj, val) = func_or_default;
         match obj {
             Some(obj) => Ok(CostFn::PyFunction(obj)),
@@ -341,7 +341,7 @@ impl TryFrom<(Option<PyObject>, f64)> for CostFn {
 }
 
 impl CostFn {
-    fn call(&self, py: Python, arg: &PyObject) -> PyResult<f64> {
+    fn call(&self, py: Python, arg: &Py<PyAny>) -> PyResult<f64> {
         match self {
             CostFn::Default(val) => Ok(*val),
             CostFn::PyFunction(obj) => {
@@ -356,7 +356,7 @@ impl CostFn {
 fn find_node_by_weight<Ty: EdgeType>(
     py: Python,
     graph: &StablePyGraph<Ty>,
-    obj: &PyObject,
+    obj: &Py<PyAny>,
 ) -> PyResult<Option<NodeIndex>> {
     let mut index = None;
     for node in graph.node_indices() {
