@@ -687,7 +687,7 @@ pub fn is_semi_connected(graph: &digraph::PyDiGraph) -> PyResult<bool> {
 pub fn digraph_adjacency_matrix<'py>(
     py: Python<'py>,
     graph: &digraph::PyDiGraph,
-    weight_fn: Option<PyObject>,
+    weight_fn: Option<Py<PyAny>>,
     default_weight: f64,
     null_value: f64,
     parallel_edge: &str,
@@ -774,7 +774,7 @@ pub fn digraph_adjacency_matrix<'py>(
 pub fn graph_adjacency_matrix<'py>(
     py: Python<'py>,
     graph: &graph::PyGraph,
-    weight_fn: Option<PyObject>,
+    weight_fn: Option<Py<PyAny>>,
     default_weight: f64,
     null_value: f64,
     parallel_edge: &str,
@@ -1345,7 +1345,7 @@ pub fn graph_longest_simple_path(graph: &graph::PyGraph) -> Option<NodeIndices> 
 /// :rtype: dict
 #[pyfunction]
 #[pyo3(text_signature = "(graph, /)")]
-pub fn graph_core_number(py: Python, graph: &graph::PyGraph) -> PyResult<PyObject> {
+pub fn graph_core_number(py: Python, graph: &graph::PyGraph) -> PyResult<Py<PyAny>> {
     let cores = connectivity::core_number(&graph.graph);
     let out_dict = PyDict::new(py);
     for (k, v) in cores {
@@ -1371,7 +1371,7 @@ pub fn graph_core_number(py: Python, graph: &graph::PyGraph) -> PyResult<PyObjec
 /// :rtype: dict
 #[pyfunction]
 #[pyo3(text_signature = "(graph, /)")]
-pub fn digraph_core_number(py: Python, graph: &digraph::PyDiGraph) -> PyResult<PyObject> {
+pub fn digraph_core_number(py: Python, graph: &digraph::PyDiGraph) -> PyResult<Py<PyAny>> {
     let cores = connectivity::core_number(&graph.graph);
     let out_dict = PyDict::new(py);
     for (k, v) in cores {
@@ -1405,7 +1405,7 @@ pub fn digraph_core_number(py: Python, graph: &digraph::PyDiGraph) -> PyResult<P
 pub fn stoer_wagner_min_cut(
     py: Python,
     graph: &graph::PyGraph,
-    weight_fn: Option<PyObject>,
+    weight_fn: Option<Py<PyAny>>,
 ) -> PyResult<Option<(f64, NodeIndices)>> {
     let cut = connectivity::stoer_wagner_min_cut(&graph.graph, |edge| -> PyResult<_> {
         let val: f64 = weight_callable(py, &weight_fn, edge.weight(), 1.0)?;

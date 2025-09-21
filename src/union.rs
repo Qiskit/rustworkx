@@ -59,7 +59,7 @@ fn union<Ty: EdgeType>(
         node_map[node.index()] = Entry::Added(index);
     }
 
-    let weights_equal = |a: &PyObject, b: &PyObject| -> PyResult<bool> {
+    let weights_equal = |a: &Py<PyAny>, b: &Py<PyAny>| -> PyResult<bool> {
         a.bind(py)
             .rich_compare(b, pyo3::basic::CompareOp::Eq)?
             .is_truthy()
