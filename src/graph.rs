@@ -23,13 +23,13 @@ use hashbrown::{HashMap, HashSet};
 use rustworkx_core::dictmap::*;
 use rustworkx_core::graph_ext::*;
 
+use pyo3::IntoPyObjectExt;
+use pyo3::PyTraverseError;
+use pyo3::Python;
 use pyo3::exceptions::PyIndexError;
 use pyo3::gc::PyVisit;
 use pyo3::prelude::*;
 use pyo3::types::{IntoPyDict, PyBool, PyDict, PyGenericAlias, PyList, PyString, PyTuple, PyType};
-use pyo3::IntoPyObjectExt;
-use pyo3::PyTraverseError;
-use pyo3::Python;
 
 use ndarray::prelude::*;
 use num_traits::Zero;
@@ -41,7 +41,7 @@ use crate::iterators::NodeMap;
 use super::dot_utils::build_dot;
 use super::iterators::{EdgeIndexMap, EdgeIndices, EdgeList, NodeIndices, WeightedEdgeList};
 use super::{
-    find_node_by_weight, weight_callable, IsNan, NoEdgeBetweenNodes, NodesRemoved, StablePyGraph,
+    IsNan, NoEdgeBetweenNodes, NodesRemoved, StablePyGraph, find_node_by_weight, weight_callable,
 };
 
 use crate::RxPyResult;
@@ -1754,17 +1754,19 @@ impl PyGraph {
             }
         };
 
-        let weight_map_fn = |obj: &Py<PyAny>, weight_fn: &Option<Py<PyAny>>| -> PyResult<Py<PyAny>> {
-            match weight_fn {
-                Some(weight_fn) => weight_fn.call1(py, (obj,)),
-                None => Ok(obj.clone_ref(py)),
-            }
-        };
+        let weight_map_fn =
+            |obj: &Py<PyAny>, weight_fn: &Option<Py<PyAny>>| -> PyResult<Py<PyAny>> {
+                match weight_fn {
+                    Some(weight_fn) => weight_fn.call1(py, (obj,)),
+                    None => Ok(obj.clone_ref(py)),
+                }
+            };
 
-        let map_fn = |source: usize, target: usize, weight: &Py<PyAny>| -> PyResult<Option<usize>> {
-            let res = edge_map_fn.call1(py, (source, target, weight))?;
-            res.extract(py)
-        };
+        let map_fn =
+            |source: usize, target: usize, weight: &Py<PyAny>| -> PyResult<Option<usize>> {
+                let res = edge_map_fn.call1(py, (source, target, weight))?;
+                res.extract(py)
+            };
 
         let node_index = NodeIndex::new(node);
         if self.graph.node_weight(node_index).is_none() {
@@ -1827,7 +1829,7 @@ impl PyGraph {
                     None => {
                         return Err(PyIndexError::new_err(format!(
                             "No mapped index {old_index} found"
-                        )))
+                        )));
                     }
                 },
                 None => continue,
@@ -1842,7 +1844,7 @@ impl PyGraph {
                     None => {
                         return Err(PyIndexError::new_err(format!(
                             "No mapped index {old_index} found"
-                        )))
+                        )));
                     }
                 },
                 None => continue,

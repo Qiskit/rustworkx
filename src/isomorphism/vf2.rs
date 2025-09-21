@@ -22,19 +22,19 @@ use std::marker;
 use hashbrown::HashMap;
 use rustworkx_core::dictmap::*;
 
+use pyo3::PyTraverseError;
 use pyo3::gc::PyVisit;
 use pyo3::prelude::*;
-use pyo3::PyTraverseError;
 
+use petgraph::EdgeType;
 use petgraph::stable_graph::NodeIndex;
 use petgraph::visit::{EdgeRef, IntoEdgeReferences, NodeIndexable};
-use petgraph::EdgeType;
 use petgraph::{Directed, Incoming, Outgoing, Undirected};
 
 use rayon::slice::ParallelSliceMut;
 
-use crate::iterators::NodeMap;
 use crate::StablePyGraph;
+use crate::iterators::NodeMap;
 
 /// Returns `true` if we can map every element of `xs` to a unique
 /// element of `ys` while using `matcher` func to compare two elements.

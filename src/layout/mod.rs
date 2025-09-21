@@ -22,8 +22,8 @@ use spring::Point;
 
 use hashbrown::{HashMap, HashSet};
 
-use pyo3::prelude::*;
 use pyo3::Python;
+use pyo3::prelude::*;
 
 use crate::iterators::Pos2DMapping;
 

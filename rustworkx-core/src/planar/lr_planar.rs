@@ -14,16 +14,16 @@ use std::cmp::Ordering;
 use std::hash::Hash;
 use std::vec::IntoIter;
 
-use hashbrown::{hash_map::Entry, HashMap};
+use hashbrown::{HashMap, hash_map::Entry};
 use petgraph::{
+    Undirected,
     visit::{
         EdgeCount, EdgeRef, GraphBase, GraphProp, IntoEdges, IntoNodeIdentifiers, NodeCount,
         Visitable,
     },
-    Undirected,
 };
 
-use crate::traversal::{depth_first_search, DfsEvent};
+use crate::traversal::{DfsEvent, depth_first_search};
 
 type Edge<G> = (<G as GraphBase>::NodeId, <G as GraphBase>::NodeId);
 
@@ -301,7 +301,7 @@ where
                         // that it's *not* a tree or a back edge so we skip it since
                         // it's oriented in the reverse direction.
                         {
-                            continue
+                            continue;
                         }
                     };
 

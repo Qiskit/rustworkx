@@ -21,13 +21,13 @@ use hashbrown::{HashMap, HashSet};
 use std::fmt::Debug;
 use std::mem::swap;
 
+use petgraph::Directed;
 use petgraph::algo;
 use petgraph::data::DataMap;
 use petgraph::visit::{
     EdgeRef, GraphBase, GraphProp, IntoEdgesDirected, IntoNeighborsDirected, IntoNodeIdentifiers,
     NodeCount, NodeIndexable, Visitable,
 };
-use petgraph::Directed;
 
 use num_traits::{Num, Zero};
 

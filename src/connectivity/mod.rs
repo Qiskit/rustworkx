@@ -17,7 +17,7 @@ mod johnson_simple_cycles;
 mod subgraphs;
 
 use super::{
-    digraph, get_edge_iter_with_weights, graph, score, weight_callable, InvalidNode, NullGraph,
+    InvalidNode, NullGraph, digraph, get_edge_iter_with_weights, graph, score, weight_callable,
 };
 
 use hashbrown::{HashMap, HashSet};
@@ -26,13 +26,13 @@ use petgraph::graph::{DiGraph, IndexType};
 use petgraph::stable_graph::NodeIndex;
 use petgraph::unionfind::UnionFind;
 use petgraph::visit::{EdgeRef, IntoEdgeReferences, NodeCount, NodeIndexable, Visitable};
-use petgraph::{algo, Graph};
-use pyo3::exceptions::PyValueError;
-use pyo3::prelude::*;
-use pyo3::types::PyDict;
+use petgraph::{Graph, algo};
 use pyo3::BoundObject;
 use pyo3::IntoPyObject;
 use pyo3::Python;
+use pyo3::exceptions::PyValueError;
+use pyo3::prelude::*;
+use pyo3::types::PyDict;
 use rayon::prelude::*;
 
 use ndarray::prelude::*;
@@ -724,7 +724,9 @@ pub fn digraph_adjacency_matrix<'py>(
                     }
                 }
                 _ => {
-                    return Err(PyValueError::new_err("Parallel edges can currently only be dealt with using \"sum\", \"min\", \"max\", or \"avg\"."));
+                    return Err(PyValueError::new_err(
+                        "Parallel edges can currently only be dealt with using \"sum\", \"min\", \"max\", or \"avg\".",
+                    ));
                 }
             }
         }
@@ -817,7 +819,9 @@ pub fn graph_adjacency_matrix<'py>(
                     }
                 }
                 _ => {
-                    return Err(PyValueError::new_err("Parallel edges can currently only be dealt with using \"sum\", \"min\", \"max\", or \"avg\"."));
+                    return Err(PyValueError::new_err(
+                        "Parallel edges can currently only be dealt with using \"sum\", \"min\", \"max\", or \"avg\".",
+                    ));
                 }
             }
         }

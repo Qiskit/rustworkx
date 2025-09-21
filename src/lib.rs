@@ -73,6 +73,7 @@ use union::*;
 use hashbrown::HashMap;
 use numpy::Complex64;
 
+use pyo3::Python;
 use pyo3::create_exception;
 use pyo3::exceptions::PyException;
 use pyo3::exceptions::PyValueError;
@@ -80,15 +81,14 @@ use pyo3::import_exception;
 use pyo3::prelude::*;
 use pyo3::wrap_pyfunction;
 use pyo3::wrap_pymodule;
-use pyo3::Python;
 
+use petgraph::EdgeType;
 use petgraph::graph::NodeIndex;
 use petgraph::prelude::*;
 use petgraph::visit::{
     Data, EdgeIndexable, GraphBase, GraphProp, IntoEdgeReferences, IntoNodeIdentifiers, NodeCount,
     NodeIndexable,
 };
-use petgraph::EdgeType;
 
 use rustworkx_core::dag_algo::TopologicalSortError;
 use std::convert::TryFrom;

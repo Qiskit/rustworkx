@@ -11,10 +11,10 @@
 // under the License.
 
 use hashbrown::HashSet;
+use petgraph::Undirected;
 use petgraph::graph::Graph;
 use petgraph::graph::NodeIndex;
 use petgraph::visit::Visitable;
-use petgraph::Undirected;
 
 use rustworkx_core::connectivity;
 

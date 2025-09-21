@@ -18,8 +18,8 @@ use crate::{digraph, graph};
 
 use std::cmp::Ordering;
 
-use pyo3::prelude::*;
 use pyo3::Python;
+use pyo3::prelude::*;
 
 /// Determine if 2 directed graphs are isomorphic
 ///

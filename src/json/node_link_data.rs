@@ -17,13 +17,13 @@ use hashbrown::HashMap;
 
 use serde::{Deserialize, Serialize};
 
-use pyo3::prelude::*;
 use pyo3::IntoPyObjectExt;
 use pyo3::Python;
+use pyo3::prelude::*;
 
+use petgraph::EdgeType;
 use petgraph::visit::EdgeRef;
 use petgraph::visit::IntoEdgeReferences;
-use petgraph::EdgeType;
 
 use crate::JSONSerializationError;
 use crate::NodeIndex;

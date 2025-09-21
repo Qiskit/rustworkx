@@ -20,8 +20,8 @@
 use std::collections::BinaryHeap;
 use std::hash::Hash;
 
-use hashbrown::hash_map::Entry;
 use hashbrown::HashMap;
+use hashbrown::hash_map::Entry;
 
 use petgraph::algo::Measure;
 use petgraph::visit::{ControlFlow, EdgeRef, IntoEdges, VisitMap, Visitable};

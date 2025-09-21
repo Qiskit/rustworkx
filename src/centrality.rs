@@ -14,11 +14,11 @@
 
 use std::convert::TryFrom;
 
+use crate::CostFn;
+use crate::FailedToConverge;
 use crate::digraph;
 use crate::graph;
 use crate::iterators::{CentralityMapping, EdgeCentralityMapping};
-use crate::CostFn;
-use crate::FailedToConverge;
 
 use hashbrown::HashMap;
 use petgraph::graph::NodeIndex;

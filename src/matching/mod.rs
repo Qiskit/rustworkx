@@ -15,8 +15,8 @@ use rustworkx_core::max_weight_matching as mwm;
 
 use hashbrown::HashSet;
 
-use pyo3::prelude::*;
 use pyo3::Python;
+use pyo3::prelude::*;
 
 use petgraph::graph::NodeIndex;
 use petgraph::prelude::*;

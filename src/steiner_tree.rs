@@ -15,10 +15,10 @@ use std::cmp::Ordering;
 use hashbrown::HashMap;
 use rayon::prelude::*;
 
-use pyo3::exceptions::PyValueError;
-use pyo3::prelude::*;
 use pyo3::IntoPyObjectExt;
 use pyo3::Python;
+use pyo3::exceptions::PyValueError;
+use pyo3::prelude::*;
 
 use petgraph::stable_graph::{EdgeIndex, EdgeReference, NodeIndex};
 use petgraph::visit::{EdgeRef, IntoEdgeReferences};

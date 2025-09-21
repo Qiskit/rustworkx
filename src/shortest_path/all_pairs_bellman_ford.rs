@@ -15,20 +15,20 @@ use rustworkx_core::shortest_path::bellman_ford;
 
 use std::sync::RwLock;
 
+use pyo3::Python;
 use pyo3::exceptions::PyIndexError;
 use pyo3::prelude::*;
-use pyo3::Python;
 
+use petgraph::EdgeType;
 use petgraph::graph::NodeIndex;
 use petgraph::prelude::*;
-use petgraph::EdgeType;
 
 use rayon::prelude::*;
 
 use crate::iterators::{
     AllPairsPathLengthMapping, AllPairsPathMapping, PathLengthMapping, PathMapping,
 };
-use crate::{edge_weights_from_callable, NegativeCycle, StablePyGraph};
+use crate::{NegativeCycle, StablePyGraph, edge_weights_from_callable};
 
 pub fn all_pairs_bellman_ford_path_lengths<Ty: EdgeType + Sync>(
     py: Python,

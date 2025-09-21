@@ -46,13 +46,13 @@ use rustworkx_core::dictmap::*;
 
 use ndarray::prelude::*;
 use numpy::IntoPyArray;
+use pyo3::IntoPyObjectExt;
+use pyo3::PyTraverseError;
 use pyo3::exceptions::{PyIndexError, PyKeyError, PyNotImplementedError, PyValueError};
 use pyo3::gc::PyVisit;
 use pyo3::prelude::*;
 use pyo3::types::IntoPyDict;
 use pyo3::types::PySlice;
-use pyo3::IntoPyObjectExt;
-use pyo3::PyTraverseError;
 
 macro_rules! last_type {
      ($a:ident,) => { $a };
@@ -1363,7 +1363,7 @@ custom_hash_map_iter_impl!(
 impl PyGCProtocol for EdgeIndexMap {
     fn __traverse__(&self, visit: PyVisit) -> Result<(), PyTraverseError> {
         for edge in &self.edge_map {
-            visit.call(&edge.1 .2)?;
+            visit.call(&edge.1.2)?;
         }
         Ok(())
     }

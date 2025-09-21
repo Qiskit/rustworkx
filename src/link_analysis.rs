@@ -13,12 +13,12 @@
 // PageRank has many possible personalizations, so we accept them all
 #![allow(clippy::too_many_arguments)]
 
-use pyo3::prelude::*;
 use pyo3::Python;
+use pyo3::prelude::*;
 
 use crate::digraph::PyDiGraph;
 use crate::iterators::CentralityMapping;
-use crate::{weight_callable, FailedToConverge};
+use crate::{FailedToConverge, weight_callable};
 
 use hashbrown::HashMap;
 use ndarray::prelude::*;

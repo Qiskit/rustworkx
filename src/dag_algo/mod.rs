@@ -17,7 +17,7 @@ use rustworkx_core::dag_algo::layers as core_layers;
 use rustworkx_core::dictmap::InitWithHasher;
 
 use super::iterators::NodeIndices;
-use crate::{digraph, DAGHasCycle, InvalidNode, RxPyResult, StablePyGraph};
+use crate::{DAGHasCycle, InvalidNode, RxPyResult, StablePyGraph, digraph};
 
 use rustworkx_core::dag_algo::collect_bicolor_runs as core_collect_bicolor_runs;
 use rustworkx_core::dag_algo::collect_runs as core_collect_runs;
@@ -25,11 +25,11 @@ use rustworkx_core::dag_algo::lexicographical_topological_sort as core_lexico_to
 use rustworkx_core::dag_algo::longest_path as core_longest_path;
 use rustworkx_core::traversal::dfs_edges;
 
+use pyo3::IntoPyObjectExt;
+use pyo3::Python;
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use pyo3::types::PyList;
-use pyo3::IntoPyObjectExt;
-use pyo3::Python;
 
 use petgraph::algo;
 use petgraph::prelude::*;

@@ -14,9 +14,9 @@ use std::cmp::Ordering;
 
 use super::{graph, weight_callable};
 
+use pyo3::Python;
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
-use pyo3::Python;
 
 use petgraph::prelude::*;
 use petgraph::stable_graph::EdgeReference;

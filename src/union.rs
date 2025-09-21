@@ -10,14 +10,14 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-use crate::{digraph, find_node_by_weight, graph, StablePyGraph};
+use crate::{StablePyGraph, digraph, find_node_by_weight, graph};
 
 use petgraph::stable_graph::NodeIndex;
 use petgraph::visit::{EdgeRef, IntoEdgeReferences, NodeIndexable};
-use petgraph::{algo, EdgeType};
+use petgraph::{EdgeType, algo};
 
-use pyo3::prelude::*;
 use pyo3::Python;
+use pyo3::prelude::*;
 
 #[derive(Copy, Clone)]
 enum Entry<T> {
@@ -30,7 +30,9 @@ fn extract<T>(x: Entry<T>) -> T {
     match x {
         Entry::Merged(val) => val,
         Entry::Added(val) => val,
-        Entry::None => panic!("Unexpected internal error: called `Entry::extract()` on a `None` value. Please file an issue at https://github.com/Qiskit/rustworkx/issues/new/choose with the details on how you encountered this."),
+        Entry::None => panic!(
+            "Unexpected internal error: called `Entry::extract()` on a `None` value. Please file an issue at https://github.com/Qiskit/rustworkx/issues/new/choose with the details on how you encountered this."
+        ),
     }
 }
 

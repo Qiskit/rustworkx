@@ -3,9 +3,9 @@ use pest_derive::Parser;
 use pyo3::prelude::*;
 use pyo3::types::{PyDict, PyString};
 
+use crate::StablePyGraph;
 use crate::digraph::PyDiGraph;
 use crate::graph::PyGraph;
-use crate::StablePyGraph;
 
 use hashbrown::HashMap;
 use rustworkx_core::petgraph::prelude::{Directed, NodeIndex, Undirected};

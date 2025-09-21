@@ -14,9 +14,9 @@ mod bfs_visit;
 pub mod dfs_visit;
 mod dijkstra_visit;
 
-use bfs_visit::{bfs_handler, PyBfsVisitor};
-use dfs_visit::{dfs_handler, PyDfsVisitor};
-use dijkstra_visit::{dijkstra_handler, PyDijkstraVisitor};
+use bfs_visit::{PyBfsVisitor, bfs_handler};
+use dfs_visit::{PyDfsVisitor, dfs_handler};
+use dijkstra_visit::{PyDijkstraVisitor, dijkstra_handler};
 
 use rustworkx_core::traversal::{
     ancestors as core_ancestors, bfs_predecessors as core_bfs_predecessors,
@@ -24,21 +24,21 @@ use rustworkx_core::traversal::{
     descendants as core_descendants, dfs_edges, dijkstra_search,
 };
 
-use super::{digraph, graph, iterators, CostFn};
+use super::{CostFn, digraph, graph, iterators};
 
 use std::convert::TryFrom;
 
 use hashbrown::HashSet;
 
+use pyo3::Python;
 use pyo3::exceptions::{PyIndexError, PyTypeError};
 use pyo3::prelude::*;
-use pyo3::Python;
 
-use petgraph::graph::NodeIndex;
 use petgraph::EdgeType;
+use petgraph::graph::NodeIndex;
 
-use crate::iterators::EdgeList;
 use crate::StablePyGraph;
+use crate::iterators::EdgeList;
 
 fn validate_source_nodes<Ty: EdgeType>(
     graph: &StablePyGraph<Ty>,

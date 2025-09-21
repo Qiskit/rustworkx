@@ -36,5 +36,5 @@ pub use core_number::core_number;
 pub use cycle_basis::cycle_basis;
 pub use find_cycle::find_cycle;
 pub use isolates::isolates;
-pub use johnson_simple_cycles::{johnson_simple_cycles, SimpleCycleIter};
+pub use johnson_simple_cycles::{SimpleCycleIter, johnson_simple_cycles};
 pub use min_cut::stoer_wagner_min_cut;

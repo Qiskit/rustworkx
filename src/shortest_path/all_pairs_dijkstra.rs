@@ -17,14 +17,14 @@ use rustworkx_core::shortest_path::dijkstra;
 
 use std::sync::RwLock;
 
+use pyo3::Python;
 use pyo3::exceptions::PyIndexError;
 use pyo3::prelude::*;
-use pyo3::Python;
 
+use petgraph::EdgeType;
 use petgraph::graph::NodeIndex;
 use petgraph::prelude::*;
 use petgraph::visit::EdgeIndexable;
-use petgraph::EdgeType;
 
 use rayon::prelude::*;
 

@@ -15,18 +15,18 @@ use rustworkx_core::dictmap::*;
 
 use crate::{get_edge_iter_with_weights, weight_callable};
 
-use pyo3::prelude::*;
 use pyo3::Python;
+use pyo3::prelude::*;
 
+use petgraph::EdgeType;
 use petgraph::prelude::*;
 use petgraph::visit::{IntoEdgeReferences, NodeIndexable};
-use petgraph::EdgeType;
 
 use ndarray::prelude::*;
 use rayon::prelude::*;
 
-use crate::iterators::{AllPairsPathLengthMapping, PathLengthMapping};
 use crate::StablePyGraph;
+use crate::iterators::{AllPairsPathLengthMapping, PathLengthMapping};
 
 pub fn floyd_warshall<Ty: EdgeType>(
     py: Python,

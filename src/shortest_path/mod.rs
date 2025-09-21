@@ -19,16 +19,16 @@ mod num_shortest_path;
 
 use std::convert::TryFrom;
 
-use crate::{digraph, edge_weights_from_callable, graph, CostFn, NegativeCycle, NoPathFound};
+use crate::{CostFn, NegativeCycle, NoPathFound, digraph, edge_weights_from_callable, graph};
 
 use numpy::{IntoPyArray, PyArray2};
 use petgraph::graph::NodeIndex;
 use petgraph::prelude::*;
 use petgraph::stable_graph::EdgeIndex;
 use petgraph::visit::NodeCount;
+use pyo3::Python;
 use pyo3::exceptions::{PyIndexError, PyTypeError, PyValueError};
 use pyo3::prelude::*;
-use pyo3::Python;
 
 use rustworkx_core::dictmap::*;
 use rustworkx_core::shortest_path::{

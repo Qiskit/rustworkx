@@ -28,8 +28,8 @@ use rand::prelude::*;
 use rand_distr::{Distribution, Uniform};
 use rand_pcg::Pcg64;
 
-use super::star_graph;
 use super::InvalidInputError;
+use super::star_graph;
 
 /// Generates a random regular graph
 ///
@@ -1039,11 +1039,7 @@ fn hyperbolic_distance(x: &[f64], y: &[f64]) -> f64 {
         inner_product = x_i.mul_add(*y_i, inner_product);
     }
     let arg = (1. + sum_squared_x).sqrt() * (1. + sum_squared_y).sqrt() - inner_product;
-    if arg < 1. {
-        0.
-    } else {
-        arg.acosh()
-    }
+    if arg < 1. { 0. } else { arg.acosh() }
 }
 
 #[cfg(test)]

@@ -10,17 +10,17 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
+use petgraph::Undirected;
 use petgraph::algo;
 use petgraph::prelude::*;
-use petgraph::Undirected;
 
+use pyo3::IntoPyObjectExt;
+use pyo3::Python;
 use pyo3::exceptions::{PyIndexError, PyOverflowError, PyValueError};
 use pyo3::prelude::*;
 use pyo3::wrap_pyfunction;
-use pyo3::IntoPyObjectExt;
-use pyo3::Python;
 
-use super::{digraph, graph, StablePyGraph};
+use super::{StablePyGraph, digraph, graph};
 use rustworkx_core::generators as core_generators;
 
 /// Generate an undirected cycle graph.
@@ -65,7 +65,7 @@ pub fn cycle_graph(
             Err(_) => {
                 return Err(PyIndexError::new_err(
                     "num_nodes and weights list not specified",
-                ))
+                ));
             }
         };
     Ok(graph::PyGraph {
@@ -126,7 +126,7 @@ pub fn directed_cycle_graph(
         Err(_) => {
             return Err(PyIndexError::new_err(
                 "num_nodes and weights list not specified",
-            ))
+            ));
         }
     };
     Ok(digraph::PyDiGraph {
@@ -181,7 +181,7 @@ pub fn path_graph(
             Err(_) => {
                 return Err(PyIndexError::new_err(
                     "num_nodes and weights list not specified",
-                ))
+                ));
             }
         };
     Ok(graph::PyGraph {
@@ -242,7 +242,7 @@ pub fn directed_path_graph(
         Err(_) => {
             return Err(PyIndexError::new_err(
                 "num_nodes and weights list not specified",
-            ))
+            ));
         }
     };
     Ok(digraph::PyDiGraph {
@@ -299,7 +299,7 @@ pub fn star_graph(
             Err(_) => {
                 return Err(PyIndexError::new_err(
                     "num_nodes and weights list not specified",
-                ))
+                ));
             }
         };
     Ok(graph::PyGraph {
@@ -374,7 +374,7 @@ pub fn directed_star_graph(
         Err(_) => {
             return Err(PyIndexError::new_err(
                 "num_nodes and weights list not specified",
-            ))
+            ));
         }
     };
     Ok(digraph::PyDiGraph {
@@ -965,7 +965,7 @@ pub fn binomial_tree_graph(
             Err(_) => {
                 return Err(PyIndexError::new_err(
                     "num_nodes and weights list not specified",
-                ))
+                ));
             }
         };
     Ok(graph::PyGraph {
@@ -1036,7 +1036,7 @@ pub fn directed_binomial_tree_graph(
         Err(_) => {
             return Err(PyIndexError::new_err(
                 "order and weights list not specified",
-            ))
+            ));
         }
     };
     Ok(digraph::PyDiGraph {
@@ -1099,7 +1099,7 @@ pub fn full_rary_tree(
         Err(_) => {
             return Err(PyIndexError::new_err(
                 "The number of weights cannot exceed num_nodes.",
-            ))
+            ));
         }
     };
     Ok(graph::PyGraph {
@@ -1339,7 +1339,7 @@ pub fn lollipop_graph(
         Err(_) => {
             return Err(PyIndexError::new_err(
                 "num_nodes and weights list not specified",
-            ))
+            ));
         }
     };
     Ok(graph::PyGraph {
@@ -1414,7 +1414,7 @@ pub fn barbell_graph(
         Err(_) => {
             return Err(PyIndexError::new_err(
                 "num_nodes and weights list not specified",
-            ))
+            ));
         }
     };
     Ok(graph::PyGraph {
@@ -1485,7 +1485,7 @@ pub fn generalized_petersen_graph(
             Err(_) => {
                 return Err(PyIndexError::new_err(
                     "n > 2, k > 0, or 2 * k > n not satisfied.",
-                ))
+                ));
             }
         };
     Ok(graph::PyGraph {
@@ -1614,7 +1614,7 @@ pub fn complete_graph(
             Err(_) => {
                 return Err(PyIndexError::new_err(
                     "num_nodes and weights list not specified",
-                ))
+                ));
             }
         };
     Ok(graph::PyGraph {
@@ -1673,7 +1673,7 @@ pub fn directed_complete_graph(
             Err(_) => {
                 return Err(PyIndexError::new_err(
                     "num_nodes and weights list not specified",
-                ))
+                ));
             }
         };
     Ok(digraph::PyDiGraph {

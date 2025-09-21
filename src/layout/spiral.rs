@@ -14,9 +14,9 @@ use std::iter::Iterator;
 
 use petgraph::EdgeType;
 
-use super::spring::{recenter, rescale, Point};
-use crate::iterators::Pos2DMapping;
+use super::spring::{Point, recenter, rescale};
 use crate::StablePyGraph;
+use crate::iterators::Pos2DMapping;
 
 pub fn spiral_layout<Ty: EdgeType>(
     graph: &StablePyGraph<Ty>,

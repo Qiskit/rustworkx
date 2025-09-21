@@ -20,10 +20,10 @@ use hashbrown::{HashMap, HashSet};
 use pyo3::exceptions::{PyRuntimeError, PyValueError};
 use pyo3::prelude::*;
 
+use petgraph::EdgeType;
 use petgraph::graph::NodeIndex;
 use petgraph::prelude::*;
 use petgraph::visit::{IntoEdgeReferences, NodeIndexable};
-use petgraph::EdgeType;
 
 use rand::prelude::*;
 use rand_distr::{Distribution, Uniform};

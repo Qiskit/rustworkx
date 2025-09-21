@@ -11,11 +11,11 @@
 // under the License.
 
 use crate::GraphNotBipartite;
-use crate::{digraph, graph, EdgeIndex, NodeIndex};
+use crate::{EdgeIndex, NodeIndex, digraph, graph};
 
+use pyo3::Python;
 use pyo3::prelude::*;
 use pyo3::types::PyDict;
-use pyo3::Python;
 
 use std::convert::Infallible;
 
