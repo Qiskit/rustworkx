@@ -1,0 +1,7 @@
+---
+deprecations:
+  - |
+    As announced in the 0.17 release, the legacy `retworkx` name has been sunset. We encourage users to depend on
+    'rustworkx' as previously instructed.
+
+    Thanks to all users that have used the library since the early days before the name change!
