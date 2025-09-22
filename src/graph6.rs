@@ -516,11 +516,11 @@ pub fn read_graph6_str<'py>(py: Python<'py>, repr: &str) -> PyResult<Bound<'py, 
 
     let wrapped = std::panic::catch_unwind(|| {
         // try undirected first
-        if let Ok(g) = Graph::from_g6(repr) {
+        if let Ok(g) = Graph6::from_g6(repr) {
             return Ok::<_, IOError>(ParserResult::Graph(g));
         }
         // try directed
-        if let Ok(dg) = DiGraph::from_d6(repr) {
+        if let Ok(dg) = DiGraph6::from_d6(repr) {
             return Ok(ParserResult::DiGraph(dg));
         }
         Err(IOError::NonCanonicalEncoding)
