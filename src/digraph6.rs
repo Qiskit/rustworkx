@@ -7,11 +7,11 @@ use petgraph::algo;
 
 /// Directed graph implementation (extracted from graph6.rs)
 #[derive(Debug)]
-pub struct DiGraph {
+pub struct DiGraph6 {
     pub bit_vec: Vec<usize>,
     pub n: usize,
 }
-impl DiGraph {
+impl DiGraph6 {
     /// Creates a new DiGraph from a graph6 representation string
     pub fn from_d6(repr: &str) -> Result<Self, IOError> {
         let bytes = repr.as_bytes();
@@ -54,7 +54,7 @@ impl DiGraph {
     }
 }
 
-impl GraphConversion for DiGraph {
+impl GraphConversion for DiGraph6 {
     fn bit_vec(&self) -> &[usize] {
         &self.bit_vec
     }
@@ -69,7 +69,7 @@ impl GraphConversion for DiGraph {
 }
 
 /// Convert internal DiGraph to PyDiGraph
-pub fn digraph_to_pydigraph<'py>(py: Python<'py>, g: &DiGraph) -> PyResult<Bound<'py, PyAny>> {
+pub fn digraph_to_pydigraph<'py>(py: Python<'py>, g: &DiGraph6) -> PyResult<Bound<'py, PyAny>> {
     use crate::graph6::GraphConversion as _;
     let mut graph = StablePyGraph::<petgraph::Directed>::with_capacity(g.size(), 0);
     for _ in 0..g.size() {
@@ -119,5 +119,4 @@ pub fn digraph_write_graph6_file(digraph: Py<crate::digraph::PyDiGraph>, path: &
     Ok(())
 }
 
-// Enable write_graph() in tests for DiGraph via the WriteGraph trait
-impl crate::graph6::write::WriteGraph for DiGraph {}
+impl crate::graph6::write::WriteGraph for DiGraph6 {}

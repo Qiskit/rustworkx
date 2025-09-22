@@ -3,7 +3,6 @@
 //! the separate files in `src/` so callers can `mod all; use all::...` and
 //! avoid many `use super` / `use crate` imports inside the library.
 
-#[allow(dead_code)]
 /// Conversion trait for graphs into various text graph formats
 pub trait GraphConversion {
     /// Returns the bitvector representation of the graph
@@ -129,9 +128,94 @@ pub enum IOError {
     InvalidDigraphHeader,
     InvalidSizeChar,
     GraphTooLarge,
-    #[allow(dead_code)]
     InvalidAdjacencyMatrix,
     NonCanonicalEncoding,
+}
+
+// ---------------------------------------------------------------------------
+// Shared size (N(n)) encoding/decoding and bit-width helper used by graph6,
+// digraph6, and sparse6. Centralizing here avoids divergence in canonical
+// encoding rules and bound checks. The formats share identical size rules.
+// ---------------------------------------------------------------------------
+
+/// Trait encapsulating graph size field (N(n)) codec.
+pub trait SizeCodec {
+    /// Encode a vertex count `n` into its canonical representation as 63-offset bytes.
+    fn encode_size(n: usize) -> Result<Vec<u8>, IOError>;
+    /// Decode size field at position `pos`, returning (n, bytes_consumed).
+    fn decode_size(bytes: &[u8], pos: usize) -> Result<(usize, usize), IOError>;
+    /// Compute number of bits needed to represent integers in [0, n-1]. (R(x) in spec)
+    fn needed_bits(n: usize) -> usize {
+        if n <= 1 { 0 } else { (usize::BITS - (n - 1).leading_zeros()) as usize }
+    }
+}
+
+/// Concrete codec implementation shared across formats.
+pub struct GraphNumberCodec;
+
+impl GraphNumberCodec {
+    #[inline]
+    fn validate(n: usize) -> Result<(), IOError> {
+        if n >= (1usize << 36) { return Err(IOError::GraphTooLarge); }
+        Ok(())
+    }
+}
+
+impl SizeCodec for GraphNumberCodec {
+    fn encode_size(n: usize) -> Result<Vec<u8>, IOError> {
+        Self::validate(n)?;
+        let mut out = Vec::with_capacity(8);
+        if n < 63 {
+            out.push((n as u8) + 63);
+        } else if n < (1 << 18) {
+            out.push(b'~');
+            let mut v = n as u32;
+            let mut parts = [0u8; 3];
+            for i in (0..3).rev() { parts[i] = (v & 0x3F) as u8; v >>= 6; }
+            out.extend(parts.iter().map(|p| p + 63));
+        } else {
+            out.push(b'~'); out.push(b'~');
+            let mut v = n as u64;
+            let mut parts = [0u8; 6];
+            for i in (0..6).rev() { parts[i] = (v & 0x3F) as u8; v >>= 6; }
+            out.extend(parts.iter().map(|p| p + 63));
+        }
+        Ok(out)
+    }
+
+    fn decode_size(bytes: &[u8], pos: usize) -> Result<(usize, usize), IOError> {
+        let first = *bytes.get(pos).ok_or(IOError::InvalidSizeChar)?;
+        if first == b'~' {
+            let second = *bytes.get(pos + 1).ok_or(IOError::InvalidSizeChar)?;
+            if second == b'~' {
+                // long form: '~~' + 6 chars
+                let mut val: u64 = 0;
+                for i in 0..6 {
+                    let c = *bytes.get(pos + 2 + i).ok_or(IOError::InvalidSizeChar)?;
+                    if c < 63 { return Err(IOError::InvalidSizeChar); }
+                    val = (val << 6) | ((c - 63) as u64);
+                }
+                if val >= (1u64 << 36) { return Err(IOError::GraphTooLarge); }
+                if val < (1 << 18) { return Err(IOError::NonCanonicalEncoding); }
+                Ok((val as usize, 8))
+            } else {
+                // medium form: '~' + 3 chars
+                let mut val: u32 = 0;
+                for i in 0..3 {
+                    let c = *bytes.get(pos + 1 + i).ok_or(IOError::InvalidSizeChar)?;
+                    if c < 63 { return Err(IOError::InvalidSizeChar); }
+                    val = (val << 6) | ((c - 63) as u32);
+                }
+                if val < 63 { return Err(IOError::NonCanonicalEncoding); }
+                Ok((val as usize, 4))
+            }
+        } else {
+            if first < 63 { return Err(IOError::InvalidSizeChar); }
+            let n = (first - 63) as usize;
+            if n >= 63 { return Err(IOError::NonCanonicalEncoding); }
+            Ok((n, 1))
+        }
+    }
 }
 
 impl From<IOError> for PyErr {
@@ -157,6 +241,7 @@ impl From<IOError> for PyErr {
 /// Utility functions used by parsers and writers
 pub mod utils {
     use super::IOError;
+    use super::{GraphNumberCodec, SizeCodec};
 
     /// Iterates through the bytes of a graph and fills a bitvector representing
     /// the adjacency matrix of the graph
@@ -184,46 +269,7 @@ pub mod utils {
     ///  - '~' + 3 chars: 63 <= n < 2^18 (except values whose top 6 bits are all 1, to avoid ambiguity with long form)
     ///  - '~~' + 6 chars: remaining values up to < 2^36
     pub fn parse_size(bytes: &[u8], pos: usize) -> Result<(usize, usize), IOError> {
-        let first = *bytes.get(pos).ok_or(IOError::InvalidSizeChar)?;
-        if first == b'~' {
-            let second = *bytes.get(pos + 1).ok_or(IOError::InvalidSizeChar)?;
-            if second == b'~' {
-                // long form: '~~' + 6 chars (36 bits)
-                let mut val: u64 = 0;
-                for i in 0..6 {
-                    let c = *bytes.get(pos + 2 + i).ok_or(IOError::InvalidSizeChar)?;
-                    if c < 63 { return Err(IOError::InvalidSizeChar); }
-                    val = (val << 6) | ((c - 63) as u64);
-                }
-                if val >= (1u64 << 36) { return Err(IOError::GraphTooLarge); }
-                // Detect impossible canonical overflow sentinel: encoding of 2^36 results in wrapped 0 after truncation
-                if val == 0 { return Err(IOError::GraphTooLarge); }
-                Ok((val as usize, 8))
-            } else {
-                // medium form: '~' + 3 chars (18 bits)
-                let mut val: u32 = 0;
-                for i in 0..3 {
-                    let c = *bytes.get(pos + 1 + i).ok_or(IOError::InvalidSizeChar)?;
-                    if c < 63 { return Err(IOError::InvalidSizeChar); }
-                    val = (val << 6) | ((c - 63) as u32);
-                }
-                if val < 63 { return Err(IOError::NonCanonicalEncoding); } // should have used short form
-                Ok((val as usize, 4))
-            }
-        } else if first < 63 { // below ASCII '?' (63) invalid
-            Err(IOError::InvalidSizeChar)
-        } else {
-            // short form
-            let n = (first - 63) as usize;
-            if n >= 63 { return Err(IOError::NonCanonicalEncoding); } // should use extended form
-            Ok((n, 1))
-        }
-    }
-
-    /// Backwards compatible helper used by legacy tests expecting only the size value.
-    #[allow(dead_code)]
-    pub fn get_size(bytes: &[u8], pos: usize) -> Result<usize, IOError> {
-        parse_size(bytes, pos).map(|(n, _)| n)
+        GraphNumberCodec::decode_size(bytes, pos)
     }
 
     /// Returns the upper triangle of a bitvector
@@ -244,9 +290,9 @@ pub mod write {
     use super::utils::upper_triangle;
     use super::GraphConversion;
     use super::IOError;
+    use super::{GraphNumberCodec, SizeCodec};
 
     /// Trait to write graphs into graph 6 formatted strings
-    #[allow(dead_code)]
     pub trait WriteGraph: GraphConversion {
         fn write_graph(&self) -> Result<String, IOError> {
             write_graph6(self.bit_vec().to_vec(), self.size(), self.is_directed())
@@ -259,41 +305,9 @@ pub mod write {
         }
     }
 
-    fn push_char63(repr: &mut String, v: u32) -> Result<(), IOError> {
-        let raw = v + 63; // guarantee 63..=126
-        let c = char::from_u32(raw).ok_or(IOError::InvalidSizeChar)?;
-        repr.push(c);
-        Ok(())
-    }
-
     fn write_size(repr: &mut String, size: usize) -> Result<(), IOError> {
-        // graph6 size encoding per formats.txt
-        // n < 63: single char n+63
-        // 63 <= n < 2^18: '~' followed by 3 chars (18 bits)
-        // 2^18 <= n < 2^36: '~~' followed by 6 chars (36 bits)
-        // We assume caller validated upper bound (< 2^36)
-        if size < 63 {
-            push_char63(repr, size as u32)?;
-        } else if size < (1 << 18) {
-            repr.push('~');
-            let mut val = size as u32;
-            let mut parts = [0u8; 3];
-            for i in (0..3).rev() {
-                parts[i] = (val & 0x3F) as u8;
-                val >>= 6;
-            }
-            for p in parts.iter() { push_char63(repr, *p as u32)?; }
-        } else {
-            repr.push('~');
-            repr.push('~');
-            let mut val = size as u64;
-            let mut parts = [0u8; 6];
-            for i in (0..6).rev() {
-                parts[i] = (val & 0x3F) as u8;
-                val >>= 6;
-            }
-            for p in parts.iter() { push_char63(repr, *p as u32)?; }
-        }
+        let enc = GraphNumberCodec::encode_size(size)?;
+        for b in enc { repr.push(b as char); }
         Ok(())
     }
 
@@ -358,11 +372,11 @@ use std::path::Path;
 
 /// Undirected graph implementation
 #[derive(Debug)]
-pub struct Graph {
+pub struct Graph6 {
     pub bit_vec: Vec<usize>,
     pub n: usize,
 }
-impl Graph {
+impl Graph6 {
     /// Creates a new undirected graph from a graph6 representation
     pub fn from_g6(repr: &str) -> Result<Self, IOError> {
         let bytes = repr.as_bytes();
@@ -424,8 +438,7 @@ impl Graph {
         Ok(bit_vec)
     }
 }
-#[allow(dead_code)]
-impl GraphConversion for Graph {
+impl GraphConversion for Graph6 {
     fn bit_vec(&self) -> &[usize] {
         &self.bit_vec
     }
@@ -438,14 +451,14 @@ impl GraphConversion for Graph {
         false
     }
 }
-impl write::WriteGraph for Graph {}
+impl write::WriteGraph for Graph6 {}
 
-use crate::digraph6::{DiGraph, digraph_to_pydigraph};
+use crate::digraph6::{DiGraph6, digraph_to_pydigraph};
 
 // End of combined module
 
 /// Convert internal Graph (undirected) to PyGraph
-fn graph_to_pygraph<'py>(py: Python<'py>, g: &Graph) -> PyResult<Bound<'py, PyAny>> {
+fn graph_to_pygraph<'py>(py: Python<'py>, g: &Graph6) -> PyResult<Bound<'py, PyAny>> {
     let mut graph = StablePyGraph::<Undirected>::with_capacity(g.size(), 0);
     // add nodes
     for _ in 0..g.size() {
@@ -497,8 +510,8 @@ pub fn read_graph6_str<'py>(py: Python<'py>, repr: &str) -> PyResult<Bound<'py, 
     // Wrap parser calls to catch Rust panics and convert IO errors to PyErr
     // Helper enum used to return either a Graph or DiGraph from the parser.
     enum ParserResult {
-        Graph(Graph),
-        DiGraph(DiGraph),
+        Graph(Graph6),
+        DiGraph(DiGraph6),
     }
 
     let wrapped = std::panic::catch_unwind(|| {

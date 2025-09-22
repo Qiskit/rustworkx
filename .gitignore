@@ -25,3 +25,4 @@ rustworkx-core/Cargo.lock
 **/.DS_Store
 venv/
 .python-version
+.venv-graph6/
