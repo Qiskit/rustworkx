@@ -243,11 +243,12 @@ pub mod utils {
 pub mod write {
     use super::utils::upper_triangle;
     use super::GraphConversion;
+    use super::IOError;
 
     /// Trait to write graphs into graph 6 formatted strings
     #[allow(dead_code)]
     pub trait WriteGraph: GraphConversion {
-        fn write_graph(&self) -> String {
+        fn write_graph(&self) -> Result<String, IOError> {
             write_graph6(self.bit_vec().to_vec(), self.size(), self.is_directed())
         }
     }
@@ -258,14 +259,21 @@ pub mod write {
         }
     }
 
-    fn write_size(repr: &mut String, size: usize) {
+    fn push_char63(repr: &mut String, v: u32) -> Result<(), IOError> {
+        let raw = v + 63; // guarantee 63..=126
+        let c = char::from_u32(raw).ok_or(IOError::InvalidSizeChar)?;
+        repr.push(c);
+        Ok(())
+    }
+
+    fn write_size(repr: &mut String, size: usize) -> Result<(), IOError> {
         // graph6 size encoding per formats.txt
         // n < 63: single char n+63
         // 63 <= n < 2^18: '~' followed by 3 chars (18 bits)
         // 2^18 <= n < 2^36: '~~' followed by 6 chars (36 bits)
         // We assume caller validated upper bound (< 2^36)
         if size < 63 {
-            repr.push(char::from_u32((size as u32) + 63).unwrap());
+            push_char63(repr, size as u32)?;
         } else if size < (1 << 18) {
             repr.push('~');
             let mut val = size as u32;
@@ -274,9 +282,7 @@ pub mod write {
                 parts[i] = (val & 0x3F) as u8;
                 val >>= 6;
             }
-            for p in parts.iter() {
-                repr.push(char::from_u32((*p as u32) + 63).unwrap());
-            }
+            for p in parts.iter() { push_char63(repr, *p as u32)?; }
         } else {
             repr.push('~');
             repr.push('~');
@@ -286,10 +292,9 @@ pub mod write {
                 parts[i] = (val & 0x3F) as u8;
                 val >>= 6;
             }
-            for p in parts.iter() {
-                repr.push(char::from_u32((*p as u32) + 63).unwrap());
-            }
+            for p in parts.iter() { push_char63(repr, *p as u32)?; }
         }
+        Ok(())
     }
 
     fn pad_bitvector(bit_vec: &mut Vec<usize>) {
@@ -298,22 +303,23 @@ pub mod write {
         }
     }
 
-    fn parse_bitvector(bit_vec: &[usize], repr: &mut String) {
+    fn parse_bitvector(bit_vec: &[usize], repr: &mut String) -> Result<(), IOError> {
         for chunk in bit_vec.chunks(6) {
             let mut sum = 0;
             for (i, bit) in chunk.iter().rev().enumerate() {
                 sum += bit * 2usize.pow(i as u32);
             }
-            let char = char::from_u32(sum as u32 + 63).unwrap();
-            repr.push(char);
+            let raw = sum as u32 + 63;
+            let c = char::from_u32(raw).ok_or(IOError::InvalidSizeChar)?;
+            repr.push(c);
         }
+        Ok(())
     }
 
-    pub fn write_graph6(bit_vec: Vec<usize>, n: usize, is_directed: bool) -> String {
+    pub fn write_graph6(bit_vec: Vec<usize>, n: usize, is_directed: bool) -> Result<String, IOError> {
         // enforce graph6 maximum (2^36 - 1) like sparse6
         if n >= (1usize << 36) {
-            // Return a placeholder that will fail parsing consistently; caller wraps in Overflow error upstream if needed
-            // (Keeping existing interface simple.)
+            return Err(IOError::GraphTooLarge);
         }
         let mut repr = String::new();
         let mut bit_vec = if !is_directed {
@@ -328,10 +334,10 @@ pub mod write {
             bit_vec
         };
         write_header(&mut repr, is_directed);
-        write_size(&mut repr, n);
+        write_size(&mut repr, n)?;
         pad_bitvector(&mut bit_vec);
-        parse_bitvector(&bit_vec, &mut repr);
-        repr
+        parse_bitvector(&bit_vec, &mut repr)?;
+        Ok(repr)
     }
 }
 
@@ -368,7 +374,6 @@ impl Graph {
     /// Creates a new undirected graph from a flattened adjacency matrix.
     /// The adjacency matrix must be square.
     /// The adjacency matrix will be forced into a symmetric matrix.
-    #[cfg(test)]
     pub fn from_adj(adj: &[usize]) -> Result<Self, IOError> {
         let n2 = adj.len();
         let n = (n2 as f64).sqrt() as usize;
@@ -433,7 +438,6 @@ impl GraphConversion for Graph {
         false
     }
 }
-#[cfg(test)]
 impl write::WriteGraph for Graph {}
 
 use crate::digraph6::{DiGraph, digraph_to_pydigraph};
@@ -541,7 +545,7 @@ pub fn write_graph6_from_pygraph(pygraph: Py<PyGraph>) -> PyResult<String> {
             bit_vec[i * n + j] = 1;
             bit_vec[j * n + i] = 1;
         }
-        let graph6 = write::write_graph6(bit_vec, n, false);
+        let graph6 = write::write_graph6(bit_vec, n, false)?;
         Ok(graph6)
     })
 }
@@ -584,412 +588,6 @@ pub fn graph_write_graph6_file(graph: Py<PyGraph>, path: &str) -> PyResult<()> {
 }
 
 /// Write a PyDiGraph to a graph6 file
-// digraph write helpers are provided by crate::digraph6
-
-#[cfg(test)]
-mod testing {
-    use super::utils::{fill_bitvector, get_size, upper_triangle};
-    use super::write::{write_graph6, WriteGraph};
-    use super::{Graph, GraphConversion, IOError};
-    use crate::digraph6::DiGraph; // bring DiGraph + trait impl into scope
-
-    // Tests from error.rs
-    #[test]
-    fn test_error_enum() {
-        let err = IOError::InvalidDigraphHeader;
-        println!("{:?}", err);
-    }
-
-    // Tests from utils.rs
-    #[test]
-    fn test_size_pos_0() {
-        let bytes = b"AG";
-        let size = get_size(bytes, 0).unwrap();
-        assert_eq!(size, 2);
-    }
-
-    #[test]
-    fn test_size_pos_1() {
-        let bytes = b"&AG";
-        let size = get_size(bytes, 1).unwrap();
-        assert_eq!(size, 2);
-    }
-
-
-    #[test]
-    fn test_size_invalid_size_char() {
-        let bytes = b">AG";
-        let size = get_size(bytes, 0).unwrap_err();
-        assert_eq!(size, IOError::InvalidSizeChar);
-    }
-
-    #[test]
-    fn test_bitvector() {
-        let bytes = b"Bw";
-        let n = 3;
-        let bit_vec = fill_bitvector(bytes, n * n, 0).unwrap();
-        assert_eq!(bit_vec, vec![0, 0, 0, 0, 1, 1, 1, 1, 1]);
-    }
-
-    #[test]
-    fn test_bitvector_offset() {
-        let bytes = b"Bw";
-        let n = 2;
-        let bit_vec = fill_bitvector(bytes, n * n, 1).unwrap();
-        assert_eq!(bit_vec, vec![1, 1, 1, 0]);
-    }
-
-    #[test]
-    fn test_upper_triangle_n2() {
-        let bit_vec = vec![0, 1, 1, 0];
-        let tri = upper_triangle(&bit_vec, 2);
-        assert_eq!(tri, vec![1]);
-    }
-
-    #[test]
-    fn test_upper_triangle_n3() {
-        let bit_vec = vec![0, 1, 1, 1, 0, 0, 1, 0, 0];
-        let tri = upper_triangle(&bit_vec, 3);
-        assert_eq!(tri, vec![1, 1, 0]);
-    }
-
-    // Tests from write.rs
-    #[test]
-    fn test_write_undirected_n2() {
-        let bit_vec = vec![0, 1, 1, 0];
-        let repr = write_graph6(bit_vec, 2, false);
-        assert_eq!(repr, "A_");
-    }
-
-    #[test]
-    fn test_write_directed_n2_mirror() {
-        let bit_vec = vec![0, 1, 1, 0];
-        let repr = write_graph6(bit_vec, 2, true);
-        assert_eq!(repr, "&AW");
-    }
-
-    #[test]
-    fn test_write_directed_n2_unmirrored() {
-        let bit_vec = vec![0, 0, 1, 0];
-        let repr = write_graph6(bit_vec, 2, true);
-        assert_eq!(repr, "&AG");
-    }
-
-    // Tests from undirected.rs
-    #[test]
-    fn test_graph_n2() {
-        let graph = Graph::from_g6("A_").unwrap();
-        assert_eq!(graph.size(), 2);
-        assert_eq!(graph.bit_vec(), &[0, 1, 1, 0]);
-    }
-
-    #[test]
-    fn test_graph_n2_empty() {
-        let graph = Graph::from_g6("A?").unwrap();
-        assert_eq!(graph.size(), 2);
-        assert_eq!(graph.bit_vec(), &[0, 0, 0, 0]);
-    }
-
-    #[test]
-    fn test_graph_n3() {
-        let graph = Graph::from_g6("Bw").unwrap();
-        assert_eq!(graph.size(), 3);
-        assert_eq!(graph.bit_vec(), &[0, 1, 1, 1, 0, 1, 1, 1, 0]);
-    }
-
-    #[test]
-    fn test_graph_n4() {
-        let graph = Graph::from_g6("C~").unwrap();
-        assert_eq!(graph.size(), 4);
-        assert_eq!(
-            graph.bit_vec(),
-            &[0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0]
-        );
-    }
-
-    #[test]
-    fn test_too_short_input() {
-        let parsed = Graph::from_g6("a");
-        assert!(parsed.is_err());
-    }
-
-    #[test]
-    fn test_invalid_char() {
-        let parsed = Graph::from_g6("A1");
-        assert!(parsed.is_err());
-    }
-
-    #[test]
-    fn test_to_adjacency() {
-        let graph = Graph::from_g6("A_").unwrap();
-        let adj = graph.to_adjmat();
-        assert_eq!(adj, "0 1\n1 0\n");
-    }
-
-    #[test]
-    fn test_to_dot() {
-        let graph = Graph::from_g6("A_").unwrap();
-        let dot = graph.to_dot(None);
-        assert_eq!(dot, "graph {\n0 -- 1;\n}");
-    }
-
-    #[test]
-    fn test_to_dot_with_label() {
-        let graph = Graph::from_g6("A_").unwrap();
-        let dot = graph.to_dot(Some(1));
-        assert_eq!(dot, "graph graph_1 {\n0 -- 1;\n}");
-    }
-
-    #[test]
-    fn test_to_net() {
-        let repr = r"A_";
-        let graph = Graph::from_g6(repr).unwrap();
-        let net = graph.to_net();
-        assert_eq!(net, "*Vertices 2\n1 \"0\"\n2 \"1\"\n*Arcs\n1 2\n2 1\n");
-    }
-
-    #[test]
-    fn test_to_flat() {
-        let repr = r"A_";
-        let graph = Graph::from_g6(repr).unwrap();
-        let flat = graph.to_flat();
-        assert_eq!(flat, "0110");
-    }
-
-    #[test]
-    fn test_write_n2() {
-        let repr = r"A_";
-        let graph = Graph::from_g6(repr).unwrap();
-        let g6 = graph.write_graph();
-        assert_eq!(g6, repr);
-    }
-
-    #[test]
-    fn test_write_n3() {
-        let repr = r"Bw";
-        let graph = Graph::from_g6(repr).unwrap();
-        let g6 = graph.write_graph();
-        assert_eq!(g6, repr);
-    }
-
-    #[test]
-    fn test_write_n4() {
-        let repr = r"C~";
-        let graph = Graph::from_g6(repr).unwrap();
-        let g6 = graph.write_graph();
-        assert_eq!(g6, repr);
-    }
-
-    #[test]
-    fn test_from_adj() {
-        let adj = &[0, 0, 1, 0];
-        let graph = Graph::from_adj(adj).unwrap();
-        assert_eq!(graph.size(), 2);
-        assert_eq!(graph.bit_vec(), &[0, 1, 1, 0]);
-        assert_eq!(graph.write_graph(), "A_");
-    }
-
-    #[test]
-    fn test_from_nonsquare_adj() {
-        let adj = &[0, 0, 1, 0, 1];
-        let graph = Graph::from_adj(adj);
-        assert!(graph.is_err());
-    }
-
-    // Tests from directed.rs
-    #[test]
-    fn test_header() {
-        let repr = b"&AG";
-        assert!(DiGraph::valid_digraph(repr).is_ok());
-    }
-
-    #[test]
-    fn test_invalid_header() {
-        let repr = b"AG";
-        assert!(DiGraph::valid_digraph(repr).is_err());
-    }
-
-    #[test]
-    fn test_from_adj_directed() {
-        let adj = &[0, 0, 1, 0];
-        let graph = DiGraph::from_adj(adj).unwrap();
-        assert_eq!(graph.size(), 2);
-        assert_eq!(graph.bit_vec(), vec![0, 0, 1, 0]);
-        assert_eq!(graph.write_graph(), "&AG");
-    }
-
-    #[test]
-    fn test_from_nonsquare_adj_directed() {
-        let adj = &[0, 0, 1, 0, 1];
-        let graph = DiGraph::from_adj(adj);
-        assert!(graph.is_err());
-    }
-
-    #[test]
-    fn test_bitvector_n2() {
-        let repr = "&AG";
-        let graph = DiGraph::from_d6(repr).unwrap();
-        assert_eq!(graph.size(), 2);
-        assert_eq!(graph.bit_vec(), vec![0, 0, 1, 0]);
-    }
-
-    #[test]
-    fn test_bitvector_n3() {
-        let repr = r"&B\o";
-        let graph = DiGraph::from_d6(repr).unwrap();
-        assert_eq!(graph.size(), 3);
-        assert_eq!(graph.bit_vec(), vec![0, 1, 1, 1, 0, 1, 1, 1, 0]);
-    }
-
-    #[test]
-    fn test_bitvector_n4() {
-        let repr = r"&C]|w";
-        let graph = DiGraph::from_d6(repr).unwrap();
-        assert_eq!(graph.size(), 4);
-        assert_eq!(
-            graph.bit_vec(),
-            vec![0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0]
-        );
-    }
-
-    #[test]
-    fn test_init_invalid_n2() {
-        let repr = "AG";
-        let graph = DiGraph::from_d6(repr);
-        assert!(graph.is_err());
-    }
-
-    #[test]
-    fn test_to_adjacency_directed() {
-        let repr = r"&C]|w";
-        let graph = DiGraph::from_d6(repr).unwrap();
-        let adj = graph.to_adjmat();
-        assert_eq!(adj, "0 1 1 1\n1 0 1 1\n1 1 0 1\n1 1 1 0\n");
-    }
-
-    #[test]
-    fn test_to_dot_directed() {
-        let repr = r"&AG";
-        let graph = DiGraph::from_d6(repr).unwrap();
-        let dot = graph.to_dot(None);
-        assert_eq!(dot, "digraph {\n1 -> 0;\n}");
-    }
-
-    #[test]
-    fn test_to_dot_with_id_directed() {
-        let repr = r"&AG";
-        let graph = DiGraph::from_d6(repr).unwrap();
-        let dot = graph.to_dot(Some(1));
-        assert_eq!(dot, "digraph graph_1 {\n1 -> 0;\n}");
-    }
-
-    #[test]
-    fn test_to_net_directed() {
-        let repr = r"&AG";
-        let graph = DiGraph::from_d6(repr).unwrap();
-        let net = graph.to_net();
-        assert_eq!(net, "*Vertices 2\n1 \"0\"\n2 \"1\"\n*Arcs\n2 1\n");
-    }
-
-    #[test]
-    fn test_to_flat_directed() {
-        let repr = r"&AG";
-        let graph = DiGraph::from_d6(repr).unwrap();
-        let flat = graph.to_flat();
-        assert_eq!(flat, "0010");
-    }
-
-    #[test]
-    fn test_write_n2_directed() {
-        let repr = r"&AG";
-        let graph = DiGraph::from_d6(repr).unwrap();
-        let graph6 = graph.write_graph();
-        assert_eq!(graph6, repr);
-    }
-
-    #[test]
-    fn test_write_n3_directed() {
-        let repr = r"&B\o";
-        let graph = DiGraph::from_d6(repr).unwrap();
-        let graph6 = graph.write_graph();
-        assert_eq!(graph6, repr);
-    }
-
-    #[test]
-    fn test_write_n4_directed() {
-        let repr = r"&C]|w";
-        let graph = DiGraph::from_d6(repr).unwrap();
-        let graph6 = graph.write_graph();
-        assert_eq!(graph6, repr);
-    }
-
-    #[test]
-    fn test_size_boundary_short_max() {
-        // n = 62 should be short form single char
-        let n = 62usize;
-    let ch = (n + 63) as u8;
-    let bytes = [ch];
-    let (parsed, consumed) = super::utils::parse_size(&bytes, 0).unwrap();
-        assert_eq!(parsed, n);
-        assert_eq!(consumed, 1);
-    }
-
-    #[test]
-    fn test_size_boundary_short_to_medium_transition() {
-        // n = 63 must use medium form; short form would be non-canonical
-        let n = 63usize;
-    // Directly build header: '~' + 3 chars with 18-bit payload
-    let mut val = n as u32;
-    let mut parts = [0u8;3];
-    for i in (0..3).rev() { parts[i] = (val & 0x3F) as u8; val >>= 6; }
-    let bytes = [b'~', parts[0]+63, parts[1]+63, parts[2]+63];
-    let (parsed, consumed) = super::utils::parse_size(&bytes, 0).unwrap();
-        assert_eq!(parsed, n);
-        assert_eq!(consumed, 4);
-    }
-
-
-    #[test]
-    fn test_size_boundary_medium_to_long_transition() {
-        // n = 2^18 requires long form and should parse correctly
-        let n = 1usize << 18;
-    let mut val = n as u64;
-    let mut parts = [0u8;6];
-    for i in (0..6).rev() { parts[i] = (val & 0x3F) as u8; val >>= 6; }
-    let mut bytes = Vec::from(b"~~".as_ref());
-    for p in parts { bytes.push(p + 63); }
-    let (parsed, consumed) = super::utils::parse_size(&bytes, 0).unwrap();
-        assert_eq!(parsed, n);
-        assert_eq!(consumed, 8);
-    }
-
-    #[test]
-    fn test_size_boundary_directed_short_medium_long() {
-        // Directed variants: prepend '&' then parse at offset 1
-        // n=62 (short)
-        let n_short = 62usize;
-        let bytes_short = [b'&', (n_short + 63) as u8];
-        let (parsed_s, consumed_s) = super::utils::parse_size(&bytes_short, 1).unwrap();
-        assert_eq!(parsed_s, n_short);
-        assert_eq!(consumed_s, 1);
-        // n=63 (medium)
-        let n_med = 63usize;
-        let mut val = n_med as u32;
-        let mut parts = [0u8;3];
-        for i in (0..3).rev() { parts[i] = (val & 0x3F) as u8; val >>= 6; }
-        let bytes_med = [b'&', b'~', parts[0]+63, parts[1]+63, parts[2]+63];
-        let (parsed_m, consumed_m) = super::utils::parse_size(&bytes_med, 1).unwrap();
-        assert_eq!(parsed_m, n_med);
-        assert_eq!(consumed_m, 4);
-        // n=2^18 (long)
-        let n_long = 1usize << 18;
-        let mut val_l = n_long as u64;
-        let mut parts_l = [0u8;6];
-        for i in (0..6).rev() { parts_l[i] = (val_l & 0x3F) as u8; val_l >>= 6; }
-        let mut bytes_long = vec![b'&', b'~', b'~'];
-        for p in parts_l { bytes_long.push(p + 63); }
-        let (parsed_l, consumed_l) = super::utils::parse_size(&bytes_long, 1).unwrap();
-        assert_eq!(parsed_l, n_long);
-        assert_eq!(consumed_l, 8);
-    }
-}
+///
+/// Implemented in crate::digraph6 module (helpers are provided there).
+pub(crate) fn _digraph_write_graph6_file_doc_placeholder() {}

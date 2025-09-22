@@ -24,7 +24,6 @@ impl DiGraph {
     }
 
     /// Creates a new DiGraph from a flattened adjacency matrix
-    #[cfg(test)]
     pub fn from_adj(adj: &[usize]) -> Result<Self, IOError> {
         let n2 = adj.len();
         let n = (n2 as f64).sqrt() as usize;
@@ -37,6 +36,9 @@ impl DiGraph {
 
     /// Validates graph6 directed representation
     pub(crate) fn valid_digraph(repr: &[u8]) -> Result<bool, IOError> {
+        if repr.is_empty() {
+            return Err(IOError::InvalidDigraphHeader);
+        }
         if repr[0] == b'&' {
             Ok(true)
         } else {
@@ -103,7 +105,7 @@ pub fn write_graph6_from_pydigraph(pydigraph: Py<crate::digraph::PyDiGraph>) -> 
         for (i, j, _w) in get_edge_iter_with_weights(&g.graph) {
             bit_vec[i * n + j] = 1;
         }
-        let graph6 = crate::graph6::write::write_graph6(bit_vec, n, true);
+        let graph6 = crate::graph6::write::write_graph6(bit_vec, n, true)?;
         Ok(graph6)
     })
 }
@@ -118,5 +120,4 @@ pub fn digraph_write_graph6_file(digraph: Py<crate::digraph::PyDiGraph>, path: &
 }
 
 // Enable write_graph() in tests for DiGraph via the WriteGraph trait
-#[cfg(test)]
 impl crate::graph6::write::WriteGraph for DiGraph {}
