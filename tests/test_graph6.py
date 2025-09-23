@@ -18,27 +18,16 @@ class TestGraph6(unittest.TestCase):
         g.add_node({"label": "n1"})
         g.add_edge(0, 1, {"weight": 3})
 
-        # use NamedTemporaryFile so this method matches the other tests' style
-        with tempfile.NamedTemporaryFile(delete=False) as fd:
-            path = fd.name
-        try:
-            rx.graph_write_graph6(g, path)
-
-            g2 = rx.read_graph6(path)
+        # Use NamedTemporaryFile with context-managed cleanup
+        with tempfile.NamedTemporaryFile() as fd:
+            rx.graph_write_graph6(g, fd.name)
+            g2 = rx.read_graph6(fd.name)
             self.assertIsInstance(g2, rx.PyGraph)
-
-            # check nodes and edges count
             self.assertEqual(g2.num_nodes(), 2)
             self.assertEqual(g2.num_edges(), 1)
-
-            # graph6 doesn't guarantee attributes; allow None or preserved dict
             n0 = g2[0]
             self.assertTrue(n0 is None or ("label" in n0 and n0["label"] == "n0"))
-
-            # check edge exists
             self.assertTrue(list(g2.edge_list()))
-        finally:
-            os.remove(path)
 
     def test_read_graph6_str_undirected(self):
         """Test reading an undirected graph from a graph6 string."""
@@ -94,45 +83,32 @@ class TestGraph6(unittest.TestCase):
 
     def test_read_graph6(self):
         """Test reading a graph from a graph6 file."""
-        with tempfile.NamedTemporaryFile(mode="w", delete=False) as fd:
-            fd.write("C~\\n")
-            path = fd.name
-        try:
-            graph = rx.read_graph6(path)
+        with tempfile.NamedTemporaryFile(mode="w+") as fd:
+            fd.write("C~\n")
+            fd.flush()
+            graph = rx.read_graph6(fd.name)
             self.assertIsInstance(graph, rx.PyGraph)
             self.assertEqual(graph.num_nodes(), 4)
             self.assertEqual(graph.num_edges(), 6)  # K4
-        finally:
-            os.remove(path)
 
     def test_graph_write_graph6(self):
         """Test writing a PyGraph to a graph6 file."""
         graph = rx.generators.complete_graph(4)
-        with tempfile.NamedTemporaryFile(delete=False) as fd:
-            path = fd.name
-        try:
-            rx.graph_write_graph6(graph, path)
-            with open(path, "r") as f:
+        with tempfile.NamedTemporaryFile() as fd:
+            rx.graph_write_graph6(graph, fd.name)
+            with open(fd.name, "r") as f:
                 content = f.read()
             self.assertEqual(content, "C~")
-        finally:
-            os.remove(path)
 
     def test_digraph_write_graph6(self):
         """Test writing a PyDiGraph to a graph6 file."""
         graph = rx.PyDiGraph()
         graph.add_nodes_from(range(3))
         graph.add_edges_from([(0, 1, None), (1, 2, None), (2, 0, None)])
-        with tempfile.NamedTemporaryFile(delete=False) as fd:
-            path = fd.name
-        try:
-            rx.digraph_write_graph6(graph, path)
-            new_graph = rx.read_graph6(path)
-            self.assertTrue(
-                rx.is_isomorphic(graph, new_graph)
-            )
-        finally:
-            os.remove(path)
+        with tempfile.NamedTemporaryFile() as fd:
+            rx.digraph_write_graph6(graph, fd.name)
+            new_graph = rx.read_graph6(fd.name)
+            self.assertTrue(rx.is_isomorphic(graph, new_graph))
 
     def test_invalid_graph6_string(self):
         """Test that an invalid graph6 string raises an error."""
@@ -159,30 +135,20 @@ class TestGraph6(unittest.TestCase):
     def test_write_plain_file(self):
         g = self._build_two_node_graph()
         expected = "A_"  # known graph6 for 2-node single edge
-        with tempfile.NamedTemporaryFile(suffix=".g6", delete=False) as fd:
-            path = fd.name
-        try:
-            rx.graph_write_graph6(g, path)
-            with open(path, "rt", encoding="ascii") as fh:
+        with tempfile.NamedTemporaryFile(suffix=".g6") as fd:
+            rx.graph_write_graph6(g, fd.name)
+            with open(fd.name, "rt", encoding="ascii") as fh:
                 content = fh.read().strip()
             self.assertEqual(expected, content)
-        finally:
-            if os.path.exists(path):
-                os.remove(path)
 
     def test_write_gzip_file(self):
         g = self._build_two_node_graph()
         expected = "A_"
-        with tempfile.NamedTemporaryFile(suffix=".g6.gz", delete=False) as fd:
-            path = fd.name
-        try:
-            rx.graph_write_graph6(g, path)
-            with gzip.open(path, "rt", encoding="ascii") as fh:
+        with tempfile.NamedTemporaryFile(suffix=".g6.gz") as fd:
+            rx.graph_write_graph6(g, fd.name)
+            with gzip.open(fd.name, "rt", encoding="ascii") as fh:
                 content = fh.read().strip()
             self.assertEqual(expected, content)
-        finally:
-            if os.path.exists(path):
-                os.remove(path)
 
 
 class TestGraph6FormatExtras(unittest.TestCase):
