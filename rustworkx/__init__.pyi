@@ -254,6 +254,8 @@ from .rustworkx import digraph_transitivity as digraph_transitivity
 from .rustworkx import graph_transitivity as graph_transitivity
 from .rustworkx import digraph_bfs_search as digraph_bfs_search
 from .rustworkx import graph_bfs_search as graph_bfs_search
+from .rustworkx import digraph_bfs_layer as digraph_bfs_layer
+from .rustworkx import graph_bfs_layer as graph_bfs_layer
 from .rustworkx import digraph_dfs_search as digraph_dfs_search
 from .rustworkx import graph_dfs_search as graph_dfs_search
 from .rustworkx import digraph_dijkstra_search as digraph_dijkstra_search

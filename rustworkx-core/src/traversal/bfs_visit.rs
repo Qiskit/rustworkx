@@ -10,10 +10,9 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
+use super::try_control;
 use petgraph::visit::{ControlFlow, EdgeRef, IntoEdges, VisitMap, Visitable};
 use std::collections::VecDeque;
-
-use super::try_control;
 
 /// A breadth first search (BFS) visitor event.
 #[derive(Copy, Clone, Debug)]
@@ -247,4 +246,38 @@ where
     });
 
     C::continuing()
+}
+
+pub fn bfs_layers<G, I>(graph: G, sources: I) -> Vec<Vec<G::NodeId>>
+where
+    G: IntoEdges + Visitable,
+    I: IntoIterator<Item = G::NodeId>,
+    G::NodeId: Copy + std::hash::Hash + Eq,
+{
+    let mut visited = std::collections::HashSet::new();
+    let mut current_layer: Vec<G::NodeId> = sources.into_iter().collect();
+
+    for &node in &current_layer {
+        visited.insert(node);
+    }
+
+    let mut layers: Vec<Vec<G::NodeId>> = Vec::new();
+
+    while !current_layer.is_empty() {
+        layers.push(current_layer.clone());
+
+        let mut next_layer = Vec::new();
+        for &node in &current_layer {
+            for edge in graph.edges(node) {
+                let child = edge.target();
+                if visited.insert(child) {
+                    next_layer.push(child);
+                }
+            }
+        }
+
+        current_layer = next_layer;
+    }
+
+    layers
 }
