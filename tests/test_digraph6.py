@@ -41,6 +41,3 @@ class TestDigraph6Format(unittest.TestCase):
         with self.assertRaises(BaseException):
             rx.read_graph6_str('&invalid')
 
-
-if __name__ == '__main__':  # pragma: no cover
-    unittest.main()

@@ -36,6 +36,3 @@ class TestSparse6(unittest.TestCase):
         self.assertEqual(g2.num_nodes(), g.num_nodes())
         self.assertEqual(g2.num_edges(), g.num_edges())
 
-
-if __name__ == '__main__':  # pragma: no cover
-    unittest.main()

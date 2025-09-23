@@ -7,10 +7,8 @@ import gzip  # added for gzip file write tests
 
 class TestGraph6(unittest.TestCase):
     def _build_two_node_graph(self):
-        g = rx.PyGraph()
-        g.add_nodes_from(range(2))
-        g.add_edge(0, 1, None)
-        return g
+        # Use path_graph(2) which yields a single edge between two nodes.
+        return rx.generators.path_graph(2)
     def test_graph6_roundtrip(self):
         # build a small graph with node/edge attrs
         g = rx.PyGraph()
@@ -49,16 +47,17 @@ class TestGraph6(unittest.TestCase):
 
     def test_write_graph6_from_pygraph(self):
         """Test writing a PyGraph to a graph6 string."""
-        graph = rx.PyGraph()
-        graph.add_nodes_from(range(2))
-        graph.add_edge(0, 1, None)
+        graph = rx.generators.path_graph(2)
         g6_str = rx.write_graph6_from_pygraph(graph)
         self.assertEqual(g6_str, "A_")
 
     def test_write_graph6_from_pydigraph(self):
         """Test writing a PyDiGraph to a graph6 string."""
+        # directed_path_graph(2) yields edge 0->1; we need 1->0 so build via generators then reverse
+        base = rx.generators.directed_path_graph(2)
         graph = rx.PyDiGraph()
-        graph.add_nodes_from(range(2))
+        graph.add_nodes_from(range(base.num_nodes()))
+        # Add reversed edge to match expected encoding &AG (edge 1->0)
         graph.add_edge(1, 0, None)
         g6_str = rx.write_graph6_from_pydigraph(graph)
         self.assertEqual(g6_str, "&AG")
