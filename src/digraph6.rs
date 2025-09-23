@@ -112,7 +112,7 @@ pub fn write_graph6_from_pydigraph(pydigraph: Py<crate::digraph::PyDiGraph>) -> 
 
 #[pyfunction]
 #[pyo3(signature=(digraph, path))]
-pub fn digraph_write_graph6_file(digraph: Py<crate::digraph::PyDiGraph>, path: &str) -> PyResult<()> {
+pub fn digraph_write_graph6(digraph: Py<crate::digraph::PyDiGraph>, path: &str) -> PyResult<()> {
     let s = write_graph6_from_pydigraph(digraph)?;
     crate::graph6::to_file(path, &s)
         .map_err(|e| pyo3::exceptions::PyIOError::new_err(format!("IO error: {}", e)))?;

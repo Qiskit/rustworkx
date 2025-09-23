@@ -359,7 +359,7 @@ pub mod write {
 
 use crate::get_edge_iter_with_weights;
 use crate::{graph::PyGraph, StablePyGraph};
-use crate::{Graph6OverflowError, Graph6PanicError, Graph6ParseError};
+use crate::{Graph6OverflowError, Graph6ParseError};
 use flate2::write::GzEncoder;
 use flate2::Compression;
 use petgraph::graph::NodeIndex;
@@ -565,7 +565,7 @@ pub fn parse_graph6_size(data: &str, offset: usize) -> PyResult<(usize, usize)> 
 /// Read a graph6 file from disk and return a PyGraph or PyDiGraph
 #[pyfunction]
 #[pyo3(signature=(path))]
-pub fn read_graph6_file<'py>(py: Python<'py>, path: &str) -> PyResult<Bound<'py, PyAny>> {
+pub fn read_graph6<'py>(py: Python<'py>, path: &str) -> PyResult<Bound<'py, PyAny>> {
     use std::fs;
     let data = fs::read_to_string(path)
         .map_err(|e| PyErr::new::<pyo3::exceptions::PyIOError, _>(format!("IO error: {}", e)))?;
@@ -577,14 +577,9 @@ pub fn read_graph6_file<'py>(py: Python<'py>, path: &str) -> PyResult<Bound<'py,
 /// Write a PyGraph to a graph6 file
 #[pyfunction]
 #[pyo3(signature=(graph, path))]
-pub fn graph_write_graph6_file(graph: Py<PyGraph>, path: &str) -> PyResult<()> {
-    let s = write_graph6_from_pygraph(graph)?;
+pub fn graph_write_graph6(py: Python<'_>, graph: Py<PyGraph>, path: &str) -> PyResult<()> {
+    let s = write_graph6_from_pygraph(py, graph)?;
     to_file(path, &s)
         .map_err(|e| PyErr::new::<pyo3::exceptions::PyIOError, _>(format!("IO error: {}", e)))?;
     Ok(())
 }
-
-/// Write a PyDiGraph to a graph6 file
-///
-/// Implemented in crate::digraph6 module (helpers are provided there).
-pub(crate) fn _digraph_write_graph6_file_doc_placeholder() {}

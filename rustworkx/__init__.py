@@ -2312,3 +2312,7 @@ def write_graphml(graph, path, /, keys=None, compression=None):
     :raises RuntimeError: when an error is encountered while writing the GraphML file.
     """
     raise TypeError(f"Invalid Input Type {type(graph)} for graph")
+
+@_rustworkx_dispatch
+def write_graph6_file(graph, path):
+    raise TypeError(f"Invalid Input Type {type(graph)} for graph")

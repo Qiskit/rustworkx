@@ -29,8 +29,8 @@ class TestDigraph6Format(unittest.TestCase):
         g.add_edges_from([(0, 1, None), (1, 2, None)])
         with tempfile.TemporaryDirectory() as td:
             p = pathlib.Path(td) / 'd.d6'
-            rx.digraph_write_graph6_file(g, str(p))
-            g2 = rx.read_graph6_file(str(p))
+            rx.digraph_write_graph6(g, str(p))
+            g2 = rx.read_graph6(str(p))
         self.assertIsInstance(g2, rx.PyDiGraph)
         self.assertEqual(g2.num_nodes(), 3)
         self.assertEqual(g2.num_edges(), 2)

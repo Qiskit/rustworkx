@@ -6,7 +6,6 @@ import gzip  # added for gzip file write tests
 
 
 class TestGraph6(unittest.TestCase):
-    # Merged helper from test_graph6_file_write.py
     def _build_two_node_graph(self):
         g = rx.PyGraph()
         g.add_nodes_from(range(2))
@@ -23,9 +22,9 @@ class TestGraph6(unittest.TestCase):
         with tempfile.NamedTemporaryFile(delete=False) as fd:
             path = fd.name
         try:
-            rx.graph_write_graph6_file(g, path)
+            rx.graph_write_graph6(g, path)
 
-            g2 = rx.read_graph6_file(path)
+            g2 = rx.read_graph6(path)
             self.assertIsInstance(g2, rx.PyGraph)
 
             # check nodes and edges count
@@ -93,33 +92,33 @@ class TestGraph6(unittest.TestCase):
         self.assertEqual(graph.num_edges(), new_graph.num_edges())
         self.assertEqual(graph.edge_list(), new_graph.edge_list())
 
-    def test_read_graph6_file(self):
+    def test_read_graph6(self):
         """Test reading a graph from a graph6 file."""
         with tempfile.NamedTemporaryFile(mode="w", delete=False) as fd:
             fd.write("C~\\n")
             path = fd.name
         try:
-            graph = rx.read_graph6_file(path)
+            graph = rx.read_graph6(path)
             self.assertIsInstance(graph, rx.PyGraph)
             self.assertEqual(graph.num_nodes(), 4)
             self.assertEqual(graph.num_edges(), 6)  # K4
         finally:
             os.remove(path)
 
-    def test_graph_write_graph6_file(self):
+    def test_graph_write_graph6(self):
         """Test writing a PyGraph to a graph6 file."""
         graph = rx.generators.complete_graph(4)
         with tempfile.NamedTemporaryFile(delete=False) as fd:
             path = fd.name
         try:
-            rx.graph_write_graph6_file(graph, path)
+            rx.graph_write_graph6(graph, path)
             with open(path, "r") as f:
                 content = f.read()
             self.assertEqual(content, "C~")
         finally:
             os.remove(path)
 
-    def test_digraph_write_graph6_file(self):
+    def test_digraph_write_graph6(self):
         """Test writing a PyDiGraph to a graph6 file."""
         graph = rx.PyDiGraph()
         graph.add_nodes_from(range(3))
@@ -127,8 +126,8 @@ class TestGraph6(unittest.TestCase):
         with tempfile.NamedTemporaryFile(delete=False) as fd:
             path = fd.name
         try:
-            rx.digraph_write_graph6_file(graph, path)
-            new_graph = rx.read_graph6_file(path)
+            rx.digraph_write_graph6(graph, path)
+            new_graph = rx.read_graph6(path)
             self.assertTrue(
                 rx.is_isomorphic(graph, new_graph)
             )
@@ -157,14 +156,13 @@ class TestGraph6(unittest.TestCase):
         self.assertEqual(new_graph.num_nodes(), 5)
         self.assertEqual(new_graph.num_edges(), 0)
 
-    # ---- Merged file write tests from test_graph6_file_write.py ----
     def test_write_plain_file(self):
         g = self._build_two_node_graph()
         expected = "A_"  # known graph6 for 2-node single edge
         with tempfile.NamedTemporaryFile(suffix=".g6", delete=False) as fd:
             path = fd.name
         try:
-            rx.graph_write_graph6_file(g, path)
+            rx.graph_write_graph6(g, path)
             with open(path, "rt", encoding="ascii") as fh:
                 content = fh.read().strip()
             self.assertEqual(expected, content)
@@ -178,7 +176,7 @@ class TestGraph6(unittest.TestCase):
         with tempfile.NamedTemporaryFile(suffix=".g6.gz", delete=False) as fd:
             path = fd.name
         try:
-            rx.graph_write_graph6_file(g, path)
+            rx.graph_write_graph6(g, path)
             with gzip.open(path, "rt", encoding="ascii") as fh:
                 content = fh.read().strip()
             self.assertEqual(expected, content)
@@ -216,8 +214,8 @@ class TestGraph6FormatExtras(unittest.TestCase):
         s = rx.write_graph6_from_pygraph(g)
         with tempfile.TemporaryDirectory() as td:
             p = pathlib.Path(td) / 'u.g6'
-            rx.graph_write_graph6_file(g, str(p))
-            g2 = rx.read_graph6_file(str(p))
+            rx.graph_write_graph6(g, str(p))
+            g2 = rx.read_graph6(str(p))
         self.assertIsInstance(g2, rx.PyGraph)
         self.assertEqual(g2.num_nodes(), 4)
         self.assertEqual(g2.num_edges(), 2)
