@@ -26,3 +26,4 @@ rustworkx-core/Cargo.lock
 venv/
 .python-version
 .venv-graph6/
+graph6-doc/

@@ -545,22 +545,20 @@ pub fn read_graph6_str<'py>(py: Python<'py>, repr: &str) -> PyResult<Bound<'py, 
 
 #[pyfunction]
 #[pyo3(signature=(pygraph))]
-pub fn write_graph6_from_pygraph(pygraph: Py<PyGraph>) -> PyResult<String> {
-    Python::with_gil(|py| {
-        let g = pygraph.borrow(py);
-        let n = g.graph.node_count();
-        if n >= (1usize << 36) {
-            return Err(Graph6OverflowError::new_err("Graph too large for graph6 encoding"));
-        }
-        // build bit_vec
-        let mut bit_vec = vec![0usize; n * n];
-        for (i, j, _w) in get_edge_iter_with_weights(&g.graph) {
-            bit_vec[i * n + j] = 1;
-            bit_vec[j * n + i] = 1;
-        }
-        let graph6 = write::write_graph6(bit_vec, n, false)?;
-        Ok(graph6)
-    })
+pub fn write_graph6_from_pygraph<'py>(py: Python<'py>, pygraph: Py<PyGraph>) -> PyResult<String> {
+    let g = pygraph.borrow(py);
+    let n = g.graph.node_count();
+    if n >= (1usize << 36) {
+        return Err(Graph6OverflowError::new_err("Graph too large for graph6 encoding"));
+    }
+    // build bit_vec
+    let mut bit_vec = vec![0usize; n * n];
+    for (i, j, _w) in get_edge_iter_with_weights(&g.graph) {
+        bit_vec[i * n + j] = 1;
+        bit_vec[j * n + i] = 1;
+    }
+    let graph6 = write::write_graph6(bit_vec, n, false)?;
+    Ok(graph6)
 }
 
 /// Parse the size header of a graph6 or digraph6 string.

@@ -13,6 +13,28 @@ import functools
 
 from .rustworkx import *
 
+# ---- Inlined graph6/digraph6/sparse6 helpers (previously separate modules) ----
+# These were thin wrappers around the Rust extension functions. They are now
+# exposed directly at the package root to simplify the public API surface.
+# Backwards compatibility: importing the removed submodules will no longer work;
+# users should call these root-level functions instead. (If needed we can add
+# stub modules re-exporting these names.)
+
+from .rustworkx import (
+    read_graph6_str,
+    write_graph6_from_pygraph,
+    write_graph6_from_pydigraph,
+    graph_write_graph6_file,
+    digraph_write_graph6_file,
+    read_graph6_file,
+    read_sparse6_str,
+    write_sparse6_from_pygraph,
+)
+
+# Provide canonical short aliases matching the former module-level 'read'/'write'
+read = read_graph6_str
+write = write_graph6_from_pygraph
+
 # flake8: noqa
 import rustworkx.visit
 

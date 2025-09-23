@@ -1,6 +1,5 @@
 import unittest
 import rustworkx as rx
-import rustworkx.digraph6 as rx_digraph6
 
 
 class TestDigraph6Format(unittest.TestCase):
@@ -8,8 +7,8 @@ class TestDigraph6Format(unittest.TestCase):
         g = rx.PyDiGraph()
         g.add_nodes_from([None, None])
         g.add_edge(0, 1, None)
-        s = rx_digraph6.write_graph6_from_pydigraph(g)
-        new_g = rx_digraph6.read_graph6_str(s)
+        s = rx.write_graph6_from_pydigraph(g)
+        new_g = rx.read_graph6_str(s)
         self.assertIsInstance(new_g, rx.PyDiGraph)
         self.assertEqual(new_g.num_nodes(), 2)
         self.assertEqual(new_g.num_edges(), 1)
@@ -18,8 +17,8 @@ class TestDigraph6Format(unittest.TestCase):
         g = rx.PyDiGraph()
         g.add_nodes_from([None, None])
         g.add_edges_from([(0, 1, None), (1, 0, None)])
-        s = rx_digraph6.write_graph6_from_pydigraph(g)
-        new_g = rx_digraph6.read_graph6_str(s)
+        s = rx.write_graph6_from_pydigraph(g)
+        new_g = rx.read_graph6_str(s)
         self.assertIsInstance(new_g, rx.PyDiGraph)
         self.assertEqual(new_g.num_edges(), 2)
 
@@ -40,7 +39,7 @@ class TestDigraph6Format(unittest.TestCase):
         # Rust implementation may panic on malformed input; accept any
         # raised BaseException (including the pyo3 PanicException wrapper).
         with self.assertRaises(BaseException):
-            rx_digraph6.read_graph6_str('&invalid')
+            rx.read_graph6_str('&invalid')
 
 
 if __name__ == '__main__':  # pragma: no cover
