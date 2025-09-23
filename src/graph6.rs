@@ -507,40 +507,26 @@ pub(crate) fn to_file(path: impl AsRef<Path>, content: &str) -> std::io::Result<
 #[pyfunction]
 #[pyo3(signature=(repr))]
 pub fn read_graph6_str<'py>(py: Python<'py>, repr: &str) -> PyResult<Bound<'py, PyAny>> {
-    // Wrap parser calls to catch Rust panics and convert IO errors to PyErr
-    // Helper enum used to return either a Graph or DiGraph from the parser.
-    enum ParserResult {
-        Graph(Graph6),
-        DiGraph(DiGraph6),
+
+    enum ParserResult{
+        Graph6(Graph6),
+        DiGraph6(DiGraph6),
     }
 
-    let wrapped = std::panic::catch_unwind(|| {
-        // try undirected first
-        if let Ok(g) = Graph6::from_g6(repr) {
-            return Ok::<_, IOError>(ParserResult::Graph(g));
-        }
-        // try directed
-        if let Ok(dg) = DiGraph6::from_d6(repr) {
-            return Ok(ParserResult::DiGraph(dg));
-        }
+    let result = if let Ok(g) = Graph6::from_g6(repr) {
+        Ok(ParserResult::Graph6(g))
+    } else if let Ok(dg) = DiGraph6::from_d6(repr) {
+        Ok(ParserResult::DiGraph6(dg))
+    } else {
         Err(IOError::NonCanonicalEncoding)
-    });
+    };
 
-    match wrapped {
-        Ok(Ok(ParserResult::Graph(g))) => graph_to_pygraph(py, &g),
-        Ok(Ok(ParserResult::DiGraph(dg))) => digraph_to_pydigraph(py, &dg),
-        Ok(Err(io_err)) => Err(PyErr::from(io_err)),
-        Err(panic_payload) => {
-            let msg = if let Some(s) = panic_payload.downcast_ref::<&str>() {
-                format!("Rust panic in graph6 parser: {}", s)
-            } else if let Some(s) = panic_payload.downcast_ref::<String>() {
-                format!("Rust panic in graph6 parser: {}", s)
-            } else {
-                "Rust panic in graph6 parser (non-string payload)".to_string()
-            };
-            Err(Graph6PanicError::new_err(msg))
-        }
+    match result {
+        Ok(ParserResult::Graph6(g)) => graph_to_pygraph(py, &g),
+        Ok(ParserResult::DiGraph6(dg)) => digraph_to_pydigraph(py, &dg),
+        Err(io_err) => Err(PyErr::from(io_err)),
     }
+
 }
 
 #[pyfunction]
