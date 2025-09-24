@@ -410,8 +410,11 @@ impl Graph6 {
 
     /// Builds the bitvector from the graph6 representation
     fn build_bitvector(bytes: &[u8], n: usize, n_len: usize) -> Result<Vec<usize>, IOError> {
+        // For n < 2 we still materialize an n*n bitvector (0-length for n=0, length 1 for n=1)
+        // to avoid downstream index calculations (i * n + j) from panicking in utility
+        // functions (DOT conversion, PyGraph conversion, etc.).
         if n < 2 {
-            return Ok(Vec::new());
+            return Ok(vec![0; n * n]);
         }
         let bv_len = n * (n - 1) / 2;
         let Some(bit_vec) = utils::fill_bitvector(bytes, bv_len, n_len) else {
@@ -460,6 +463,9 @@ use crate::digraph6::{DiGraph6, digraph_to_pydigraph};
 /// Convert internal Graph (undirected) to PyGraph
 fn graph_to_pygraph<'py>(py: Python<'py>, g: &Graph6) -> PyResult<Bound<'py, PyAny>> {
     let mut graph = StablePyGraph::<Undirected>::with_capacity(g.size(), 0);
+    if g.bit_vec.len() < g.size().saturating_mul(g.size()) {
+        return Err(Graph6ParseError::new_err("Bitvector shorter than n*n; invalid internal state"));
+    }
     // add nodes
     for _ in 0..g.size() {
         graph.add_node(py.None());

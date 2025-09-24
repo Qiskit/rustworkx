@@ -1,118 +1,28 @@
 use pyo3::prelude::*;
 use pyo3::types::PyAny;
-use crate::graph6::IOError;
+use crate::graph6::{IOError, GraphNumberCodec, SizeCodec};
 use crate::graph::PyGraph;
 use petgraph::graph::NodeIndex;
 use petgraph::prelude::Undirected;
 use crate::StablePyGraph;
 use std::iter;
 
+// Unified size parser using GraphNumberCodec (shared with graph6/digraph6).
+// Returns (n, absolute next position) to preserve original caller expectations.
 fn parse_n(bytes: &[u8], pos: usize) -> Result<(usize, usize), IOError> {
-    if pos >= bytes.len() {
-        return Err(IOError::NonCanonicalEncoding);
-    }
-    let first = bytes[pos];
-    if first < 63 || first > 126 {
-        return Err(IOError::InvalidSizeChar);
-    }
-    if first != 126 {
-        return Ok(((first - 63) as usize, pos + 1));
-    }
-    // first == 126 -> extended form. Look ahead without advancing permanently.
-    if pos + 1 >= bytes.len() {
-        return Err(IOError::NonCanonicalEncoding);
-    }
-    let second = bytes[pos + 1];
-    if second == 126 {
-        // 8 byte form: 126 126 R(x) where R(x) is 36 bits -> 6 bytes
-        if bytes.len() < pos + 2 + 6 {
-            return Err(IOError::NonCanonicalEncoding);
-        }
-        let mut val: u64 = 0;
-        for i in 0..6 {
-            let b = bytes[pos + 2 + i];
-            if b < 63 || b > 126 {
-                return Err(IOError::InvalidSizeChar);
-            }
-            val = (val << 6) | ((b - 63) as u64);
-        }
-        return Ok((val as usize, pos + 2 + 6));
-    } else {
-        // 4 byte form: 126 R(x) where R(x) is 18 bits -> 3 bytes
-        if bytes.len() < pos + 1 + 3 {
-            return Err(IOError::NonCanonicalEncoding);
-        }
-        let mut val: usize = 0;
-        for i in 0..3 {
-            let b = bytes[pos + 1 + i];
-            if b < 63 || b > 126 {
-                return Err(IOError::InvalidSizeChar);
-            }
-            val = (val << 6) | ((b - 63) as usize);
-        }
-        if val == 64032 {
-            eprintln!("DEBUG sparse6 parse_n anomaly: pos={} bytes_prefix={:?} triple={:?}", pos, &bytes[..std::cmp::min(bytes.len(),10)], [&bytes[pos+1], &bytes[pos+2], &bytes[pos+3]]);
-        }
-        return Ok((val, pos + 1 + 3));
-    }
-}
-
-fn bits_from_bytes(bytes: &[u8], start: usize) -> Result<Vec<u8>, IOError> {
-    let mut bits = Vec::new();
-    for &b in bytes.iter().skip(start) {
-        if b < 63 || b > 126 {
-            return Err(IOError::InvalidSizeChar);
-        }
-        let val = b - 63;
-        for i in 0..6 {
-            let bit = (val >> (5 - i)) & 1;
-            bits.push(bit);
-        }
-    }
-    Ok(bits)
+    let (n, consumed) = GraphNumberCodec::decode_size(bytes, pos)?;
+    Ok((n, pos + consumed))
 }
 
 // Encoder: produce sparse6 byte chars (63-based) from a graph's bit_vec
 fn to_sparse6_bytes(bit_vec: &[usize], n: usize, header: bool) -> Result<Vec<u8>, IOError> {
-    if n >= (1usize << 36) {
-        return Err(IOError::GraphTooLarge);
-    }
+    // Unified bound check occurs inside GraphNumberCodec::encode_size too, but keep for clarity.
+    if n >= (1usize << 36) { return Err(IOError::GraphTooLarge); }
     let mut out: Vec<u8> = Vec::new();
-    if header {
-        out.extend_from_slice(b">>sparse6<<");
-    }
+    if header { out.extend_from_slice(b">>sparse6<<"); }
     out.push(b':');
-
-    // write N(n) using same encoding as graph6 utils.get_size but extended
-    if n < 63 {
-        out.push((n as u8) + 63);
-    } else if n < (1 << 18) {
-        // 4-byte form: 126 then three 6-bit chars
-        out.push(126);
-        let mut val = n as usize;
-        let mut parts = [0u8; 3];
-        parts[2] = (val & 0x3F) as u8;
-        val >>= 6;
-        parts[1] = (val & 0x3F) as u8;
-        val >>= 6;
-        parts[0] = (val & 0x3F) as u8;
-        for p in parts.iter() {
-            out.push(p + 63);
-        }
-    } else {
-        // 8-byte form: 126,126 then 6-byte 36-bit value
-        out.push(126);
-        out.push(126);
-        let mut val = n as u64;
-        let mut parts = [0u8; 6];
-        for i in (0..6).rev() {
-            parts[i] = (val as u8) & 0x3F;
-            val >>= 6;
-        }
-        for p in parts.iter() {
-            out.push(p + 63);
-        }
-    }
+    let size_enc = GraphNumberCodec::encode_size(n)?;
+    out.extend_from_slice(&size_enc);
 
     // compute k
     let mut k = 1usize;
@@ -215,16 +125,27 @@ pub fn read_sparse6_str<'py>(py: Python<'py>, repr: &str) -> PyResult<Bound<'py,
             pos = 1;
         }
 
-        // Parse N(n)
-    let (n, new_pos) = parse_n(s, pos)?;
-    let pos = new_pos;
+        // Parse N(n) (returns absolute next index)
+        let (n, pos_after) = parse_n(s, pos)?;
+        let pos = pos_after;
 
         // compute k = bits needed to represent n-1
         let k = if n <= 1 { 0 } else { (usize::BITS - (n - 1).leading_zeros()) as usize };
         if pos >= s.len() {
             return Ok::<(Vec<(usize, usize)>, usize), IOError>((Vec::new(), n));
         }
-        let bits = bits_from_bytes(s, pos)?;
+        // let bits = bits_from_bytes(s, pos)?;
+        let mut bits = Vec::new();
+        for &b in s.iter().skip(pos) {
+            if b < 63 || b > 126 {
+                return Err(IOError::InvalidSizeChar);
+            }
+            let val = b - 63;
+            for i in 0..6 {
+                let bit = (val >> (5 - i)) & 1;
+                bits.push(bit);
+            }
+        }
         let mut idx = 0usize;
         let mut v: usize = 0;
         let mut edges: Vec<(usize, usize)> = Vec::new();

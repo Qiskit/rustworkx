@@ -247,9 +247,13 @@ class TestGraph6SizeParse(unittest.TestCase):
         with self.assertRaises(rx.Graph6ParseError):
             rx.parse_graph6_size(bad_hdr)
 
+    # Construct long-form size header for n = 2^36 (one above the allowed max 2^36 - 1).
+    # Spec requires n < 2^36, so this header must raise an overflow/parse error.
     def test_overflow(self):
         overflow_val = 1 << 36
         parts = [0] * 6
+        # Extract 6-bit chunks of val from least-significant to most (val & 0x3F), shifting right each loop.
+        # Fill parts right-to-left so the resulting list is big-endian (highest chunk ends up at parts[0]).
         val = overflow_val
         for i in range(5, -1, -1):
             parts[i] = val & 0x3F
