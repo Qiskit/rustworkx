@@ -1,9 +1,9 @@
+use crate::graph6::{utils, GraphConversion, IOError};
 use crate::{get_edge_iter_with_weights, StablePyGraph};
-use crate::graph6::{utils, IOError, GraphConversion};
+use petgraph::algo;
+use petgraph::graph::NodeIndex;
 use pyo3::prelude::*;
 use pyo3::types::PyAny;
-use petgraph::graph::NodeIndex;
-use petgraph::algo;
 
 /// Directed graph implementation (extracted from graph6.rs)
 #[derive(Debug)]
@@ -16,8 +16,8 @@ impl DiGraph6 {
     pub fn from_d6(repr: &str) -> Result<Self, IOError> {
         let bytes = repr.as_bytes();
         Self::valid_digraph(bytes)?;
-    let (n, n_len) = utils::parse_size(bytes, 1)?;
-    let Some(bit_vec) = Self::build_bitvector(bytes, n, 1 + n_len) else {
+        let (n, n_len) = utils::parse_size(bytes, 1)?;
+        let Some(bit_vec) = Self::build_bitvector(bytes, n, 1 + n_len) else {
             return Err(IOError::NonCanonicalEncoding);
         };
         Ok(Self { bit_vec, n })
@@ -97,7 +97,14 @@ pub fn digraph6_to_pydigraph<'py>(py: Python<'py>, g: &DiGraph6) -> PyResult<Bou
 
 #[pyfunction]
 #[pyo3(signature=(pydigraph))]
-pub fn digraph_write_graph6_to_str<'py>(py: Python<'py>, pydigraph: Py<crate::digraph::PyDiGraph>) -> PyResult<String> {
+/// Encode a directed `PyDiGraph` into the graph6 digraph extension form.
+/// The returned string starts with '&' followed by the size field and data.
+/// Multi edges are collapsed; only 0/1 adjacency is represented. Fails if
+/// n >= 2^36 or encoding would overflow.
+pub fn digraph_write_graph6_to_str<'py>(
+    py: Python<'py>,
+    pydigraph: Py<crate::digraph::PyDiGraph>,
+) -> PyResult<String> {
     let g = pydigraph.borrow(py);
     let n = g.graph.node_count();
     let mut bit_vec = vec![0usize; n * n];
@@ -110,7 +117,14 @@ pub fn digraph_write_graph6_to_str<'py>(py: Python<'py>, pydigraph: Py<crate::di
 
 #[pyfunction]
 #[pyo3(signature=(digraph, path))]
-pub fn digraph_write_graph6(py: Python<'_>, digraph: Py<crate::digraph::PyDiGraph>, path: &str) -> PyResult<()> {
+/// Write a `PyDiGraph` to a file in digraph6 (graph6 with '&' prefix) format.
+/// Supports gzip when the filename ends with `.gz`. Overwrites existing file.
+/// Returns IOError for filesystem failures.
+pub fn digraph_write_graph6(
+    py: Python<'_>,
+    digraph: Py<crate::digraph::PyDiGraph>,
+    path: &str,
+) -> PyResult<()> {
     let s = digraph_write_graph6_to_str(py, digraph)?;
     crate::graph6::to_file(path, &s)
         .map_err(|e| pyo3::exceptions::PyIOError::new_err(format!("IO error: {}", e)))?;

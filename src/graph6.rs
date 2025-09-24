@@ -146,7 +146,11 @@ pub trait SizeCodec {
     fn decode_size(bytes: &[u8], pos: usize) -> Result<(usize, usize), IOError>;
     /// Compute number of bits needed to represent integers in [0, n-1]. (R(x) in spec)
     fn needed_bits(n: usize) -> usize {
-        if n <= 1 { 0 } else { (usize::BITS - (n - 1).leading_zeros()) as usize }
+        if n <= 1 {
+            0
+        } else {
+            (usize::BITS - (n - 1).leading_zeros()) as usize
+        }
     }
 }
 
@@ -156,7 +160,9 @@ pub struct GraphNumberCodec;
 impl GraphNumberCodec {
     #[inline]
     fn validate(n: usize) -> Result<(), IOError> {
-        if n >= (1usize << 36) { return Err(IOError::GraphTooLarge); }
+        if n >= (1usize << 36) {
+            return Err(IOError::GraphTooLarge);
+        }
         Ok(())
     }
 }
@@ -171,13 +177,20 @@ impl SizeCodec for GraphNumberCodec {
             out.push(b'~');
             let mut v = n as u32;
             let mut parts = [0u8; 3];
-            for i in (0..3).rev() { parts[i] = (v & 0x3F) as u8; v >>= 6; }
+            for i in (0..3).rev() {
+                parts[i] = (v & 0x3F) as u8;
+                v >>= 6;
+            }
             out.extend(parts.iter().map(|p| p + 63));
         } else {
-            out.push(b'~'); out.push(b'~');
+            out.push(b'~');
+            out.push(b'~');
             let mut v = n as u64;
             let mut parts = [0u8; 6];
-            for i in (0..6).rev() { parts[i] = (v & 0x3F) as u8; v >>= 6; }
+            for i in (0..6).rev() {
+                parts[i] = (v & 0x3F) as u8;
+                v >>= 6;
+            }
             out.extend(parts.iter().map(|p| p + 63));
         }
         Ok(out)
@@ -192,27 +205,41 @@ impl SizeCodec for GraphNumberCodec {
                 let mut val: u64 = 0;
                 for i in 0..6 {
                     let c = *bytes.get(pos + 2 + i).ok_or(IOError::InvalidSizeChar)?;
-                    if c < 63 { return Err(IOError::InvalidSizeChar); }
+                    if c < 63 {
+                        return Err(IOError::InvalidSizeChar);
+                    }
                     val = (val << 6) | ((c - 63) as u64);
                 }
-                if val >= (1u64 << 36) { return Err(IOError::GraphTooLarge); }
-                if val < (1 << 18) { return Err(IOError::NonCanonicalEncoding); }
+                if val >= (1u64 << 36) {
+                    return Err(IOError::GraphTooLarge);
+                }
+                if val < (1 << 18) {
+                    return Err(IOError::NonCanonicalEncoding);
+                }
                 Ok((val as usize, 8))
             } else {
                 // medium form: '~' + 3 chars
                 let mut val: u32 = 0;
                 for i in 0..3 {
                     let c = *bytes.get(pos + 1 + i).ok_or(IOError::InvalidSizeChar)?;
-                    if c < 63 { return Err(IOError::InvalidSizeChar); }
+                    if c < 63 {
+                        return Err(IOError::InvalidSizeChar);
+                    }
                     val = (val << 6) | ((c - 63) as u32);
                 }
-                if val < 63 { return Err(IOError::NonCanonicalEncoding); }
+                if val < 63 {
+                    return Err(IOError::NonCanonicalEncoding);
+                }
                 Ok((val as usize, 4))
             }
         } else {
-            if first < 63 { return Err(IOError::InvalidSizeChar); }
+            if first < 63 {
+                return Err(IOError::InvalidSizeChar);
+            }
             let n = (first - 63) as usize;
-            if n >= 63 { return Err(IOError::NonCanonicalEncoding); }
+            if n >= 63 {
+                return Err(IOError::NonCanonicalEncoding);
+            }
             Ok((n, 1))
         }
     }
@@ -307,7 +334,9 @@ pub mod write {
 
     fn write_size(repr: &mut String, size: usize) -> Result<(), IOError> {
         let enc = GraphNumberCodec::encode_size(size)?;
-        for b in enc { repr.push(b as char); }
+        for b in enc {
+            repr.push(b as char);
+        }
         Ok(())
     }
 
@@ -456,7 +485,7 @@ impl GraphConversion for Graph6 {
 }
 impl write::WriteGraph for Graph6 {}
 
-use crate::digraph6::{DiGraph6, digraph6_to_pydigraph};
+use crate::digraph6::{digraph6_to_pydigraph, DiGraph6};
 
 // End of combined module
 
@@ -464,7 +493,9 @@ use crate::digraph6::{DiGraph6, digraph6_to_pydigraph};
 fn graph6_to_pygraph<'py>(py: Python<'py>, g: &Graph6) -> PyResult<Bound<'py, PyAny>> {
     let mut graph = StablePyGraph::<Undirected>::with_capacity(g.size(), 0);
     if g.bit_vec.len() < g.size().saturating_mul(g.size()) {
-        return Err(Graph6ParseError::new_err("Bitvector shorter than n*n; invalid internal state"));
+        return Err(Graph6ParseError::new_err(
+            "Bitvector shorter than n*n; invalid internal state",
+        ));
     }
     // add nodes
     for _ in 0..g.size() {
@@ -512,9 +543,12 @@ pub(crate) fn to_file(path: impl AsRef<Path>, content: &str) -> std::io::Result<
 
 #[pyfunction]
 #[pyo3(signature=(repr))]
+/// Parse a single graph6 or digraph6 text line and return a PyGraph (undirected)
+/// or PyDiGraph (directed). Automatically detects directed form starting with
+/// '&'. Raises Graph6ParseError / Graph6OverflowError derived python errors for
+/// malformed or non‑canonical encodings.
 pub fn read_graph6_str<'py>(py: Python<'py>, repr: &str) -> PyResult<Bound<'py, PyAny>> {
-
-    enum ParserResult{
+    enum ParserResult {
         Graph6(Graph6),
         DiGraph6(DiGraph6),
     }
@@ -532,16 +566,20 @@ pub fn read_graph6_str<'py>(py: Python<'py>, repr: &str) -> PyResult<Bound<'py, 
         Ok(ParserResult::DiGraph6(dg)) => digraph6_to_pydigraph(py, &dg),
         Err(io_err) => Err(PyErr::from(io_err)),
     }
-
 }
 
 #[pyfunction]
 #[pyo3(signature=(pygraph))]
+/// Encode an undirected `PyGraph` into a graph6 ASCII string (no trailing
+/// newline). Fails with Graph6OverflowError if the graph has >= 2^36 nodes.
+/// Self‑loops and multi edges are ignored; only simple adjacency is encoded.
 pub fn graph_write_graph6_to_str<'py>(py: Python<'py>, pygraph: Py<PyGraph>) -> PyResult<String> {
     let g = pygraph.borrow(py);
     let n = g.graph.node_count();
     if n >= (1usize << 36) {
-        return Err(Graph6OverflowError::new_err("Graph too large for graph6 encoding"));
+        return Err(Graph6OverflowError::new_err(
+            "Graph too large for graph6 encoding",
+        ));
     }
     // build bit_vec
     let mut bit_vec = vec![0usize; n * n];
@@ -553,12 +591,11 @@ pub fn graph_write_graph6_to_str<'py>(py: Python<'py>, pygraph: Py<PyGraph>) -> 
     Ok(graph6)
 }
 
-/// Parse the size header of a graph6 or digraph6 string.
+/// Parse the size field of a graph6/digraph6 string.
 ///
-/// Returns a tuple (n, size_field_length). For a directed (digraph6) string
-/// starting with '&', pass offset=1. This function enforces canonical
-/// encoding (shortest valid length) per the specification in:
-/// https://users.cecs.anu.edu.au/~bdm/data/formats.txt
+/// Returns (n, length_of_size_field). For digraph6 pass offset=1 to skip '&'.
+/// Enforces canonical (shortest) encoding per the official specification.
+/// Errors if n >= 2^36 or the size field uses a non‑minimal form.
 #[pyfunction]
 #[pyo3(signature=(data, offset=0))]
 pub fn parse_graph6_size(data: &str, offset: usize) -> PyResult<(usize, usize)> {
@@ -567,10 +604,12 @@ pub fn parse_graph6_size(data: &str, offset: usize) -> PyResult<(usize, usize)> 
     Ok((n, consumed))
 }
 
-
 /// Read a graph6 file from disk and return a PyGraph or PyDiGraph
 #[pyfunction]
 #[pyo3(signature=(path))]
+/// Read the first non‑empty line from a file (optionally gzip if handled
+/// externally) and parse it as graph6 or digraph6, returning a PyGraph or
+/// PyDiGraph. Ignores additional lines. Designed for single‑graph files.
 pub fn read_graph6<'py>(py: Python<'py>, path: &str) -> PyResult<Bound<'py, PyAny>> {
     use std::fs;
     let data = fs::read_to_string(path)
@@ -583,6 +622,9 @@ pub fn read_graph6<'py>(py: Python<'py>, path: &str) -> PyResult<Bound<'py, PyAn
 /// Write a PyGraph to a graph6 file
 #[pyfunction]
 #[pyo3(signature=(graph, path))]
+/// Write a `PyGraph` to a file in graph6 format. Supports gzip output when the
+/// path ends with `.gz`. Overwrites existing files. Returns IOError on I/O
+/// failure and Graph6OverflowError if n >= 2^36.
 pub fn graph_write_graph6(py: Python<'_>, graph: Py<PyGraph>, path: &str) -> PyResult<()> {
     let s = graph_write_graph6_to_str(py, graph)?;
     to_file(path, &s)

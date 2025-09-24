@@ -1,0 +1,59 @@
+---
+prelude: >
+  Definition : https://users.cecs.anu.edu.au/~bdm/data/formats.txt
+  Added native read/write support for the ASCII graph encoding formats
+  graph6, digraph6, and sparse6. These enable compact text (and optionally
+  gzip-compressed) serialization of simple graphs and directed graphs with
+  canonical size-field validation and clearer error reporting.
+
+features:
+  - |
+    Introduced built‑in helpers for three related ASCII graph formats:
+
+    graph6
+    - Undirected simple graph encoding using a variable-length size field and
+      6-bit packing of the upper triangular adjacency matrix.
+
+    digraph6
+    - Directed extension of graph6 (string begins with '&'), encoding the full
+      n × n adjacency (row‑major) with the same 6‑bit packing.
+
+    sparse6
+    - Space‑efficient encoding for very sparse undirected graphs using runs of
+      variable-length integers instead of a dense upper triangle.
+
+    Unified size codec
+    - A shared GraphNumberCodec enforces canonical size (N(n)) encoding across
+      graph6, digraph6, and sparse6, preventing divergence in edge cases.
+      Exposed indirectly via parse_graph6_size() for testing and tooling.
+
+    Error handling
+    - Added/used Python exceptions: Graph6ParseError, Graph6OverflowError,
+      Graph6PanicError (panic guard for sparse6 parser).
+    - Non‑canonical encodings, invalid characters, and oversize graphs fail
+      fast with deterministic error types instead of panics.
+
+    Gzip support
+    - graph_write_graph6 / digraph_write_graph6 transparently gzip output
+      when the destination filename ends with ".gz".
+
+    Testing & validation
+    - Round‑trip tests for undirected, directed, and sparse variants.
+    - Boundary tests for size field forms (short, medium, long) and overflow.
+    - Sparse6 round‑trip on small disconnected components.
+
+    Developer notes
+    - Only simple (0/1) adjacency is serialized; parallel edges and weights
+      are collapsed.
+    - parse_graph6_size() enforces minimal encoding; use offset=1 for
+      directed strings that start with '&'.
+
+issues:
+  - |
+    Original feature request / discussion: https://github.com/Qiskit/rustworkx/issues/1496
+    Implemented in PR: https://github.com/Qiskit/rustworkx/pull/1500
+upgrade:
+  - |
+    Parsing now rejects non‑canonical size encodings and any n >= 2^36 with
+    explicit typed errors. If prior ad‑hoc tooling accepted such inputs, they
+    may now raise Graph6ParseError or Graph6OverflowError.
