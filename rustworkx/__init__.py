@@ -13,6 +13,7 @@ import functools
 
 from .rustworkx import *
 
+
 # flake8: noqa
 import rustworkx.visit
 
@@ -2310,4 +2311,8 @@ def write_graphml(graph, path, /, keys=None, compression=None):
         If not specified, no compression is applied.
     :raises RuntimeError: when an error is encountered while writing the GraphML file.
     """
+    raise TypeError(f"Invalid Input Type {type(graph)} for graph")
+
+@_rustworkx_dispatch
+def write_graph6(graph, path):
     raise TypeError(f"Invalid Input Type {type(graph)} for graph")
