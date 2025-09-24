@@ -716,14 +716,14 @@ fn rustworkx(py: Python<'_>, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(graph_write_graphml))?;
     m.add_wrapped(wrap_pyfunction!(digraph_write_graphml))?;
     m.add_wrapped(wrap_pyfunction!(read_graph6_str))?;
-    m.add_wrapped(wrap_pyfunction!(write_graph6_from_pygraph))?;
-    m.add_wrapped(wrap_pyfunction!(write_graph6_from_pydigraph))?;
+    m.add_wrapped(wrap_pyfunction!(graph_write_graph6_to_str))?;
+    m.add_wrapped(wrap_pyfunction!(digraph_write_graph6_to_str))?;
     m.add_wrapped(wrap_pyfunction!(read_graph6))?;
     m.add_wrapped(wrap_pyfunction!(graph_write_graph6))?;
     m.add_wrapped(wrap_pyfunction!(digraph_write_graph6))?;
     m.add_wrapped(wrap_pyfunction!(parse_graph6_size))?;
     m.add_wrapped(wrap_pyfunction!(read_sparse6_str))?;
-    m.add_wrapped(wrap_pyfunction!(write_sparse6_from_pygraph))?;
+    m.add_wrapped(wrap_pyfunction!(graph_write_sparse6_to_str))?;
     m.add_wrapped(wrap_pyfunction!(digraph_node_link_json))?;
     m.add_wrapped(wrap_pyfunction!(graph_node_link_json))?;
     m.add_wrapped(wrap_pyfunction!(from_node_link_json_file))?;

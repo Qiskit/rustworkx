@@ -45,13 +45,13 @@ class TestGraph6(unittest.TestCase):
         self.assertEqual(graph.num_edges(), 1)
         self.assertTrue(graph.has_edge(1, 0))
 
-    def test_write_graph6_from_pygraph(self):
+    def test_graph_write_graph6_to_str(self):
         """Test writing a PyGraph to a graph6 string."""
         graph = rx.generators.path_graph(2)
-        g6_str = rx.write_graph6_from_pygraph(graph)
+        g6_str = rx.graph_write_graph6_to_str(graph)
         self.assertEqual(g6_str, "A_")
 
-    def test_write_graph6_from_pydigraph(self):
+    def test_digraph_write_graph6_to_str(self):
         """Test writing a PyDiGraph to a graph6 string."""
         # directed_path_graph(2) yields edge 0->1; we need 1->0 so build via generators then reverse
         base = rx.generators.directed_path_graph(2)
@@ -59,13 +59,13 @@ class TestGraph6(unittest.TestCase):
         graph.add_nodes_from(range(base.num_nodes()))
         # Add reversed edge to match expected encoding &AG (edge 1->0)
         graph.add_edge(1, 0, None)
-        g6_str = rx.write_graph6_from_pydigraph(graph)
+        g6_str = rx.digraph_write_graph6_to_str(graph)
         self.assertEqual(g6_str, "&AG")
 
     def test_roundtrip_undirected(self):
         """Test roundtrip for an undirected graph."""
         graph = rx.generators.path_graph(4)
-        g6_str = rx.write_graph6_from_pygraph(graph)
+        g6_str = rx.graph_write_graph6_to_str(graph)
         new_graph = rx.read_graph6_str(g6_str)
         self.assertEqual(graph.num_nodes(), new_graph.num_nodes())
         self.assertEqual(graph.num_edges(), new_graph.num_edges())
@@ -74,7 +74,7 @@ class TestGraph6(unittest.TestCase):
     def test_roundtrip_directed(self):
         """Test roundtrip for a directed graph."""
         graph = rx.generators.directed_path_graph(4)
-        g6_str = rx.write_graph6_from_pydigraph(graph)
+        g6_str = rx.digraph_write_graph6_to_str(graph)
         new_graph = rx.read_graph6_str(g6_str)
         self.assertEqual(graph.num_nodes(), new_graph.num_nodes())
         self.assertEqual(graph.num_edges(), new_graph.num_edges())
@@ -117,7 +117,7 @@ class TestGraph6(unittest.TestCase):
     def test_empty_graph(self):
         """Test writing and reading an empty graph."""
         graph = rx.PyGraph()
-        g6_str = rx.write_graph6_from_pygraph(graph)
+        g6_str = rx.graph_write_graph6_to_str(graph)
         new_graph = rx.read_graph6_str(g6_str)
         self.assertEqual(new_graph.num_nodes(), 0)
         self.assertEqual(new_graph.num_edges(), 0)
@@ -126,7 +126,7 @@ class TestGraph6(unittest.TestCase):
         """Test a graph with nodes but no edges."""
         graph = rx.PyGraph()
         graph.add_nodes_from(range(5))
-        g6_str = rx.write_graph6_from_pygraph(graph)
+        g6_str = rx.graph_write_graph6_to_str(graph)
         new_graph = rx.read_graph6_str(g6_str)
         self.assertEqual(new_graph.num_nodes(), 5)
         self.assertEqual(new_graph.num_edges(), 0)
@@ -155,7 +155,7 @@ class TestGraph6FormatExtras(unittest.TestCase):
         g = rx.PyGraph()
         g.add_nodes_from([None, None])
         g.add_edge(0, 1, None)
-        s = rx.write_graph6_from_pygraph(g)
+        s = rx.graph_write_graph6_to_str(g)
         new_g = rx.read_graph6_str(s)
         self.assertIsInstance(new_g, rx.PyGraph)
         self.assertEqual(new_g.num_nodes(), 2)
@@ -165,7 +165,7 @@ class TestGraph6FormatExtras(unittest.TestCase):
         g = rx.PyGraph()
         g.add_nodes_from([None, None, None])
         g.add_edges_from([(0, 1, None), (1, 2, None), (0, 2, None)])
-        s = rx.write_graph6_from_pygraph(g)
+        s = rx.graph_write_graph6_to_str(g)
         new_g = rx.read_graph6_str(s)
         self.assertIsInstance(new_g, rx.PyGraph)
         self.assertEqual(new_g.num_nodes(), 3)
@@ -176,7 +176,7 @@ class TestGraph6FormatExtras(unittest.TestCase):
         g = rx.PyGraph()
         g.add_nodes_from([None, None, None, None])
         g.add_edges_from([(0, 1, None), (2, 3, None)])
-        s = rx.write_graph6_from_pygraph(g)
+        s = rx.graph_write_graph6_to_str(g)
         with tempfile.TemporaryDirectory() as td:
             p = pathlib.Path(td) / 'u.g6'
             rx.graph_write_graph6(g, str(p))
@@ -184,7 +184,7 @@ class TestGraph6FormatExtras(unittest.TestCase):
         self.assertIsInstance(g2, rx.PyGraph)
         self.assertEqual(g2.num_nodes(), 4)
         self.assertEqual(g2.num_edges(), 2)
-        self.assertEqual(rx.write_graph6_from_pygraph(g2), s)
+        self.assertEqual(rx.graph_write_graph6_to_str(g2), s)
 
     def test_invalid_string_format(self):
         with self.assertRaises(Exception):

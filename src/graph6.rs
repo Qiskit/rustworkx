@@ -295,7 +295,7 @@ pub mod write {
     /// Trait to write graphs into graph 6 formatted strings
     pub trait WriteGraph: GraphConversion {
         fn write_graph(&self) -> Result<String, IOError> {
-            write_graph6(self.bit_vec().to_vec(), self.size(), self.is_directed())
+            to_file(self.bit_vec().to_vec(), self.size(), self.is_directed())
         }
     }
 
@@ -330,7 +330,7 @@ pub mod write {
         Ok(())
     }
 
-    pub fn write_graph6(bit_vec: Vec<usize>, n: usize, is_directed: bool) -> Result<String, IOError> {
+    pub fn to_file(bit_vec: Vec<usize>, n: usize, is_directed: bool) -> Result<String, IOError> {
         // enforce graph6 maximum (2^36 - 1) like sparse6
         if n >= (1usize << 36) {
             return Err(IOError::GraphTooLarge);
@@ -456,12 +456,12 @@ impl GraphConversion for Graph6 {
 }
 impl write::WriteGraph for Graph6 {}
 
-use crate::digraph6::{DiGraph6, digraph_to_pydigraph};
+use crate::digraph6::{DiGraph6, digraph6_to_pydigraph};
 
 // End of combined module
 
 /// Convert internal Graph (undirected) to PyGraph
-fn graph_to_pygraph<'py>(py: Python<'py>, g: &Graph6) -> PyResult<Bound<'py, PyAny>> {
+fn graph6_to_pygraph<'py>(py: Python<'py>, g: &Graph6) -> PyResult<Bound<'py, PyAny>> {
     let mut graph = StablePyGraph::<Undirected>::with_capacity(g.size(), 0);
     if g.bit_vec.len() < g.size().saturating_mul(g.size()) {
         return Err(Graph6ParseError::new_err("Bitvector shorter than n*n; invalid internal state"));
@@ -528,8 +528,8 @@ pub fn read_graph6_str<'py>(py: Python<'py>, repr: &str) -> PyResult<Bound<'py, 
     };
 
     match result {
-        Ok(ParserResult::Graph6(g)) => graph_to_pygraph(py, &g),
-        Ok(ParserResult::DiGraph6(dg)) => digraph_to_pydigraph(py, &dg),
+        Ok(ParserResult::Graph6(g)) => graph6_to_pygraph(py, &g),
+        Ok(ParserResult::DiGraph6(dg)) => digraph6_to_pydigraph(py, &dg),
         Err(io_err) => Err(PyErr::from(io_err)),
     }
 
@@ -537,7 +537,7 @@ pub fn read_graph6_str<'py>(py: Python<'py>, repr: &str) -> PyResult<Bound<'py, 
 
 #[pyfunction]
 #[pyo3(signature=(pygraph))]
-pub fn write_graph6_from_pygraph<'py>(py: Python<'py>, pygraph: Py<PyGraph>) -> PyResult<String> {
+pub fn graph_write_graph6_to_str<'py>(py: Python<'py>, pygraph: Py<PyGraph>) -> PyResult<String> {
     let g = pygraph.borrow(py);
     let n = g.graph.node_count();
     if n >= (1usize << 36) {
@@ -549,7 +549,7 @@ pub fn write_graph6_from_pygraph<'py>(py: Python<'py>, pygraph: Py<PyGraph>) -> 
         bit_vec[i * n + j] = 1;
         bit_vec[j * n + i] = 1;
     }
-    let graph6 = write::write_graph6(bit_vec, n, false)?;
+    let graph6 = write::to_file(bit_vec, n, false)?;
     Ok(graph6)
 }
 
@@ -584,7 +584,7 @@ pub fn read_graph6<'py>(py: Python<'py>, path: &str) -> PyResult<Bound<'py, PyAn
 #[pyfunction]
 #[pyo3(signature=(graph, path))]
 pub fn graph_write_graph6(py: Python<'_>, graph: Py<PyGraph>, path: &str) -> PyResult<()> {
-    let s = write_graph6_from_pygraph(py, graph)?;
+    let s = graph_write_graph6_to_str(py, graph)?;
     to_file(path, &s)
         .map_err(|e| PyErr::new::<pyo3::exceptions::PyIOError, _>(format!("IO error: {}", e)))?;
     Ok(())

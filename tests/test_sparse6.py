@@ -31,7 +31,7 @@ class TestSparse6(unittest.TestCase):
             g.add_node(None)
         g.add_edge(0,1,None)
         g.add_edge(2,3,None)
-        s = rx.write_sparse6_from_pygraph(g, header=False)
+        s = rx.graph_write_sparse6_to_str(g, header=False)
         g2 = rx.read_sparse6_str(s)
         self.assertEqual(g2.num_nodes(), g.num_nodes())
         self.assertEqual(g2.num_edges(), g.num_edges())

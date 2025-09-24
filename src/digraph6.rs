@@ -69,7 +69,7 @@ impl GraphConversion for DiGraph6 {
 }
 
 /// Convert internal DiGraph to PyDiGraph
-pub fn digraph_to_pydigraph<'py>(py: Python<'py>, g: &DiGraph6) -> PyResult<Bound<'py, PyAny>> {
+pub fn digraph6_to_pydigraph<'py>(py: Python<'py>, g: &DiGraph6) -> PyResult<Bound<'py, PyAny>> {
     use crate::graph6::GraphConversion as _;
     let mut graph = StablePyGraph::<petgraph::Directed>::with_capacity(g.size(), 0);
     for _ in 0..g.size() {
@@ -97,23 +97,21 @@ pub fn digraph_to_pydigraph<'py>(py: Python<'py>, g: &DiGraph6) -> PyResult<Boun
 
 #[pyfunction]
 #[pyo3(signature=(pydigraph))]
-pub fn write_graph6_from_pydigraph(pydigraph: Py<crate::digraph::PyDiGraph>) -> PyResult<String> {
-    Python::with_gil(|py| {
-        let g = pydigraph.borrow(py);
-        let n = g.graph.node_count();
-        let mut bit_vec = vec![0usize; n * n];
-        for (i, j, _w) in get_edge_iter_with_weights(&g.graph) {
-            bit_vec[i * n + j] = 1;
-        }
-        let graph6 = crate::graph6::write::write_graph6(bit_vec, n, true)?;
-        Ok(graph6)
-    })
+pub fn digraph_write_graph6_to_str<'py>(py: Python<'py>, pydigraph: Py<crate::digraph::PyDiGraph>) -> PyResult<String> {
+    let g = pydigraph.borrow(py);
+    let n = g.graph.node_count();
+    let mut bit_vec = vec![0usize; n * n];
+    for (i, j, _w) in get_edge_iter_with_weights(&g.graph) {
+        bit_vec[i * n + j] = 1;
+    }
+    let graph6 = crate::graph6::write::to_file(bit_vec, n, true)?;
+    Ok(graph6)
 }
 
 #[pyfunction]
 #[pyo3(signature=(digraph, path))]
-pub fn digraph_write_graph6(digraph: Py<crate::digraph::PyDiGraph>, path: &str) -> PyResult<()> {
-    let s = write_graph6_from_pydigraph(digraph)?;
+pub fn digraph_write_graph6(py: Python<'_>, digraph: Py<crate::digraph::PyDiGraph>, path: &str) -> PyResult<()> {
+    let s = digraph_write_graph6_to_str(py, digraph)?;
     crate::graph6::to_file(path, &s)
         .map_err(|e| pyo3::exceptions::PyIOError::new_err(format!("IO error: {}", e)))?;
     Ok(())

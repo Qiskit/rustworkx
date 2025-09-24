@@ -93,21 +93,19 @@ fn to_sparse6_bytes(bit_vec: &[usize], n: usize, header: bool) -> Result<Vec<u8>
 
 #[pyfunction]
 #[pyo3(signature=(pygraph, header=true))]
-pub fn write_sparse6_from_pygraph(pygraph: Py<PyGraph>, header: bool) -> PyResult<String> {
-    Python::with_gil(|py| {
-        let g = pygraph.borrow(py);
-        let n = g.graph.node_count();
-        let mut bit_vec = vec![0usize; n * n];
-        for (i, j, _w) in crate::get_edge_iter_with_weights(&g.graph) {
-            bit_vec[i * n + j] = 1;
-            bit_vec[j * n + i] = 1;
-        }
-        let bytes = to_sparse6_bytes(&bit_vec, n, header)
-            .map_err(|e| pyo3::exceptions::PyValueError::new_err(format!("sparse6 encode error: {:?}", e)))?;
-        // convert bytes to string
-        let s = String::from_utf8(bytes).map_err(|e| pyo3::exceptions::PyValueError::new_err(format!("utf8: {}", e)))?;
-        Ok(s)
-    })
+pub fn graph_write_sparse6_to_str<'py>(py: Python<'py>, pygraph: Py<PyGraph>, header: bool) -> PyResult<String> {
+    let g = pygraph.borrow(py);
+    let n = g.graph.node_count();
+    let mut bit_vec = vec![0usize; n * n];
+    for (i, j, _w) in crate::get_edge_iter_with_weights(&g.graph) {
+        bit_vec[i * n + j] = 1;
+        bit_vec[j * n + i] = 1;
+    }
+    let bytes = to_sparse6_bytes(&bit_vec, n, header)
+        .map_err(|e| pyo3::exceptions::PyValueError::new_err(format!("sparse6 encode error: {:?}", e)))?;
+    // convert bytes to string
+    let s = String::from_utf8(bytes).map_err(|e| pyo3::exceptions::PyValueError::new_err(format!("utf8: {}", e)))?;
+    Ok(s)
 }
 
 #[pyfunction]

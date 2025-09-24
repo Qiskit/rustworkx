@@ -2314,5 +2314,5 @@ def write_graphml(graph, path, /, keys=None, compression=None):
     raise TypeError(f"Invalid Input Type {type(graph)} for graph")
 
 @_rustworkx_dispatch
-def write_graph6_file(graph, path):
+def write_graph6(graph, path):
     raise TypeError(f"Invalid Input Type {type(graph)} for graph")
