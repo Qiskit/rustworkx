@@ -2312,6 +2312,7 @@ def write_graphml(graph, path, /, keys=None, compression=None):
     """
     raise TypeError(f"Invalid Input Type {type(graph)} for graph")
 
+
 @_rustworkx_dispatch
 def bfs_layers(graph, sources=None):
     """Return the BFS layers of a graph as a list of lists.
