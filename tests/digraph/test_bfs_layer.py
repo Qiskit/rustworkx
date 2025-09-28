@@ -4,16 +4,7 @@ import rustworkx
 
 class TestDiGraphBfsLayers(unittest.TestCase):
     def setUp(self):
-        self.graph = rustworkx.PyDiGraph()
-        self.graph.extend_from_edge_list(
-            [
-                (0, 1),
-                (1, 2),
-                (2, 3),
-                (0, 4),
-                (4, 5),
-            ]
-        )
+        self.graph = rustworkx.generators.directed_path_graph(6)
 
     def test_simple_chain(self):
         layers = rustworkx.digraph_bfs_layers(self.graph, [0])

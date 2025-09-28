@@ -4,15 +4,7 @@ import rustworkx
 
 class TestGraphBfsLayers(unittest.TestCase):
     def setUp(self):
-        self.graph = rustworkx.PyGraph()
-        self.graph.extend_from_edge_list(
-            [
-                (0, 1),
-                (1, 2),
-                (2, 3),
-                (3, 4),
-            ]
-        )
+        self.graph = rustworkx.generators.path_graph(5)
 
     def test_simple_path(self):
         layers = rustworkx.graph_bfs_layers(self.graph, [0])

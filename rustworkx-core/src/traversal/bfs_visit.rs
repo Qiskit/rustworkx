@@ -254,7 +254,7 @@ where
     I: IntoIterator<Item = G::NodeId>,
     G::NodeId: Copy + std::hash::Hash + Eq,
 {
-    let mut visited = std::collections::HashSet::new();
+    let mut visited = hashbrown::HashSet::new();
     let mut current_layer: Vec<G::NodeId> = sources.into_iter().collect();
 
     for &node in &current_layer {
