@@ -677,5 +677,5 @@ def write_graphml(
 ) -> None: ...
 def bfs_layers(
     graph: PyGraph | PyDiGraph,
-    source: Sequence[int] | None = ...,
+    sources: Sequence[int] | None = ...,
 ) -> list[list[int]]: ...

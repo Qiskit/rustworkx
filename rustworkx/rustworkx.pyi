@@ -1083,12 +1083,12 @@ def graph_dfs_search(
     visitor: _DFSVisitor | None = ...,
 ) -> None: ...
 def digraph_bfs_layers(
-    graph: PyDiGraph,
-    source: Sequence[int] | None = ...,
+    digraph: PyDiGraph,
+    sources: Sequence[int] | None = ...,
 ) -> list[list[int]]: ...
 def graph_bfs_layers(
     graph: PyGraph,
-    source: Sequence[int] | None = ...,
+    sources: Sequence[int] | None = ...,
 ) -> list[list[int]]: ...
 def digraph_dijkstra_search(
     graph: PyDiGraph,
