@@ -1119,6 +1119,18 @@ pub fn graph_dijkstra_search(
     Ok(())
 }
 
+/// Return the BFS layers of a PyGraph as a list of lists.
+/// 
+/// :param graph: The input PyGraph to use for BFS traversal
+/// :type graph: PyGraph
+/// :param sources: An optional list of node indices to use as the starting
+///     nodes for the BFS traversal. If not specified, all nodes in the graph
+///     will be used as sources.
+/// :type sources: list[int] or None
+/// 
+/// :returns: A list of lists where each inner list contains the node indices
+///     at that BFS layer/level from the source nodes
+/// :rtype: list[list[int]]
 #[pyfunction]
 #[pyo3(signature = (graph, sources=None))]
 pub fn graph_bfs_layers(
@@ -1144,6 +1156,18 @@ pub fn graph_bfs_layers(
     py_layers.into_py_any(py)
 }
 
+/// Return the BFS layers of a PyDiGraph as a list of lists.
+/// 
+/// :param graph: The input PyDiGraph to use for BFS traversal
+/// :type graph: PyDiGraph
+/// :param sources: An optional list of node indices to use as the starting
+///     nodes for the BFS traversal. If not specified, all nodes in the graph
+///     will be used as sources.
+/// :type sources: list[int] or None
+/// 
+/// :returns: A list of lists where each inner list contains the node indices
+///     at that BFS layer/level from the source nodes
+/// :rtype: list[list[int]]
 #[pyfunction]
 #[pyo3(signature = (digraph, sources=None))]
 pub fn digraph_bfs_layers(
