@@ -675,3 +675,7 @@ def write_graphml(
     keys: list[GraphMLKey] | None = ...,
     compression: str | None = ...,
 ) -> None: ...
+def bfs_layers(
+    graph: PyGraph | PyDiGraph,
+    source: Sequence[int] | None = ...,
+) -> list[list[int]]: ...
