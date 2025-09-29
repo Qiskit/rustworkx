@@ -2283,5 +2283,49 @@ def single_source_all_shortest_paths(
 
 @_rustworkx_dispatch
 def write_graphml(graph, path, /, keys=None, compression=None):
-    """ """
+    """Write a graph to a file in GraphML format.
+
+    GraphML is a comprehensive and easy-to-use file format for graphs. It consists
+    of a language core to describe the structural properties of a graph and a flexible
+    extension mechanism to add application-specific data.
+
+    For more information see:
+    http://graphml.graphdrawing.org/
+
+    .. note::
+
+        This implementation does not support mixed graphs (directed and undirected edges together),
+        hyperedges, nested graphs, or ports.
+
+    .. note::
+
+        GraphML attributes with `graph` domain are written from the graph's attrs field.
+
+    :param graph: The graph to write to the file. This can be a
+        :class:`~rustworkx.PyGraph` or :class:`~rustworkx.PyDiGraph`.
+    :param path: The path of the output file to write.
+    :param keys: Optional list of key definitions for GraphML attributes.
+        If not specified, keys will be inferred from the graph data.
+    :param compression: Optional compression format for the output file.
+        If not specified, no compression is applied.
+    :raises RuntimeError: when an error is encountered while writing the GraphML file.
+    """
+    raise TypeError(f"Invalid Input Type {type(graph)} for graph")
+
+
+@_rustworkx_dispatch
+def bfs_layers(graph, sources=None):
+    """Return the BFS layers of a graph as a list of lists.
+
+    :param graph: The input graph to use. Can either be a
+        :class:`~rustworkx.PyGraph` or :class:`~rustworkx.PyDiGraph`
+    :param sources: An optional list of node indices to use as the starting
+        nodes for the BFS traversal. If not specified, all nodes in the graph
+        will be used as sources.
+    :type sources: list[int]
+
+    :returns: A list of lists where each inner list contains the node indices
+        at that BFS layer/level from the source nodes
+    :rtype: list[list[int]]
+    """
     raise TypeError(f"Invalid Input Type {type(graph)} for graph")

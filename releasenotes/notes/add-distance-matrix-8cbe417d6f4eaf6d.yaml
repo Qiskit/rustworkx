@@ -1,0 +1,6 @@
+---
+features:
+  - |
+    Added a new function ``rustworkx_core::shortest_path::distance_matrix``
+    to rustworkx-core. This function is the equivalent of :func:`.distance_matrix`
+    for the Python library, but as a generic Rust function for rustworkx-core.

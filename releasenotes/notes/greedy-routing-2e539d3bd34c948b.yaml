@@ -1,0 +1,10 @@
+features:
+  - |
+    Adds the new ``geometry`` module to ``rustworkx_core``.
+    This module mainly defines the greedy routing algorithm which is useful when each node has a position in a metric space.
+    The ``greedy_routing`` function returns, if it exists, the greedy path between two nodes and its total length in the metric space.
+    The ``greedy_routing_success_rate`` returns the proportion of pairs of nodes for which the greedy path reaches the destination.
+    The greedy routing algorithm may be used with any distance.
+    The ``geometry`` module implements many distances: ``angular_distance``, ``euclidean_distance``, ``hyperboloid_hyperbolic_distance``, ``lp_distance``, ``maximum_distance`` and ``polar_hyperbolic_distance``.
+  - |
+    Adds the function :func:`.hyperbolic_greedy_routing` that performs the greedy routing algorithm in the hyperbolic space, and the function :func:`.hyperbolic_greedy_success_rate` that computes the proportion of pairs of nodes for which the greedy path reaches the destination.

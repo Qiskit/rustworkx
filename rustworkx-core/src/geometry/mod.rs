@@ -10,18 +10,13 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-use ndarray::prelude::*;
-use petgraph::EdgeType;
+//! Module for graphs with vertices embedded in a metric space.
 
-use crate::StablePyGraph;
+mod distances;
+mod greedy_routing;
 
-use rustworkx_core::shortest_path;
-
-pub fn compute_distance_matrix<Ty: EdgeType + Sync>(
-    graph: &StablePyGraph<Ty>,
-    parallel_threshold: usize,
-    as_undirected: bool,
-    null_value: f64,
-) -> Array2<f64> {
-    shortest_path::distance_matrix(graph, parallel_threshold, as_undirected, null_value)
-}
+pub use distances::{
+    angular_distance, euclidean_distance, hyperboloid_hyperbolic_distance, lp_distance,
+    maximum_distance, polar_hyperbolic_distance, IncompatiblePointsError,
+};
+pub use greedy_routing::{greedy_routing, greedy_routing_success_rate, NodeNotReachedError};
