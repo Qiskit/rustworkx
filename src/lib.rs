@@ -21,6 +21,7 @@ mod dominance;
 mod dot_parser;
 mod dot_utils;
 mod generators;
+mod geometry;
 mod graph;
 mod graphml;
 mod isomorphism;
@@ -58,6 +59,7 @@ use line_graph::*;
 use link_analysis::*;
 
 use dot_parser::*;
+use geometry::*;
 use matching::*;
 use planar::*;
 use random_graph::*;
@@ -541,6 +543,8 @@ fn rustworkx(py: Python<'_>, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(digraph_longest_simple_path))?;
     m.add_wrapped(wrap_pyfunction!(graph_all_simple_paths))?;
     m.add_wrapped(wrap_pyfunction!(digraph_all_simple_paths))?;
+    m.add_wrapped(wrap_pyfunction!(hyperbolic_greedy_routing))?;
+    m.add_wrapped(wrap_pyfunction!(hyperbolic_greedy_success_rate))?;
     m.add_wrapped(wrap_pyfunction!(graph_dijkstra_shortest_paths))?;
     m.add_wrapped(wrap_pyfunction!(digraph_dijkstra_shortest_paths))?;
     m.add_wrapped(wrap_pyfunction!(graph_all_shortest_paths))?;
