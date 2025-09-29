@@ -24,7 +24,7 @@ use petgraph::visit::Reversed;
 use petgraph::visit::VisitMap;
 use petgraph::visit::Visitable;
 
-pub use bfs_visit::{BfsEvent, breadth_first_search};
+pub use bfs_visit::{BfsEvent, bfs_layers, breadth_first_search};
 pub use dfs_edges::dfs_edges;
 pub use dfs_visit::{DfsEvent, depth_first_search};
 pub use dijkstra_visit::{DijkstraEvent, dijkstra_search};
