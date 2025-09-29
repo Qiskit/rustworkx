@@ -285,7 +285,7 @@ def local_complement(
 def digraph_all_simple_paths(
     graph: PyDiGraph,
     origin: int,
-    to: int,
+    to: int | Iterable[int],
     /,
     min_depth: int | None = ...,
     cutoff: int | None = ...,
@@ -293,7 +293,7 @@ def digraph_all_simple_paths(
 def graph_all_simple_paths(
     graph: PyGraph,
     origin: int,
-    to: int,
+    to: int | Iterable[int],
     /,
     min_depth: int | None = ...,
     cutoff: int | None = ...,
@@ -751,6 +751,22 @@ def from_node_link_json_file(
     node_attrs: Callable[[dict[str, str]], _S] | None = ...,
     edge_attrs: Callable[[dict[str, str]], _T] | None = ...,
 ) -> PyDiGraph[_S, _T] | PyGraph[_S, _T]: ...
+def from_dot(
+    dot_str: str,
+) -> PyDiGraph[_S, _T] | PyGraph[_S, _T]: ...
+
+# Geometry
+
+def hyperbolic_greedy_routing(
+    graph: PyGraph[_S, _T],
+    pos: list[list[float]],
+    source: int,
+    destination: int,
+) -> tuple[list[int], float] | None: ...
+def hyperbolic_greedy_success_rate(
+    graph: PyGraph[_S, _T],
+    pos: list[list[float]],
+) -> float: ...
 
 # Shortest Path
 
@@ -1079,6 +1095,14 @@ def graph_dfs_search(
     source: Sequence[int] | None = ...,
     visitor: _DFSVisitor | None = ...,
 ) -> None: ...
+def digraph_bfs_layers(
+    digraph: PyDiGraph,
+    sources: Sequence[int] | None = ...,
+) -> list[list[int]]: ...
+def graph_bfs_layers(
+    graph: PyGraph,
+    sources: Sequence[int] | None = ...,
+) -> list[list[int]]: ...
 def digraph_dijkstra_search(
     graph: PyDiGraph,
     source: Sequence[int] | None = ...,

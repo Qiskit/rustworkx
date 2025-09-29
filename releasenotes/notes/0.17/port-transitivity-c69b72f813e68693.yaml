@@ -1,0 +1,4 @@
+---
+features:
+  - |
+    Add function to rustworkx-core to compute undirected and directed graph transitivity. This ports the algorithm that was implemented in rustworkx Python API.

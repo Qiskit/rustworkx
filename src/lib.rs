@@ -18,8 +18,10 @@ mod connectivity;
 mod dag_algo;
 mod digraph;
 mod dominance;
+mod dot_parser;
 mod dot_utils;
 mod generators;
+mod geometry;
 mod graph;
 mod graphml;
 mod isomorphism;
@@ -56,6 +58,8 @@ use layout::*;
 use line_graph::*;
 use link_analysis::*;
 
+use dot_parser::*;
+use geometry::*;
 use matching::*;
 use planar::*;
 use random_graph::*;
@@ -539,6 +543,8 @@ fn rustworkx(py: Python<'_>, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(digraph_longest_simple_path))?;
     m.add_wrapped(wrap_pyfunction!(graph_all_simple_paths))?;
     m.add_wrapped(wrap_pyfunction!(digraph_all_simple_paths))?;
+    m.add_wrapped(wrap_pyfunction!(hyperbolic_greedy_routing))?;
+    m.add_wrapped(wrap_pyfunction!(hyperbolic_greedy_success_rate))?;
     m.add_wrapped(wrap_pyfunction!(graph_dijkstra_shortest_paths))?;
     m.add_wrapped(wrap_pyfunction!(digraph_dijkstra_shortest_paths))?;
     m.add_wrapped(wrap_pyfunction!(graph_all_shortest_paths))?;
@@ -662,6 +668,8 @@ fn rustworkx(py: Python<'_>, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(steiner_tree::steiner_tree))?;
     m.add_wrapped(wrap_pyfunction!(digraph_dfs_search))?;
     m.add_wrapped(wrap_pyfunction!(graph_dfs_search))?;
+    m.add_wrapped(wrap_pyfunction!(digraph_bfs_layers))?;
+    m.add_wrapped(wrap_pyfunction!(graph_bfs_layers))?;
     m.add_wrapped(wrap_pyfunction!(articulation_points))?;
     m.add_wrapped(wrap_pyfunction!(bridges))?;
     m.add_wrapped(wrap_pyfunction!(biconnected_components))?;
@@ -679,6 +687,7 @@ fn rustworkx(py: Python<'_>, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(parse_node_link_json))?;
     m.add_wrapped(wrap_pyfunction!(pagerank))?;
     m.add_wrapped(wrap_pyfunction!(hits))?;
+    m.add_wrapped(wrap_pyfunction!(from_dot))?;
     m.add_class::<digraph::PyDiGraph>()?;
     m.add_class::<graph::PyGraph>()?;
     m.add_class::<toposort::TopologicalSorter>()?;
@@ -710,5 +719,21 @@ fn rustworkx(py: Python<'_>, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_class::<Type>()?;
     m.add_class::<KeySpec>()?;
     m.add_wrapped(wrap_pymodule!(generators::generators))?;
+    #[cfg(target_os = "emscripten")]
+    setup_rayon_for_pyodide();
     Ok(())
+}
+
+#[cfg(target_os = "emscripten")]
+static PYODIDE_INIT: std::sync::Once = std::sync::Once::new();
+
+#[cfg(target_os = "emscripten")]
+pub fn setup_rayon_for_pyodide() {
+    PYODIDE_INIT.call_once(|| {
+        rayon::ThreadPoolBuilder::new()
+            .num_threads(1)
+            .use_current_thread()
+            .build_global()
+            .expect("failing setting up threads for pyodide");
+    });
 }

@@ -14,7 +14,7 @@ import numpy as np
 import numpy.typing as npt
 
 from typing import Generic, Any, Callable, overload
-from collections.abc import Iterator, Sequence
+from collections.abc import Iterable, Iterator, Sequence
 
 if sys.version_info >= (3, 13):
     from typing import TypeVar
@@ -169,7 +169,10 @@ from .rustworkx import GraphMLKey as GraphMLKey
 from .rustworkx import digraph_node_link_json as digraph_node_link_json
 from .rustworkx import graph_node_link_json as graph_node_link_json
 from .rustworkx import from_node_link_json_file as from_node_link_json_file
+from .rustworkx import from_dot as from_dot
 from .rustworkx import parse_node_link_json as parse_node_link_json
+from .rustworkx import hyperbolic_greedy_routing as hyperbolic_greedy_routing
+from .rustworkx import hyperbolic_greedy_success_rate as hyperbolic_greedy_success_rate
 from .rustworkx import digraph_bellman_ford_shortest_paths as digraph_bellman_ford_shortest_paths
 from .rustworkx import graph_bellman_ford_shortest_paths as graph_bellman_ford_shortest_paths
 from .rustworkx import (
@@ -253,6 +256,8 @@ from .rustworkx import digraph_transitivity as digraph_transitivity
 from .rustworkx import graph_transitivity as graph_transitivity
 from .rustworkx import digraph_bfs_search as digraph_bfs_search
 from .rustworkx import graph_bfs_search as graph_bfs_search
+from .rustworkx import digraph_bfs_layers as digraph_bfs_layers
+from .rustworkx import graph_bfs_layers as graph_bfs_layers
 from .rustworkx import digraph_dfs_search as digraph_dfs_search
 from .rustworkx import graph_dfs_search as graph_dfs_search
 from .rustworkx import digraph_dijkstra_search as digraph_dijkstra_search
@@ -325,7 +330,7 @@ def adjacency_matrix(
 def all_simple_paths(
     graph: PyGraph | PyDiGraph,
     from_: int,
-    to: int,
+    to: int | Iterable[int],
     min_depth: int | None = ...,
     cutoff: int | None = ...,
 ) -> list[list[int]]: ...
@@ -672,3 +677,7 @@ def write_graphml(
     keys: list[GraphMLKey] | None = ...,
     compression: str | None = ...,
 ) -> None: ...
+def bfs_layers(
+    graph: PyGraph | PyDiGraph,
+    sources: Sequence[int] | None = ...,
+) -> list[list[int]]: ...
