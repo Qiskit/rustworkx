@@ -19,7 +19,7 @@ use dfs_visit::{dfs_handler, PyDfsVisitor};
 use dijkstra_visit::{dijkstra_handler, PyDijkstraVisitor};
 
 use rustworkx_core::traversal::{
-    ancestors as core_ancestors, bfs_predecessors as core_bfs_predecessors,
+    ancestors as core_ancestors, bfs_layers, bfs_predecessors as core_bfs_predecessors,
     bfs_successors as core_bfs_successors, breadth_first_search, depth_first_search,
     descendants as core_descendants, dfs_edges, dijkstra_search,
 };
@@ -32,6 +32,8 @@ use hashbrown::HashSet;
 
 use pyo3::exceptions::{PyIndexError, PyTypeError};
 use pyo3::prelude::*;
+use pyo3::types::PyList;
+use pyo3::IntoPyObjectExt;
 use pyo3::Python;
 
 use petgraph::graph::NodeIndex;
@@ -1115,4 +1117,78 @@ pub fn graph_dijkstra_search(
     )??;
 
     Ok(())
+}
+
+/// Return the BFS layers of a PyGraph as a list of lists.
+///
+/// :param graph: The input PyGraph to use for BFS traversal
+/// :type graph: PyGraph
+/// :param sources: An optional list of node indices to use as the starting
+///     nodes for the BFS traversal. If not specified, all nodes in the graph
+///     will be used as sources.
+/// :type sources: list[int] or None
+///
+/// :returns: A list of lists where each inner list contains the node indices
+///     at that BFS layer/level from the source nodes
+/// :rtype: list[list[int]]
+#[pyfunction]
+#[pyo3(signature = (graph, sources=None))]
+pub fn graph_bfs_layers(
+    py: Python,
+    graph: &graph::PyGraph,
+    sources: Option<Vec<usize>>,
+) -> PyResult<PyObject> {
+    let starts: Vec<NodeIndex> = match sources {
+        Some(v) => v.into_iter().map(NodeIndex::new).collect(),
+        None => graph.graph.node_indices().collect(),
+    };
+
+    validate_source_nodes(&graph.graph, &starts)?;
+
+    let layers = bfs_layers(&graph.graph, starts);
+
+    let py_layers = PyList::empty(py);
+    for layer in layers {
+        let ids: Vec<usize> = layer.into_iter().map(|n| n.index()).collect();
+        let sublist = PyList::new(py, &ids)?;
+        py_layers.append(sublist)?;
+    }
+    py_layers.into_py_any(py)
+}
+
+/// Return the BFS layers of a PyDiGraph as a list of lists.
+///
+/// :param graph: The input PyDiGraph to use for BFS traversal
+/// :type graph: PyDiGraph
+/// :param sources: An optional list of node indices to use as the starting
+///     nodes for the BFS traversal. If not specified, all nodes in the graph
+///     will be used as sources.
+/// :type sources: list[int] or None
+///
+/// :returns: A list of lists where each inner list contains the node indices
+///     at that BFS layer/level from the source nodes
+/// :rtype: list[list[int]]
+#[pyfunction]
+#[pyo3(signature = (digraph, sources=None))]
+pub fn digraph_bfs_layers(
+    py: Python,
+    digraph: &digraph::PyDiGraph,
+    sources: Option<Vec<usize>>,
+) -> PyResult<PyObject> {
+    let starts: Vec<NodeIndex> = match sources {
+        Some(v) => v.into_iter().map(NodeIndex::new).collect(),
+        None => digraph.graph.node_indices().collect(),
+    };
+
+    validate_source_nodes(&digraph.graph, &starts)?;
+
+    let layers = bfs_layers(&digraph.graph, starts);
+
+    let py_layers = PyList::empty(py);
+    for layer in layers {
+        let ids: Vec<usize> = layer.into_iter().map(|n| n.index()).collect();
+        let sublist = PyList::new(py, &ids)?;
+        py_layers.append(sublist)?;
+    }
+    py_layers.into_py_any(py)
 }

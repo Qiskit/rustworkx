@@ -664,6 +664,8 @@ fn rustworkx(py: Python<'_>, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(steiner_tree::steiner_tree))?;
     m.add_wrapped(wrap_pyfunction!(digraph_dfs_search))?;
     m.add_wrapped(wrap_pyfunction!(graph_dfs_search))?;
+    m.add_wrapped(wrap_pyfunction!(digraph_bfs_layers))?;
+    m.add_wrapped(wrap_pyfunction!(graph_bfs_layers))?;
     m.add_wrapped(wrap_pyfunction!(articulation_points))?;
     m.add_wrapped(wrap_pyfunction!(bridges))?;
     m.add_wrapped(wrap_pyfunction!(biconnected_components))?;

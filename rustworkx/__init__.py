@@ -2311,3 +2311,21 @@ def write_graphml(graph, path, /, keys=None, compression=None):
     :raises RuntimeError: when an error is encountered while writing the GraphML file.
     """
     raise TypeError(f"Invalid Input Type {type(graph)} for graph")
+
+
+@_rustworkx_dispatch
+def bfs_layers(graph, sources=None):
+    """Return the BFS layers of a graph as a list of lists.
+
+    :param graph: The input graph to use. Can either be a
+        :class:`~rustworkx.PyGraph` or :class:`~rustworkx.PyDiGraph`
+    :param sources: An optional list of node indices to use as the starting
+        nodes for the BFS traversal. If not specified, all nodes in the graph
+        will be used as sources.
+    :type sources: list[int]
+
+    :returns: A list of lists where each inner list contains the node indices
+        at that BFS layer/level from the source nodes
+    :rtype: list[list[int]]
+    """
+    raise TypeError(f"Invalid Input Type {type(graph)} for graph")
