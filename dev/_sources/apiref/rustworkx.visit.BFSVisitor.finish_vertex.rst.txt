@@ -1,0 +1,6 @@
+rustworkx.visit.BFSVisitor.finish\_vertex
+=========================================
+
+.. currentmodule:: rustworkx.visit
+
+.. automethod:: BFSVisitor.finish_vertex

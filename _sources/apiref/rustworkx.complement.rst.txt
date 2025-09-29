@@ -1,0 +1,6 @@
+﻿rustworkx.complement
+====================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: complement
