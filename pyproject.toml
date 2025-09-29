@@ -1,6 +1,6 @@
 [project]
 name = "rustworkx"
-version = "0.17.0"
+version = "0.17.1"
 description = "A High-Performance Graph Library for Python"
 requires-python = ">=3.9"
 dependencies = [
@@ -8,7 +8,6 @@ dependencies = [
 ]
 readme = {file = "README.md", content-type = "text/markdown"}
 license-files = ["LICENSE"]
-license = "Apache-2.0"
 classifiers=[
     "Intended Audience :: Developers",
     "Intended Audience :: Science/Research",
@@ -22,9 +21,8 @@ classifiers=[
     "Operating System :: MacOS :: MacOS X",
     "Operating System :: Microsoft :: Windows",
     "Operating System :: POSIX :: Linux",
-    "Development Status ::  5 - Production/Stable",
 ]
-keywords = ["Networks", "network", "graph", "Graph Theory", "DAG"]
+keywords = ["Networks", "Network", "Graph", "Graph Theory", "DAG"]
 
 [tool.setuptools]
 packages = ["rustworkx", "rustworkx.visualization"]

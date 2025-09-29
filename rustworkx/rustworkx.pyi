@@ -751,6 +751,9 @@ def from_node_link_json_file(
     node_attrs: Callable[[dict[str, str]], _S] | None = ...,
     edge_attrs: Callable[[dict[str, str]], _T] | None = ...,
 ) -> PyDiGraph[_S, _T] | PyGraph[_S, _T]: ...
+def from_dot(
+    dot_str: str,
+) -> PyDiGraph[_S, _T] | PyGraph[_S, _T]: ...
 
 # Shortest Path
 
@@ -1079,6 +1082,14 @@ def graph_dfs_search(
     source: Sequence[int] | None = ...,
     visitor: _DFSVisitor | None = ...,
 ) -> None: ...
+def digraph_bfs_layers(
+    digraph: PyDiGraph,
+    sources: Sequence[int] | None = ...,
+) -> list[list[int]]: ...
+def graph_bfs_layers(
+    graph: PyGraph,
+    sources: Sequence[int] | None = ...,
+) -> list[list[int]]: ...
 def digraph_dijkstra_search(
     graph: PyDiGraph,
     source: Sequence[int] | None = ...,
