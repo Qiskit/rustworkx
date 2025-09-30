@@ -18,10 +18,10 @@
 // of just between a single node pair.
 
 use hashbrown::HashSet;
-use indexmap::map::Entry;
 use indexmap::IndexSet;
-use petgraph::visit::{IntoNeighborsDirected, NodeCount};
+use indexmap::map::Entry;
 use petgraph::Direction::Outgoing;
+use petgraph::visit::{IntoNeighborsDirected, NodeCount};
 use std::iter;
 use std::{hash::Hash, iter::FromIterator};
 

@@ -152,8 +152,8 @@ where
 #[cfg(test)]
 mod test_transitivity {
     use petgraph::{
-        graph::{DiGraph, UnGraph},
         Graph,
+        graph::{DiGraph, UnGraph},
     };
 
     use super::{

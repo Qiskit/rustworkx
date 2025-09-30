@@ -15,12 +15,12 @@ mod node_link_data;
 use std::fs::File;
 use std::io::BufReader;
 
-use crate::{digraph, graph, JSONDeserializationError, StablePyGraph};
-use petgraph::{algo, Directed, Undirected};
+use crate::{JSONDeserializationError, StablePyGraph, digraph, graph};
+use petgraph::{Directed, Undirected, algo};
 
-use pyo3::prelude::*;
 use pyo3::IntoPyObjectExt;
 use pyo3::Python;
+use pyo3::prelude::*;
 
 /// Parse a node-link format JSON file to generate a graph
 ///
@@ -48,9 +48,9 @@ use pyo3::Python;
 pub fn from_node_link_json_file<'py>(
     py: Python<'py>,
     path: &str,
-    graph_attrs: Option<PyObject>,
-    node_attrs: Option<PyObject>,
-    edge_attrs: Option<PyObject>,
+    graph_attrs: Option<Py<PyAny>>,
+    node_attrs: Option<Py<PyAny>>,
+    edge_attrs: Option<Py<PyAny>>,
 ) -> PyResult<Bound<'py, PyAny>> {
     let file = File::open(path)?;
     let reader = BufReader::new(file);
@@ -62,7 +62,7 @@ pub fn from_node_link_json_file<'py>(
             )));
         }
     };
-    let attrs: PyObject = match graph.attrs {
+    let attrs: Py<PyAny> = match graph.attrs {
         Some(ref attrs) => match graph_attrs {
             Some(ref callback) => callback.call1(py, (attrs.clone(),))?,
             None => attrs.into_py_any(py)?,
@@ -127,9 +127,9 @@ pub fn from_node_link_json_file<'py>(
 pub fn parse_node_link_json<'py>(
     py: Python<'py>,
     data: &str,
-    graph_attrs: Option<PyObject>,
-    node_attrs: Option<PyObject>,
-    edge_attrs: Option<PyObject>,
+    graph_attrs: Option<Py<PyAny>>,
+    node_attrs: Option<Py<PyAny>>,
+    edge_attrs: Option<Py<PyAny>>,
 ) -> PyResult<Bound<'py, PyAny>> {
     let graph: node_link_data::GraphInput = match serde_json::from_str(data) {
         Ok(v) => v,
@@ -139,7 +139,7 @@ pub fn parse_node_link_json<'py>(
             )));
         }
     };
-    let attrs: PyObject = match graph.attrs {
+    let attrs: Py<PyAny> = match graph.attrs {
         Some(ref attrs) => match graph_attrs {
             Some(ref callback) => callback.call1(py, (attrs.clone(),))?,
             None => attrs.into_py_any(py)?,
@@ -208,9 +208,9 @@ pub fn digraph_node_link_json(
     py: Python,
     graph: &digraph::PyDiGraph,
     path: Option<String>,
-    graph_attrs: Option<PyObject>,
-    node_attrs: Option<PyObject>,
-    edge_attrs: Option<PyObject>,
+    graph_attrs: Option<Py<PyAny>>,
+    node_attrs: Option<Py<PyAny>>,
+    edge_attrs: Option<Py<PyAny>>,
 ) -> PyResult<Option<String>> {
     node_link_data::node_link_data(
         py,
@@ -256,9 +256,9 @@ pub fn graph_node_link_json(
     py: Python,
     graph: &graph::PyGraph,
     path: Option<String>,
-    graph_attrs: Option<PyObject>,
-    node_attrs: Option<PyObject>,
-    edge_attrs: Option<PyObject>,
+    graph_attrs: Option<Py<PyAny>>,
+    node_attrs: Option<Py<PyAny>>,
+    edge_attrs: Option<Py<PyAny>>,
 ) -> PyResult<Option<String>> {
     node_link_data::node_link_data(
         py,

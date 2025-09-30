@@ -23,11 +23,11 @@ use std::mem;
 
 use hashbrown::{HashMap, HashSet};
 
+use petgraph::Undirected;
 use petgraph::visit::{
     EdgeCount, EdgeRef, GraphBase, GraphProp, IntoEdges, IntoNodeIdentifiers, NodeCount,
     NodeIndexable,
 };
-use petgraph::Undirected;
 
 /// Return 2 * slack of edge k (does not work inside blossoms).
 fn slack(edge_index: usize, dual_var: &[i128], edges: &[(usize, usize, i128)]) -> i128 {

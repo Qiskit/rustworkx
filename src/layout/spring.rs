@@ -20,10 +20,10 @@ use hashbrown::{HashMap, HashSet};
 use pyo3::exceptions::{PyRuntimeError, PyValueError};
 use pyo3::prelude::*;
 
+use petgraph::EdgeType;
 use petgraph::graph::NodeIndex;
 use petgraph::prelude::*;
 use petgraph::visit::{IntoEdgeReferences, NodeIndexable};
-use petgraph::EdgeType;
 
 use rand::prelude::*;
 use rand_distr::{Distribution, Uniform};
@@ -307,7 +307,7 @@ pub fn spring_layout<Ty>(
     adaptive_cooling: Option<bool>,
     num_iter: Option<usize>,
     tol: Option<f64>,
-    weight_fn: Option<PyObject>,
+    weight_fn: Option<Py<PyAny>>,
     default_weight: f64,
     scale: Option<f64>,
     center: Option<Point>,

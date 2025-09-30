@@ -1,6 +1,6 @@
 use petgraph::graph::DiGraph;
 use petgraph::visit::{Bfs, EdgeRef, NodeIndexable};
-use quickcheck::{quickcheck, TestResult};
+use quickcheck::{TestResult, quickcheck};
 use rustworkx_core::generators::grid_graph;
 
 #[test]

@@ -85,7 +85,9 @@ pub fn hyperbolic_greedy_routing(
     }
     let dim = pos[0].len();
     if dim < 2 || pos.iter().any(|x| x.len() != dim) {
-        return Err(PyValueError::new_err("Each node must have the same number of coordinates and must have at least 2 coordinates."));
+        return Err(PyValueError::new_err(
+            "Each node must have the same number of coordinates and must have at least 2 coordinates.",
+        ));
     }
 
     Ok(core_geometry::greedy_routing(
@@ -138,7 +140,9 @@ pub fn hyperbolic_greedy_success_rate(graph: &graph::PyGraph, pos: Vec<Vec<f64>>
     }
     let dim = pos[0].len();
     if dim < 2 || pos.iter().any(|x| x.len() != dim) {
-        return Err(PyValueError::new_err("Each node must have the same number of coordinates and must have at least 2 coordinates."));
+        return Err(PyValueError::new_err(
+            "Each node must have the same number of coordinates and must have at least 2 coordinates.",
+        ));
     }
 
     Ok(core_geometry::greedy_routing_success_rate(

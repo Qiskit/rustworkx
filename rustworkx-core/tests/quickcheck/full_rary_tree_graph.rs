@@ -1,5 +1,5 @@
 use petgraph::graph::UnGraph;
-use quickcheck::{quickcheck, TestResult};
+use quickcheck::{TestResult, quickcheck};
 use rustworkx_core::generators::full_rary_tree_graph;
 
 #[test]

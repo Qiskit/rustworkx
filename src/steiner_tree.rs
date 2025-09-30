@@ -15,10 +15,10 @@ use std::cmp::Ordering;
 use hashbrown::HashMap;
 use rayon::prelude::*;
 
-use pyo3::exceptions::PyValueError;
-use pyo3::prelude::*;
 use pyo3::IntoPyObjectExt;
 use pyo3::Python;
+use pyo3::exceptions::PyValueError;
+use pyo3::prelude::*;
 
 use petgraph::stable_graph::{EdgeIndex, EdgeReference, NodeIndex};
 use petgraph::visit::{EdgeRef, IntoEdgeReferences};
@@ -47,9 +47,9 @@ use rustworkx_core::steiner_tree::steiner_tree as core_steiner_tree;
 pub fn metric_closure(
     py: Python,
     graph: &graph::PyGraph,
-    weight_fn: PyObject,
+    weight_fn: Py<PyAny>,
 ) -> PyResult<graph::PyGraph> {
-    let callable = |e: EdgeReference<PyObject>| -> PyResult<f64> {
+    let callable = |e: EdgeReference<Py<PyAny>>| -> PyResult<f64> {
         let data = e.weight();
         let raw = weight_fn.call1(py, (data,))?;
         let weight = raw.extract(py)?;
@@ -121,9 +121,9 @@ pub fn steiner_tree(
     py: Python,
     graph: &mut graph::PyGraph,
     terminal_nodes: Vec<usize>,
-    weight_fn: PyObject,
+    weight_fn: Py<PyAny>,
 ) -> PyResult<graph::PyGraph> {
-    let callable = |e: EdgeReference<PyObject>| -> PyResult<f64> {
+    let callable = |e: EdgeReference<Py<PyAny>>| -> PyResult<f64> {
         let data = e.weight();
         let raw = weight_fn.call1(py, (data,))?;
         raw.extract(py)
@@ -172,11 +172,12 @@ pub fn steiner_tree(
 fn deduplicate_edges(
     py: Python,
     out_graph: &mut graph::PyGraph,
-    weight_fn: &PyObject,
+    weight_fn: &Py<PyAny>,
 ) -> PyResult<()> {
     if out_graph.multigraph {
         // Find all edges between nodes
-        let mut duplicate_map: HashMap<[NodeIndex; 2], Vec<(EdgeIndex, PyObject)>> = HashMap::new();
+        let mut duplicate_map: HashMap<[NodeIndex; 2], Vec<(EdgeIndex, Py<PyAny>)>> =
+            HashMap::new();
         for edge in out_graph.graph.edge_references() {
             if duplicate_map.contains_key(&[edge.source(), edge.target()]) {
                 duplicate_map

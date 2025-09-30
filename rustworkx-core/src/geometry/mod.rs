@@ -16,7 +16,7 @@ mod distances;
 mod greedy_routing;
 
 pub use distances::{
-    angular_distance, euclidean_distance, hyperboloid_hyperbolic_distance, lp_distance,
-    maximum_distance, polar_hyperbolic_distance, IncompatiblePointsError,
+    IncompatiblePointsError, angular_distance, euclidean_distance, hyperboloid_hyperbolic_distance,
+    lp_distance, maximum_distance, polar_hyperbolic_distance,
 };
-pub use greedy_routing::{greedy_routing, greedy_routing_success_rate, NodeNotReachedError};
+pub use greedy_routing::{NodeNotReachedError, greedy_routing, greedy_routing_success_rate};

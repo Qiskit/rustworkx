@@ -17,9 +17,9 @@ use std::{hash::Hash, ops::AddAssign};
 use priority_queue::PriorityQueue;
 
 use petgraph::{
+    Undirected,
     stable_graph::StableUnGraph,
     visit::{Bfs, EdgeCount, EdgeRef, GraphProp, IntoEdges, IntoNodeIdentifiers, NodeCount},
-    Undirected,
 };
 
 type StCut<K, T> = Option<((T, T), K)>;

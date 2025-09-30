@@ -167,8 +167,8 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::generators::binomial_tree_graph;
     use crate::generators::InvalidInputError;
+    use crate::generators::binomial_tree_graph;
     use crate::petgraph;
     use crate::petgraph::visit::EdgeRef;
 

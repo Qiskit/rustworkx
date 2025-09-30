@@ -10,8 +10,8 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-use foldhash::fast::RandomState;
 use foldhash::HashSet;
+use foldhash::fast::RandomState;
 use hashbrown::HashMap;
 use indexmap::IndexSet;
 use petgraph::data::Build;

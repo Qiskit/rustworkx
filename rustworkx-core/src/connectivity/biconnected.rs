@@ -14,14 +14,14 @@ use hashbrown::{HashMap, HashSet};
 use std::hash::Hash;
 
 use petgraph::{
+    Undirected,
     visit::{
         EdgeCount, GraphBase, GraphProp, IntoEdges, IntoNodeIdentifiers, NodeIndexable, Time,
         Visitable,
     },
-    Undirected,
 };
 
-use crate::traversal::{depth_first_search, DfsEvent};
+use crate::traversal::{DfsEvent, depth_first_search};
 
 const NULL: usize = usize::MAX;
 

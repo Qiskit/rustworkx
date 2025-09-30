@@ -12,12 +12,12 @@
 
 use std::iter::Iterator;
 
-use petgraph::visit::NodeIndexable;
 use petgraph::EdgeType;
+use petgraph::visit::NodeIndexable;
 
-use super::spring::{recenter, Point};
-use crate::iterators::Pos2DMapping;
+use super::spring::{Point, recenter};
 use crate::StablePyGraph;
+use crate::iterators::Pos2DMapping;
 
 pub fn shell_layout<Ty: EdgeType>(
     graph: &StablePyGraph<Ty>,

@@ -19,16 +19,16 @@ mod num_shortest_path;
 
 use std::convert::TryFrom;
 
-use crate::{digraph, edge_weights_from_callable, graph, CostFn, NegativeCycle, NoPathFound};
+use crate::{CostFn, NegativeCycle, NoPathFound, digraph, edge_weights_from_callable, graph};
 
 use numpy::{IntoPyArray, PyArray2};
 use petgraph::graph::NodeIndex;
 use petgraph::prelude::*;
 use petgraph::stable_graph::EdgeIndex;
 use petgraph::visit::NodeCount;
+use pyo3::Python;
 use pyo3::exceptions::{PyIndexError, PyTypeError, PyValueError};
 use pyo3::prelude::*;
-use pyo3::Python;
 
 use rustworkx_core::dictmap::*;
 use rustworkx_core::shortest_path::{
@@ -72,7 +72,7 @@ pub fn graph_dijkstra_shortest_paths(
     graph: &graph::PyGraph,
     source: usize,
     target: Option<usize>,
-    weight_fn: Option<PyObject>,
+    weight_fn: Option<Py<PyAny>>,
     default_weight: f64,
 ) -> PyResult<PathMapping> {
     let start = NodeIndex::new(source);
@@ -142,7 +142,7 @@ pub fn graph_all_shortest_paths(
     graph: &graph::PyGraph,
     source: usize,
     target: usize,
-    weight_fn: Option<PyObject>,
+    weight_fn: Option<Py<PyAny>>,
     default_weight: f64,
 ) -> PyResult<Vec<Vec<usize>>> {
     let start = NodeIndex::new(source);
@@ -216,7 +216,7 @@ pub fn digraph_dijkstra_shortest_paths(
     graph: &digraph::PyDiGraph,
     source: usize,
     target: Option<usize>,
-    weight_fn: Option<PyObject>,
+    weight_fn: Option<Py<PyAny>>,
     default_weight: f64,
     as_undirected: bool,
 ) -> PyResult<PathMapping> {
@@ -295,7 +295,7 @@ pub fn digraph_all_shortest_paths(
     graph: &digraph::PyDiGraph,
     source: usize,
     target: usize,
-    weight_fn: Option<PyObject>,
+    weight_fn: Option<Py<PyAny>>,
     default_weight: f64,
     as_undirected: bool,
 ) -> PyResult<Vec<Vec<usize>>> {
@@ -354,7 +354,7 @@ pub fn graph_single_source_all_shortest_paths(
     py: Python,
     graph: &graph::PyGraph,
     source: usize,
-    weight_fn: Option<PyObject>,
+    weight_fn: Option<Py<PyAny>>,
     default_weight: f64,
 ) -> PyResult<DictMap<usize, Vec<Vec<usize>>>> {
     if source >= graph.node_count() {
@@ -452,7 +452,7 @@ pub fn digraph_single_source_all_shortest_paths(
     py: Python,
     graph: &digraph::PyDiGraph,
     source: usize,
-    weight_fn: Option<PyObject>,
+    weight_fn: Option<Py<PyAny>>,
     default_weight: f64,
     as_undirected: bool,
 ) -> PyResult<DictMap<usize, Vec<Vec<usize>>>> {
@@ -570,7 +570,7 @@ pub fn graph_dijkstra_shortest_path_lengths(
     py: Python,
     graph: &graph::PyGraph,
     node: usize,
-    edge_cost_fn: PyObject,
+    edge_cost_fn: Py<PyAny>,
     goal: Option<usize>,
 ) -> PyResult<PathLengthMapping> {
     let start = NodeIndex::new(node);
@@ -645,7 +645,7 @@ pub fn digraph_dijkstra_shortest_path_lengths(
     py: Python,
     graph: &digraph::PyDiGraph,
     node: usize,
-    edge_cost_fn: PyObject,
+    edge_cost_fn: Py<PyAny>,
     goal: Option<usize>,
 ) -> PyResult<PathLengthMapping> {
     let edge_cost_callable = CostFn::from(edge_cost_fn);
@@ -729,7 +729,7 @@ pub fn digraph_dijkstra_shortest_path_lengths(
 pub fn digraph_all_pairs_dijkstra_path_lengths(
     py: Python,
     graph: &digraph::PyDiGraph,
-    edge_cost_fn: PyObject,
+    edge_cost_fn: Py<PyAny>,
 ) -> PyResult<AllPairsPathLengthMapping> {
     all_pairs_dijkstra::all_pairs_dijkstra_path_lengths(py, &graph.graph, edge_cost_fn)
 }
@@ -768,7 +768,7 @@ pub fn digraph_all_pairs_dijkstra_path_lengths(
 pub fn digraph_all_pairs_dijkstra_shortest_paths(
     py: Python,
     graph: &digraph::PyDiGraph,
-    edge_cost_fn: PyObject,
+    edge_cost_fn: Py<PyAny>,
 ) -> PyResult<AllPairsPathMapping> {
     all_pairs_dijkstra::all_pairs_dijkstra_shortest_paths(py, &graph.graph, edge_cost_fn, None)
 }
@@ -803,7 +803,7 @@ pub fn digraph_all_pairs_dijkstra_shortest_paths(
 pub fn graph_all_pairs_dijkstra_path_lengths(
     py: Python,
     graph: &graph::PyGraph,
-    edge_cost_fn: PyObject,
+    edge_cost_fn: Py<PyAny>,
 ) -> PyResult<AllPairsPathLengthMapping> {
     all_pairs_dijkstra::all_pairs_dijkstra_path_lengths(py, &graph.graph, edge_cost_fn)
 }
@@ -838,7 +838,7 @@ pub fn graph_all_pairs_dijkstra_path_lengths(
 pub fn graph_all_pairs_dijkstra_shortest_paths(
     py: Python,
     graph: &graph::PyGraph,
-    edge_cost_fn: PyObject,
+    edge_cost_fn: Py<PyAny>,
 ) -> PyResult<AllPairsPathMapping> {
     all_pairs_dijkstra::all_pairs_dijkstra_shortest_paths(py, &graph.graph, edge_cost_fn, None)
 }
@@ -871,11 +871,11 @@ pub fn digraph_astar_shortest_path(
     py: Python,
     graph: &digraph::PyDiGraph,
     node: usize,
-    goal_fn: PyObject,
-    edge_cost_fn: PyObject,
-    estimate_cost_fn: PyObject,
+    goal_fn: Py<PyAny>,
+    edge_cost_fn: Py<PyAny>,
+    estimate_cost_fn: Py<PyAny>,
 ) -> PyResult<NodeIndices> {
-    let goal_fn_callable = |a: &PyObject| -> PyResult<bool> {
+    let goal_fn_callable = |a: &Py<PyAny>| -> PyResult<bool> {
         let res = goal_fn.call1(py, (a,))?;
         let output: bool = res.extract(py)?;
         Ok(output)
@@ -935,11 +935,11 @@ pub fn graph_astar_shortest_path(
     py: Python,
     graph: &graph::PyGraph,
     node: usize,
-    goal_fn: PyObject,
-    edge_cost_fn: PyObject,
-    estimate_cost_fn: PyObject,
+    goal_fn: Py<PyAny>,
+    edge_cost_fn: Py<PyAny>,
+    estimate_cost_fn: Py<PyAny>,
 ) -> PyResult<NodeIndices> {
-    let goal_fn_callable = |a: &PyObject| -> PyResult<bool> {
+    let goal_fn_callable = |a: &Py<PyAny>| -> PyResult<bool> {
         let res = goal_fn.call1(py, (a,))?;
         let output: bool = res.extract(py)?;
         Ok(output)
@@ -998,7 +998,7 @@ pub fn digraph_k_shortest_path_lengths(
     graph: &digraph::PyDiGraph,
     start: usize,
     k: usize,
-    edge_cost: PyObject,
+    edge_cost: Py<PyAny>,
     goal: Option<usize>,
 ) -> PyResult<PathLengthMapping> {
     let out_goal = goal.map(NodeIndex::new);
@@ -1058,7 +1058,7 @@ pub fn graph_k_shortest_path_lengths(
     graph: &graph::PyGraph,
     start: usize,
     k: usize,
-    edge_cost: PyObject,
+    edge_cost: Py<PyAny>,
     goal: Option<usize>,
 ) -> PyResult<PathLengthMapping> {
     let out_goal = goal.map(NodeIndex::new);
@@ -1141,7 +1141,7 @@ pub fn graph_k_shortest_path_lengths(
 pub fn digraph_floyd_warshall(
     py: Python,
     graph: &digraph::PyDiGraph,
-    weight_fn: Option<PyObject>,
+    weight_fn: Option<Py<PyAny>>,
     as_undirected: bool,
     default_weight: f64,
     parallel_threshold: usize,
@@ -1204,7 +1204,7 @@ pub fn digraph_floyd_warshall(
 pub fn graph_floyd_warshall(
     py: Python,
     graph: &graph::PyGraph,
-    weight_fn: Option<PyObject>,
+    weight_fn: Option<Py<PyAny>>,
     default_weight: f64,
     parallel_threshold: usize,
 ) -> PyResult<AllPairsPathLengthMapping> {
@@ -1260,7 +1260,7 @@ pub fn graph_floyd_warshall(
 pub fn graph_floyd_warshall_numpy<'py>(
     py: Python<'py>,
     graph: &graph::PyGraph,
-    weight_fn: Option<PyObject>,
+    weight_fn: Option<Py<PyAny>>,
     default_weight: f64,
     parallel_threshold: usize,
 ) -> PyResult<Bound<'py, PyArray2<f64>>> {
@@ -1335,7 +1335,7 @@ text_signature = "(graph, /, weight_fn=None, default_weight=1.0, parallel_thresh
 pub fn graph_floyd_warshall_successor_and_distance<'py>(
     py: Python<'py>,
     graph: &graph::PyGraph,
-    weight_fn: Option<PyObject>,
+    weight_fn: Option<Py<PyAny>>,
     default_weight: f64,
     parallel_threshold: usize,
 ) -> PyResult<FloydWarshallReturn<'py>> {
@@ -1394,7 +1394,7 @@ text_signature = "(graph, /, weight_fn=None, as_undirected=False, default_weight
 pub fn digraph_floyd_warshall_numpy<'py>(
     py: Python<'py>,
     graph: &digraph::PyDiGraph,
-    weight_fn: Option<PyObject>,
+    weight_fn: Option<Py<PyAny>>,
     as_undirected: bool,
     default_weight: f64,
     parallel_threshold: usize,
@@ -1470,7 +1470,7 @@ text_signature = "(graph, /, weight_fn=None, as_undirected=False, default_weight
 pub fn digraph_floyd_warshall_successor_and_distance<'py>(
     py: Python<'py>,
     graph: &digraph::PyDiGraph,
-    weight_fn: Option<PyObject>,
+    weight_fn: Option<Py<PyAny>>,
     as_undirected: bool,
     default_weight: f64,
     parallel_threshold: usize,
@@ -1769,7 +1769,7 @@ pub fn digraph_bellman_ford_shortest_path_lengths(
     py: Python,
     graph: &digraph::PyDiGraph,
     node: usize,
-    edge_cost_fn: PyObject,
+    edge_cost_fn: Py<PyAny>,
     goal: Option<usize>,
 ) -> PyResult<PathLengthMapping> {
     let edge_weights: Vec<Option<f64>> =
@@ -1854,7 +1854,7 @@ pub fn graph_bellman_ford_shortest_path_lengths(
     py: Python,
     graph: &graph::PyGraph,
     node: usize,
-    edge_cost_fn: PyObject,
+    edge_cost_fn: Py<PyAny>,
     goal: Option<usize>,
 ) -> PyResult<PathLengthMapping> {
     let edge_weights: Vec<Option<f64>> =
@@ -1945,7 +1945,7 @@ pub fn graph_bellman_ford_shortest_paths(
     graph: &graph::PyGraph,
     source: usize,
     target: Option<usize>,
-    weight_fn: Option<PyObject>,
+    weight_fn: Option<Py<PyAny>>,
     default_weight: f64,
 ) -> PyResult<PathMapping> {
     let start = NodeIndex::new(source);
@@ -2026,7 +2026,7 @@ pub fn digraph_bellman_ford_shortest_paths(
     graph: &digraph::PyDiGraph,
     source: usize,
     target: Option<usize>,
-    weight_fn: Option<PyObject>,
+    weight_fn: Option<Py<PyAny>>,
     default_weight: f64,
     as_undirected: bool,
 ) -> PyResult<PathMapping> {
@@ -2104,7 +2104,7 @@ pub fn digraph_bellman_ford_shortest_paths(
 pub fn negative_edge_cycle(
     py: Python,
     graph: &digraph::PyDiGraph,
-    edge_cost_fn: PyObject,
+    edge_cost_fn: Py<PyAny>,
 ) -> PyResult<bool> {
     let edge_weights: Vec<Option<f64>> =
         edge_weights_from_callable(py, &graph.graph, &Some(edge_cost_fn), 1.0)?;
@@ -2139,7 +2139,7 @@ pub fn negative_edge_cycle(
 pub fn find_negative_cycle(
     py: Python,
     graph: &digraph::PyDiGraph,
-    edge_cost_fn: PyObject,
+    edge_cost_fn: Py<PyAny>,
 ) -> PyResult<NodeIndices> {
     let edge_weights: Vec<Option<f64>> =
         edge_weights_from_callable(py, &graph.graph, &Some(edge_cost_fn), 1.0)?;
@@ -2198,7 +2198,7 @@ pub fn find_negative_cycle(
 pub fn digraph_all_pairs_bellman_ford_path_lengths(
     py: Python,
     graph: &digraph::PyDiGraph,
-    edge_cost_fn: PyObject,
+    edge_cost_fn: Py<PyAny>,
 ) -> PyResult<AllPairsPathLengthMapping> {
     all_pairs_bellman_ford::all_pairs_bellman_ford_path_lengths(py, &graph.graph, edge_cost_fn)
 }
@@ -2238,7 +2238,7 @@ pub fn digraph_all_pairs_bellman_ford_path_lengths(
 pub fn digraph_all_pairs_bellman_ford_shortest_paths(
     py: Python,
     graph: &digraph::PyDiGraph,
-    edge_cost_fn: PyObject,
+    edge_cost_fn: Py<PyAny>,
 ) -> PyResult<AllPairsPathMapping> {
     all_pairs_bellman_ford::all_pairs_bellman_ford_shortest_paths(py, &graph.graph, edge_cost_fn)
 }
@@ -2274,7 +2274,7 @@ pub fn digraph_all_pairs_bellman_ford_shortest_paths(
 pub fn graph_all_pairs_bellman_ford_path_lengths(
     py: Python,
     graph: &graph::PyGraph,
-    edge_cost_fn: PyObject,
+    edge_cost_fn: Py<PyAny>,
 ) -> PyResult<AllPairsPathLengthMapping> {
     all_pairs_bellman_ford::all_pairs_bellman_ford_path_lengths(py, &graph.graph, edge_cost_fn)
 }
@@ -2310,7 +2310,7 @@ pub fn graph_all_pairs_bellman_ford_path_lengths(
 pub fn graph_all_pairs_bellman_ford_shortest_paths(
     py: Python,
     graph: &graph::PyGraph,
-    edge_cost_fn: PyObject,
+    edge_cost_fn: Py<PyAny>,
 ) -> PyResult<AllPairsPathMapping> {
     all_pairs_bellman_ford::all_pairs_bellman_ford_shortest_paths(py, &graph.graph, edge_cost_fn)
 }

@@ -18,13 +18,13 @@ use std::fmt;
 use std::hash::Hash;
 
 use hashbrown::HashMap;
+use petgraph::Directed;
+use petgraph::Direction::{Incoming, Outgoing};
 use petgraph::stable_graph::{NodeIndex, StableGraph};
 use petgraph::visit::{
     EdgeCount, GraphBase, IntoEdges, IntoNeighborsDirected, IntoNodeIdentifiers, NodeCount,
     NodeIndexable, Visitable,
 };
-use petgraph::Directed;
-use petgraph::Direction::{Incoming, Outgoing};
 use rayon::prelude::*;
 use rayon_cond::CondIterator;
 

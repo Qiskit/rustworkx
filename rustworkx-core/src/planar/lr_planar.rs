@@ -14,16 +14,16 @@ use std::cmp::Ordering;
 use std::hash::Hash;
 use std::vec::IntoIter;
 
-use hashbrown::{hash_map::Entry, HashMap};
+use hashbrown::{HashMap, hash_map::Entry};
 use petgraph::{
+    Undirected,
     visit::{
         EdgeCount, EdgeRef, GraphBase, GraphProp, IntoEdges, IntoNodeIdentifiers, NodeCount,
         Visitable,
     },
-    Undirected,
 };
 
-use crate::traversal::{depth_first_search, DfsEvent};
+use crate::traversal::{DfsEvent, depth_first_search};
 
 type Edge<G> = (<G as GraphBase>::NodeId, <G as GraphBase>::NodeId);
 
@@ -301,7 +301,7 @@ where
                         // that it's *not* a tree or a back edge so we skip it since
                         // it's oriented in the reverse direction.
                         {
-                            continue
+                            continue;
                         }
                     };
 
@@ -546,7 +546,7 @@ where
             }
 
             // trim right interval
-            if let Some((pr_low, ref mut pr_high)) = c_pair.right.as_mut() {
+            if let Some((pr_low, pr_high)) = c_pair.right.as_mut() {
                 match self.follow_eref_until_is_target(*pr_high, v) {
                     Some(val) => {
                         *pr_high = val;

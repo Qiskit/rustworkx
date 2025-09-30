@@ -10,8 +10,8 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-use petgraph::visit::{IntoNeighborsDirected, IntoNodeIdentifiers, NodeIndexable};
 use petgraph::Direction::{Incoming, Outgoing};
+use petgraph::visit::{IntoNeighborsDirected, IntoNodeIdentifiers, NodeIndexable};
 
 /// Return the isolates in a graph object
 ///

@@ -18,8 +18,8 @@ use crate::{digraph, graph};
 
 use std::cmp::Ordering;
 
-use pyo3::prelude::*;
 use pyo3::Python;
+use pyo3::prelude::*;
 
 /// Determine if 2 directed graphs are isomorphic
 ///
@@ -67,8 +67,8 @@ pub fn digraph_is_isomorphic(
     py: Python,
     first: &digraph::PyDiGraph,
     second: &digraph::PyDiGraph,
-    node_matcher: Option<PyObject>,
-    edge_matcher: Option<PyObject>,
+    node_matcher: Option<Py<PyAny>>,
+    edge_matcher: Option<Py<PyAny>>,
     id_order: bool,
     call_limit: Option<usize>,
 ) -> PyResult<bool> {
@@ -131,8 +131,8 @@ pub fn graph_is_isomorphic(
     py: Python,
     first: &graph::PyGraph,
     second: &graph::PyGraph,
-    node_matcher: Option<PyObject>,
-    edge_matcher: Option<PyObject>,
+    node_matcher: Option<Py<PyAny>>,
+    edge_matcher: Option<Py<PyAny>>,
     id_order: bool,
     call_limit: Option<usize>,
 ) -> PyResult<bool> {
@@ -202,8 +202,8 @@ pub fn digraph_is_subgraph_isomorphic(
     py: Python,
     first: &digraph::PyDiGraph,
     second: &digraph::PyDiGraph,
-    node_matcher: Option<PyObject>,
-    edge_matcher: Option<PyObject>,
+    node_matcher: Option<Py<PyAny>>,
+    edge_matcher: Option<Py<PyAny>>,
     id_order: bool,
     induced: bool,
     call_limit: Option<usize>,
@@ -274,8 +274,8 @@ pub fn graph_is_subgraph_isomorphic(
     py: Python,
     first: &graph::PyGraph,
     second: &graph::PyGraph,
-    node_matcher: Option<PyObject>,
-    edge_matcher: Option<PyObject>,
+    node_matcher: Option<Py<PyAny>>,
+    edge_matcher: Option<Py<PyAny>>,
     id_order: bool,
     induced: bool,
     call_limit: Option<usize>,
@@ -346,8 +346,8 @@ pub fn digraph_vf2_mapping(
     py: Python,
     first: &digraph::PyDiGraph,
     second: &digraph::PyDiGraph,
-    node_matcher: Option<PyObject>,
-    edge_matcher: Option<PyObject>,
+    node_matcher: Option<Py<PyAny>>,
+    edge_matcher: Option<Py<PyAny>>,
     id_order: bool,
     subgraph: bool,
     induced: bool,
@@ -424,8 +424,8 @@ pub fn graph_vf2_mapping(
     py: Python,
     first: &graph::PyGraph,
     second: &graph::PyGraph,
-    node_matcher: Option<PyObject>,
-    edge_matcher: Option<PyObject>,
+    node_matcher: Option<Py<PyAny>>,
+    edge_matcher: Option<Py<PyAny>>,
     id_order: bool,
     subgraph: bool,
     induced: bool,

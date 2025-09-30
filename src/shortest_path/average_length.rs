@@ -12,8 +12,8 @@
 
 use hashbrown::HashSet;
 
-use petgraph::prelude::*;
 use petgraph::EdgeType;
+use petgraph::prelude::*;
 
 use rayon::prelude::*;
 

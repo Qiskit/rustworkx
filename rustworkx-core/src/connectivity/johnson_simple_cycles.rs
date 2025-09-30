@@ -15,6 +15,7 @@ use hashbrown::{HashMap, HashSet};
 use indexmap::IndexSet;
 use std::hash::Hash;
 
+use petgraph::Directed;
 use petgraph::algo::kosaraju_scc;
 use petgraph::stable_graph::{NodeIndex, StableDiGraph};
 use petgraph::visit::{
@@ -22,7 +23,6 @@ use petgraph::visit::{
     IntoNeighborsDirected, IntoNodeReferences, NodeCount, NodeFiltered, NodeIndexable, NodeRef,
     Visitable,
 };
-use petgraph::Directed;
 
 use crate::graph_ext::EdgeFindable;
 

@@ -1,5 +1,5 @@
 use petgraph::graph::Graph;
-use quickcheck::{quickcheck, TestResult};
+use quickcheck::{TestResult, quickcheck};
 use rustworkx_core::generators::dorogovtsev_goltsev_mendes_graph;
 
 #[test]

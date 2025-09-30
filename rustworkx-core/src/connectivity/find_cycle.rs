@@ -11,11 +11,11 @@
 // under the License.
 
 use hashbrown::{HashMap, HashSet};
+use petgraph::Direction::Outgoing;
 use petgraph::algo;
 use petgraph::visit::{
     EdgeCount, GraphBase, IntoNeighborsDirected, IntoNodeIdentifiers, NodeCount, Visitable,
 };
-use petgraph::Direction::Outgoing;
 use std::hash::Hash;
 
 /// Return the first cycle encountered during DFS of a given directed graph.
@@ -151,7 +151,7 @@ mod tests {
 
     // Utility to assert cycles in the response
     macro_rules! assert_cycle {
-        ($g: expr, $cycle: expr) => {{
+        ($g: expr_2021, $cycle: expr_2021) => {{
             for i in 0..$cycle.len() {
                 let (s, t) = $cycle[i];
                 assert!($g.contains_edge(s, t));

@@ -1,16 +1,16 @@
 use std::cell::RefCell;
 use std::rc::Rc;
 
-use pyo3::prelude::*;
 use pyo3::Python;
+use pyo3::prelude::*;
 
 use hashbrown::hash_map::Entry;
 use hashbrown::{HashMap, HashSet};
 
 use crate::iterators::{IndexPartitionBlock, RelationalCoarsestPartition};
-use crate::{digraph, Directed, StablePyGraph};
-use petgraph::graph;
+use crate::{Directed, StablePyGraph, digraph};
 use petgraph::Direction::{Incoming, Outgoing};
+use petgraph::graph;
 
 type Block = Vec<graph::NodeIndex>;
 type Counterimage = HashMap<graph::NodeIndex, Vec<graph::NodeIndex>>;

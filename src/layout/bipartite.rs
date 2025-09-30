@@ -16,9 +16,9 @@ use hashbrown::HashSet;
 
 use petgraph::EdgeType;
 
-use super::spring::{recenter, rescale, Point};
-use crate::iterators::Pos2DMapping;
+use super::spring::{Point, recenter, rescale};
 use crate::StablePyGraph;
+use crate::iterators::Pos2DMapping;
 use rustworkx_core::dictmap::*;
 
 pub fn bipartite_layout<Ty: EdgeType>(

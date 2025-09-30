@@ -1,6 +1,6 @@
 use petgraph::graph::{DiGraph, UnGraph};
 use petgraph::visit::EdgeRef;
-use quickcheck::{quickcheck, TestResult};
+use quickcheck::{TestResult, quickcheck};
 use rustworkx_core::generators::complete_graph;
 use std::collections::HashSet;
 

@@ -10,7 +10,7 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-use super::{digraph, InvalidNode, NullGraph};
+use super::{InvalidNode, NullGraph, digraph};
 use rustworkx_core::dictmap::DictMap;
 
 use hashbrown::HashSet;

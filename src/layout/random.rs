@@ -15,8 +15,8 @@ use petgraph::EdgeType;
 use rand::prelude::*;
 use rand_pcg::Pcg64;
 
-use crate::iterators::Pos2DMapping;
 use crate::StablePyGraph;
+use crate::iterators::Pos2DMapping;
 
 pub fn random_layout<Ty: EdgeType>(
     graph: &StablePyGraph<Ty>,

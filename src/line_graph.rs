@@ -10,18 +10,18 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-use crate::{graph, StablePyGraph};
+use crate::{StablePyGraph, graph};
 
 use hashbrown::HashMap;
 
+use petgraph::Undirected;
 use petgraph::graph::{EdgeIndex, NodeIndex};
 use petgraph::visit::{EdgeRef, IntoEdgeReferences};
-use petgraph::Undirected;
 use rustworkx_core::dictmap::*;
 use rustworkx_core::line_graph::line_graph;
 
-use pyo3::prelude::*;
 use pyo3::Python;
+use pyo3::prelude::*;
 
 /// Constructs the line graph of a :class:`~.PyGraph` object.
 ///

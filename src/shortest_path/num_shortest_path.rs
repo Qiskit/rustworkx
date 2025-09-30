@@ -15,9 +15,9 @@ use rustworkx_core::dictmap::*;
 use pyo3::exceptions::PyIndexError;
 use pyo3::prelude::*;
 
+use petgraph::EdgeType;
 use petgraph::graph::NodeIndex;
 use petgraph::visit::{Bfs, NodeIndexable};
-use petgraph::EdgeType;
 
 use num_bigint::{BigUint, ToBigUint};
 

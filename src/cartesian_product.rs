@@ -11,16 +11,16 @@
 // under the License.
 
 use crate::iterators::ProductNodeMap;
-use crate::{digraph, graph, StablePyGraph};
+use crate::{StablePyGraph, digraph, graph};
 
 use hashbrown::HashMap;
 
 use petgraph::visit::{EdgeRef, IntoEdgeReferences, IntoNodeReferences};
-use petgraph::{algo, EdgeType};
+use petgraph::{EdgeType, algo};
 
-use pyo3::prelude::*;
 use pyo3::IntoPyObjectExt;
 use pyo3::Python;
+use pyo3::prelude::*;
 
 fn cartesian_product<Ty: EdgeType>(
     py: Python,

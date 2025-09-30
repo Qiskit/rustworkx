@@ -149,8 +149,8 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::generators::grid_graph;
     use crate::generators::InvalidInputError;
+    use crate::generators::grid_graph;
     use crate::petgraph::visit::EdgeRef;
 
     #[test]
