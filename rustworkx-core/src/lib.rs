@@ -101,6 +101,7 @@ pub mod connectivity;
 /// Module for algorithms that work on DAGs.
 pub mod dag_algo;
 pub mod generators;
+pub mod geometry;
 pub mod graph_ext;
 pub mod line_graph;
 /// Module for maximum weight matching algorithms.
