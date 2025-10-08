@@ -17,7 +17,6 @@ use crate::InvalidMapping;
 use hashbrown::HashMap;
 use petgraph::graph::NodeIndex;
 use pyo3::prelude::*;
-use rustworkx_core::token_swapper;
 
 /// This module performs an approximately optimal Token Swapping algorithm
 /// Supports partial mappings (i.e. not-permutations) for graphs with missing tokens.
@@ -28,10 +27,12 @@ use rustworkx_core::token_swapper;
 /// The inputs are a partial ``mapping`` to be implemented in swaps, and the number of ``trials``
 /// to perform the mapping. It's minimized over the trials.
 ///
-/// It returns a list of tuples representing the swaps to perform.
+/// It returns a list of tuples representing the swaps to perform, where each tuple contains
+/// the node identifiers (integers) of the nodes to swap.
 ///
 /// :param PyGraph graph: The input graph
-/// :param dict[int: int] mapping: Map of (node, token)
+/// :param Mapping[int, int] mapping: Map of (node, token). Can be any mapping-like object
+///     that associates integer node indices to integer token positions (e.g., dict, or custom Mapping types).
 /// :param int trials: The number of trials to run
 /// :param int seed: The random seed to be used in producing random ints for selecting
 ///      which nodes to process next
@@ -44,8 +45,8 @@ use rustworkx_core::token_swapper;
 /// the ``RAYON_NUM_THREADS`` environment variable. For example, setting ``RAYON_NUM_THREADS=4``
 /// would limit the thread pool to 4 threads.
 ///
-/// :returns: A list of tuples which are the swaps to be applied to the mapping to rearrange
-///      the tokens.
+/// :returns: A list of tuples containing the node identifiers (integers) of the swaps to be
+///      applied to the mapping to rearrange the tokens.
 /// :rtype: EdgeList
 #[pyfunction]
 #[pyo3(
@@ -53,25 +54,37 @@ use rustworkx_core::token_swapper;
     signature = (graph, mapping, trials=None, seed=None, parallel_threshold=None)
 )]
 pub fn graph_token_swapper(
+    py: Python<'_>,
     graph: &graph::PyGraph,
-    mapping: HashMap<usize, usize>,
+    mapping: Py<PyAny>,
     trials: Option<usize>,
     seed: Option<u64>,
     parallel_threshold: Option<usize>,
 ) -> PyResult<EdgeList> {
-    let map: HashMap<NodeIndex, NodeIndex> = mapping
-        .iter()
-        .map(|(s, t)| (NodeIndex::new(*s), NodeIndex::new(*t)))
-        .collect();
-    let swaps =
-        match token_swapper::token_swapper(&graph.graph, map, trials, seed, parallel_threshold) {
-            Ok(swaps) => swaps,
-            Err(_) => {
-                return Err(InvalidMapping::new_err(
-                    "Specified mapping could not be made on the given graph",
-                ))
-            }
-        };
+    let items = mapping.getattr(py, "items")?.call0(py)?;
+    let mut map: HashMap<NodeIndex, NodeIndex> = HashMap::new();
+
+    for item_result in items.bind(py).try_iter()? {
+        let item = item_result?;
+        let (key, value): (usize, usize) = item.extract()?;
+        map.insert(NodeIndex::new(key), NodeIndex::new(value));
+    }
+
+    let swaps = match rustworkx_core::token_swapper::token_swapper(
+        &graph.graph,
+        map,
+        trials,
+        seed,
+        parallel_threshold,
+    ) {
+        Ok(swaps) => swaps,
+        Err(_) => {
+            return Err(InvalidMapping::new_err(
+                "Specified mapping could not be made on the given graph",
+            ))
+        }
+    };
+
     Ok(EdgeList {
         edges: swaps
             .into_iter()

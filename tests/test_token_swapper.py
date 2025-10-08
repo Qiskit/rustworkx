@@ -13,7 +13,7 @@
 import unittest
 import itertools
 import rustworkx as rx
-
+from collections.abc import Mapping
 from numpy import random
 
 
@@ -38,6 +38,52 @@ class TestGeneral(unittest.TestCase):
         """Set up test cases."""
         super().setUp()
         random.seed(0)
+
+    def test_simple_dict(self) -> None:
+        """Test a simple permutation on a path graph using a dictionary."""
+        graph = rx.generators.path_graph(4)
+        mapping = {0: 0, 1: 3, 3: 1, 2: 2}
+        swaps = rx.graph_token_swapper(graph, mapping, 4, 4, 1)
+        self.assertIsInstance(swaps, rx.EdgeList)
+        self.assertTrue(
+            all(
+                isinstance(s, tuple) and len(s) == 2 and all(isinstance(n, int) for n in s)
+                for s in swaps
+            )
+        )
+        swap_permutation(mapping, swaps)
+        self.assertEqual(3, len(swaps))
+        self.assertEqual({i: i for i in range(4)}, mapping)
+
+    def test_custom_mapping(self) -> None:
+        """Test a permutation using a custom mapping class."""
+
+        class CustomMapping(Mapping):
+            def __init__(self, data):
+                self._data = data
+
+            def __getitem__(self, key):
+                return self._data[key]
+
+            def __iter__(self):
+                return iter(self._data)
+
+            def __len__(self):
+                return len(self._data)
+
+        graph = rx.generators.path_graph(4)
+        mapping = CustomMapping({0: 0, 1: 3, 3: 1, 2: 2})
+        swaps = rx.graph_token_swapper(graph, mapping, 4, 4, 1)
+        self.assertIsInstance(swaps, rx.EdgeList)
+        self.assertTrue(
+            all(
+                isinstance(s, tuple) and len(s) == 2 and all(isinstance(n, int) for n in s)
+                for s in swaps
+            )
+        )
+        swap_permutation(mapping._data, swaps)
+        self.assertEqual(3, len(swaps))
+        self.assertEqual({i: i for i in range(4)}, mapping._data)
 
     def test_simple(self) -> None:
         """Test a simple permutation on a path graph of size 4."""
