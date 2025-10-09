@@ -1,0 +1,19 @@
+features:
+  - |
+    Added support for reading and writing matrices in the Matrix Market (MM) format via the new
+    :func:~rustworkx.read_matrix_market_data and :func:~rustworkx.write_matrix_market_data functions.
+    These functions enable importing and exporting sparse matrices in COO (Coordinate) format, either from
+    a file or directly from an in-memory string. The implementation uses the nalgebra-sparse crate for
+    efficient handling of sparse data. For example::
+
+      import rustworkx
+
+      Read a sparse matrix from a Matrix Market file
+      nrows, ncols, rows, cols, vals = rustworkx.read_matrix_market_data("matrix.mtx", True)
+
+      Write the same matrix to a new file
+      rustworkx.write_matrix_market_data(nrows, ncols, rows, cols, vals, "output.mtx")
+
+      Or get the Matrix Market data as a string
+      mm_str = rustworkx.write_matrix_market_data(nrows, ncols, rows, cols, vals, None)
+      assert "%%matrixmarket" in mm_str

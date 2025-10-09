@@ -66,6 +66,7 @@ rustworkx-core = { path = "rustworkx-core", version = "=0.17.1" }
 flate2 = "1.0.35"
 pest = "=2.7.15"
 pest_derive = "=2.7.15"
+nalgebra-sparse = { version = "0.11", features = ["io"] }
 
 [dependencies.pyo3]
 version = "0.24"
