@@ -6,6 +6,7 @@ import tempfile
 import unittest
 
 import rustworkx
+import numpy as np
 
 
 class TestMatrixMarket(unittest.TestCase):
@@ -102,3 +103,47 @@ class TestMatrixMarket(unittest.TestCase):
         self.assertSetEqual(set(zip(r2, c2)), {(0, 1), (1, 0)})
         self.assertCountEqual(d2, [1.0, 2.0])
 
+    def test_dense_and_sparse_consistency(self):
+        """Validate consistency between dense and sparse matrices via Matrix Market format."""
+
+        # Dense matrix
+        dense = np.array([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0], [7.0, 8.0, 9.0]])
+
+        # Convert to COO triplets manually
+        nrows, ncols = dense.shape
+        rows, cols, vals = [], [], []
+        for i in range(nrows):
+            for j in range(ncols):
+                rows.append(i)
+                cols.append(j)
+                vals.append(dense[i, j])
+
+        # Write dense as COO -> Matrix Market string
+        mm_str = rustworkx.write_matrix_market_data(nrows, ncols, rows, cols, vals, None)
+
+        n2, m2, r2, c2, d2 = rustworkx.read_matrix_market_data(mm_str, False)
+
+        # Assert matrix dimensions
+        self.assertEqual((n2, m2), (nrows, ncols))
+
+        # Reconstruct dense from COO
+        reconstructed = np.zeros((n2, m2))
+        for i, j, v in zip(r2, c2, d2):
+            reconstructed[i, j] = v
+
+        # Ensure consistency
+        np.testing.assert_allclose(dense, reconstructed)
+
+        # Now test sparse version (only non-zero entries)
+        sparse_rows = [0, 2]
+        sparse_cols = [1, 2]
+        sparse_vals = [10.0, 20.0]
+        mm_sparse_str = rustworkx.write_matrix_market_data(
+            3, 3, sparse_rows, sparse_cols, sparse_vals, None
+        )
+
+        n3, m3, r3, c3, v3 = rustworkx.read_matrix_market_data(mm_sparse_str, False)
+        self.assertEqual((n3, m3), (3, 3))
+        self.assertEqual(
+            sorted(list(zip(r3, c3, v3))), sorted(list(zip(sparse_rows, sparse_cols, sparse_vals)))
+        )
