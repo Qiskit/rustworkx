@@ -31,10 +31,10 @@ use crate::min_scored::MinScored;
 use super::try_control;
 
 macro_rules! try_control_with_result {
-    ($e:expr_2021, $p:stmt) => {
+    ($e:expr, $p:stmt) => {
         try_control_with_result!($e, $p, ());
     };
-    ($e:expr_2021, $p:stmt, $q:stmt) => {
+    ($e:expr, $p:stmt, $q:stmt) => {
         match $e {
             x => {
                 if x.should_break() {

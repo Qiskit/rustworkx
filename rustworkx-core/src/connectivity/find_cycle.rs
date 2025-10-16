@@ -151,7 +151,7 @@ mod tests {
 
     // Utility to assert cycles in the response
     macro_rules! assert_cycle {
-        ($g: expr_2021, $cycle: expr_2021) => {{
+        ($g: expr, $cycle: expr) => {{
             for i in 0..$cycle.len() {
                 let (s, t) = $cycle[i];
                 assert!($g.contains_edge(s, t));
