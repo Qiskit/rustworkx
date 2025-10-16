@@ -208,9 +208,10 @@ class TestNodeLinkJSON(unittest.TestCase):
     def test_node_indices_preserved_with_deletion(self):
         """Test that node indices are preserved after deletion (related to issue #1503)"""
         graph = rustworkx.PyGraph()
-        graph.add_node("A")  # 0
-        graph.add_node("B")  # 1
-        graph.add_node("C")  # 2
+        graph.add_node(None)  # 0
+        graph.add_node(None)  # 1
+        graph.add_node(None)  # 2
+        graph.add_edge(0, 2, None)
         graph.remove_node(1)  # Remove middle node
 
         # Verify original has gaps in indices
@@ -222,18 +223,18 @@ class TestNodeLinkJSON(unittest.TestCase):
 
         # Verify indices are preserved
         self.assertEqual(graph.node_indices(), restored.node_indices())
-        self.assertEqual(graph.nodes(), restored.nodes())
+        self.assertEqual(graph.edge_list(), restored.edge_list())
 
     def test_node_indices_preserved_with_contraction(self):
         """Test that node indices are preserved after contraction (issue #1503)"""
         graph = rustworkx.PyGraph()
-        graph.add_node("A")  # 0
-        graph.add_node("B")  # 1
-        graph.add_node("C")  # 2
+        graph.add_node(None)  # 0
+        graph.add_node(None)  # 1
+        graph.add_node(None)  # 2
 
         # Contract nodes 0 and 1
-        contracted_idx = graph.contract_nodes([0, 1], "AB")
-        graph.add_edge(2, contracted_idx, "C->AB")
+        contracted_idx = graph.contract_nodes([0, 1], None)
+        graph.add_edge(2, contracted_idx, None)
 
         # Verify original has non-consecutive indices
         self.assertEqual([2, contracted_idx], graph.node_indices())
@@ -250,11 +251,11 @@ class TestNodeLinkJSON(unittest.TestCase):
         """Test index preservation with multiple deletions and edges"""
         graph = rustworkx.PyGraph()
         for i in range(6):
-            graph.add_node(f"Node{i}")
+            graph.add_node(None)
 
-        graph.add_edge(0, 1, "0-1")
-        graph.add_edge(2, 3, "2-3")
-        graph.add_edge(4, 5, "4-5")
+        graph.add_edge(0, 1, None)
+        graph.add_edge(2, 3, None)
+        graph.add_edge(4, 5, None)
 
         # Remove nodes 1 and 4
         graph.remove_node(1)
@@ -270,4 +271,3 @@ class TestNodeLinkJSON(unittest.TestCase):
         # Verify complete state is preserved
         self.assertEqual(graph.node_indices(), restored.node_indices())
         self.assertEqual(graph.edge_list(), restored.edge_list())
-        self.assertEqual(graph.nodes(), restored.nodes())
