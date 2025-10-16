@@ -74,7 +74,13 @@ pub fn from_node_link_json_file<'py>(
     Ok(if graph.directed {
         let mut inner_graph: StablePyGraph<Directed> =
             StablePyGraph::with_capacity(graph.nodes.len(), graph.links.len());
-        let node_removed = node_link_data::parse_node_link_data(&py, graph, &mut inner_graph, node_attrs, edge_attrs)?;
+        let node_removed = node_link_data::parse_node_link_data(
+            &py,
+            graph,
+            &mut inner_graph,
+            node_attrs,
+            edge_attrs,
+        )?;
         digraph::PyDiGraph {
             graph: inner_graph,
             cycle_state: algo::DfsSpace::default(),
@@ -88,7 +94,13 @@ pub fn from_node_link_json_file<'py>(
     } else {
         let mut inner_graph: StablePyGraph<Undirected> =
             StablePyGraph::with_capacity(graph.nodes.len(), graph.links.len());
-        let node_removed = node_link_data::parse_node_link_data(&py, graph, &mut inner_graph, node_attrs, edge_attrs)?;
+        let node_removed = node_link_data::parse_node_link_data(
+            &py,
+            graph,
+            &mut inner_graph,
+            node_attrs,
+            edge_attrs,
+        )?;
 
         graph::PyGraph {
             graph: inner_graph,
@@ -150,7 +162,13 @@ pub fn parse_node_link_json<'py>(
     Ok(if graph.directed {
         let mut inner_graph: StablePyGraph<Directed> =
             StablePyGraph::with_capacity(graph.nodes.len(), graph.links.len());
-        let node_removed = node_link_data::parse_node_link_data(&py, graph, &mut inner_graph, node_attrs, edge_attrs)?;
+        let node_removed = node_link_data::parse_node_link_data(
+            &py,
+            graph,
+            &mut inner_graph,
+            node_attrs,
+            edge_attrs,
+        )?;
         digraph::PyDiGraph {
             graph: inner_graph,
             cycle_state: algo::DfsSpace::default(),
@@ -164,7 +182,13 @@ pub fn parse_node_link_json<'py>(
     } else {
         let mut inner_graph: StablePyGraph<Undirected> =
             StablePyGraph::with_capacity(graph.nodes.len(), graph.links.len());
-        let node_removed = node_link_data::parse_node_link_data(&py, graph, &mut inner_graph, node_attrs, edge_attrs)?;
+        let node_removed = node_link_data::parse_node_link_data(
+            &py,
+            graph,
+            &mut inner_graph,
+            node_attrs,
+            edge_attrs,
+        )?;
         graph::PyGraph {
             graph: inner_graph,
             node_removed,

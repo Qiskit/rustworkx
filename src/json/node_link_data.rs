@@ -91,10 +91,7 @@ pub fn parse_node_link_data<Ty: EdgeType>(
 
     let node_removed = if preserve_ids {
         // Find the maximum node ID to determine how many placeholder nodes we need
-        let max_id = graph.nodes.iter()
-            .filter_map(|n| n.id)
-            .max()
-            .unwrap_or(0);
+        let max_id = graph.nodes.iter().filter_map(|n| n.id).max().unwrap_or(0);
 
         // Create placeholder nodes up to max_id
         let mut tmp_nodes: Vec<NodeIndex> = Vec::new();
