@@ -83,22 +83,73 @@ pub fn parse_node_link_data<Ty: EdgeType>(
     out_graph: &mut StablePyGraph<Ty>,
     node_attrs: Option<PyObject>,
     edge_attrs: Option<PyObject>,
-) -> PyResult<()> {
+) -> PyResult<bool> {
     let mut id_mapping: HashMap<usize, NodeIndex> = HashMap::with_capacity(graph.nodes.len());
-    for node in graph.nodes {
-        let payload = match node.data {
-            Some(data) => match node_attrs {
-                Some(ref callback) => callback.call1(*py, (data,))?,
-                None => data.into_py_any(*py)?,
-            },
-            None => py.None(),
-        };
-        let id = out_graph.add_node(payload);
-        match node.id {
-            Some(input_id) => id_mapping.insert(input_id, id),
-            None => id_mapping.insert(id.index(), id),
-        };
-    }
+
+    // Check if nodes have explicit IDs that need preservation
+    let preserve_ids = graph.nodes.iter().any(|n| n.id.is_some());
+
+    let node_removed = if preserve_ids {
+        // Find the maximum node ID to determine how many placeholder nodes we need
+        let max_id = graph.nodes.iter()
+            .filter_map(|n| n.id)
+            .max()
+            .unwrap_or(0);
+
+        // Create placeholder nodes up to max_id
+        let mut tmp_nodes: Vec<NodeIndex> = Vec::new();
+        for i in 0..=max_id {
+            let idx = out_graph.add_node(py.None());
+            tmp_nodes.push(idx);
+        }
+
+        // Replace placeholder nodes with actual data and track which to keep
+        for node in graph.nodes {
+            let payload = match node.data {
+                Some(data) => match node_attrs {
+                    Some(ref callback) => callback.call1(*py, (data,))?,
+                    None => data.into_py_any(*py)?,
+                },
+                None => py.None(),
+            };
+            let node_id = node.id.unwrap_or(0);
+            let idx = NodeIndex::new(node_id);
+
+            // Replace the placeholder with actual data
+            if let Some(weight) = out_graph.node_weight_mut(idx) {
+                *weight = payload;
+            }
+
+            id_mapping.insert(node_id, idx);
+            // Mark this index as used (remove from tmp_nodes)
+            tmp_nodes.retain(|&n| n != idx);
+        }
+
+        // Track if we're removing any nodes (indicates gaps in indices)
+        let has_gaps = !tmp_nodes.is_empty();
+
+        // Remove remaining placeholder nodes
+        for tmp_node in tmp_nodes {
+            out_graph.remove_node(tmp_node);
+        }
+
+        has_gaps
+    } else {
+        // No explicit IDs, just add nodes sequentially (legacy behavior)
+        for node in graph.nodes {
+            let payload = match node.data {
+                Some(data) => match node_attrs {
+                    Some(ref callback) => callback.call1(*py, (data,))?,
+                    None => data.into_py_any(*py)?,
+                },
+                None => py.None(),
+            };
+            let id = out_graph.add_node(payload);
+            id_mapping.insert(id.index(), id);
+        }
+        false
+    };
+
     for edge in graph.links {
         let data = match edge.data {
             Some(data) => match edge_attrs {
@@ -109,7 +160,7 @@ pub fn parse_node_link_data<Ty: EdgeType>(
         };
         out_graph.add_edge(id_mapping[&edge.source], id_mapping[&edge.target], data);
     }
-    Ok(())
+    Ok(node_removed)
 }
 
 #[allow(clippy::too_many_arguments)]
