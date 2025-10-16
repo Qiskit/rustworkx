@@ -95,7 +95,7 @@ pub fn parse_node_link_data<Ty: EdgeType>(
 
         // Create placeholder nodes up to max_id
         let mut tmp_nodes: Vec<NodeIndex> = Vec::new();
-        for i in 0..=max_id {
+        for _ in 0..=max_id {
             let idx = out_graph.add_node(py.None());
             tmp_nodes.push(idx);
         }
