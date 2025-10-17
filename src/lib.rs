@@ -690,8 +690,10 @@ fn rustworkx(py: Python<'_>, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(pagerank))?;
     m.add_wrapped(wrap_pyfunction!(hits))?;
     m.add_wrapped(wrap_pyfunction!(from_dot))?;
-    m.add_wrapped(wrap_pyfunction!(write_matrix_market_data))?;
-    m.add_wrapped(wrap_pyfunction!(read_matrix_market_data))?;
+    m.add_wrapped(wrap_pyfunction!(write_matrix_market_graph))?;
+    m.add_wrapped(wrap_pyfunction!(write_matrix_market_digraph))?;
+    m.add_wrapped(wrap_pyfunction!(read_matrix_market))?;
+    m.add_wrapped(wrap_pyfunction!(read_matrix_market_file))?;
     m.add_class::<digraph::PyDiGraph>()?;
     m.add_class::<graph::PyGraph>()?;
     m.add_class::<toposort::TopologicalSorter>()?;

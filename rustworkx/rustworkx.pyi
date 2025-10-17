@@ -754,16 +754,14 @@ def from_node_link_json_file(
 def from_dot(
     dot_str: str,
 ) -> PyDiGraph[_S, _T] | PyGraph[_S, _T]: ...
-def read_matrix_market_data(
-    input: str,
-    from_file: bool,
-) -> tuple[int, int, list[int], list[int], list[float]]: ...
-def write_matrix_market_data(
-    nrows: int,
-    ncols: int,
-    rows: list[int],
-    cols: list[int],
-    data: list[float],
+def read_matrix_market(contents: str) -> PyGraph | PyDiGraph: ...
+def read_matrix_market_file(path: str) -> PyGraph | PyDiGraph: ...
+def write_matrix_market_graph(
+    graph: PyGraph,
+    path: str | None = None,
+) -> str | None: ...
+def write_matrix_market_digraph(
+    graph: PyDiGraph,
     path: str | None = None,
 ) -> str | None: ...
 
