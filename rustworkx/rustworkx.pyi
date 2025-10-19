@@ -756,13 +756,15 @@ def from_dot(
 ) -> PyDiGraph[_S, _T] | PyGraph[_S, _T]: ...
 def read_matrix_market(contents: str) -> PyGraph | PyDiGraph: ...
 def read_matrix_market_file(path: str) -> PyGraph | PyDiGraph: ...
-def write_matrix_market_graph(
+def graph_write_matrix_market(
     graph: PyGraph,
-    path: str | None = None,
+    /,
+    path: str | None = ...,
 ) -> str | None: ...
-def write_matrix_market_digraph(
+def digraph_write_matrix_market(
     graph: PyDiGraph,
-    path: str | None = None,
+    /,
+    path: str | None = ...,
 ) -> str | None: ...
 
 # Geometry

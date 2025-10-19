@@ -136,7 +136,7 @@ pub fn read_matrix_market_file(py: Python<'_>, path: &str) -> PyResult<PyObject>
 
 /// Write Matrix Market from a python graph (PyGraph or PyDiGraph). If `path` is Some then write file, else return string.
 #[pyfunction]
-pub fn write_matrix_market_graph(
+pub fn graph_write_matrix_market(
     py: Python<'_>,
     graph: &PyGraph,
     path: Option<&str>,
@@ -162,7 +162,7 @@ pub fn write_matrix_market_graph(
 
 /// Write a PyDiGraph (directed) to Matrix Market
 #[pyfunction]
-pub fn write_matrix_market_digraph(
+pub fn digraph_write_matrix_market(
     py: Python<'_>,
     graph: &PyDiGraph,
     path: Option<&str>,

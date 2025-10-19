@@ -13,7 +13,7 @@ class TestMatrixMarketDiGraph(unittest.TestCase):
         g.add_edge(0, 1, 1.0)
         g.add_edge(1, 2, 1.0)
 
-        mm_str = rustworkx.write_matrix_market_digraph(g, None)
+        mm_str = rustworkx.write_matrix_market(g, None)
         self.assertIsInstance(mm_str, str)
         self.assertIn("matrix", mm_str)
         # Directed edges are not duplicated
@@ -27,7 +27,7 @@ class TestMatrixMarketDiGraph(unittest.TestCase):
         g.add_edge(1, 2, 1.0)
 
         with tempfile.NamedTemporaryFile(suffix=".mtx", delete=False) as tmp:
-            rustworkx.write_matrix_market_digraph(g, tmp.name)
+            rustworkx.write_matrix_market(g, tmp.name)
             tmp.seek(0)
             content = tmp.read().decode("utf-8")
 
@@ -71,7 +71,7 @@ class TestMatrixMarketDiGraph(unittest.TestCase):
         g.add_edge(0, 1, 1.0)
         g.add_edge(1, 2, 1.0)
 
-        mm_str = rustworkx.write_matrix_market_digraph(g, None)
+        mm_str = rustworkx.write_matrix_market(g, None)
         g2 = rustworkx.read_matrix_market(mm_str)
 
         self.assertEqual(len(g2.nodes()), len(g.nodes()))
@@ -85,7 +85,7 @@ class TestMatrixMarketDiGraph(unittest.TestCase):
         g.add_edge(0, 1, 1.0)
 
         with tempfile.NamedTemporaryFile(suffix=".mtx", delete=False) as tmp:
-            rustworkx.write_matrix_market_digraph(g, tmp.name)
+            rustworkx.write_matrix_market(g, tmp.name)
             g2 = rustworkx.read_matrix_market_file(tmp.name)
 
         self.assertEqual(len(g2.nodes()), 2)

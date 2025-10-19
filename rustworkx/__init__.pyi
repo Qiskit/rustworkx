@@ -170,8 +170,8 @@ from .rustworkx import digraph_node_link_json as digraph_node_link_json
 from .rustworkx import graph_node_link_json as graph_node_link_json
 from .rustworkx import from_node_link_json_file as from_node_link_json_file
 from .rustworkx import from_dot as from_dot
-from .rustworkx import write_matrix_market_graph as write_matrix_market_graph
-from .rustworkx import write_matrix_market_digraph as write_matrix_market_digraph
+from .rustworkx import graph_write_matrix_market as graph_write_matrix_market
+from .rustworkx import digraph_write_matrix_market as digraph_write_matrix_market
 from .rustworkx import read_matrix_market_file as read_matrix_market_file
 from .rustworkx import read_matrix_market as read_matrix_market
 from .rustworkx import parse_node_link_json as parse_node_link_json
@@ -680,6 +680,11 @@ def write_graphml(
     /,
     keys: list[GraphMLKey] | None = ...,
     compression: str | None = ...,
+) -> None: ...
+def write_matrix_market(
+    graph: PyGraph | PyDiGraph,
+    /,
+    path: str | None = ...,
 ) -> None: ...
 def bfs_layers(
     graph: PyGraph | PyDiGraph,
