@@ -136,7 +136,25 @@ pub fn read_matrix_market_file(py: Python<'_>, path: &str) -> PyResult<PyObject>
     read_matrix_market(py, &contents)
 }
 
-/// Write Matrix Market from a python graph (PyGraph or PyDiGraph). If `path` is Some then write file, else return string.
+/// Write a graph to Matrix Market format.
+///
+/// Matrix Market is a human-readable ASCII file format for storing sparse matrices
+/// as coordinate format (row, column, value) triplets. The graph is converted to a
+/// coordinate (COO) sparse matrix representation where edges become non-zero entries.
+///
+/// For more information about Matrix Market format, see:
+/// https://math.nist.gov/MatrixMarket/formats.html
+///
+/// :param PyGraph graph: The graph to write in Matrix Market format.
+/// :param Optional[str] path: Optional file path to write the output. If None,
+///                            returns the Matrix Market content as a string.
+///
+/// :returns: None if a file path was provided, otherwise returns the Matrix Market
+///          formatted content as a string.
+/// :rtype: Optional[str]
+///
+/// :raises ValueError: when the graph cannot be converted to a valid COO matrix.
+/// :raises IOError: when an error occurs during file I/O or format serialization.
 #[pyfunction]
 #[pyo3(signature=(graph, path=None),text_signature = "(graph, /, path=None)")]
 pub fn graph_write_matrix_market(
@@ -163,7 +181,25 @@ pub fn graph_write_matrix_market(
     }
 }
 
-/// Write a PyDiGraph (directed) to Matrix Market
+/// Write a directed graph to Matrix Market format.
+///
+/// Matrix Market is a human-readable ASCII file format for storing sparse matrices
+/// as coordinate format (row, column, value) triplets. The directed graph is converted
+/// to a coordinate (COO) sparse matrix representation where edges become non-zero entries.
+///
+/// For more information about Matrix Market format, see:
+/// https://math.nist.gov/MatrixMarket/formats.html
+///
+/// :param PyDiGraph graph: The directed graph to write in Matrix Market format.
+/// :param Optional[str] path: Optional file path to write the output. If None,
+///                            returns the Matrix Market content as a string.
+///
+/// :returns: None if a file path was provided, otherwise returns the Matrix Market
+///          formatted content as a string.
+/// :rtype: Optional[str]
+///
+/// :raises ValueError: when the graph cannot be converted to a valid COO matrix.
+/// :raises IOError: when an error occurs during file I/O or format serialization.
 #[pyfunction]
 #[pyo3(signature=(graph, path=None),text_signature = "(graph, /, path=None)")]
 pub fn digraph_write_matrix_market(
