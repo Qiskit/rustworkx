@@ -15,10 +15,7 @@ use rustworkx_core::petgraph::{Directed, EdgeType, Undirected};
 type MatrixMarketData = (usize, usize, Vec<usize>, Vec<usize>, Vec<f64>);
 
 /// Convert any StablePyGraph (directed or undirected) into COO triplets
-fn graph_to_coo<Ty: EdgeType>(
-    _py: Python<'_>,
-    graph: &StablePyGraph<Ty>,
-) -> PyResult<MatrixMarketData> {
+fn graph_to_coo<Ty: EdgeType>(graph: &StablePyGraph<Ty>) -> PyResult<MatrixMarketData> {
     let mut rows = Vec::new();
     let mut cols = Vec::new();
     let mut vals = Vec::new();
@@ -105,7 +102,23 @@ fn coo_to_graph(py: Python<'_>, coo: &CooMatrix<f64>, is_directed: bool) -> PyRe
     }
 }
 
-/// Read Matrix Market from string contents and return the graph (PyGraph or PyDiGraph)
+/// Read a graph from Matrix Market format string contents.
+///
+/// Matrix Market is a human-readable ASCII file format for storing sparse matrices
+/// as coordinate format (row, column, value) triplets. This function parses Matrix
+/// Market formatted string contents and converts it to a graph representation.
+///
+/// For more information about Matrix Market format, see:
+/// https://math.nist.gov/MatrixMarket/formats.html
+///
+/// :param str contents: The Matrix Market formatted string contents to parse.
+///
+/// :returns: A graph object constructed from the Matrix Market data. Returns a
+///          :class:`~rustworkx.PyDiGraph` for directed matrices or a
+///          :class:`~rustworkx.PyGraph` for undirected matrices.
+/// :rtype: PyGraph or PyDiGraph
+///
+/// :raises ValueError: when the Matrix Market string contains invalid data or format.
 #[pyfunction]
 #[pyo3(signature=(contents,),text_signature = "(contents)")]
 pub fn read_matrix_market(py: Python<'_>, contents: &str) -> PyResult<PyObject> {
@@ -126,7 +139,22 @@ pub fn read_matrix_market(py: Python<'_>, contents: &str) -> PyResult<PyObject> 
     coo_to_graph(py, &coo, is_directed)
 }
 
-/// Read Matrix Market from a file path and return the graph
+/// Read a graph from a Matrix Market format file.
+///
+/// Matrix Market is a human-readable ASCII file format for storing sparse matrices
+/// as coordinate format (row, column, value) triplets. This function reads a Matrix
+/// Market file and converts it to a graph representation.
+///
+/// For more information about Matrix Market format, see:
+/// https://math.nist.gov/MatrixMarket/formats.html
+///
+/// :param str path: The file path to read the Matrix Market data from.
+///
+/// :returns: A graph object constructed from the Matrix Market file.
+/// :rtype: PyGraph or PyDiGraph
+///
+/// :raises IOError: when an error occurs during file reading or parsing.
+/// :raises ValueError: when the Matrix Market file contains invalid data or format.
 #[pyfunction]
 #[pyo3(signature=(path,),text_signature = "(path)")]
 pub fn read_matrix_market_file(py: Python<'_>, path: &str) -> PyResult<PyObject> {
@@ -158,11 +186,11 @@ pub fn read_matrix_market_file(py: Python<'_>, path: &str) -> PyResult<PyObject>
 #[pyfunction]
 #[pyo3(signature=(graph, path=None),text_signature = "(graph, /, path=None)")]
 pub fn graph_write_matrix_market(
-    py: Python<'_>,
+    _py: Python<'_>,
     graph: &PyGraph,
     path: Option<&str>,
 ) -> PyResult<Option<String>> {
-    let (nrows, ncols, rows, cols, vals) = graph_to_coo(py, &graph.graph)?;
+    let (nrows, ncols, rows, cols, vals) = graph_to_coo(&graph.graph)?;
 
     let coo = CooMatrix::try_from_triplets(nrows, ncols, rows, cols, vals)
         .map_err(|e| PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("{}", e)))?;
@@ -175,9 +203,7 @@ pub fn graph_write_matrix_market(
         let mut cursor = Cursor::new(Vec::new());
         save_to_matrix_market(&mut cursor, &coo)
             .map_err(|e| PyErr::new::<pyo3::exceptions::PyIOError, _>(format!("{}", e)))?;
-        Ok(Some(
-            String::from_utf8(cursor.into_inner()).unwrap_or_default(),
-        ))
+        Ok(Some(String::from_utf8(cursor.into_inner())?))
     }
 }
 
@@ -203,11 +229,11 @@ pub fn graph_write_matrix_market(
 #[pyfunction]
 #[pyo3(signature=(graph, path=None),text_signature = "(graph, /, path=None)")]
 pub fn digraph_write_matrix_market(
-    py: Python<'_>,
+    _py: Python<'_>,
     graph: &PyDiGraph,
     path: Option<&str>,
 ) -> PyResult<Option<String>> {
-    let (nrows, ncols, rows, cols, vals) = graph_to_coo(py, &graph.graph)?;
+    let (nrows, ncols, rows, cols, vals) = graph_to_coo(&graph.graph)?;
 
     let coo = CooMatrix::try_from_triplets(nrows, ncols, rows, cols, vals)
         .map_err(|e| PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("{}", e)))?;
@@ -220,8 +246,6 @@ pub fn digraph_write_matrix_market(
         let mut cursor = Cursor::new(Vec::new());
         save_to_matrix_market(&mut cursor, &coo)
             .map_err(|e| PyErr::new::<pyo3::exceptions::PyIOError, _>(format!("{}", e)))?;
-        Ok(Some(
-            String::from_utf8(cursor.into_inner()).unwrap_or_default(),
-        ))
+        Ok(Some(String::from_utf8(cursor.into_inner())?))
     }
 }
