@@ -107,6 +107,7 @@ fn coo_to_graph(py: Python<'_>, coo: &CooMatrix<f64>, is_directed: bool) -> PyRe
 
 /// Read Matrix Market from string contents and return the graph (PyGraph or PyDiGraph)
 #[pyfunction]
+#[pyo3(signature=(contents,),text_signature = "(contents)")]
 pub fn read_matrix_market(py: Python<'_>, contents: &str) -> PyResult<PyObject> {
     // find header (first non-comment/blank line)
     let header_line = contents
@@ -127,6 +128,7 @@ pub fn read_matrix_market(py: Python<'_>, contents: &str) -> PyResult<PyObject> 
 
 /// Read Matrix Market from a file path and return the graph
 #[pyfunction]
+#[pyo3(signature=(path,),text_signature = "(path)")]
 pub fn read_matrix_market_file(py: Python<'_>, path: &str) -> PyResult<PyObject> {
     let contents = fs::read_to_string(path)
         .map_err(|e| PyErr::new::<pyo3::exceptions::PyIOError, _>(format!("{}", e)))?;
@@ -136,6 +138,7 @@ pub fn read_matrix_market_file(py: Python<'_>, path: &str) -> PyResult<PyObject>
 
 /// Write Matrix Market from a python graph (PyGraph or PyDiGraph). If `path` is Some then write file, else return string.
 #[pyfunction]
+#[pyo3(signature=(graph, path=None),text_signature = "(graph, /, path=None)")]
 pub fn graph_write_matrix_market(
     py: Python<'_>,
     graph: &PyGraph,
@@ -162,6 +165,7 @@ pub fn graph_write_matrix_market(
 
 /// Write a PyDiGraph (directed) to Matrix Market
 #[pyfunction]
+#[pyo3(signature=(graph, path=None),text_signature = "(graph, /, path=None)")]
 pub fn digraph_write_matrix_market(
     py: Python<'_>,
     graph: &PyDiGraph,
