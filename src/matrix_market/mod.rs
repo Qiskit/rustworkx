@@ -1,4 +1,4 @@
-use crate::{digraph::PyDiGraph, graph::PyGraph, StablePyGraph};
+use crate::{StablePyGraph, digraph::PyDiGraph, graph::PyGraph};
 use nalgebra_sparse::coo::CooMatrix;
 use nalgebra_sparse::io::{
     load_coo_from_matrix_market_str, save_to_matrix_market, save_to_matrix_market_file,
@@ -54,7 +54,7 @@ fn is_directed_from_header(header_line: &str) -> bool {
 }
 
 /// Create a rustworkx graph from a COO matrix. Returns a PyObject (graph instance).
-fn coo_to_graph(py: Python<'_>, coo: &CooMatrix<f64>, is_directed: bool) -> PyResult<PyObject> {
+fn coo_to_graph(py: Python<'_>, coo: &CooMatrix<f64>, is_directed: bool) -> PyResult<Py<PyAny>> {
     if is_directed {
         let mut inner_graph: StablePyGraph<Directed> =
             StablePyGraph::with_capacity(coo.nrows(), coo.nnz());
@@ -121,7 +121,7 @@ fn coo_to_graph(py: Python<'_>, coo: &CooMatrix<f64>, is_directed: bool) -> PyRe
 /// :raises ValueError: when the Matrix Market string contains invalid data or format.
 #[pyfunction]
 #[pyo3(signature=(contents,),text_signature = "(contents)")]
-pub fn read_matrix_market(py: Python<'_>, contents: &str) -> PyResult<PyObject> {
+pub fn read_matrix_market(py: Python<'_>, contents: &str) -> PyResult<Py<PyAny>> {
     // find header (first non-comment/blank line)
     let header_line = contents
         .lines()
@@ -157,7 +157,7 @@ pub fn read_matrix_market(py: Python<'_>, contents: &str) -> PyResult<PyObject> 
 /// :raises ValueError: when the Matrix Market file contains invalid data or format.
 #[pyfunction]
 #[pyo3(signature=(path,),text_signature = "(path)")]
-pub fn read_matrix_market_file(py: Python<'_>, path: &str) -> PyResult<PyObject> {
+pub fn read_matrix_market_file(py: Python<'_>, path: &str) -> PyResult<Py<PyAny>> {
     let contents = fs::read_to_string(path)
         .map_err(|e| PyErr::new::<pyo3::exceptions::PyIOError, _>(format!("{}", e)))?;
 
