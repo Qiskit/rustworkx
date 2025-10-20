@@ -1,0 +1,7 @@
+features:
+  - |
+    Added support for reading and writing matrices in the Matrix Market (MM) format via the new
+    :func:`~rustworkx.read_matrix_market`, :func:`~rustworkx.read_matrix_market_file`,
+    and :func:`~rustworkx.write_matrix_market` functions.
+    These functions enable importing and exporting sparse matrices in COO (Coordinate) format, either from
+    a file or directly from an in-memory string.

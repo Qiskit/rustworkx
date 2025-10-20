@@ -2314,6 +2314,30 @@ def write_graphml(graph, path, /, keys=None, compression=None):
 
 
 @_rustworkx_dispatch
+def write_matrix_market(graph, /, path=None):
+    """Write a graph to Matrix Market format.
+
+    Matrix Market is a human-readable ASCII file format for storing sparse matrices
+    as coordinate format (row, column, value) triplets. The graph is converted to a
+    coordinate (COO) sparse matrix representation where edges become non-zero entries.
+
+    For more information about Matrix Market format, see:
+    https://math.nist.gov/MatrixMarket/formats.html
+
+    :param graph: The graph to write in Matrix Market format. This can be a
+        :class:`~rustworkx.PyGraph` or :class:`~rustworkx.PyDiGraph`.
+    :param path: Optional file path to write the output. If not specified,
+        returns the Matrix Market content as a string.
+    :returns: None if a file path was provided, otherwise returns the Matrix Market
+        formatted content as a string.
+    :rtype: Optional[str]
+    :raises ValueError: when the graph cannot be converted to a valid COO matrix.
+    :raises IOError: when an error occurs during file I/O or format serialization.
+    """
+    raise TypeError(f"Invalid Input Type {type(graph)} for graph")
+
+
+@_rustworkx_dispatch
 def bfs_layers(graph, sources=None):
     """Return the BFS layers of a graph as a list of lists.
 
