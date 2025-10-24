@@ -167,11 +167,11 @@ where
 
 #[cfg(test)]
 mod tests {
+    use crate::Result;
     use crate::dictmap::DictMap;
     use crate::shortest_path::dijkstra;
-    use crate::Result;
-    use petgraph::prelude::*;
     use petgraph::Graph;
+    use petgraph::prelude::*;
 
     #[test]
     fn test_dijk() {

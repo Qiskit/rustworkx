@@ -772,11 +772,7 @@ where
 
     // Assuming that color is either c or d, returns the other color
     fn flip_color(&self, c: usize, d: usize, e: usize) -> usize {
-        if e == c {
-            d
-        } else {
-            c
-        }
+        if e == c { d } else { c }
     }
 
     // Returns the longest path starting at node u with alternating colors c, d, c, d, c, etc.
@@ -906,16 +902,16 @@ where
 #[cfg(test)]
 mod test_node_coloring {
     use crate::coloring::{
-        greedy_node_color, greedy_node_color_with_coloring_strategy, two_color, ColoringStrategy,
+        ColoringStrategy, greedy_node_color, greedy_node_color_with_coloring_strategy, two_color,
     };
     use crate::dictmap::*;
     use crate::generators::{complete_graph, cycle_graph, heavy_hex_graph, path_graph};
     use std::convert::Infallible;
     use std::hash::Hash;
 
+    use crate::petgraph::Undirected;
     use crate::petgraph::graph::NodeIndex;
     use crate::petgraph::prelude::*;
-    use crate::petgraph::Undirected;
     use petgraph::visit::{IntoEdgeReferences, IntoNodeIdentifiers};
 
     /// Helper function to check validity of node coloring
@@ -1378,14 +1374,14 @@ mod test_node_coloring {
 #[cfg(test)]
 mod test_edge_coloring {
     use crate::coloring::{
-        greedy_edge_color, greedy_edge_color_with_coloring_strategy, ColoringStrategy,
+        ColoringStrategy, greedy_edge_color, greedy_edge_color_with_coloring_strategy,
     };
     use crate::dictmap::DictMap;
     use crate::petgraph::Graph;
     use std::convert::Infallible;
 
-    use petgraph::graph::{edge_index, EdgeIndex};
     use petgraph::Undirected;
+    use petgraph::graph::{EdgeIndex, edge_index};
 
     #[test]
     fn test_legacy_greedy_edge_color_empty_graph() {
@@ -1674,9 +1670,9 @@ mod test_misra_gries_edge_coloring {
     use crate::petgraph::Graph;
 
     use hashbrown::HashSet;
+    use petgraph::Undirected;
     use petgraph::graph::EdgeIndex;
     use petgraph::visit::{EdgeRef, IntoEdges, IntoNodeIdentifiers, NodeIndexable};
-    use petgraph::Undirected;
     use std::fmt::Debug;
     use std::hash::Hash;
 

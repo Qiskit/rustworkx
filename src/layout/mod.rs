@@ -22,8 +22,8 @@ use spring::Point;
 
 use hashbrown::{HashMap, HashSet};
 
-use pyo3::prelude::*;
 use pyo3::Python;
+use pyo3::prelude::*;
 
 use crate::iterators::Pos2DMapping;
 
@@ -87,7 +87,7 @@ pub fn graph_spring_layout(
     adaptive_cooling: bool,
     num_iter: usize,
     tol: f64,
-    weight_fn: Option<PyObject>,
+    weight_fn: Option<Py<PyAny>>,
     default_weight: f64,
     scale: f64,
     center: Option<Point>,
@@ -171,7 +171,7 @@ pub fn digraph_spring_layout(
     adaptive_cooling: bool,
     num_iter: usize,
     tol: Option<f64>,
-    weight_fn: Option<PyObject>,
+    weight_fn: Option<Py<PyAny>>,
     default_weight: f64,
     scale: f64,
     center: Option<Point>,
