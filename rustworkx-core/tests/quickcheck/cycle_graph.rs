@@ -1,6 +1,6 @@
 use petgraph::graph::{DiGraph, UnGraph};
 use petgraph::visit::EdgeRef;
-use quickcheck::{quickcheck, TestResult};
+use quickcheck::{TestResult, quickcheck};
 use rustworkx_core::generators::cycle_graph;
 use std::collections::HashSet;
 
@@ -45,7 +45,7 @@ fn prop_cycle_graph_bidirectional() {
             match cycle_graph::<DiGraph<(), ()>, (), _, _, ()>(Some(n), None, || (), || (), true) {
                 Ok(g) => g,
                 Err(_) => {
-                    return TestResult::error("Unexpected error in bidirectional cycle_graph")
+                    return TestResult::error("Unexpected error in bidirectional cycle_graph");
                 }
             };
 

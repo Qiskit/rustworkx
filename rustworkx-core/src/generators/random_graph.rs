@@ -28,8 +28,8 @@ use rand::prelude::*;
 use rand_distr::{Distribution, Uniform};
 use rand_pcg::Pcg64;
 
-use super::star_graph;
 use super::InvalidInputError;
+use super::star_graph;
 use crate::geometry::hyperboloid_hyperbolic_distance;
 
 /// Generates a random regular graph
@@ -144,7 +144,7 @@ where
     let mut try_creation = || -> Option<IndexSet<(G::NodeId, G::NodeId)>> {
         let mut edges: IndexSet<(G::NodeId, G::NodeId)> = IndexSet::with_capacity(num_nodes);
         let mut stubs: Vec<G::NodeId> = (0..num_nodes)
-            .flat_map(|x| std::iter::repeat(graph.from_index(x)).take(degree))
+            .flat_map(|x| std::iter::repeat_n(graph.from_index(x), degree))
             .collect();
         while !stubs.is_empty() {
             let mut potential_edges: DictMap<G::NodeId, usize> = DictMap::default();
@@ -808,7 +808,7 @@ where
                 .edges_directed(x, Outgoing)
                 .chain(graph.edges_directed(x, Incoming))
                 .count();
-            std::iter::repeat(x).take(degree)
+            std::iter::repeat_n(x, degree)
         })
         .collect();
     let mut source = graph.node_count();

@@ -15,8 +15,8 @@ use std::hash::Hash;
 use petgraph::data::{Build, Create};
 use petgraph::visit::{Data, NodeIndexable, NodeRef};
 
-use super::utils::get_num_nodes;
 use super::InvalidInputError;
+use super::utils::get_num_nodes;
 use crate::utils::pairwise;
 
 /// Generate a barbell graph where two identical complete graphs are
@@ -184,8 +184,8 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::generators::barbell_graph;
     use crate::generators::InvalidInputError;
+    use crate::generators::barbell_graph;
     use crate::petgraph::visit::EdgeRef;
 
     #[test]

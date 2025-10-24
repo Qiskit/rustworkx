@@ -134,11 +134,11 @@ where
 
 #[cfg(test)]
 mod tests {
-    use super::{greedy_routing, greedy_routing_success_rate, NodeNotReachedError};
+    use super::{NodeNotReachedError, greedy_routing, greedy_routing_success_rate};
     use crate::geometry::distances;
     use crate::petgraph::graph::UnGraph;
-    use petgraph::visit::NodeIndexable;
     use petgraph::Graph;
+    use petgraph::visit::NodeIndexable;
 
     fn distance1d<G>(graph: &G, positions: &[f64], u: G::NodeId, v: G::NodeId) -> f64
     where

@@ -15,12 +15,12 @@ use std::hash::Hash;
 
 use hashbrown::HashMap;
 
+use petgraph::Undirected;
 use petgraph::visit::{
     GraphProp, IntoEdges, IntoNodeIdentifiers, NodeCount, NodeIndexable, VisitMap, Visitable,
 };
-use petgraph::Undirected;
 
-use crate::traversal::{depth_first_search, DfsEvent};
+use crate::traversal::{DfsEvent, depth_first_search};
 
 fn _build_chain<G, VM: VisitMap<G::NodeId>>(
     graph: G,

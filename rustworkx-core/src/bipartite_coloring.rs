@@ -130,11 +130,7 @@ where
 
 fn other_node(graph: &EdgedGraph, edge_index: EdgeIndex, node_index: NodeIndex) -> NodeIndex {
     let (a, b) = graph.edge_endpoints(edge_index).unwrap();
-    if node_index == a {
-        b
-    } else {
-        a
-    }
+    if node_index == a { b } else { a }
 }
 
 /// Returns a set of Euler cycles for a possibly disconnected graph.

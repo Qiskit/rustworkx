@@ -1,6 +1,6 @@
 use petgraph::graph::Graph;
 use petgraph::visit::EdgeRef;
-use quickcheck::{quickcheck, TestResult};
+use quickcheck::{TestResult, quickcheck};
 use rustworkx_core::generators::heavy_square_graph;
 use std::collections::HashSet;
 

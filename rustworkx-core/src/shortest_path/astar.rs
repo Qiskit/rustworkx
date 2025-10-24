@@ -21,8 +21,8 @@
 use std::collections::BinaryHeap;
 use std::hash::Hash;
 
-use hashbrown::hash_map::Entry;
 use hashbrown::HashMap;
+use hashbrown::hash_map::Entry;
 
 use petgraph::algo::Measure;
 use petgraph::visit::{EdgeRef, GraphBase, IntoEdges, VisitMap, Visitable};
@@ -209,11 +209,11 @@ where
 #[cfg(test)]
 mod tests {
 
+    use crate::Result;
     use crate::dictmap::DictMap;
     use crate::shortest_path::{astar, dijkstra};
-    use crate::Result;
-    use petgraph::graph::NodeIndex;
     use petgraph::Graph;
+    use petgraph::graph::NodeIndex;
 
     #[test]
     fn test_astar_null_heuristic() {

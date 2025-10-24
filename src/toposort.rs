@@ -12,19 +12,19 @@
 
 use crate::digraph::PyDiGraph;
 
-use hashbrown::hash_map::Entry;
 use hashbrown::HashMap;
+use hashbrown::hash_map::Entry;
 
+use pyo3::Python;
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use pyo3::types::PyList;
-use pyo3::Python;
 
 use petgraph::stable_graph::NodeIndex;
 use petgraph::visit::IntoNodeIdentifiers;
 
-use crate::dag_algo::{is_directed_acyclic_graph, traversal_directions};
 use crate::DAGHasCycle;
+use crate::dag_algo::{is_directed_acyclic_graph, traversal_directions};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum NodeState {
