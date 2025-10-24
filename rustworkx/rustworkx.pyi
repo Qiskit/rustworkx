@@ -754,6 +754,31 @@ def from_node_link_json_file(
 def from_dot(
     dot_str: str,
 ) -> PyDiGraph[_S, _T] | PyGraph[_S, _T]: ...
+def read_matrix_market(contents: str) -> PyGraph | PyDiGraph: ...
+def read_matrix_market_file(path: str) -> PyGraph | PyDiGraph: ...
+def graph_write_matrix_market(
+    graph: PyGraph,
+    /,
+    path: str | None = ...,
+) -> str | None: ...
+def digraph_write_matrix_market(
+    graph: PyDiGraph,
+    /,
+    path: str | None = ...,
+) -> str | None: ...
+
+# Geometry
+
+def hyperbolic_greedy_routing(
+    graph: PyGraph[_S, _T],
+    pos: list[list[float]],
+    source: int,
+    destination: int,
+) -> tuple[list[int], float] | None: ...
+def hyperbolic_greedy_success_rate(
+    graph: PyGraph[_S, _T],
+    pos: list[list[float]],
+) -> float: ...
 
 # Shortest Path
 
@@ -1082,6 +1107,14 @@ def graph_dfs_search(
     source: Sequence[int] | None = ...,
     visitor: _DFSVisitor | None = ...,
 ) -> None: ...
+def digraph_bfs_layers(
+    digraph: PyDiGraph,
+    sources: Sequence[int] | None = ...,
+) -> list[list[int]]: ...
+def graph_bfs_layers(
+    graph: PyGraph,
+    sources: Sequence[int] | None = ...,
+) -> list[list[int]]: ...
 def digraph_dijkstra_search(
     graph: PyDiGraph,
     source: Sequence[int] | None = ...,

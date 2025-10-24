@@ -12,13 +12,13 @@
 
 #![allow(clippy::float_cmp)]
 
-use crate::{digraph, graph, StablePyGraph};
+use crate::{StablePyGraph, digraph, graph};
 
+use pyo3::IntoPyObjectExt;
+use pyo3::Python;
 use pyo3::exceptions::{PyRuntimeError, PyValueError};
 use pyo3::prelude::*;
 use pyo3::types::PyDict;
-use pyo3::IntoPyObjectExt;
-use pyo3::Python;
 
 use petgraph::algo;
 use petgraph::graph::NodeIndex;
@@ -81,7 +81,7 @@ pub fn directed_gnp_random_graph(
         Err(_) => {
             return Err(PyValueError::new_err(
                 "num_nodes or probability invalid input",
-            ))
+            ));
         }
     };
     // Core function does not put index into node payload, so for backwards compat
@@ -149,7 +149,7 @@ pub fn undirected_gnp_random_graph(
         Err(_) => {
             return Err(PyValueError::new_err(
                 "num_nodes or probability invalid input",
-            ))
+            ));
         }
     };
     // Core function does not put index into node payload, so for backwards compat
@@ -203,7 +203,7 @@ pub fn directed_gnm_random_graph(
             Err(_) => {
                 return Err(PyValueError::new_err(
                     "num_nodes or num_edges invalid input",
-                ))
+                ));
             }
         };
     // Core function does not put index into node payload, so for backwards compat
@@ -259,7 +259,7 @@ pub fn undirected_gnm_random_graph(
             Err(_) => {
                 return Err(PyValueError::new_err(
                     "num_nodes or num_edges invalid input",
-                ))
+                ));
             }
         };
     // Core function does not put index into node payload, so for backwards compat
@@ -319,7 +319,7 @@ pub fn directed_sbm_random_graph<'p>(
         Err(_) => {
             return Err(PyValueError::new_err(
                 "invalid blocks or probabilities input",
-            ))
+            ));
         }
     };
     Ok(digraph::PyDiGraph {
@@ -375,7 +375,7 @@ pub fn undirected_sbm_random_graph<'p>(
         Err(_) => {
             return Err(PyValueError::new_err(
                 "invalid blocks or probabilities input",
-            ))
+            ));
         }
     };
     Ok(graph::PyGraph {
@@ -601,7 +601,7 @@ pub fn barabasi_albert_graph(
         Err(_) => {
             return Err(PyValueError::new_err(
                 "initial_graph has either less nodes than m, or more nodes than n",
-            ))
+            ));
         }
     };
     Ok(graph::PyGraph {
@@ -663,7 +663,7 @@ pub fn directed_barabasi_albert_graph(
         Err(_) => {
             return Err(PyValueError::new_err(
                 "initial_graph has either less nodes than m, or more nodes than n",
-            ))
+            ));
         }
     };
     Ok(digraph::PyDiGraph {
@@ -716,7 +716,7 @@ pub fn directed_random_bipartite_graph(
         Err(_) => {
             return Err(PyValueError::new_err(
                 "invalid number of nodes num_l_nodes + num_r_nodes or invalid probability",
-            ))
+            ));
         }
     };
     Ok(digraph::PyDiGraph {
@@ -769,7 +769,7 @@ pub fn undirected_random_bipartite_graph(
         Err(_) => {
             return Err(PyValueError::new_err(
                 "invalid number of nodes num_l_nodes + num_r_nodes or invalid probability",
-            ))
+            ));
         }
     };
     Ok(graph::PyGraph {

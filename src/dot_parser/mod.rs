@@ -3,9 +3,9 @@ use pest_derive::Parser;
 use pyo3::prelude::*;
 use pyo3::types::{PyDict, PyString};
 
+use crate::StablePyGraph;
 use crate::digraph::PyDiGraph;
 use crate::graph::PyGraph;
-use crate::StablePyGraph;
 
 use hashbrown::HashMap;
 use rustworkx_core::petgraph::prelude::{Directed, NodeIndex, Undirected};
@@ -27,13 +27,13 @@ impl DotGraph {
     fn new_undirected() -> Self {
         DotGraph::Undirected(StablePyGraph::<Undirected>::with_capacity(0, 0))
     }
-    fn add_node(&mut self, w: PyObject) -> NodeIndex {
+    fn add_node(&mut self, w: Py<PyAny>) -> NodeIndex {
         match self {
             DotGraph::Directed(g) => g.add_node(w),
             DotGraph::Undirected(g) => g.add_node(w),
         }
     }
-    fn add_edge(&mut self, a: NodeIndex, b: NodeIndex, w: PyObject) {
+    fn add_edge(&mut self, a: NodeIndex, b: NodeIndex, w: Py<PyAny>) {
         match self {
             DotGraph::Directed(g) => {
                 g.add_edge(a, b, w);
@@ -102,7 +102,7 @@ fn node_id_to_string(pair: pest::iterators::Pair<Rule>) -> String {
 }
 
 #[pyfunction]
-pub fn from_dot(py: Python<'_>, dot_str: &str) -> PyResult<PyObject> {
+pub fn from_dot(py: Python<'_>, dot_str: &str) -> PyResult<Py<PyAny>> {
     let pairs = DotParser::parse(Rule::graph_file, dot_str).map_err(|e| {
         PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("DOT parse error: {}", e))
     })?;
@@ -131,14 +131,14 @@ fn build_graph_enum(
     py: Python<'_>,
     pairs: pest::iterators::Pairs<Rule>,
     is_directed: bool,
-) -> PyResult<PyObject> {
+) -> PyResult<Py<PyAny>> {
     let mut node_map: HashMap<String, NodeIndex> = HashMap::new();
     let graph_attrs = PyDict::new(py);
 
     let mut default_node_attrs: HashMap<String, String> = HashMap::new();
     let mut default_edge_attrs: HashMap<String, String> = HashMap::new();
 
-    let mut node_attrs_map: HashMap<String, PyObject> = HashMap::new();
+    let mut node_attrs_map: HashMap<String, Py<PyAny>> = HashMap::new();
 
     let mut graph = if is_directed {
         DotGraph::new_directed()
@@ -173,7 +173,7 @@ fn build_graph_enum(
                             )
                         })?;
                         let name = node_id_to_string(nid);
-                        let py_node_obj: PyObject = PyString::new(py, &name).into();
+                        let py_node_obj: Py<PyAny> = PyString::new(py, &name).into();
 
                         let idx = graph.add_node(py_node_obj);
                         node_map.insert(name.clone(), idx);
@@ -232,16 +232,16 @@ fn build_graph_enum(
                             let dst = endpoints[i + 1].clone();
 
                             let src_idx = *node_map.entry(src.clone()).or_insert_with(|| {
-                                let py_node: PyObject = PyString::new(py, &src).into();
+                                let py_node: Py<PyAny> = PyString::new(py, &src).into();
                                 graph.add_node(py_node)
                             });
 
                             let dst_idx = *node_map.entry(dst.clone()).or_insert_with(|| {
-                                let py_node: PyObject = PyString::new(py, &dst).into();
+                                let py_node: Py<PyAny> = PyString::new(py, &dst).into();
                                 graph.add_node(py_node)
                             });
 
-                            let edge_attrs_obj: PyObject = collected.clone().into();
+                            let edge_attrs_obj: Py<PyAny> = collected.clone().into();
                             graph.add_edge(src_idx, dst_idx, edge_attrs_obj);
                         }
                     }

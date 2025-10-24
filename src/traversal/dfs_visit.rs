@@ -20,17 +20,17 @@ use rustworkx_core::traversal::DfsEvent;
 
 #[derive(FromPyObject)]
 pub struct PyDfsVisitor {
-    discover_vertex: PyObject,
-    finish_vertex: PyObject,
-    tree_edge: PyObject,
-    back_edge: PyObject,
-    forward_or_cross_edge: PyObject,
+    discover_vertex: Py<PyAny>,
+    finish_vertex: Py<PyAny>,
+    tree_edge: Py<PyAny>,
+    back_edge: Py<PyAny>,
+    forward_or_cross_edge: Py<PyAny>,
 }
 
 pub fn dfs_handler(
     py: Python,
     vis: &PyDfsVisitor,
-    event: DfsEvent<NodeIndex, &PyObject>,
+    event: DfsEvent<NodeIndex, &Py<PyAny>>,
 ) -> PyResult<Control<()>> {
     let res = match event {
         DfsEvent::Discover(u, Time(t)) => vis.discover_vertex.call1(py, (u.index(), t)),

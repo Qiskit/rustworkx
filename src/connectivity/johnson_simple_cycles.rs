@@ -17,7 +17,7 @@ use std::ops::Deref;
 use pyo3::prelude::*;
 
 use crate::iterators::NodeIndices;
-use rustworkx_core::connectivity::{johnson_simple_cycles, SimpleCycleIter};
+use rustworkx_core::connectivity::{SimpleCycleIter, johnson_simple_cycles};
 
 #[pyclass(module = "rustworkx", name = "SimpleCycleIter")]
 pub struct PySimpleCycleIter {

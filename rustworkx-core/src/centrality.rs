@@ -520,9 +520,9 @@ where
 #[cfg(test)]
 mod test_edge_betweenness_centrality {
     use crate::centrality::edge_betweenness_centrality;
+    use petgraph::Undirected;
     use petgraph::graph::edge_index;
     use petgraph::prelude::StableGraph;
-    use petgraph::Undirected;
 
     macro_rules! assert_almost_equal {
         ($x:expr, $y:expr, $d:expr) => {
@@ -854,9 +854,9 @@ where
 #[cfg(test)]
 mod test_eigenvector_centrality {
 
+    use crate::Result;
     use crate::centrality::eigenvector_centrality;
     use crate::petgraph;
-    use crate::Result;
 
     macro_rules! assert_almost_equal {
         ($x:expr, $y:expr, $d:expr) => {
@@ -943,9 +943,9 @@ mod test_eigenvector_centrality {
 #[cfg(test)]
 mod test_katz_centrality {
 
+    use crate::Result;
     use crate::centrality::katz_centrality;
     use crate::petgraph;
-    use crate::Result;
     use hashbrown::HashMap;
 
     macro_rules! assert_almost_equal {
