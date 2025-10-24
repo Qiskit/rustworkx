@@ -259,8 +259,8 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::generators::heavy_hex_graph;
     use crate::generators::InvalidInputError;
+    use crate::generators::heavy_hex_graph;
     use crate::petgraph;
     use crate::petgraph::visit::EdgeRef;
 

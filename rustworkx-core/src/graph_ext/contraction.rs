@@ -15,8 +15,8 @@
 use crate::dictmap::{DictMap, InitWithHasher};
 use crate::err::{ContractError, ContractSimpleError};
 use crate::graph_ext::NodeRemovable;
-use indexmap::map::Entry;
 use indexmap::IndexSet;
+use indexmap::map::Entry;
 use petgraph::data::Build;
 use petgraph::graphmap;
 use petgraph::stable_graph;

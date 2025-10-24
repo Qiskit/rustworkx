@@ -754,6 +754,18 @@ def from_node_link_json_file(
 def from_dot(
     dot_str: str,
 ) -> PyDiGraph[_S, _T] | PyGraph[_S, _T]: ...
+def read_matrix_market(contents: str) -> PyGraph | PyDiGraph: ...
+def read_matrix_market_file(path: str) -> PyGraph | PyDiGraph: ...
+def graph_write_matrix_market(
+    graph: PyGraph,
+    /,
+    path: str | None = ...,
+) -> str | None: ...
+def digraph_write_matrix_market(
+    graph: PyDiGraph,
+    /,
+    path: str | None = ...,
+) -> str | None: ...
 
 # Geometry
 

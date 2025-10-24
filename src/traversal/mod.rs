@@ -14,9 +14,9 @@ mod bfs_visit;
 pub mod dfs_visit;
 mod dijkstra_visit;
 
-use bfs_visit::{bfs_handler, PyBfsVisitor};
-use dfs_visit::{dfs_handler, PyDfsVisitor};
-use dijkstra_visit::{dijkstra_handler, PyDijkstraVisitor};
+use bfs_visit::{PyBfsVisitor, bfs_handler};
+use dfs_visit::{PyDfsVisitor, dfs_handler};
+use dijkstra_visit::{PyDijkstraVisitor, dijkstra_handler};
 
 use rustworkx_core::traversal::{
     ancestors as core_ancestors, bfs_layers, bfs_predecessors as core_bfs_predecessors,
@@ -24,23 +24,23 @@ use rustworkx_core::traversal::{
     descendants as core_descendants, dfs_edges, dijkstra_search,
 };
 
-use super::{digraph, graph, iterators, CostFn};
+use super::{CostFn, digraph, graph, iterators};
 
 use std::convert::TryFrom;
 
 use hashbrown::HashSet;
 
+use pyo3::IntoPyObjectExt;
+use pyo3::Python;
 use pyo3::exceptions::{PyIndexError, PyTypeError};
 use pyo3::prelude::*;
 use pyo3::types::PyList;
-use pyo3::IntoPyObjectExt;
-use pyo3::Python;
 
-use petgraph::graph::NodeIndex;
 use petgraph::EdgeType;
+use petgraph::graph::NodeIndex;
 
-use crate::iterators::EdgeList;
 use crate::StablePyGraph;
+use crate::iterators::EdgeList;
 
 fn validate_source_nodes<Ty: EdgeType>(
     graph: &StablePyGraph<Ty>,
@@ -951,7 +951,7 @@ pub fn digraph_dijkstra_search(
     py: Python,
     graph: &digraph::PyDiGraph,
     source: Option<Vec<usize>>,
-    weight_fn: Option<PyObject>,
+    weight_fn: Option<Py<PyAny>>,
     visitor: Option<PyDijkstraVisitor>,
 ) -> PyResult<()> {
     if visitor.is_none() {
@@ -1094,7 +1094,7 @@ pub fn graph_dijkstra_search(
     py: Python,
     graph: &graph::PyGraph,
     source: Option<Vec<usize>>,
-    weight_fn: Option<PyObject>,
+    weight_fn: Option<Py<PyAny>>,
     visitor: Option<PyDijkstraVisitor>,
 ) -> PyResult<()> {
     if visitor.is_none() {
@@ -1137,7 +1137,7 @@ pub fn graph_bfs_layers(
     py: Python,
     graph: &graph::PyGraph,
     sources: Option<Vec<usize>>,
-) -> PyResult<PyObject> {
+) -> PyResult<Py<PyAny>> {
     let starts: Vec<NodeIndex> = match sources {
         Some(v) => v.into_iter().map(NodeIndex::new).collect(),
         None => graph.graph.node_indices().collect(),
@@ -1174,7 +1174,7 @@ pub fn digraph_bfs_layers(
     py: Python,
     digraph: &digraph::PyDiGraph,
     sources: Option<Vec<usize>>,
-) -> PyResult<PyObject> {
+) -> PyResult<Py<PyAny>> {
     let starts: Vec<NodeIndex> = match sources {
         Some(v) => v.into_iter().map(NodeIndex::new).collect(),
         None => digraph.graph.node_indices().collect(),

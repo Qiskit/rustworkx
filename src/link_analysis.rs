@@ -13,12 +13,12 @@
 // PageRank has many possible personalizations, so we accept them all
 #![allow(clippy::too_many_arguments)]
 
-use pyo3::prelude::*;
 use pyo3::Python;
+use pyo3::prelude::*;
 
 use crate::digraph::PyDiGraph;
 use crate::iterators::CentralityMapping;
-use crate::{weight_callable, FailedToConverge};
+use crate::{FailedToConverge, weight_callable};
 
 use hashbrown::HashMap;
 use ndarray::prelude::*;
@@ -91,7 +91,7 @@ pub fn pagerank(
     py: Python,
     graph: &PyDiGraph,
     alpha: f64,
-    weight_fn: Option<PyObject>,
+    weight_fn: Option<Py<PyAny>>,
     nstart: Option<HashMap<usize, f64>>,
     personalization: Option<HashMap<usize, f64>>,
     tol: f64,
@@ -272,7 +272,7 @@ pub fn pagerank(
 pub fn hits(
     py: Python,
     graph: &PyDiGraph,
-    weight_fn: Option<PyObject>,
+    weight_fn: Option<Py<PyAny>>,
     nstart: Option<HashMap<usize, f64>>,
     tol: f64,
     max_iter: usize,

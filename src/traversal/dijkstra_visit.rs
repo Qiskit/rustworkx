@@ -20,17 +20,17 @@ use rustworkx_core::traversal::DijkstraEvent;
 
 #[derive(FromPyObject)]
 pub struct PyDijkstraVisitor {
-    discover_vertex: PyObject,
-    finish_vertex: PyObject,
-    examine_edge: PyObject,
-    edge_relaxed: PyObject,
-    edge_not_relaxed: PyObject,
+    discover_vertex: Py<PyAny>,
+    finish_vertex: Py<PyAny>,
+    examine_edge: Py<PyAny>,
+    edge_relaxed: Py<PyAny>,
+    edge_not_relaxed: Py<PyAny>,
 }
 
 pub fn dijkstra_handler(
     py: Python,
     vis: &PyDijkstraVisitor,
-    event: DijkstraEvent<NodeIndex, &PyObject, f64>,
+    event: DijkstraEvent<NodeIndex, &Py<PyAny>, f64>,
 ) -> PyResult<Control<()>> {
     let res = match event {
         DijkstraEvent::Discover(u, score) => vis.discover_vertex.call1(py, (u.index(), score)),

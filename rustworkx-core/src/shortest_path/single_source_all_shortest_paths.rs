@@ -1,8 +1,8 @@
 use crate::dictmap::{DictMap, InitWithHasher};
 use crate::shortest_path::dijkstra;
 use fixedbitset::FixedBitSet;
-use petgraph::visit::{EdgeRef, IntoEdgesDirected, IntoNodeIdentifiers, NodeIndexable, Visitable};
 use petgraph::Direction::Incoming;
+use petgraph::visit::{EdgeRef, IntoEdgesDirected, IntoNodeIdentifiers, NodeIndexable, Visitable};
 use std::hash::Hash;
 type AllShortestPathsMap<N> = DictMap<N, Vec<Vec<N>>>;
 pub fn single_source_all_shortest_paths<G, F, K, E>(
@@ -106,8 +106,8 @@ mod tests {
     use crate::dictmap::DictMap;
     use crate::generators::grid_graph;
     use hashbrown::HashSet;
-    use petgraph::prelude::*;
     use petgraph::Graph;
+    use petgraph::prelude::*;
     use std::convert::Infallible;
     #[test]
     fn test_single_source_all_shortest_paths_cycle() {
