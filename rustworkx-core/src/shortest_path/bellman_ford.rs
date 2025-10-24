@@ -15,7 +15,7 @@ use std::hash::Hash;
 
 use fixedbitset::FixedBitSet;
 use petgraph::algo::kosaraju_scc;
-use petgraph::algo::{is_cyclic_directed, Measure};
+use petgraph::algo::{Measure, is_cyclic_directed};
 use petgraph::graph::IndexType;
 use petgraph::stable_graph::StableDiGraph;
 use petgraph::visit::{
@@ -394,12 +394,12 @@ where
 
 #[cfg(test)]
 mod tests {
+    use crate::Result;
     use crate::dictmap::DictMap;
     use crate::shortest_path::negative_cycle_finder;
     use crate::shortest_path::{bellman_ford, dijkstra};
-    use crate::Result;
-    use petgraph::graph::NodeIndex;
     use petgraph::Graph;
+    use petgraph::graph::NodeIndex;
 
     #[test]
     fn test_bell() {

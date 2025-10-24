@@ -13,8 +13,8 @@
 use std::hash::Hash;
 
 use hashbrown::{HashMap, HashSet};
-use petgraph::visit::{GraphBase, IntoNeighborsDirected, IntoNodeIdentifiers, NodeCount};
 use petgraph::Direction::{Incoming, Outgoing};
+use petgraph::visit::{GraphBase, IntoNeighborsDirected, IntoNodeIdentifiers, NodeCount};
 use rayon::prelude::*;
 
 use crate::dictmap::*;

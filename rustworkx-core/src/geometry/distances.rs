@@ -155,8 +155,8 @@ mod tests {
     use std::f64::consts::PI;
 
     use super::{
-        angular_distance, euclidean_distance, hyperboloid_hyperbolic_distance, lp_distance,
-        maximum_distance, polar_hyperbolic_distance, IncompatiblePointsError,
+        IncompatiblePointsError, angular_distance, euclidean_distance,
+        hyperboloid_hyperbolic_distance, lp_distance, maximum_distance, polar_hyperbolic_distance,
     };
 
     #[test]

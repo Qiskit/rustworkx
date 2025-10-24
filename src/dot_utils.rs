@@ -27,13 +27,13 @@ pub fn build_dot<G, T>(
     graph: G,
     file: &mut T,
     graph_attrs: Option<BTreeMap<String, String>>,
-    node_attrs: Option<PyObject>,
-    edge_attrs: Option<PyObject>,
+    node_attrs: Option<Py<PyAny>>,
+    edge_attrs: Option<Py<PyAny>>,
 ) -> PyResult<()>
 where
     T: Write,
     G: GraphBase + IntoEdgeReferences + IntoNodeReferences + NodeIndexable + GraphProp,
-    G: Data<NodeWeight = PyObject, EdgeWeight = PyObject>,
+    G: Data<NodeWeight = Py<PyAny>, EdgeWeight = Py<PyAny>>,
 {
     writeln!(file, "{} {{", TYPE[graph.is_directed() as usize])?;
     if let Some(graph_attr_map) = graph_attrs {
@@ -69,13 +69,13 @@ static ATTRS_TO_ESCAPE: [&str; 2] = ["label", "tooltip"];
 /// Convert an attr map to an output string
 fn attr_map_to_string<'a>(
     py: Python,
-    attrs: Option<&'a PyObject>,
-    weight: &'a PyObject,
+    attrs: Option<&'a Py<PyAny>>,
+    weight: &'a Py<PyAny>,
 ) -> PyResult<String> {
     if attrs.is_none() {
         return Ok("".to_string());
     }
-    let attr_callable = |node: &'a PyObject| -> PyResult<BTreeMap<String, String>> {
+    let attr_callable = |node: &'a Py<PyAny>| -> PyResult<BTreeMap<String, String>> {
         let res = attrs.unwrap().call1(py, (node,))?;
         res.extract(py)
     };

@@ -77,8 +77,8 @@ pub mod contraction;
 pub mod multigraph;
 
 pub use contraction::{
-    can_contract, ContractNodesDirected, ContractNodesSimpleDirected,
-    ContractNodesSimpleUndirected, ContractNodesUndirected,
+    ContractNodesDirected, ContractNodesSimpleDirected, ContractNodesSimpleUndirected,
+    ContractNodesUndirected, can_contract,
 };
 pub use multigraph::{HasParallelEdgesDirected, HasParallelEdgesUndirected};
 
