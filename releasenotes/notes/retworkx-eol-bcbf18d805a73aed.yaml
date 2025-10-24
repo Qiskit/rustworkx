@@ -1,5 +1,5 @@
 ---
-deprecations:
+upgrade:
   - |
     As announced in the 0.17 release, the legacy `retworkx` name has been sunset. We encourage users to depend on
     'rustworkx' as previously instructed.
