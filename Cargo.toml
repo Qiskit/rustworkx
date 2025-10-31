@@ -30,7 +30,7 @@ fixedbitset = "0.5.7"
 indexmap = { version = ">=1.9, <3", features = ["rayon"] }
 ndarray = { version = "0.16.1", features = ["rayon"] }
 num-traits = "0.2"
-petgraph = "0.8"
+petgraph = "0.8.3"
 hashbrown = { version = ">=0.13, <0.16", features = ["rayon"] }
 numpy = "0.26"
 rand = "0.9"

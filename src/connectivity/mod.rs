@@ -968,7 +968,7 @@ impl<'py> FromPyObject<'py> for TargetNodes {
         if let Ok(int) = ob.extract::<usize>() {
             Ok(Self::Single(NodeIndex::new(int)))
         } else {
-            let mut target_set: HashSet<NodeIndex> = HashSet::new();
+            let mut target_set: HashSet<NodeIndex, foldhash::fast::RandomState> = HashSet::new();
             for target in ob.try_iter()? {
                 let target_index = NodeIndex::new(target?.extract::<usize>()?);
                 target_set.insert(target_index);
@@ -1036,19 +1036,17 @@ pub fn graph_all_simple_paths(
             Ok(result)
         }
         TargetNodes::Multiple(target_set) => {
-            let result = connectivity::all_simple_paths_multiple_targets(
-                &graph.graph,
-                from_index,
-                &target_set,
-                min_intermediate_nodes,
-                cutoff_petgraph,
-            );
-
-            Ok(result
-                .into_values()
-                .flatten()
-                .map(|path| path.into_iter().map(|node| node.index()).collect())
-                .collect())
+            let result: Vec<Vec<usize>> =
+                algo::all_simple_paths_multi::<Vec<_>, _, foldhash::fast::RandomState>(
+                    &graph.graph,
+                    from_index,
+                    &target_set,
+                    min_intermediate_nodes,
+                    cutoff_petgraph,
+                )
+                .map(|v: Vec<NodeIndex>| v.into_iter().map(|i| i.index()).collect())
+                .collect();
+            Ok(result)
         }
     }
 }
@@ -1111,19 +1109,17 @@ pub fn digraph_all_simple_paths(
             Ok(result)
         }
         TargetNodes::Multiple(target_set) => {
-            let result = connectivity::all_simple_paths_multiple_targets(
-                &graph.graph,
-                from_index,
-                &target_set,
-                min_intermediate_nodes,
-                cutoff_petgraph,
-            );
-
-            Ok(result
-                .into_values()
-                .flatten()
-                .map(|path| path.into_iter().map(|node| node.index()).collect())
-                .collect())
+            let result: Vec<Vec<usize>> =
+                algo::all_simple_paths_multi::<Vec<_>, _, foldhash::fast::RandomState>(
+                    &graph.graph,
+                    from_index,
+                    &target_set,
+                    min_intermediate_nodes,
+                    cutoff_petgraph,
+                )
+                .map(|v: Vec<NodeIndex>| v.into_iter().map(|i| i.index()).collect())
+                .collect();
+            Ok(result)
         }
     }
 }
