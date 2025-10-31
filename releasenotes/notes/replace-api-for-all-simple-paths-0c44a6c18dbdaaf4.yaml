@@ -1,0 +1,5 @@
+upgrade:
+  - |
+    The underlying implementation for all simple paths with multiple targets is
+    replaced with a new implementation from petgraph to improve performance.
+    This does not affect existing functionality.
