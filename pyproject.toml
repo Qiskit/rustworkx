@@ -133,7 +133,7 @@ extend-ignore-words-re = [
 [tool.cibuildwheel]
 manylinux-x86_64-image = "manylinux2014"
 manylinux-i686-image = "manylinux2014"
-skip = "pp* cp37-* cp38-* cp39-* *win32 *musllinux*i686"
+skip = "pp* cp314t* *win32 *musllinux*i686"
 test-requires = "networkx"
 test-command = "python -m unittest discover {project}/tests"
 before-build = "pip install -U setuptools-rust"
