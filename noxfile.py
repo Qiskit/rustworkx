@@ -9,6 +9,9 @@ deps = nox.project.dependency_groups(pyproject, "test")
 lint_deps = nox.project.dependency_groups(pyproject, "lint")
 stubs_deps = nox.project.dependency_groups(pyproject, "stubs")
 
+requires_python = pyproject["project"]["requires-python"]
+min_python_version = SpecifierSet(requires_python)
+
 def install_rustworkx(session):
     session.install(*deps)
     session.install(".[all]", "-c", "constraints.txt")
@@ -88,3 +91,46 @@ def stubs(session):
     session.install(*stubs_deps)
     session.chdir("tests")
     session.run("python", "-m", "mypy.stubtest", "--concise", "rustworkx", "--allowlist", "stubs_allowlist.txt")
+
+@nox.session(python=["3.10"], venv_backend="uv", reuse_venv=False, default=False)
+def compile_locks(session):    
+    # Install python3.10 with uv
+    session.run("uv", "python", "install", "3.10", external=True)
+    
+    # Get all dependency groups from pyproject.toml
+    dependency_groups = pyproject.get("dependency-groups", {})
+    
+    if not dependency_groups:
+        session.warn("No dependency groups found in pyproject.toml")
+        return
+    
+    # Create requirements directory if it doesn't exist
+    requirements_dir = Path("requirements")
+    requirements_dir.mkdir(exist_ok=True)
+    
+    # Process each dependency group
+    for group_name in dependency_groups.keys():
+        session.log(f"Compiling dependency group: {group_name}")
+        
+        # Create group directory
+        group_dir = requirements_dir / group_name
+        group_dir.mkdir(exist_ok=True)
+        
+        # Output file path
+        output_file = group_dir / "pylock.toml"
+        
+        # Run uv pip compile
+        session.run(
+            "uv",
+            "pip",
+            "compile",
+            "--python",
+            "python3.10",
+            "--group",
+            group_name,
+            "-o",
+            str(output_file),
+            external=True,
+        )
+        
+        session.log(f"✓ Created {output_file}")
