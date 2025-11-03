@@ -114,14 +114,11 @@ def compile_locks(session):
     for group_name in dependency_groups.keys():
         session.log(f"Compiling dependency group: {group_name}")
         
-        # Ensuring group directory exists
         group_dir = requirements_dir / group_name
-        group_dir.mkdir(exist_ok=True)
-        
-        # Output file path
+        group_dir.mkdir(exist_ok=True)        
         output_file = group_dir / "pylock.toml"
         
-        # Run uv pip compile
+        # Compile lockfile
         uv_python = f"python{min_python_version}"
         session.run(
             "uv",
