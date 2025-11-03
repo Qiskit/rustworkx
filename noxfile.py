@@ -2,6 +2,7 @@ import nox
 
 nox.options.reuse_existing_virtualenvs = True
 nox.options.stop_on_first_error = True
+nox.options.download_python = 'never'
 
 pyproject = nox.project.load_toml("pyproject.toml")
 
@@ -10,7 +11,8 @@ lint_deps = nox.project.dependency_groups(pyproject, "lint")
 stubs_deps = nox.project.dependency_groups(pyproject, "stubs")
 
 requires_python = pyproject["project"]["requires-python"]
-min_python_version = SpecifierSet(requires_python)
+supported_python_versions = nox.project.python_versions(pyproject)
+min_python_version = min(supported_python_versions)
 
 def install_rustworkx(session):
     session.install(*deps)
@@ -92,19 +94,19 @@ def stubs(session):
     session.chdir("tests")
     session.run("python", "-m", "mypy.stubtest", "--concise", "rustworkx", "--allowlist", "stubs_allowlist.txt")
 
-@nox.session(python=["3.10"], venv_backend="uv", reuse_venv=False, default=False)
+@nox.session(
+    python=["3"], 
+    venv_backend="uv", 
+    reuse_venv=False,
+    default=False, 
+)
 def compile_locks(session):    
-    # Install python3.10 with uv
-    session.run("uv", "python", "install", "3.10", external=True)
+    from pathlib import Path
+    print("Supported Python versions:", supported_python_versions)
     
-    # Get all dependency groups from pyproject.toml
-    dependency_groups = pyproject.get("dependency-groups", {})
-    
-    if not dependency_groups:
-        session.warn("No dependency groups found in pyproject.toml")
-        return
-    
-    # Create requirements directory if it doesn't exist
+    dependency_groups = pyproject.get("dependency-groups")
+        
+    # Ensure requirements directory exists
     requirements_dir = Path("requirements")
     requirements_dir.mkdir(exist_ok=True)
     
@@ -112,7 +114,7 @@ def compile_locks(session):
     for group_name in dependency_groups.keys():
         session.log(f"Compiling dependency group: {group_name}")
         
-        # Create group directory
+        # Ensuring group directory exists
         group_dir = requirements_dir / group_name
         group_dir.mkdir(exist_ok=True)
         
@@ -120,17 +122,17 @@ def compile_locks(session):
         output_file = group_dir / "pylock.toml"
         
         # Run uv pip compile
+        uv_python = f"python{min_python_version}"
         session.run(
             "uv",
             "pip",
             "compile",
             "--python",
-            "python3.10",
+            uv_python,
             "--group",
             group_name,
             "-o",
             str(output_file),
-            external=True,
         )
         
         session.log(f"✓ Created {output_file}")
