@@ -968,7 +968,7 @@ impl<'py> FromPyObject<'py> for TargetNodes {
         if let Ok(int) = ob.extract::<usize>() {
             Ok(Self::Single(NodeIndex::new(int)))
         } else {
-            let mut target_set: HashSet<NodeIndex, foldhash::fast::RandomState> = HashSet::new();
+            let mut target_set: HashSet<NodeIndex> = HashSet::new();
             for target in ob.try_iter()? {
                 let target_index = NodeIndex::new(target?.extract::<usize>()?);
                 target_set.insert(target_index);
