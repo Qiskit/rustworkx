@@ -1,0 +1,6 @@
+---
+upgrade:
+  - |
+    The minimum supported Python version for using rustworkx has been raised to Python 3.10.
+    Python 3.9 has reached it's end-of-life and will no longer be supported. To use rustworkx
+    you will need to ensure you are using Python >=3.10.
