@@ -2,6 +2,7 @@ import nox
 
 nox.options.reuse_existing_virtualenvs = True
 nox.options.stop_on_first_error = True
+nox.options.download_python = 'never'
 
 pyproject = nox.project.load_toml("pyproject.toml")
 
@@ -9,9 +10,13 @@ deps = nox.project.dependency_groups(pyproject, "test")
 lint_deps = nox.project.dependency_groups(pyproject, "lint")
 stubs_deps = nox.project.dependency_groups(pyproject, "stubs")
 
+requires_python = pyproject["project"]["requires-python"]
+supported_python_versions = nox.project.python_versions(pyproject)
+min_python_version = min(supported_python_versions)
+
 def install_rustworkx(session):
     session.install(*deps)
-    session.install(".[all]", "-c", "constraints.txt")
+    session.install(".[all]")
 
 # We define a common base such that -e test triggers a test with the current
 # Python version of the interpreter and -e test_with_version launches
@@ -25,7 +30,7 @@ def base_test(session):
 def test(session):
     base_test(session)
 
-@nox.session(python=["3.9", "3.10", "3.11", "3.12"])
+@nox.session(python=["3.10", "3.11", "3.12", "3.13"])
 def test_with_version(session):
     base_test(session)
 
@@ -34,7 +39,7 @@ def lint(session):
     black(session)
     typos(session)
     session.install(*lint_deps)
-    session.run("ruff", "check", "rustworkx", "retworkx", "setup.py")
+    session.run("ruff", "check", "rustworkx", "setup.py")
     session.run("cargo", "fmt", "--all", "--", "--check", external=True)
     session.run("python", "tools/find_stray_release_notes.py")
 
@@ -74,7 +79,7 @@ def docs_clean(session):
 @nox.session(python=["3"])
 def black(session):
     session.install(*[d for d in lint_deps if "black" in d])
-    session.run("black", "rustworkx", "tests", "retworkx", *session.posargs)
+    session.run("black", "rustworkx", "tests", *session.posargs)
 
 @nox.session(python=["3"])
 def typos(session):
@@ -87,4 +92,44 @@ def stubs(session):
     install_rustworkx(session)
     session.install(*stubs_deps)
     session.chdir("tests")
-    session.run("python", "-m", "mypy.stubtest", "--concise", "rustworkx")
+    session.run("python", "-m", "mypy.stubtest", "--concise", "rustworkx", "--allowlist", "stubs_allowlist.txt")
+
+@nox.session(
+    python=["3"], 
+    venv_backend="uv", 
+    reuse_venv=False,
+    default=False, 
+)
+def compile_locks(session):    
+    from pathlib import Path
+    print("Supported Python versions:", supported_python_versions)
+    
+    dependency_groups = pyproject.get("dependency-groups")
+        
+    # Ensure requirements directory exists
+    requirements_dir = Path("requirements")
+    requirements_dir.mkdir(exist_ok=True)
+    
+    # Process each dependency group
+    for group_name in dependency_groups.keys():
+        session.log(f"Compiling dependency group: {group_name}")
+        
+        group_dir = requirements_dir / group_name
+        group_dir.mkdir(exist_ok=True)        
+        output_file = group_dir / "pylock.toml"
+        
+        # Compile lockfile
+        uv_python = f"python{min_python_version}"
+        session.run(
+            "uv",
+            "pip",
+            "compile",
+            "--python",
+            uv_python,
+            "--group",
+            group_name,
+            "-o",
+            str(output_file),
+        )
+        
+        session.log(f"✓ Created {output_file}")
