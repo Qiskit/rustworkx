@@ -1,0 +1,6 @@
+﻿rustworkx.metric\_closure
+=========================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: metric_closure

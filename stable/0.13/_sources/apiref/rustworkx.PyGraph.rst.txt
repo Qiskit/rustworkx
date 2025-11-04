@@ -1,0 +1,72 @@
+﻿PyGraph
+=======
+
+.. currentmodule:: rustworkx
+
+.. autoclass:: PyGraph
+   :no-members:
+   :show-inheritance:
+
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+      :toctree: ../apiref/
+
+      ~PyGraph.add_edge
+      ~PyGraph.add_edges_from
+      ~PyGraph.add_edges_from_no_data
+      ~PyGraph.add_node
+      ~PyGraph.add_nodes_from
+      ~PyGraph.adj
+      ~PyGraph.compose
+      ~PyGraph.contract_nodes
+      ~PyGraph.copy
+      ~PyGraph.degree
+      ~PyGraph.edge_index_map
+      ~PyGraph.edge_indices
+      ~PyGraph.edge_list
+      ~PyGraph.edge_subgraph
+      ~PyGraph.edges
+      ~PyGraph.extend_from_edge_list
+      ~PyGraph.extend_from_weighted_edge_list
+      ~PyGraph.find_node_by_weight
+      ~PyGraph.from_adjacency_matrix
+      ~PyGraph.from_complex_adjacency_matrix
+      ~PyGraph.get_all_edge_data
+      ~PyGraph.get_edge_data
+      ~PyGraph.get_edge_data_by_index
+      ~PyGraph.get_edge_endpoints_by_index
+      ~PyGraph.get_node_data
+      ~PyGraph.has_edge
+      ~PyGraph.has_parallel_edges
+      ~PyGraph.in_edges
+      ~PyGraph.incident_edge_index_map
+      ~PyGraph.incident_edges
+      ~PyGraph.neighbors
+      ~PyGraph.node_indexes
+      ~PyGraph.node_indices
+      ~PyGraph.nodes
+      ~PyGraph.num_edges
+      ~PyGraph.num_nodes
+      ~PyGraph.out_edges
+      ~PyGraph.read_edge_list
+      ~PyGraph.remove_edge
+      ~PyGraph.remove_edge_from_index
+      ~PyGraph.remove_edges_from
+      ~PyGraph.remove_node
+      ~PyGraph.remove_nodes_from
+      ~PyGraph.subgraph
+      ~PyGraph.to_directed
+      ~PyGraph.to_dot
+      ~PyGraph.update_edge
+      ~PyGraph.update_edge_by_index
+      ~PyGraph.weighted_edge_list
+      ~PyGraph.write_edge_list
+
+
+
+   .. rubric:: Attributes
+
+   .. autoattribute:: attrs
+   .. autoattribute:: multigraph
