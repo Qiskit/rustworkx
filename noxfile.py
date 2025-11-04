@@ -16,7 +16,7 @@ min_python_version = min(supported_python_versions)
 
 def install_rustworkx(session):
     session.install(*deps)
-    session.install(".[all]", "-c", "constraints.txt")
+    session.install(".[all]")
 
 # We define a common base such that -e test triggers a test with the current
 # Python version of the interpreter and -e test_with_version launches
