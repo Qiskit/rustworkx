@@ -1,0 +1,9 @@
+---
+fixes:
+  - |
+    Fixed an issue where using function ``draw_edges()`` in 
+    ~/rustworkx/visualization/matplotlib.py will always attempt to use 
+    connectionstyle arc3 even if a different connectionstyle argument is 
+    input by the user. Now, `draw_edges()` can accept different connectionstyle arguments. 
+    If connectionstyle arc3 is used, the previous `draw_edges()` behavior is still used.
+    Refer to `#1497 <https://github.com/Qiskit/rustworkx/issues/1497>`__ for more details.
