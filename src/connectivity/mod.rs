@@ -432,20 +432,7 @@ pub fn connected_components(graph: &graph::PyGraph) -> Vec<HashSet<usize>> {
 #[pyfunction]
 #[pyo3(text_signature = "(graph, node, /)")]
 pub fn node_connected_component(graph: &graph::PyGraph, node: usize) -> PyResult<HashSet<usize>> {
-    let node = NodeIndex::new(node);
-
-    if !graph.graph.contains_node(node) {
-        return Err(InvalidNode::new_err(
-            "The input index for 'node' is not a valid node index",
-        ));
-    }
-
-    Ok(
-        connectivity::bfs_undirected(&graph.graph, node, &mut graph.graph.visit_map())
-            .into_iter()
-            .map(|x| x.index())
-            .collect(),
-    )
+    connectivity::node_connected_component(&graph.graph, node)
 }
 
 /// Check if an undirected graph is fully connected
@@ -472,13 +459,7 @@ pub fn node_connected_component(graph: &graph::PyGraph, node: usize) -> PyResult
 #[pyfunction]
 #[pyo3(text_signature = "(graph, /)")]
 pub fn is_connected(graph: &graph::PyGraph) -> PyResult<bool> {
-    match graph.graph.node_indices().next() {
-        Some(node) => {
-            let component = node_connected_component(graph, node.index())?;
-            Ok(component.len() == graph.graph.node_count())
-        }
-        None => Err(NullGraph::new_err("Invalid operation on a NullGraph")),
-    }
+    connectivity::is_connected(&graph.graph)
 }
 
 /// Find the number of weakly connected components in a directed graph
