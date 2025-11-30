@@ -31,7 +31,7 @@ def test_with_version(session):
 
 @nox.session(python=["3"])
 def lint(session):
-    black(session)
+    format(session)
     typos(session)
     session.install(*lint_deps)
     session.run("ruff", "check", "rustworkx", "setup.py")
@@ -72,9 +72,14 @@ def docs_clean(session):
     session.run("rm", "-rf", "build", "source/apiref", external=True)
 
 @nox.session(python=["3"])
+def format(session):
+    session.install(*[d for d in lint_deps if "ruff" in d])
+    session.run("ruff", "format", "rustworkx", "tests", *session.posargs)
+
+@nox.session(python=["3"])
 def black(session):
-    session.install(*[d for d in lint_deps if "black" in d])
-    session.run("black", "rustworkx", "tests", *session.posargs)
+    # Legacy black formatting session is aliased
+    format(session)
 
 @nox.session(python=["3"])
 def typos(session):

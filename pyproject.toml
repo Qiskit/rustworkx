@@ -76,7 +76,6 @@ test = [
   "stestr>=4.1",
 ]
 lint = [
-    "black~=25.9",
     "ruff==0.14.3",
     "setuptools-rust",
     "typos~=1.39",
@@ -103,12 +102,8 @@ releaseinfra = [
     "cibuildwheel==3.2.1; python_version >= '3.11'",
 ]
 
-[tool.black]
-line-length = 100
-target-version = ['py310', 'py311', 'py312', 'py313', 'py314']
-
 [tool.ruff]
-line-length = 105 # more lenient than black due to long function signatures
+line-length = 100
 src = ["rustworkx", "setup.py", "tests"]
 lint.select = [
     "E",   # pycodestyle
@@ -123,6 +118,14 @@ extend-exclude = ["doc"]
 [tool.ruff.lint.per-file-ignores]
 "rustworkx/__init__.py" = ["F405", "F403"]
 "*.pyi" = ["F403", "F405", "PYI001", "PYI002"]
+
+[tool.ruff.lint.pycodestyle]
+max-line-length = 105 #  lint has a larger limit than the formatter because of long signatures
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+docstring-code-format = true
 
 [tool.typos.default]
 extend-ignore-words-re = [
