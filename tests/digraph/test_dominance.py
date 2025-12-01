@@ -58,7 +58,7 @@ class TestImmediateDominators(unittest.TestCase):
         nx_graph = nx.DiGraph()
         nx_graph.add_edges_from(graph.edge_list())
         # subset check
-        self.assertLessEqual(
+        self.assertGreaterEqual(
             rx.immediate_dominators(graph, 0).items(), nx.immediate_dominators(nx_graph, 0).items()
         )
 
@@ -78,7 +78,7 @@ class TestImmediateDominators(unittest.TestCase):
         nx_graph = nx.DiGraph()
         nx_graph.add_edges_from(graph.edge_list())
         # subset check
-        self.assertLessEqual(result.items(), nx.immediate_dominators(nx_graph, 5).items())
+        self.assertGreaterEqual(result.items(), nx.immediate_dominators(nx_graph, 5).items())
 
     def test_irreducible2(self):
         """
@@ -96,7 +96,7 @@ class TestImmediateDominators(unittest.TestCase):
         nx_graph = nx.DiGraph()
         nx_graph.add_edges_from(graph.edge_list())
         # subset check
-        self.assertLessEqual(result.items(), nx.immediate_dominators(nx_graph, 6).items())
+        self.assertGreaterEqual(result.items(), nx.immediate_dominators(nx_graph, 6).items())
 
     def test_domrel_png(self):
         """
@@ -119,7 +119,7 @@ class TestImmediateDominators(unittest.TestCase):
         result = rx.immediate_dominators(graph, 6)
         self.assertDictEqual(result, {1: 2, 2: 6, 3: 5, 4: 5, 5: 2, 6: 6})
         # subset check
-        self.assertLessEqual(
+        self.assertGreaterEqual(
             result.items(), nx.immediate_dominators(nx_graph.reverse(copy=False), 6).items()
         )
 
@@ -137,14 +137,14 @@ class TestImmediateDominators(unittest.TestCase):
         nx_graph = nx.DiGraph()
         nx_graph.add_edges_from(graph.edge_list())
         # subset check
-        self.assertLessEqual(result.items(), nx.immediate_dominators(nx_graph, 0).items())
+        self.assertGreaterEqual(result.items(), nx.immediate_dominators(nx_graph, 0).items())
 
         # Test postdominance.
         graph.reverse()
         result = rx.immediate_dominators(graph, 7)
         self.assertDictEqual(result, {0: 1, 1: 7, 2: 7, 3: 4, 4: 5, 5: 7, 6: 4, 7: 7})
         # subset check
-        self.assertLessEqual(
+        self.assertGreaterEqual(
             result.items(), nx.immediate_dominators(nx_graph.reverse(copy=False), 7).items()
         )
 
