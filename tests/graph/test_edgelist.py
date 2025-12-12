@@ -143,6 +143,37 @@ class TestEdgeList(unittest.TestCase):
         self.assertTrue(graph.has_edge(0, 2))
         self.assertEqual(graph.edges(), ["0", "1", None])
 
+    def test_remove_parallel_edges_graph(self):
+        with tempfile.NamedTemporaryFile("wt") as fd:
+            fd.write("0 1\n")
+            fd.write("1 1 a\n")
+            fd.write("1 1 b\n")
+            fd.write("2 1 c\n")
+            fd.write("1 2 d\n")
+            fd.flush()
+            graph = rustworkx.PyGraph.read_edge_list(fd.name, multigraph=False)
+        self.assertTrue(graph.node_indexes(), [0, 1, 2])
+        self.assertTrue(graph.has_edge(0, 1))
+        self.assertTrue(graph.has_edge(1, 2))
+        self.assertTrue(graph.has_edge(1, 1))
+        self.assertEqual(graph.edges(), [None, "b", "d"])
+        self.assertFalse(graph.multigraph)
+
+    def test_remove_selfloops_graph(self):
+        with tempfile.NamedTemporaryFile("wt") as fd:
+            fd.write("0 1\n")
+            fd.write("1 1 a\n")
+            fd.write("1 1 b\n")
+            fd.write("2 1 c\n")
+            fd.write("1 2 d\n")
+            fd.flush()
+            graph = rustworkx.PyGraph.read_edge_list(fd.name, selfloops=False)
+        self.assertTrue(graph.node_indexes(), [0, 1, 2])
+        self.assertTrue(graph.has_edge(0, 1))
+        self.assertTrue(graph.has_edge(1, 2))
+        self.assertFalse(graph.has_edge(1, 1))
+        self.assertEqual(graph.edges(), [None, "c", "d"])
+
     def test_write_edge_list_empty_digraph(self):
         path = os.path.join(tempfile.gettempdir(), "empty.txt")
         graph = rustworkx.PyGraph()

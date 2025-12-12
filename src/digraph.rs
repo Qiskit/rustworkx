@@ -2458,6 +2458,10 @@ impl PyDiGraph {
     /// :param bool labels: If set to ``True`` the first two separated fields
     ///     will be treated as string labels uniquely identifying a node
     ///     instead of node indices.
+    /// :param bool multigraph: If ``False``, duplicate edges do not create
+    ///     parallel edges. Instead, repeated edges overwrite the previous
+    ///     weight, with the last one in the input determining the final weight.
+    /// :param bool selfloops: If set to ``False``, self-loops are not created.
     ///
     /// For example:
     ///
@@ -2480,14 +2484,18 @@ impl PyDiGraph {
     ///   mpl_draw(graph)
     ///
     #[staticmethod]
-    #[pyo3(signature=(path, comment=None, deliminator=None, labels=false))]
-    #[pyo3(text_signature = "(path, /, comment=None, deliminator=None, labels=False)")]
+    #[pyo3(signature=(path, comment=None, deliminator=None, labels=false, multigraph=true, selfloops=true))]
+    #[pyo3(
+        text_signature = "(path, /, comment=None, deliminator=None, labels=False, multigraph=True, selfloops=True)"
+    )]
     pub fn read_edge_list(
         py: Python,
         path: &str,
         comment: Option<String>,
         deliminator: Option<String>,
         labels: bool,
+        multigraph: bool,
+        selfloops: bool,
     ) -> PyResult<PyDiGraph> {
         let file = File::open(path)?;
         let buf_reader = BufReader::new(file);
@@ -2555,14 +2563,20 @@ impl PyDiGraph {
             } else {
                 py.None()
             };
-            out_graph.add_edge(NodeIndex::new(src), NodeIndex::new(target), weight);
+            if selfloops || src != target {
+                if multigraph {
+                    out_graph.add_edge(NodeIndex::new(src), NodeIndex::new(target), weight);
+                } else {
+                    out_graph.update_edge(NodeIndex::new(src), NodeIndex::new(target), weight);
+                }
+            }
         }
         Ok(PyDiGraph {
             graph: out_graph,
             cycle_state: algo::DfsSpace::default(),
             check_cycle: false,
             node_removed: false,
-            multigraph: true,
+            multigraph,
             attrs: py.None(),
         })
     }
