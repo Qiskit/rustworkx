@@ -206,9 +206,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: prefix-dev/setup-pixi@v0.8.8
+      - uses: prefix-dev/setup-pixi@v0.9.3
         with:
           manifest-path: pyproject.toml
-          pixi-version: v0.46.0
+          pixi-version: v0.61.0
           environments: default
       - run: pixi run build_pyodide
