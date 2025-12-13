@@ -162,17 +162,17 @@ platforms = ["linux-64", "osx-arm64"]
 default = {features = [], solve-group = "default"}
 
 [tool.pixi.dependencies]
-python = "==3.13.2"
+python = "==3.12.7"
 pip="==25.3"
 pyodide-build = "==0.30.9"
-emscripten = "==4.0.9"
+emscripten = "==3.1.58"
 nodejs = ">=25.2.1,<25.3"
 rust = "==1.86"
 rust-std-wasm32-unknown-emscripten = "==1.86"
 rust-src = "==1.86"
 
 [tool.pixi.tasks.install_xbuildenv]
-cmd = ["pyodide", "xbuildenv", "install", "0.29.0"]
+cmd = ["pyodide", "xbuildenv", "install", "0.27.7"]
 
 [tool.pixi.tasks.build_pyodide]
 cmd = ["pyodide", "build"]
