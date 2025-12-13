@@ -1,0 +1,7 @@
+---
+features:
+  - |
+    Adds the flags ``multigraph`` and ``allow_self_loops`` to the ``read_edge_list`` methods of :class:`rustwork.PyGraph` and :class:`rustworkx.PyDiGraph`.
+    When the flag ``multigraph`` is set to ``False``, no parallel edge is created, but the edge weight is updated.
+    The edge weight is the last one found in the edge list file.
+    When flag ``allow_self_loops` is set to ``False``, the self-loops in the edge list file are ignored.
