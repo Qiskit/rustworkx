@@ -171,7 +171,7 @@ class TestEdgeList(unittest.TestCase):
             fd.write("1 2 c\n")
             fd.write("1 2 d\n")
             fd.flush()
-            graph = rustworkx.PyDiGraph.read_edge_list(fd.name, selfloops=False)
+            graph = rustworkx.PyDiGraph.read_edge_list(fd.name, allow_self_loops=False)
         self.assertTrue(graph.node_indexes(), [0, 1, 2])
         self.assertTrue(graph.has_edge(0, 1))
         self.assertTrue(graph.has_edge(1, 2))

@@ -1373,9 +1373,9 @@ impl PyGraph {
     ///   mpl_draw(graph)
     ///
     #[staticmethod]
-    #[pyo3(signature=(path, comment=None, deliminator=None, labels=false, multigraph=true, selfloops=true))]
+    #[pyo3(signature=(path, comment=None, deliminator=None, labels=false, multigraph=true, allow_self_loops=true))]
     #[pyo3(
-        text_signature = "(path, /, comment=None, deliminator=None, labels=False, multigraph=True, selfloops=True)"
+        text_signature = "(path, /, comment=None, deliminator=None, labels=False, multigraph=True, allow_self_loops=True)"
     )]
     pub fn read_edge_list(
         py: Python,
@@ -1384,7 +1384,7 @@ impl PyGraph {
         deliminator: Option<String>,
         labels: bool,
         multigraph: bool,
-        selfloops: bool,
+        allow_self_loops: bool,
     ) -> PyResult<PyGraph> {
         let file = File::open(path)?;
         let buf_reader = BufReader::new(file);
@@ -1452,7 +1452,7 @@ impl PyGraph {
             } else {
                 py.None()
             };
-            if selfloops || src != target {
+            if allow_self_loops || src != target {
                 if multigraph {
                     out_graph.add_edge(NodeIndex::new(src), NodeIndex::new(target), weight);
                 } else {
