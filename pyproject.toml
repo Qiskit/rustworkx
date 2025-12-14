@@ -182,7 +182,8 @@ depends-on = ["install_xbuildenv"]
 
 [tool.pixi.tasks.pyodide_test]
 cmd = [
-    "cd", "tests", "&&",
+    "uv", "cache", "clean", "rustworkx",
+    "&&",
     "uvx",
     "--no-config",
     "--isolated",
@@ -192,11 +193,11 @@ cmd = [
     "--no-build",
     "--extra-index-url", "{{ index_url }}",
     "--index-strategy", "unsafe-best-match",
-    "--reinstall",
+    "--directory", "tests",
     "python", "-m", "unittest", "discover", "."
 ]
 args = [
-  { "arg" = "wheel_path", "default" = "$(uvx python ../tools/find_only_wheel.py)" },
+  { "arg" = "wheel_path", "default" = "$(uvx python tools/find_only_wheel.py)" },
   { "arg" = "python_version", "default" = "cpython-3.12.7-emscripten-wasm32-musl" },
   { "arg" = "index_url", "default" = "https://index.pyodide.org/0.27.7/" },
 ]
