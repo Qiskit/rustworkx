@@ -75,6 +75,10 @@ jobs:
             python-version: "3.12"
             platform: { os: "ubuntu-latest", python-architecture: "x64", rust-target: "x86_64-unknown-linux-gnu" }
             msrv: "MSRV"
+          - rust: stable
+            python-version: "3.14t"
+            platform: { os: "ubuntu-latest", python-architecture: "x64", rust-target: "x86_64-unknown-linux-gnu" }
+            msrv: "Free-Threaded"
           # Test future versions of Rust and Python
           - rust: beta
             python-version: "3.14" # upgrade to 3.15-dev when the release candidate is available
