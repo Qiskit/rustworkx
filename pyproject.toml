@@ -156,17 +156,17 @@ repair-wheel-command = "cp {wheel} {dest_dir}/. && pipx run abi3audit==0.0.9 --s
 
 [tool.pixi.workspace]
 channels = ["conda-forge"]
-platforms = ["linux-64"]
+platforms = ["linux-64", "osx-arm64"]
 
 [tool.pixi.environments]
 default = {features = [], solve-group = "default"}
 
 [tool.pixi.dependencies]
 python = "==3.12.7"
-pip="==25.1"
-pyodide-build = "==0.30.5"
+pip="==25.3"
+pyodide-build = "==0.30.9"
 emscripten = "==3.1.58"
-nodejs = ">=22.13.0,<22.14"
+nodejs = ">=25.2.1,<25.3"
 rust = "==1.86"
 rust-std-wasm32-unknown-emscripten = "==1.86"
 rust-src = "==1.86"
