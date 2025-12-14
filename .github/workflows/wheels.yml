@@ -31,7 +31,7 @@ jobs:
         with:
           python-version: '3.12'
       - name: Install deps
-        run: pip install -U setuptools-rust build
+        run: pip install -U maturin>=1.9.0,<2.0 build
       - name: Build sdist
         run: python -m build --sdist
       - uses: actions/upload-artifact@v4
