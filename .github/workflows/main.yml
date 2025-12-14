@@ -154,7 +154,14 @@ jobs:
       - name: Build rustworkx
         run: pip install .
         env:
-          PROFILE: "dev"
+          CARGO_PROFILE_RELEASE_OPT_LEVEL: "0"
+          CARGO_PROFILE_RELEASE_DEBUG: "true"
+          CARGO_PROFILE_RELEASE_DEBUG_ASSERTIONS: "true"
+          CARGO_PROFILE_RELEASE_OVERFLOW_CHECKS: "true"
+          CARGO_PROFILE_RELEASE_LTO: "false"
+          CARGO_PROFILE_RELEASE_PANIC: "unwind"
+          CARGO_PROFILE_RELEASE_INCREMENTAL: "true"
+          CARGO_PROFILE_RELEASE_CODEGEN_UNITS: "16"
           CARGO_INCREMENTAL: 0
           RUSTFLAGS: "-Cinstrument-coverage"
           LLVM_PROFILE_FILE: "rustworkx-%p-%m.profraw"
