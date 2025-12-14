@@ -166,8 +166,8 @@ changes reflected in your python environment.
 ### Develop Mode
 
 If you'd like to build rustworkx in debug mode and use an interactive debugger
-while working on a change you can run `maturin develop` to build and install
-rustworkx in develop mode.
+while working on a change you can run `maturin build --profile dev` to build rustworkx
+and then install the wheel with `pip`.
 This will build rustworkx without optimizations and include debuginfo
 when running `pip install`. That can be handy for debugging.
 
