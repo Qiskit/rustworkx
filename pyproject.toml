@@ -182,7 +182,7 @@ depends-on = ["install_xbuildenv"]
 
 [tool.pixi.tasks.pyodide_test]
 cmd = [
-    "uv", "cache", "prune", "--ci",
+    "uv", "cache", "clean", "rustworkx",
     "&&",
     "uvx",
     "--no-config",
