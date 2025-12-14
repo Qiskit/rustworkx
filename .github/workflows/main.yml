@@ -144,8 +144,9 @@ jobs:
         run: |
           pip install -U --group test
       - name: Build rustworkx
-        run: maturin develop
+        run: pip install .
         env:
+          PROFILE: "dev"
           CARGO_INCREMENTAL: 0
           RUSTFLAGS: "-Cinstrument-coverage"
           LLVM_PROFILE_FILE: "rustworkx-%p-%m.profraw"
