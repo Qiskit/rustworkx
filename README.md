@@ -77,10 +77,10 @@ it just as it would if there was a prebuilt binary available.
 > [!NOTE]  
 > To build from source you will need to ensure you have pip >=19.0.0
 installed, which supports PEP-517, or that you have manually installed
-`setuptools-rust>=1.9` prior to running `pip install rustworkx`. If you receive an
-error about `setuptools-rust` not being found you should upgrade pip with
-`pip install -U pip` or manually install `setuptools-rust` with
-`pip install -U setuptools-rust` and try again.
+`maturin>=1.9` prior to running `pip install rustworkx`. If you receive an
+error about `maturin` not being found you should upgrade pip with
+`pip install -U pip` or manually install `maturin` with
+`pip install -U maturin>=1.9` and try again.
 
 ### Optional dependencies
 
@@ -134,7 +134,7 @@ git clone https://github.com/Qiskit/rustworkx.git
 ```
 
 rustworkx uses [PyO3](https://github.com/pyo3/pyo3) and
-[setuptools-rust](https://github.com/PyO3/setuptools-rust) to build the
+[maturin](https://github.com/PyO3/maturin) to build the
 python interface, which enables using standard python tooling to work. So,
 assuming you have rust installed, you can easily install rustworkx into your
 python environment using `pip`. Once you have a local clone of the repo, change
@@ -166,8 +166,8 @@ changes reflected in your python environment.
 ### Develop Mode
 
 If you'd like to build rustworkx in debug mode and use an interactive debugger
-while working on a change you can set `SETUPTOOLS_RUST_CARGO_PROFILE="dev"`
-as an environment variable to build and install rustworkx in develop mode.
+while working on a change you can run `maturin develop` to build and install
+rustworkx in develop mode.
 This will build rustworkx without optimizations and include debuginfo
 when running `pip install`. That can be handy for debugging.
 
