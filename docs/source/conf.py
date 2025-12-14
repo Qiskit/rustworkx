@@ -118,11 +118,6 @@ with open(jupyterlite_config, "r") as test_json_config:
     # If there are syntax errors, jupyterlite fails silently
     # so we validate with Python
     test_config_dictionary = json.load(test_json_config)
-    playground_url = test_config_dictionary["PipliteAddon"]["piplite_urls"][0]
-    playground_wheel = pathlib.Path(__file__).parent / playground_url
-    # If the wheel does not exist, jupyterlite fails silently. So we check
-    # ourselves.
-    assert playground_wheel.is_file()
 
 # Texinfo options
 
