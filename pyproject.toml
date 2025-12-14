@@ -192,6 +192,7 @@ cmd = [
     "--no-build",
     "--extra-index-url", "{{ index_url }}",
     "--index-strategy", "unsafe-best-match",
+    "--reinstall",
     "python", "-m", "unittest", "discover", "."
 ]
 args = [
