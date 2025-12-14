@@ -165,7 +165,7 @@ jobs:
         run: |
           set -e
           mv tests/rustworkx*profraw .
-          ./grcov . --binary-path ./target/debug/ -s . -t lcov --branch --ignore-not-existing --ignore "/*" -o ./coveralls.lcov
+          ./grcov . --binary-path ./target/release/ -s . -t lcov --branch --ignore-not-existing --ignore "/*" -o ./coveralls.lcov
       - uses: actions/upload-artifact@v4
         with:
           name: coverage
