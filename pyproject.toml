@@ -2,7 +2,7 @@
 name = "rustworkx"
 version = "0.17.1"
 description = "A High-Performance Graph Library for Python"
-requires-python = ">=3.10"
+requires-python = ">=3.9"
 dependencies = [
     "numpy>=1.16.0,<3"
 ]
@@ -101,9 +101,9 @@ docs = [
     # Required to pin Pyodide 0.28.3 with jupyterlite-sphinx.
     # jupyterlite-pyodide-kernel is pinned to specific Pyodide versions,
     # therefore we need to pick releases that are compatible.
-    "jupyterlite-sphinx==0.22.0",
-    "jupyterlite-core==0.7.0",
-    "jupyterlite-pyodide-kernel==0.7.0",
+    'jupyterlite-sphinx==0.22.0; python_version >= "3.10"',
+    'jupyterlite-core==0.7.0; python_version >= "3.10"',
+    'jupyterlite-pyodide-kernel==0.7.0; python_version >= "3.10"',
 ]
 releaseinfra = [
     "cibuildwheel==2.23.2",
