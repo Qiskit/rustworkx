@@ -13,7 +13,8 @@ import sys
 import numpy as np
 import numpy.typing as npt
 
-from typing import Generic, Any, Callable, overload
+from typing import Generic, Any, overload
+from collections.abc import Callable
 from collections.abc import Iterable, Iterator, Sequence
 
 if sys.version_info >= (3, 13):
@@ -312,7 +313,7 @@ _BFSVisitor = TypeVar("_BFSVisitor", bound=visit.BFSVisitor)
 _DFSVisitor = TypeVar("_DFSVisitor", bound=visit.DFSVisitor)
 _DijkstraVisitor = TypeVar("_DijkstraVisitor", bound=visit.DijkstraVisitor)
 
-class PyDAG(Generic[_S, _T], PyDiGraph[_S, _T]): ...
+class PyDAG(PyDiGraph[_S, _T], Generic[_S, _T]): ...
 
 def distance_matrix(
     graph: PyGraph | PyDiGraph,
