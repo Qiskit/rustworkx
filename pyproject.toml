@@ -93,7 +93,7 @@ docs = [
     "lxml_html_clean",
 ]
 releaseinfra = [
-    "cibuildwheel==3.2.1; python_version >= '3.11'",
+    "cibuildwheel==3.3.0; python_version >= '3.11'",
 ]
 
 [tool.ruff]
