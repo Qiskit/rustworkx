@@ -24,5 +24,5 @@ experiment with Rustworkx in your browser.
    version with `rustworkx.__version__`.
 
 .. note::
-   The `rustworkx` version in the playground experimental. If you find any issues, please
+   The `rustworkx` WASM version in the playground experimental. If you find any issues, please
    report them at https://github.com/Qiskit/rustworkx/issues.
