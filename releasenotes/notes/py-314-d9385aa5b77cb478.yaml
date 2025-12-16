@@ -1,5 +1,5 @@
 ---
-upgrade:
+features:
   - |
     This is the first release of rustworkx with official support Python 3.14. Although
     previous versions of rustworkx do work with Python 3.14, this release has been
