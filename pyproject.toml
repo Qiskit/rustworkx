@@ -109,8 +109,8 @@ target-version = ['py310', 'py311', 'py312', 'py313']
 [tool.ruff]
 line-length = 105 # more lenient than black due to long function signatures
 src = ["rustworkx", "setup.py", "tests"]
-target-version = "py39"
 extend-exclude = ["doc"]
+target-version = "py310"
 
 [tool.ruff.lint]
 select = [
@@ -120,8 +120,6 @@ select = [
     "PYI", # flake8-pyi
     "Q",   # flake8-quotes
 ]
-target-version = "py310"
-extend-exclude = ["doc"]
 
 [tool.ruff.lint.per-file-ignores]
 "rustworkx/__init__.py" = ["F405", "F403"]
