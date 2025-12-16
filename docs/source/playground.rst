@@ -5,7 +5,7 @@ Rustworkx Playground
 ####################
 
 Welcome to the Rustworkx Playground! This is an interactive environment where you can
-experiment with Rustworkx on your browser.
+experiment with Rustworkx in your browser.
 
 .. replite::
    :kernel: python
