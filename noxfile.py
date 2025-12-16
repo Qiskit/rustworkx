@@ -25,7 +25,7 @@ def base_test(session):
 def test(session):
     base_test(session)
 
-@nox.session(python=["3.9", "3.10", "3.11", "3.12"])
+@nox.session(python=["3.10", "3.11", "3.12", "3.13"])
 def test_with_version(session):
     base_test(session)
 
@@ -34,7 +34,7 @@ def lint(session):
     black(session)
     typos(session)
     session.install(*lint_deps)
-    session.run("ruff", "check", "rustworkx", "retworkx", "setup.py")
+    session.run("ruff", "check", "rustworkx", "setup.py")
     session.run("cargo", "fmt", "--all", "--", "--check", external=True)
     session.run("python", "tools/find_stray_release_notes.py")
 
@@ -74,7 +74,7 @@ def docs_clean(session):
 @nox.session(python=["3"])
 def black(session):
     session.install(*[d for d in lint_deps if "black" in d])
-    session.run("black", "rustworkx", "tests", "retworkx", *session.posargs)
+    session.run("black", "rustworkx", "tests", *session.posargs)
 
 @nox.session(python=["3"])
 def typos(session):

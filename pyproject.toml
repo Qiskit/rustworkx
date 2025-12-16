@@ -2,7 +2,7 @@
 name = "rustworkx"
 version = "0.17.1"
 description = "A High-Performance Graph Library for Python"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 dependencies = [
     "numpy>=1.16.0,<3"
 ]
@@ -13,7 +13,6 @@ classifiers=[
     "Intended Audience :: Science/Research",
     "Programming Language :: Rust",
     "Programming Language :: Python :: 3 :: Only",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
@@ -29,7 +28,7 @@ packages = ["rustworkx", "rustworkx.visualization"]
 include-package-data = true
 
 [tool.distutils.bdist_wheel]
-py-limited-api = "cp39"
+py-limited-api = "cp310"
 
 [[tool.setuptools-rust.ext-modules]]
 target = "rustworkx.rustworkx"
@@ -105,7 +104,7 @@ releaseinfra = [
 
 [tool.black]
 line-length = 100
-target-version = ['py39', 'py310', 'py311', 'py312', 'py313']
+target-version = ['py310', 'py311', 'py312', 'py313']
 
 [tool.ruff]
 line-length = 105 # more lenient than black due to long function signatures
@@ -122,6 +121,8 @@ select = [
     "Q",   # flake8-quotes
 ]
 per-file-ignores = {"rustworkx/__init__.py" = ["F405", "F403"], "*.pyi" = ["F403", "F405", "PYI001", "PYI002"]}
+target-version = "py310"
+extend-exclude = ["doc"]
 
 
 [tool.typos.default]
