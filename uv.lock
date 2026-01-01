@@ -678,7 +678,7 @@ wheels = [
 
 [[package]]
 name = "furo"
-version = "2024.1.29"
+version = "2024.8.6"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "beautifulsoup4" },
@@ -686,9 +686,9 @@ dependencies = [
     { name = "sphinx" },
     { name = "sphinx-basic-ng" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/00/6d/7d0f35b9fba4394675bd90d44baadde8f20fe6e38c2481ef42cf05cd74f8/furo-2024.1.29.tar.gz", hash = "sha256:4d6b2fe3f10a6e36eb9cc24c1e7beb38d7a23fc7b3c382867503b7fcac8a1e02", size = 1657869, upload-time = "2024-01-29T22:52:43.268Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/a0/e2/d351d69a9a9e4badb4a5be062c2d0e87bd9e6c23b5e57337fef14bef34c8/furo-2024.8.6.tar.gz", hash = "sha256:b63e4cee8abfc3136d3bc03a3d45a76a850bada4d6374d24c1716b0e01394a01", size = 1661506, upload-time = "2024-08-06T08:07:57.567Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/88/1b/6e2c959476fcdaea2aeb8fe5807ed6df8189086a7cd17904de5272db53e9/furo-2024.1.29-py3-none-any.whl", hash = "sha256:3548be2cef45a32f8cdc0272d415fcb3e5fa6a0eb4ddfe21df3ecf1fe45a13cf", size = 325212, upload-time = "2024-01-29T22:52:41.145Z" },
+    { url = "https://files.pythonhosted.org/packages/27/48/e791a7ed487dbb9729ef32bb5d1af16693d8925f4366befef54119b2e576/furo-2024.8.6-py3-none-any.whl", hash = "sha256:6cd97c58b47813d3619e63e9081169880fbe331f0ca883c871ff1f3f11814f5c", size = 341333, upload-time = "2024-08-06T08:07:54.44Z" },
 ]
 
 [[package]]
@@ -1953,17 +1953,16 @@ wheels = [
 
 [[package]]
 name = "qiskit-sphinx-theme"
-version = "1.16.1"
+version = "2.0.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "docutils" },
     { name = "furo" },
     { name = "sphinx" },
-    { name = "sphinxcontrib-jquery" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/4d/f7/3111cab922a9b0b705801e41a21ef0a06b5177a6c6fc31a8c1bdf0070aab/qiskit_sphinx_theme-1.16.1.tar.gz", hash = "sha256:d90287a843093785e842b47be47b55853f49c1d2b994526a9496bb71d468836c", size = 1676184, upload-time = "2024-03-01T17:16:08.774Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/ba/55/b9900b1751e9fc9aacd728304f23f1bba7c62cf35d0aef2bebd4e9e3d45d/qiskit_sphinx_theme-2.0.0.tar.gz", hash = "sha256:3bd305a27a96aff7bab533ec09a546ad3c5c6171f308db474c22c8fb1dd5b342", size = 2402710, upload-time = "2024-08-30T13:16:47.217Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/1d/ee/e85a2caf7290e3ea0791725c402fd1b9a6ccaa777ee30a2a21809ca91f72/qiskit_sphinx_theme-1.16.1-py3-none-any.whl", hash = "sha256:3ab586840d89bba2214716435836de9d5495ad9cfe5ae696807d6bf3c0997c50", size = 1073060, upload-time = "2024-03-01T17:16:06.858Z" },
+    { url = "https://files.pythonhosted.org/packages/f2/1d/5da0201ffb2ac4087bba0b34a2cdec4f976d3d4dd5c24be571a286c0d177/qiskit_sphinx_theme-2.0.0-py3-none-any.whl", hash = "sha256:30e564c7197fc12754132b37696d86d80221165b471c46bf74b3c0238dbb8956", size = 202020, upload-time = "2024-08-30T13:16:45.967Z" },
 ]
 
 [[package]]
@@ -2210,7 +2209,7 @@ docs = [
     { name = "matplotlib", specifier = ">=3.4" },
     { name = "pillow", specifier = ">=4.2.1" },
     { name = "pydot" },
-    { name = "qiskit-sphinx-theme", specifier = "==1.16.1" },
+    { name = "qiskit-sphinx-theme", specifier = "==2.0.0" },
     { name = "reno", specifier = ">=3.4.0" },
     { name = "sphinx", specifier = ">=5.0" },
     { name = "sphinx-reredirects" },
@@ -2372,18 +2371,6 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/43/93/983afd9aa001e5201eab16b5a444ed5b9b0a7a010541e0ddfbbfd0b2470c/sphinxcontrib_htmlhelp-2.1.0.tar.gz", hash = "sha256:c9e2916ace8aad64cc13a0d233ee22317f2b9025b9cf3295249fa985cc7082e9", size = 22617, upload-time = "2024-07-29T01:09:37.889Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/0a/7b/18a8c0bcec9182c05a0b3ec2a776bba4ead82750a55ff798e8d406dae604/sphinxcontrib_htmlhelp-2.1.0-py3-none-any.whl", hash = "sha256:166759820b47002d22914d64a075ce08f4c46818e17cfc9470a9786b759b19f8", size = 98705, upload-time = "2024-07-29T01:09:36.407Z" },
-]
-
-[[package]]
-name = "sphinxcontrib-jquery"
-version = "4.1"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "sphinx" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/de/f3/aa67467e051df70a6330fe7770894b3e4f09436dea6881ae0b4f3d87cad8/sphinxcontrib-jquery-4.1.tar.gz", hash = "sha256:1620739f04e36a2c779f1a131a2dfd49b2fd07351bf1968ced074365933abc7a", size = 122331, upload-time = "2023-03-14T15:01:01.944Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/76/85/749bd22d1a68db7291c89e2ebca53f4306c3f205853cf31e9de279034c3c/sphinxcontrib_jquery-4.1-py2.py3-none-any.whl", hash = "sha256:f936030d7d0147dd026a4f2b5a57343d233f1fc7b363f68b3d4f1cb0993878ae", size = 121104, upload-time = "2023-03-14T15:01:00.356Z" },
 ]
 
 [[package]]
