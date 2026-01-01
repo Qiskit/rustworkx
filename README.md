@@ -93,7 +93,7 @@ installed with `pip install matplotlib` or when you're installing rustworkx with
 function `rustworkx.visualization.graphviz_drawer` first you will need to install
 graphviz, instructions for this can be found here:
 https://graphviz.org/download/#executable-packages. Then you
-will need to install the [pillow](https://python-pillow.org/) Python library.
+will need to install the [pillow](https://python-pillow.github.io/) Python library.
 This can be done either with `pip install pillow` or when installing rustworkx
 with `pip install 'rustworkx[graphviz]'`.
 
