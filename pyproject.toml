@@ -92,7 +92,7 @@ docs = [
     "pydot",
     "pillow>=4.2.1",
     "reno>=3.4.0",
-    "qiskit-sphinx-theme==1.16.1",
+    "qiskit-sphinx-theme==2.0.0",
     "matplotlib>=3.4",
     "sphinx-reredirects",
     "sphinxemoji",
