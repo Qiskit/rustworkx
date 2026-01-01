@@ -25,3 +25,5 @@ rustworkx-core/Cargo.lock
 **/.DS_Store
 venv/
 .python-version
+.jupyterlite.doit.db
+docs/source/.cache

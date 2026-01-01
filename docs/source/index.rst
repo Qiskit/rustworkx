@@ -73,6 +73,7 @@ Contents:
 
    About Rustworkx <self>
    Installation and Getting Started <install>
+   Rustworkx Playground <playground>
    Rustworkx Tutorials and Guides <tutorial/index>
    Rustworkx API <api/index>
    Visualization <visualization>
