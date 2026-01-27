@@ -259,6 +259,8 @@ from .rustworkx import graph_tensor_product as graph_tensor_product
 from .rustworkx import graph_token_swapper as graph_token_swapper
 from .rustworkx import digraph_transitivity as digraph_transitivity
 from .rustworkx import graph_transitivity as graph_transitivity
+from .rustworkx import generate_random_path_digraph as generate_random_path_digraph
+from .rustworkx import generate_random_path_graph as generate_random_path_graph
 from .rustworkx import digraph_bfs_search as digraph_bfs_search
 from .rustworkx import graph_bfs_search as graph_bfs_search
 from .rustworkx import digraph_bfs_layers as digraph_bfs_layers
