@@ -28,7 +28,7 @@ jobs:
           python-version: "3.12"
       - run: |
           pip install -U --group lint
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: dtolnay/rust-toolchain@1.92 # TODO: unpin clippy
         with:
           components: rustfmt, clippy
       - name: Test Build
