@@ -17,6 +17,7 @@ classifiers=[
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Operating System :: MacOS :: MacOS X",
     "Operating System :: Microsoft :: Windows",
     "Operating System :: POSIX :: Linux",
@@ -65,8 +66,8 @@ build-backend = "setuptools.build_meta"
 
 [dependency-groups]
 testinfra = [
-    "nox==2025.5.1",
-    "uv==0.7.8",
+    "nox==2025.10.16",
+    "uv==0.9.7",
 ]
 test = [
   "setuptools-rust",
@@ -75,13 +76,13 @@ test = [
   "stestr>=4.1",
 ]
 lint = [
-    "black~=24.8",
-    "ruff==0.11.9",
+    "black~=25.9",
+    "ruff==0.14.3",
     "setuptools-rust",
-    "typos~=1.28",
+    "typos~=1.39",
 ]
 stubs = [
-    "mypy==1.11.2",
+    "mypy==1.17.1",
     "typing-extensions>=4.4",
 ]
 docs = [
@@ -99,12 +100,12 @@ docs = [
     "lxml_html_clean",
 ]
 releaseinfra = [
-    "cibuildwheel==2.23.2",
+    "cibuildwheel==3.3.0; python_version >= '3.11'",
 ]
 
 [tool.black]
 line-length = 100
-target-version = ['py310', 'py311', 'py312', 'py313']
+target-version = ['py310', 'py311', 'py312', 'py313', 'py314']
 
 [tool.ruff]
 line-length = 105 # more lenient than black due to long function signatures
@@ -126,12 +127,13 @@ extend-exclude = ["doc"]
 [tool.typos.default]
 extend-ignore-words-re = [
   "[Ss]toer",
+  "[Bb]rin",
 ]
 
 [tool.cibuildwheel]
 manylinux-x86_64-image = "manylinux2014"
 manylinux-i686-image = "manylinux2014"
-skip = "pp* cp36-* cp37-* cp38-* *win32 *musllinux*i686"
+skip = "pp* cp314t* *win32 *musllinux*i686"
 test-requires = "networkx"
 test-command = "python -m unittest discover {project}/tests"
 before-build = "pip install -U setuptools-rust"

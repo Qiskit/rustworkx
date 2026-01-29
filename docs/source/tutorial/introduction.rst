@@ -399,9 +399,9 @@ operations on the graph. For example:
 
 .. jupyter-execute::
 
-    lolipop_graph = rx.generators.lollipop_graph(4, 3)
+    lollipop_graph = rx.generators.lollipop_graph(4, 3)
     mesh_graph = rx.generators.mesh_graph(4)
-    combined_graph = rx.cartesian_product(lolipop_graph, mesh_graph)[0]
+    combined_graph = rx.cartesian_product(lollipop_graph, mesh_graph)[0]
     mpl_draw(combined_graph)
 
 Additionally there are alternate constructors such as
