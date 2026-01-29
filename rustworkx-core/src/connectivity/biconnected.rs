@@ -125,9 +125,10 @@ where
                             num_components += 1;
                         }
                     }
-                    if need_bridges && low[u] != disc[pu] {
-                        tmp_bridges.insert((pu_id, u_id));
-                    }
+                }
+
+                if need_bridges && low[u] > disc[pu] {
+                    tmp_bridges.insert((pu_id, u_id));
                 }
 
                 if is_root(&parent, pu) && need_components {
