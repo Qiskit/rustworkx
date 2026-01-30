@@ -106,11 +106,11 @@ where
 #[cfg(test)]
 mod test_line_graph {
     use crate::line_graph::line_graph;
-    use crate::petgraph::visit::EdgeRef;
     use crate::petgraph::Graph;
+    use crate::petgraph::visit::EdgeRef;
     use hashbrown::HashMap;
-    use petgraph::graph::{EdgeIndex, NodeIndex};
     use petgraph::Undirected;
+    use petgraph::graph::{EdgeIndex, NodeIndex};
 
     #[test]
     fn test_simple_graph() {

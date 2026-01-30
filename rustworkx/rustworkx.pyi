@@ -12,12 +12,12 @@
 from .visit import BFSVisitor, DFSVisitor, DijkstraVisitor
 from types import GenericAlias
 from typing import (
-    Callable,
     final,
     Any,
     Generic,
     overload,
 )
+from collections.abc import Callable
 from collections.abc import (
     Iterable,
     Iterator,
@@ -751,6 +751,34 @@ def from_node_link_json_file(
     node_attrs: Callable[[dict[str, str]], _S] | None = ...,
     edge_attrs: Callable[[dict[str, str]], _T] | None = ...,
 ) -> PyDiGraph[_S, _T] | PyGraph[_S, _T]: ...
+def from_dot(
+    dot_str: str,
+) -> PyDiGraph[_S, _T] | PyGraph[_S, _T]: ...
+def read_matrix_market(contents: str) -> PyGraph | PyDiGraph: ...
+def read_matrix_market_file(path: str) -> PyGraph | PyDiGraph: ...
+def graph_write_matrix_market(
+    graph: PyGraph,
+    /,
+    path: str | None = ...,
+) -> str | None: ...
+def digraph_write_matrix_market(
+    graph: PyDiGraph,
+    /,
+    path: str | None = ...,
+) -> str | None: ...
+
+# Geometry
+
+def hyperbolic_greedy_routing(
+    graph: PyGraph[_S, _T],
+    pos: list[list[float]],
+    source: int,
+    destination: int,
+) -> tuple[list[int], float] | None: ...
+def hyperbolic_greedy_success_rate(
+    graph: PyGraph[_S, _T],
+    pos: list[list[float]],
+) -> float: ...
 
 # Shortest Path
 
@@ -1059,6 +1087,18 @@ _BFSVisitor = TypeVar("_BFSVisitor", bound=BFSVisitor, default=BFSVisitor)
 _DFSVisitor = TypeVar("_DFSVisitor", bound=DFSVisitor, default=DFSVisitor)
 _DijkstraVisitor = TypeVar("_DijkstraVisitor", bound=DijkstraVisitor, default=DijkstraVisitor)
 
+def digraph_generate_random_path(
+    graph: PyDiGraph,
+    source: int,
+    length: int,
+    seed: int | None = None,
+) -> Sequence[int]: ...
+def graph_generate_random_path(
+    graph: PyGraph,
+    source: int,
+    length: int,
+    seed: int | None = None,
+) -> Sequence[int]: ...
 def digraph_bfs_search(
     graph: PyDiGraph,
     source: Sequence[int] | None = ...,
@@ -1079,6 +1119,14 @@ def graph_dfs_search(
     source: Sequence[int] | None = ...,
     visitor: _DFSVisitor | None = ...,
 ) -> None: ...
+def digraph_bfs_layers(
+    digraph: PyDiGraph,
+    sources: Sequence[int] | None = ...,
+) -> list[list[int]]: ...
+def graph_bfs_layers(
+    graph: PyGraph,
+    sources: Sequence[int] | None = ...,
+) -> list[list[int]]: ...
 def digraph_dijkstra_search(
     graph: PyDiGraph,
     source: Sequence[int] | None = ...,
@@ -1148,7 +1196,7 @@ def dominance_frontiers(graph: PyDiGraph[_S, _T], start_node: int, /) -> dict[in
 
 _T_co = TypeVar("_T_co", covariant=True, default=Any)
 
-class _RustworkxCustomVecIter(Generic[_T_co], Sequence[_T_co], ABC):
+class _RustworkxCustomVecIter(Sequence[_T_co], ABC, Generic[_T_co]):
     def __init__(self) -> None: ...
     def __eq__(self, other: object) -> bool: ...
     @overload
@@ -1166,7 +1214,7 @@ class _RustworkxCustomVecIter(Generic[_T_co], Sequence[_T_co], ABC):
     def __iter__(self) -> Iterator[_T_co]: ...
     def __reversed__(self) -> Iterator[_T_co]: ...
 
-class _RustworkxCustomHashMapIter(Generic[_S, _T_co], Mapping[_S, _T_co], ABC):
+class _RustworkxCustomHashMapIter(Mapping[_S, _T_co], ABC, Generic[_S, _T_co]):
     def __init__(self) -> None: ...
     def items(self) -> ItemsView[_S, _T_co]: ...
     def keys(self) -> KeysView[_S]: ...
@@ -1197,13 +1245,13 @@ class AllPairsPathLengthMapping(_RustworkxCustomHashMapIter[int, PathLengthMappi
 class AllPairsPathMapping(_RustworkxCustomHashMapIter[int, PathMapping]): ...
 
 @final
-class BFSSuccessors(Generic[_T_co], _RustworkxCustomVecIter[tuple[_T_co, list[_T_co]]]): ...
+class BFSSuccessors(_RustworkxCustomVecIter[tuple[_T_co, list[_T_co]]], Generic[_T_co]): ...
 
 @final
-class BFSPredecessors(Generic[_T_co], _RustworkxCustomVecIter[tuple[_T_co, list[_T_co]]]): ...
+class BFSPredecessors(_RustworkxCustomVecIter[tuple[_T_co, list[_T_co]]], Generic[_T_co]): ...
 
 @final
-class EdgeIndexMap(Generic[_T_co], _RustworkxCustomHashMapIter[int, tuple[int, int, _T_co]]): ...
+class EdgeIndexMap(_RustworkxCustomHashMapIter[int, tuple[int, int, _T_co]], Generic[_T_co]): ...
 
 @final
 class EdgeIndices(_RustworkxCustomVecIter[int]): ...
@@ -1230,7 +1278,7 @@ class NodesCountMapping(_RustworkxCustomHashMapIter[int, int]): ...
 class Pos2DMapping(_RustworkxCustomHashMapIter[int, tuple[float, float]]): ...
 
 @final
-class WeightedEdgeList(Generic[_T_co], _RustworkxCustomVecIter[tuple[int, int, _T_co]]): ...
+class WeightedEdgeList(_RustworkxCustomVecIter[tuple[int, int, _T_co]], Generic[_T_co]): ...
 
 @final
 class CentralityMapping(_RustworkxCustomHashMapIter[int, float]): ...
@@ -1351,6 +1399,8 @@ class PyGraph(Generic[_S, _T]):
         comment: str | None = ...,
         deliminator: str | None = ...,
         labels: bool = ...,
+        multigraph: bool = ...,
+        allow_self_loops: bool = ...,
     ) -> PyGraph: ...
     def remove_edge(self, node_a: int, node_b: int, /) -> None: ...
     def remove_edge_from_index(self, edge: int, /) -> None: ...
@@ -1545,6 +1595,8 @@ class PyDiGraph(Generic[_S, _T]):
         comment: str | None = ...,
         deliminator: str | None = ...,
         labels: bool = ...,
+        multigraph: bool = ...,
+        allow_self_loops: bool = ...,
     ) -> PyDiGraph: ...
     def remove_edge(self, parent: int, child: int, /) -> None: ...
     def remove_edge_from_index(self, edge: int, /) -> None: ...

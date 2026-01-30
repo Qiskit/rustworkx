@@ -13,7 +13,8 @@ import sys
 import numpy as np
 import numpy.typing as npt
 
-from typing import Generic, Any, Callable, overload
+from typing import Generic, Any, overload
+from collections.abc import Callable
 from collections.abc import Iterable, Iterator, Sequence
 
 if sys.version_info >= (3, 13):
@@ -169,7 +170,14 @@ from .rustworkx import GraphMLKey as GraphMLKey
 from .rustworkx import digraph_node_link_json as digraph_node_link_json
 from .rustworkx import graph_node_link_json as graph_node_link_json
 from .rustworkx import from_node_link_json_file as from_node_link_json_file
+from .rustworkx import from_dot as from_dot
+from .rustworkx import graph_write_matrix_market as graph_write_matrix_market
+from .rustworkx import digraph_write_matrix_market as digraph_write_matrix_market
+from .rustworkx import read_matrix_market_file as read_matrix_market_file
+from .rustworkx import read_matrix_market as read_matrix_market
 from .rustworkx import parse_node_link_json as parse_node_link_json
+from .rustworkx import hyperbolic_greedy_routing as hyperbolic_greedy_routing
+from .rustworkx import hyperbolic_greedy_success_rate as hyperbolic_greedy_success_rate
 from .rustworkx import digraph_bellman_ford_shortest_paths as digraph_bellman_ford_shortest_paths
 from .rustworkx import graph_bellman_ford_shortest_paths as graph_bellman_ford_shortest_paths
 from .rustworkx import (
@@ -251,8 +259,12 @@ from .rustworkx import graph_tensor_product as graph_tensor_product
 from .rustworkx import graph_token_swapper as graph_token_swapper
 from .rustworkx import digraph_transitivity as digraph_transitivity
 from .rustworkx import graph_transitivity as graph_transitivity
+from .rustworkx import digraph_generate_random_path as digraph_generate_random_path
+from .rustworkx import graph_generate_random_path as graph_generate_random_path
 from .rustworkx import digraph_bfs_search as digraph_bfs_search
 from .rustworkx import graph_bfs_search as graph_bfs_search
+from .rustworkx import digraph_bfs_layers as digraph_bfs_layers
+from .rustworkx import graph_bfs_layers as graph_bfs_layers
 from .rustworkx import digraph_dfs_search as digraph_dfs_search
 from .rustworkx import graph_dfs_search as graph_dfs_search
 from .rustworkx import digraph_dijkstra_search as digraph_dijkstra_search
@@ -303,7 +315,7 @@ _BFSVisitor = TypeVar("_BFSVisitor", bound=visit.BFSVisitor)
 _DFSVisitor = TypeVar("_DFSVisitor", bound=visit.DFSVisitor)
 _DijkstraVisitor = TypeVar("_DijkstraVisitor", bound=visit.DijkstraVisitor)
 
-class PyDAG(Generic[_S, _T], PyDiGraph[_S, _T]): ...
+class PyDAG(PyDiGraph[_S, _T], Generic[_S, _T]): ...
 
 def distance_matrix(
     graph: PyGraph | PyDiGraph,
@@ -672,3 +684,18 @@ def write_graphml(
     keys: list[GraphMLKey] | None = ...,
     compression: str | None = ...,
 ) -> None: ...
+def write_matrix_market(
+    graph: PyGraph | PyDiGraph,
+    /,
+    path: str | None = ...,
+) -> None: ...
+def bfs_layers(
+    graph: PyGraph | PyDiGraph,
+    sources: Sequence[int] | None = ...,
+) -> list[list[int]]: ...
+def generate_random_path(
+    graph: PyGraph | PyDiGraph,
+    source: int,
+    length: int,
+    seed: int | None = None,
+) -> Sequence[int]: ...

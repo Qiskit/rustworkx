@@ -14,31 +14,35 @@ mod bfs_visit;
 pub mod dfs_visit;
 mod dijkstra_visit;
 
-use bfs_visit::{bfs_handler, PyBfsVisitor};
-use dfs_visit::{dfs_handler, PyDfsVisitor};
-use dijkstra_visit::{dijkstra_handler, PyDijkstraVisitor};
+use bfs_visit::{PyBfsVisitor, bfs_handler};
+use dfs_visit::{PyDfsVisitor, dfs_handler};
+use dijkstra_visit::{PyDijkstraVisitor, dijkstra_handler};
 
 use rustworkx_core::traversal::{
-    ancestors as core_ancestors, bfs_predecessors as core_bfs_predecessors,
+    ancestors as core_ancestors, bfs_layers, bfs_predecessors as core_bfs_predecessors,
     bfs_successors as core_bfs_successors, breadth_first_search, depth_first_search,
     descendants as core_descendants, dfs_edges, dijkstra_search,
+    generate_random_path as core_generate_random_path,
 };
 
-use super::{digraph, graph, iterators, CostFn};
+use super::{CostFn, digraph, graph, iterators};
 
 use std::convert::TryFrom;
 
 use hashbrown::HashSet;
 
+use pyo3::IntoPyObjectExt;
+use pyo3::Python;
 use pyo3::exceptions::{PyIndexError, PyTypeError};
 use pyo3::prelude::*;
-use pyo3::Python;
+use pyo3::types::PyList;
 
-use petgraph::graph::NodeIndex;
 use petgraph::EdgeType;
+use petgraph::graph::NodeIndex;
+use petgraph::visit::NodeIndexable;
 
-use crate::iterators::EdgeList;
 use crate::StablePyGraph;
+use crate::iterators::EdgeList;
 
 fn validate_source_nodes<Ty: EdgeType>(
     graph: &StablePyGraph<Ty>,
@@ -331,9 +335,9 @@ pub fn descendants(graph: &digraph::PyDiGraph, node: usize) -> PyResult<HashSet<
 ///           ENQUEUE(Q, v)
 ///         else                           # event: non_tree_edge((u, v, w))
 ///           if (GRAY = color[v])         # event: gray_target_edge((u, v, w))
-///             ...                       
+///             ...
 ///           elif (BLACK = color[v])      # event: black_target_edge((u, v, w))
-///             ...                       
+///             ...
 ///       end for
 ///       color[u] := BLACK                # event: finish_vertex(u)
 ///     end while
@@ -353,7 +357,7 @@ pub fn descendants(graph: &digraph::PyDiGraph, node: usize) -> PyResult<HashSet<
 ///
 ///        import rustworkx as rx
 ///        from rustworkx.visit import BFSVisitor
-///   
+///
 ///        class TreeEdgesRecorder(BFSVisitor):
 ///
 ///            def __init__(self):
@@ -384,7 +388,7 @@ pub fn descendants(graph: &digraph::PyDiGraph, node: usize) -> PyResult<HashSet<
 ///     graph.add_edges_from_no_data(
 ///         [(school, home), (school, market), (market, home)]
 ///     )
-///    
+///
 ///     class DistanceHomeFinder(BFSVisitor):
 ///
 ///         def __init__(self):
@@ -478,9 +482,9 @@ pub fn digraph_bfs_search(
 ///           ENQUEUE(Q, v)
 ///         else                           # event: non_tree_edge((u, v, w))
 ///           if (GRAY = color[v])         # event: gray_target_edge((u, v, w))
-///             ...                       
+///             ...
 ///           elif (BLACK = color[v])      # event: black_target_edge((u, v, w))
-///             ...                       
+///             ...
 ///       end for
 ///       color[u] := BLACK                # event: finish_vertex(u)
 ///     end while
@@ -500,7 +504,7 @@ pub fn digraph_bfs_search(
 ///
 ///        import rustworkx as rx
 ///        from rustworkx.visit import BFSVisitor
-///   
+///
 ///        class TreeEdgesRecorder(BFSVisitor):
 ///
 ///            def __init__(self):
@@ -653,7 +657,7 @@ pub fn graph_bfs_search(
 ///
 ///        import rustworkx as rx
 ///        from rustworkx.visit import DFSVisitor
-///   
+///
 ///        class TreeEdgesRecorder(DFSVisitor):
 ///
 ///            def __init__(self):
@@ -769,7 +773,7 @@ pub fn digraph_dfs_search(
 ///
 ///        import rustworkx as rx
 ///        from rustworkx.visit import DFSVisitor
-///   
+///
 ///        class TreeEdgesRecorder(DFSVisitor):
 ///
 ///            def __init__(self):
@@ -949,7 +953,7 @@ pub fn digraph_dijkstra_search(
     py: Python,
     graph: &digraph::PyDiGraph,
     source: Option<Vec<usize>>,
-    weight_fn: Option<PyObject>,
+    weight_fn: Option<Py<PyAny>>,
     visitor: Option<PyDijkstraVisitor>,
 ) -> PyResult<()> {
     if visitor.is_none() {
@@ -1092,7 +1096,7 @@ pub fn graph_dijkstra_search(
     py: Python,
     graph: &graph::PyGraph,
     source: Option<Vec<usize>>,
-    weight_fn: Option<PyObject>,
+    weight_fn: Option<Py<PyAny>>,
     visitor: Option<PyDijkstraVisitor>,
 ) -> PyResult<()> {
     if visitor.is_none() {
@@ -1115,4 +1119,147 @@ pub fn graph_dijkstra_search(
     )??;
 
     Ok(())
+}
+
+/// Return the BFS layers of a PyGraph as a list of lists.
+///
+/// :param graph: The input PyGraph to use for BFS traversal
+/// :type graph: PyGraph
+/// :param sources: An optional list of node indices to use as the starting
+///     nodes for the BFS traversal. If not specified, all nodes in the graph
+///     will be used as sources.
+/// :type sources: list[int] or None
+///
+/// :returns: A list of lists where each inner list contains the node indices
+///     at that BFS layer/level from the source nodes
+/// :rtype: list[list[int]]
+#[pyfunction]
+#[pyo3(signature = (graph, sources=None))]
+pub fn graph_bfs_layers(
+    py: Python,
+    graph: &graph::PyGraph,
+    sources: Option<Vec<usize>>,
+) -> PyResult<Py<PyAny>> {
+    let starts: Vec<NodeIndex> = match sources {
+        Some(v) => v.into_iter().map(NodeIndex::new).collect(),
+        None => graph.graph.node_indices().collect(),
+    };
+
+    validate_source_nodes(&graph.graph, &starts)?;
+
+    let layers = bfs_layers(&graph.graph, starts);
+
+    let py_layers = PyList::empty(py);
+    for layer in layers {
+        let ids: Vec<usize> = layer.into_iter().map(|n| n.index()).collect();
+        let sublist = PyList::new(py, &ids)?;
+        py_layers.append(sublist)?;
+    }
+    py_layers.into_py_any(py)
+}
+
+/// Return the BFS layers of a PyDiGraph as a list of lists.
+///
+/// :param graph: The input PyDiGraph to use for BFS traversal
+/// :type graph: PyDiGraph
+/// :param sources: An optional list of node indices to use as the starting
+///     nodes for the BFS traversal. If not specified, all nodes in the graph
+///     will be used as sources.
+/// :type sources: list[int] or None
+///
+/// :returns: A list of lists where each inner list contains the node indices
+///     at that BFS layer/level from the source nodes
+/// :rtype: list[list[int]]
+#[pyfunction]
+#[pyo3(signature = (digraph, sources=None))]
+pub fn digraph_bfs_layers(
+    py: Python,
+    digraph: &digraph::PyDiGraph,
+    sources: Option<Vec<usize>>,
+) -> PyResult<Py<PyAny>> {
+    let starts: Vec<NodeIndex> = match sources {
+        Some(v) => v.into_iter().map(NodeIndex::new).collect(),
+        None => digraph.graph.node_indices().collect(),
+    };
+
+    validate_source_nodes(&digraph.graph, &starts)?;
+
+    let layers = bfs_layers(&digraph.graph, starts);
+
+    let py_layers = PyList::empty(py);
+    for layer in layers {
+        let ids: Vec<usize> = layer.into_iter().map(|n| n.index()).collect();
+        let sublist = PyList::new(py, &ids)?;
+        py_layers.append(sublist)?;
+    }
+    py_layers.into_py_any(py)
+}
+
+/// Return a random path (or random walk) on a directed graph.
+///
+/// The next node to visit is selected uniformly at random from the outgoing
+/// neighbors. If a node of the path has no outgoing neighbor, the path will
+/// stop early.
+///
+/// :param PyDiGraph graph: Graph on which the random walk is done.
+/// :param int source: Starting node of the path.
+/// :param int length: Maximum length of the path.
+/// :param Optional[int] seed: seed of the random number generator that chooses the next node.
+///
+/// :returns: List of visited nodes including the initial node `source`.
+/// :rtype: list[int]
+#[pyfunction]
+#[pyo3(signature = (graph, source, length, seed=None))]
+pub fn digraph_generate_random_path(
+    graph: &digraph::PyDiGraph,
+    source: usize,
+    length: usize,
+    seed: Option<u64>,
+) -> PyResult<Vec<usize>> {
+    if !graph.has_node(source) {
+        return Err(PyIndexError::new_err(
+            "The graph doesn't contain the source node.",
+        ));
+    }
+    let source_node = NodeIndexable::from_index(&graph.graph, source);
+    Ok(
+        core_generate_random_path(&graph.graph, source_node, length, seed)
+            .iter()
+            .map(|&u| NodeIndexable::to_index(&graph.graph, u))
+            .collect(),
+    )
+}
+
+/// Return a random path (or random walk) on an undirected graph.
+///
+/// The next node to visit is selected uniformly at random from the neighbors.
+/// If the `source` node has no neighbor, the random walk stops.
+///
+/// :param PyGraph graph: Graph on which the random walk is done.
+/// :param int source: Starting node of the path.
+/// :param int length: Maximum length of the path.
+/// :param Optional[int] seed: seed of the random number generator that chooses the next node.
+///
+/// :returns: List of visited nodes including the initial node `source`.
+/// :rtype: list[int]
+#[pyfunction]
+#[pyo3(signature = (graph, source, length, seed=None))]
+pub fn graph_generate_random_path(
+    graph: &graph::PyGraph,
+    source: usize,
+    length: usize,
+    seed: Option<u64>,
+) -> PyResult<Vec<usize>> {
+    if !graph.has_node(source) {
+        return Err(PyIndexError::new_err(
+            "The graph doesn't contain the source node.",
+        ));
+    }
+    let source_node = NodeIndexable::from_index(&graph.graph, source);
+    Ok(
+        core_generate_random_path(&graph.graph, source_node, length, seed)
+            .iter()
+            .map(|&u| NodeIndexable::to_index(&graph.graph, u))
+            .collect(),
+    )
 }

@@ -6,7 +6,7 @@
 [![](https://img.shields.io/github/release/Qiskit/rustworkx.svg?style=popout-square)](https://github.com/Qiskit/rustworkx/releases)
 [![](https://img.shields.io/pypi/dm/rustworkx.svg?style=popout-square)](https://pypi.org/project/rustworkx/)
 [![Coverage Status](https://coveralls.io/repos/github/Qiskit/rustworkx/badge.svg?branch=main)](https://coveralls.io/github/Qiskit/rustworkx?branch=main)
-[![Minimum rustc 1.79](https://img.shields.io/badge/rustc-1.79+-blue.svg)](https://rust-lang.github.io/rfcs/2495-min-rust-version.html)
+[![Minimum rustc 1.85](https://img.shields.io/badge/rustc-1.85+-blue.svg)](https://rust-lang.github.io/rfcs/2495-min-rust-version.html)
 [![DOI](https://joss.theoj.org/papers/10.21105/joss.03968/status.svg)](https://doi.org/10.21105/joss.03968)
 [![arXiv](https://img.shields.io/badge/arXiv-2110.15221-b31b1b.svg)](https://arxiv.org/abs/2110.15221)
 [![Zenodo](https://img.shields.io/badge/Zenodo-10.5281%2Fzenodo.5879859-blue)](https://doi.org/10.5281/zenodo.5879859)
@@ -59,7 +59,7 @@ environment.
 
 If there are no precompiled binaries published for your system you'll have to
 build the package from source. However, to be able to build the package
-from the published source package you need to have Rust >= 1.79 installed (and
+from the published source package you need to have Rust >= 1.85 installed (and
 also [cargo](https://doc.rust-lang.org/cargo/) which is normally included with
 rust) You can use [rustup](https://rustup.rs/) (a cross platform installer for
 rust) to make this simpler, or rely on
@@ -93,7 +93,7 @@ installed with `pip install matplotlib` or when you're installing rustworkx with
 function `rustworkx.visualization.graphviz_drawer` first you will need to install
 graphviz, instructions for this can be found here:
 https://graphviz.org/download/#executable-packages. Then you
-will need to install the [pillow](https://python-pillow.org/) Python library.
+will need to install the [pillow](https://python-pillow.github.io/) Python library.
 This can be done either with `pip install pillow` or when installing rustworkx
 with `pip install 'rustworkx[graphviz]'`.
 

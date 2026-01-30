@@ -28,8 +28,9 @@ use rand::prelude::*;
 use rand_distr::{Distribution, Uniform};
 use rand_pcg::Pcg64;
 
-use super::star_graph;
 use super::InvalidInputError;
+use super::star_graph;
+use crate::geometry::hyperboloid_hyperbolic_distance;
 
 /// Generates a random regular graph
 ///
@@ -143,7 +144,7 @@ where
     let mut try_creation = || -> Option<IndexSet<(G::NodeId, G::NodeId)>> {
         let mut edges: IndexSet<(G::NodeId, G::NodeId)> = IndexSet::with_capacity(num_nodes);
         let mut stubs: Vec<G::NodeId> = (0..num_nodes)
-            .flat_map(|x| std::iter::repeat(graph.from_index(x)).take(degree))
+            .flat_map(|x| std::iter::repeat_n(graph.from_index(x), degree))
             .collect();
         while !stubs.is_empty() {
             let mut potential_edges: DictMap<G::NodeId, usize> = DictMap::default();
@@ -807,7 +808,7 @@ where
                 .edges_directed(x, Outgoing)
                 .chain(graph.edges_directed(x, Incoming))
                 .count();
-            std::iter::repeat(x).take(degree)
+            std::iter::repeat_n(x, degree)
         })
         .collect();
     let mut source = graph.node_count();
@@ -1004,7 +1005,7 @@ where
     let between = Uniform::new(0.0, 1.0).unwrap();
     for (v, p1) in pos.iter().enumerate().take(num_nodes - 1) {
         for (w, p2) in pos.iter().enumerate().skip(v + 1) {
-            let dist = hyperbolic_distance(p1, p2);
+            let dist = hyperboloid_hyperbolic_distance(p1, p2).unwrap();
             let is_edge = match beta {
                 Some(b) => {
                     let prob_inverse = (b / 2. * (dist - r)).exp() + 1.;
@@ -1025,27 +1026,6 @@ where
     Ok(graph)
 }
 
-#[inline]
-fn hyperbolic_distance(x: &[f64], y: &[f64]) -> f64 {
-    let mut sum_squared_x = 0.;
-    let mut sum_squared_y = 0.;
-    let mut inner_product = 0.;
-    for (x_i, y_i) in x.iter().zip(y.iter()) {
-        if x_i.is_infinite() || y_i.is_infinite() || x_i.is_nan() || y_i.is_nan() {
-            return f64::NAN;
-        }
-        sum_squared_x = x_i.mul_add(*x_i, sum_squared_x);
-        sum_squared_y = y_i.mul_add(*y_i, sum_squared_y);
-        inner_product = x_i.mul_add(*y_i, inner_product);
-    }
-    let arg = (1. + sum_squared_x).sqrt() * (1. + sum_squared_y).sqrt() - inner_product;
-    if arg < 1. {
-        0.
-    } else {
-        arg.acosh()
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use crate::generators::InvalidInputError;
@@ -1056,10 +1036,7 @@ mod tests {
     };
     use crate::petgraph;
 
-    use super::hyperbolic_distance;
-
     // Test gnp_random_graph
-
     #[test]
     fn test_gnp_random_graph_directed() {
         let g: petgraph::graph::DiGraph<(), ()> =
@@ -1545,18 +1522,6 @@ mod tests {
     // z = cosh(r)
     // x = sinh(r)cos(theta)
     // y = sinh(r)sin(theta)
-
-    #[test]
-    fn test_hyperbolic_dist() {
-        assert_eq!(
-            hyperbolic_distance(&[3_f64.sinh(), 0.], &[-0.5_f64.sinh(), 0.]),
-            3.5
-        );
-    }
-    #[test]
-    fn test_hyperbolic_dist_inf() {
-        assert!(hyperbolic_distance(&[f64::INFINITY, 0.], &[0., 0.]).is_nan());
-    }
 
     #[test]
     fn test_hyperbolic_random_graph_seeded() {

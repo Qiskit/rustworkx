@@ -15,6 +15,7 @@ use hashbrown::{HashMap, HashSet};
 use indexmap::IndexSet;
 use std::hash::Hash;
 
+use petgraph::Directed;
 use petgraph::algo::kosaraju_scc;
 use petgraph::stable_graph::{NodeIndex, StableDiGraph};
 use petgraph::visit::{
@@ -22,7 +23,6 @@ use petgraph::visit::{
     IntoNeighborsDirected, IntoNodeReferences, NodeCount, NodeFiltered, NodeIndexable, NodeRef,
     Visitable,
 };
-use petgraph::Directed;
 
 use crate::graph_ext::EdgeFindable;
 
@@ -188,8 +188,7 @@ impl SimpleCycleIter {
             + NodeIndexable,
         <G as GraphBase>::NodeId: Hash + Eq,
     {
-        if self.self_cycles.is_some() {
-            let self_cycles = self.self_cycles.as_mut().unwrap();
+        if let Some(self_cycles) = &mut self.self_cycles {
             let cycle_node = self_cycles.pop().unwrap();
             if self_cycles.is_empty() {
                 self.self_cycles = None;

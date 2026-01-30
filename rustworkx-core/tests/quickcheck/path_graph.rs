@@ -2,7 +2,7 @@
 mod tests {
     use petgraph::graph::DiGraph;
     use petgraph::visit::EdgeRef;
-    use quickcheck::{quickcheck, TestResult};
+    use quickcheck::{TestResult, quickcheck};
 
     use rustworkx_core::generators::path_graph;
 

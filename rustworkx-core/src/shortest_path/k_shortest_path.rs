@@ -125,10 +125,10 @@ where
 mod tests {
     use hashbrown::HashMap;
 
-    use crate::shortest_path::k_shortest_path;
     use crate::Result;
-    use petgraph::graph::NodeIndex;
+    use crate::shortest_path::k_shortest_path;
     use petgraph::Graph;
+    use petgraph::graph::NodeIndex;
 
     #[test]
     fn test_second_shortest_path() {

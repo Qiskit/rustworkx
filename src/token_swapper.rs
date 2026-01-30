@@ -10,9 +10,9 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
+use crate::InvalidMapping;
 use crate::graph;
 use crate::iterators::EdgeList;
-use crate::InvalidMapping;
 
 use hashbrown::HashMap;
 use petgraph::graph::NodeIndex;
@@ -69,7 +69,7 @@ pub fn graph_token_swapper(
             Err(_) => {
                 return Err(InvalidMapping::new_err(
                     "Specified mapping could not be made on the given graph",
-                ))
+                ));
             }
         };
     Ok(EdgeList {

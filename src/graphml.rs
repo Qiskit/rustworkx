@@ -22,29 +22,29 @@ use std::num::{ParseFloatError, ParseIntError};
 use std::path::Path;
 use std::str::ParseBoolError;
 
+use flate2::Compression;
 use flate2::bufread::GzDecoder;
 use flate2::write::GzEncoder;
-use flate2::Compression;
 use hashbrown::HashSet;
 
 use indexmap::map::Entry;
 
+use quick_xml::Error as XmlError;
 use quick_xml::events::{BytesDecl, BytesStart, BytesText, Event};
 use quick_xml::name::QName;
-use quick_xml::Error as XmlError;
 use quick_xml::{Reader, Writer};
 
 use petgraph::algo;
 use petgraph::{Directed, EdgeType, Undirected};
 
-use pyo3::exceptions::PyException;
-use pyo3::prelude::*;
 use pyo3::IntoPyObjectExt;
 use pyo3::PyErr;
+use pyo3::exceptions::PyException;
+use pyo3::prelude::*;
 
 use rustworkx_core::dictmap::{DictMap, InitWithHasher};
 
-use crate::{digraph::PyDiGraph, graph::PyGraph, StablePyGraph};
+use crate::{StablePyGraph, digraph::PyDiGraph, graph::PyGraph};
 
 pub enum Error {
     Xml(String),
@@ -522,7 +522,7 @@ impl Graph {
         py: Python<'_>,
         dir: Direction,
         pygraph: &StablePyGraph<Ty>,
-        attrs: &PyObject,
+        attrs: &Py<PyAny>,
     ) -> PyResult<Self> {
         let mut attrs: Option<DictMap<String, Value>> = attrs.extract(py).ok();
         let id = attrs
@@ -548,14 +548,16 @@ impl Graph {
         let mut node_ids = DictMap::new();
         let mut fresh_index_counter = 0;
         for (node_index, element_info) in node_infos.vec {
-            let id = element_info.id.unwrap_or_else(|| loop {
-                let id = format!("n{fresh_index_counter}");
-                fresh_index_counter += 1;
-                if node_infos.id_taken.contains(&id) {
-                    continue;
+            let id = element_info.id.unwrap_or_else(|| {
+                loop {
+                    let id = format!("n{fresh_index_counter}");
+                    fresh_index_counter += 1;
+                    if node_infos.id_taken.contains(&id) {
+                        continue;
+                    }
+                    node_infos.id_taken.insert(id.clone());
+                    break id;
                 }
-                node_infos.id_taken.insert(id.clone());
-                break id;
             });
             graph.nodes.push(Node {
                 id: id.clone(),

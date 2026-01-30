@@ -18,8 +18,10 @@ mod connectivity;
 mod dag_algo;
 mod digraph;
 mod dominance;
+mod dot_parser;
 mod dot_utils;
 mod generators;
+mod geometry;
 mod graph;
 mod graphml;
 mod isomorphism;
@@ -29,6 +31,7 @@ mod layout;
 mod line_graph;
 mod link_analysis;
 mod matching;
+mod matrix_market;
 mod planar;
 mod random_graph;
 mod score;
@@ -56,7 +59,10 @@ use layout::*;
 use line_graph::*;
 use link_analysis::*;
 
+use dot_parser::*;
+use geometry::*;
 use matching::*;
+use matrix_market::*;
 use planar::*;
 use random_graph::*;
 use shortest_path::*;
@@ -71,6 +77,7 @@ use union::*;
 use hashbrown::HashMap;
 use numpy::Complex64;
 
+use pyo3::Python;
 use pyo3::create_exception;
 use pyo3::exceptions::PyException;
 use pyo3::exceptions::PyValueError;
@@ -78,15 +85,14 @@ use pyo3::import_exception;
 use pyo3::prelude::*;
 use pyo3::wrap_pyfunction;
 use pyo3::wrap_pymodule;
-use pyo3::Python;
 
+use petgraph::EdgeType;
 use petgraph::graph::NodeIndex;
 use petgraph::prelude::*;
 use petgraph::visit::{
     Data, EdgeIndexable, GraphBase, GraphProp, IntoEdgeReferences, IntoNodeIdentifiers, NodeCount,
     NodeIndexable,
 };
-use petgraph::EdgeType;
 
 use rustworkx_core::dag_algo::TopologicalSortError;
 use std::convert::TryFrom;
@@ -192,7 +198,7 @@ impl IsNan for Complex64 {
         self.re.is_nan() || self.im.is_nan()
     }
 }
-pub type StablePyGraph<Ty> = StableGraph<PyObject, PyObject, Ty>;
+pub type StablePyGraph<Ty> = StableGraph<Py<PyAny>, Py<PyAny>, Ty>;
 
 pub trait NodesRemoved {
     fn nodes_removed(&self) -> bool;
@@ -207,7 +213,7 @@ where
     }
 }
 
-pub fn get_edge_iter_with_weights<G>(graph: G) -> impl Iterator<Item = (usize, usize, PyObject)>
+pub fn get_edge_iter_with_weights<G>(graph: G) -> impl Iterator<Item = (usize, usize, Py<PyAny>)>
 where
     G: GraphBase
         + IntoEdgeReferences
@@ -216,7 +222,7 @@ where
         + NodeCount
         + GraphProp
         + NodesRemoved,
-    G: Data<NodeWeight = PyObject, EdgeWeight = PyObject>,
+    G: Data<NodeWeight = Py<PyAny>, EdgeWeight = Py<PyAny>>,
 {
     let node_map: Option<HashMap<NodeIndex, usize>> = if graph.nodes_removed() {
         let mut node_hash_map: HashMap<NodeIndex, usize> =
@@ -251,8 +257,8 @@ where
 
 fn weight_callable<'p, T>(
     py: Python<'p>,
-    weight_fn: &'p Option<PyObject>,
-    weight: &PyObject,
+    weight_fn: &'p Option<Py<PyAny>>,
+    weight: &Py<PyAny>,
     default: T,
 ) -> PyResult<T>
 where
@@ -270,7 +276,7 @@ where
 pub fn edge_weights_from_callable<'p, T, Ty: EdgeType>(
     py: Python<'p>,
     graph: &StablePyGraph<Ty>,
-    weight_fn: &'p Option<PyObject>,
+    weight_fn: &'p Option<Py<PyAny>>,
     default_weight: T,
 ) -> PyResult<Vec<Option<T>>>
 where
@@ -308,11 +314,11 @@ fn is_valid_weight(val: f64) -> PyResult<f64> {
 
 pub enum CostFn {
     Default(f64),
-    PyFunction(PyObject),
+    PyFunction(Py<PyAny>),
 }
 
-impl From<PyObject> for CostFn {
-    fn from(obj: PyObject) -> Self {
+impl From<Py<PyAny>> for CostFn {
+    fn from(obj: Py<PyAny>) -> Self {
         CostFn::PyFunction(obj)
     }
 }
@@ -326,10 +332,10 @@ impl TryFrom<f64> for CostFn {
     }
 }
 
-impl TryFrom<(Option<PyObject>, f64)> for CostFn {
+impl TryFrom<(Option<Py<PyAny>>, f64)> for CostFn {
     type Error = PyErr;
 
-    fn try_from(func_or_default: (Option<PyObject>, f64)) -> Result<Self, Self::Error> {
+    fn try_from(func_or_default: (Option<Py<PyAny>>, f64)) -> Result<Self, Self::Error> {
         let (obj, val) = func_or_default;
         match obj {
             Some(obj) => Ok(CostFn::PyFunction(obj)),
@@ -339,7 +345,7 @@ impl TryFrom<(Option<PyObject>, f64)> for CostFn {
 }
 
 impl CostFn {
-    fn call(&self, py: Python, arg: &PyObject) -> PyResult<f64> {
+    fn call(&self, py: Python, arg: &Py<PyAny>) -> PyResult<f64> {
         match self {
             CostFn::Default(val) => Ok(*val),
             CostFn::PyFunction(obj) => {
@@ -354,7 +360,7 @@ impl CostFn {
 fn find_node_by_weight<Ty: EdgeType>(
     py: Python,
     graph: &StablePyGraph<Ty>,
-    obj: &PyObject,
+    obj: &Py<PyAny>,
 ) -> PyResult<Option<NodeIndex>> {
     let mut index = None;
     for node in graph.node_indices() {
@@ -539,6 +545,8 @@ fn rustworkx(py: Python<'_>, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(digraph_longest_simple_path))?;
     m.add_wrapped(wrap_pyfunction!(graph_all_simple_paths))?;
     m.add_wrapped(wrap_pyfunction!(digraph_all_simple_paths))?;
+    m.add_wrapped(wrap_pyfunction!(hyperbolic_greedy_routing))?;
+    m.add_wrapped(wrap_pyfunction!(hyperbolic_greedy_success_rate))?;
     m.add_wrapped(wrap_pyfunction!(graph_dijkstra_shortest_paths))?;
     m.add_wrapped(wrap_pyfunction!(digraph_dijkstra_shortest_paths))?;
     m.add_wrapped(wrap_pyfunction!(graph_all_shortest_paths))?;
@@ -662,6 +670,10 @@ fn rustworkx(py: Python<'_>, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(steiner_tree::steiner_tree))?;
     m.add_wrapped(wrap_pyfunction!(digraph_dfs_search))?;
     m.add_wrapped(wrap_pyfunction!(graph_dfs_search))?;
+    m.add_wrapped(wrap_pyfunction!(digraph_bfs_layers))?;
+    m.add_wrapped(wrap_pyfunction!(graph_bfs_layers))?;
+    m.add_wrapped(wrap_pyfunction!(digraph_generate_random_path))?;
+    m.add_wrapped(wrap_pyfunction!(graph_generate_random_path))?;
     m.add_wrapped(wrap_pyfunction!(articulation_points))?;
     m.add_wrapped(wrap_pyfunction!(bridges))?;
     m.add_wrapped(wrap_pyfunction!(biconnected_components))?;
@@ -679,6 +691,11 @@ fn rustworkx(py: Python<'_>, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(parse_node_link_json))?;
     m.add_wrapped(wrap_pyfunction!(pagerank))?;
     m.add_wrapped(wrap_pyfunction!(hits))?;
+    m.add_wrapped(wrap_pyfunction!(from_dot))?;
+    m.add_wrapped(wrap_pyfunction!(digraph_write_matrix_market))?;
+    m.add_wrapped(wrap_pyfunction!(graph_write_matrix_market))?;
+    m.add_wrapped(wrap_pyfunction!(read_matrix_market))?;
+    m.add_wrapped(wrap_pyfunction!(read_matrix_market_file))?;
     m.add_class::<digraph::PyDiGraph>()?;
     m.add_class::<graph::PyGraph>()?;
     m.add_class::<toposort::TopologicalSorter>()?;

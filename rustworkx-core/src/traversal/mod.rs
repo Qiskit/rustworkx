@@ -16,6 +16,7 @@ mod bfs_visit;
 mod dfs_edges;
 mod dfs_visit;
 mod dijkstra_visit;
+mod random_walk;
 
 use petgraph::prelude::*;
 use petgraph::visit::GraphRef;
@@ -24,10 +25,11 @@ use petgraph::visit::Reversed;
 use petgraph::visit::VisitMap;
 use petgraph::visit::Visitable;
 
-pub use bfs_visit::{breadth_first_search, BfsEvent};
+pub use bfs_visit::{BfsEvent, bfs_layers, breadth_first_search};
 pub use dfs_edges::dfs_edges;
-pub use dfs_visit::{depth_first_search, DfsEvent};
-pub use dijkstra_visit::{dijkstra_search, DijkstraEvent};
+pub use dfs_visit::{DfsEvent, depth_first_search};
+pub use dijkstra_visit::{DijkstraEvent, dijkstra_search};
+pub use random_walk::generate_random_path;
 
 /// Return if the expression is a break value, execute the provided statement
 /// if it is a prune value.
@@ -59,10 +61,10 @@ struct AncestryWalker<G, N, VM> {
 }
 
 impl<
-        G: GraphRef + Visitable + IntoNeighborsDirected<NodeId = N>,
-        N: Copy + Clone + PartialEq,
-        VM: VisitMap<N>,
-    > Iterator for AncestryWalker<G, N, VM>
+    G: GraphRef + Visitable + IntoNeighborsDirected<NodeId = N>,
+    N: Copy + Clone + PartialEq,
+    VM: VisitMap<N>,
+> Iterator for AncestryWalker<G, N, VM>
 {
     type Item = N;
     fn next(&mut self) -> Option<Self::Item> {
@@ -146,10 +148,10 @@ struct BFSAncestryWalker<G, N, VM> {
 }
 
 impl<
-        G: GraphRef + Visitable + IntoNeighborsDirected<NodeId = N>,
-        N: Copy + Clone + PartialEq,
-        VM: VisitMap<N>,
-    > Iterator for BFSAncestryWalker<G, N, VM>
+    G: GraphRef + Visitable + IntoNeighborsDirected<NodeId = N>,
+    N: Copy + Clone + PartialEq,
+    VM: VisitMap<N>,
+> Iterator for BFSAncestryWalker<G, N, VM>
 {
     type Item = (N, Vec<N>);
 
