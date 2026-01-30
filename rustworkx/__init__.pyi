@@ -695,6 +695,7 @@ def bfs_layers(
 ) -> list[list[int]]: ...
 def generate_random_path(
     graph: PyGraph | PyDiGraph,
+    /,
     source: int,
     length: int,
     seed: int | None = None,
