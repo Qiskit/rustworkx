@@ -2353,3 +2353,25 @@ def bfs_layers(graph, sources=None):
     :rtype: list[list[int]]
     """
     raise TypeError(f"Invalid Input Type {type(graph)} for graph")
+
+
+@_rustworkx_dispatch
+def generate_random_path(graph, /, source, length, seed=None):
+    """Return a random path (or random walk) on a graph.
+
+    The next node to visit is selected uniformly at random from the neighbors
+    (or outgoing neighbors for directed graphs). If a node of the path has no
+    neighbor (or no outgoing neighbor for directed graphs), the path will
+    stop early.
+
+    :param graph: Graph on which the random walk is done. This can be a
+        :class:`~rustworkx.PyGraph` or :class:`~rustworkx.PyDiGraph`.
+    :param int source: Starting node of the path.
+    :param int length: Maximum length of the path.
+    :param Optional[int] seed: seed of the random number generator that chooses the next node.
+
+    :returns: List of visited nodes including the initial node `source`.
+    :rtype: list[int]
+    :raises IndexError: when the graph doesn't contain the source node.
+    """
+    raise TypeError(f"Invalid Input Type {type(graph)} for graph")

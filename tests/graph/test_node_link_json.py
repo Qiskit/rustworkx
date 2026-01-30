@@ -204,3 +204,70 @@ class TestNodeLinkJSON(unittest.TestCase):
         self.assertEqual(new.nodes(), graph.nodes())
         self.assertEqual(new.weighted_edge_list(), graph.weighted_edge_list())
         self.assertEqual(new.attrs, {"label": graph.attrs})
+
+    def test_node_indices_preserved_with_deletion(self):
+        """Test that node indices are preserved after deletion (related to issue #1503)"""
+        graph = rustworkx.PyGraph()
+        graph.add_node(None)  # 0
+        graph.add_node(None)  # 1
+        graph.add_node(None)  # 2
+        graph.add_edge(0, 2, None)
+        graph.remove_node(1)  # Remove middle node
+
+        # Verify original has gaps in indices
+        self.assertEqual([0, 2], graph.node_indices())
+
+        # Round-trip through JSON
+        json_str = rustworkx.node_link_json(graph)
+        restored = rustworkx.parse_node_link_json(json_str)
+
+        # Verify indices are preserved
+        self.assertEqual(graph.node_indices(), restored.node_indices())
+        self.assertEqual(graph.edge_list(), restored.edge_list())
+
+    def test_node_indices_preserved_with_contraction(self):
+        """Test that node indices are preserved after contraction (issue #1503)"""
+        graph = rustworkx.PyGraph()
+        graph.add_node(None)  # 0
+        graph.add_node(None)  # 1
+        graph.add_node(None)  # 2
+
+        # Contract nodes 0 and 1
+        contracted_idx = graph.contract_nodes([0, 1], None)
+        graph.add_edge(2, contracted_idx, None)
+
+        # Verify original has non-consecutive indices
+        self.assertEqual([2, contracted_idx], graph.node_indices())
+
+        # Round-trip through JSON
+        json_str = rustworkx.node_link_json(graph)
+        restored = rustworkx.parse_node_link_json(json_str)
+
+        # Verify indices are preserved
+        self.assertEqual(graph.node_indices(), restored.node_indices())
+        self.assertEqual(graph.edge_list(), restored.edge_list())
+
+    def test_node_indices_preserved_complex(self):
+        """Test index preservation with multiple deletions and edges"""
+        graph = rustworkx.PyGraph()
+        for i in range(6):
+            graph.add_node(None)
+
+        graph.add_edge(0, 1, None)
+        graph.add_edge(2, 3, None)
+        graph.add_edge(4, 5, None)
+
+        # Remove nodes 1 and 4
+        graph.remove_node(1)
+        graph.remove_node(4)
+
+        # Verify gaps exist
+        self.assertEqual([0, 2, 3, 5], graph.node_indices())
+
+        # Round-trip through JSON
+        json_str = rustworkx.node_link_json(graph)
+        restored = rustworkx.parse_node_link_json(json_str)
+
+        # Verify complete state is preserved
+        self.assertEqual(graph.node_indices(), restored.node_indices())
+        self.assertEqual(graph.edge_list(), restored.edge_list())
