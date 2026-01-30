@@ -14,6 +14,7 @@ use std::collections::BTreeMap;
 use std::fs::File;
 
 use hashbrown::HashMap;
+use indexmap::IndexSet;
 
 use serde::{Deserialize, Serialize};
 
@@ -89,49 +90,7 @@ pub fn parse_node_link_data<Ty: EdgeType>(
     // Check if nodes have explicit IDs that need preservation
     let preserve_ids = graph.nodes.iter().any(|n| n.id.is_some());
 
-    let node_removed = if preserve_ids {
-        // Find the maximum node ID to determine how many placeholder nodes we need
-        let max_id = graph.nodes.iter().filter_map(|n| n.id).max().unwrap_or(0);
-
-        // Create placeholder nodes up to max_id
-        let mut tmp_nodes: Vec<NodeIndex> = Vec::new();
-        for _ in 0..=max_id {
-            let idx = out_graph.add_node(py.None());
-            tmp_nodes.push(idx);
-        }
-
-        // Replace placeholder nodes with actual data and track which to keep
-        for node in graph.nodes {
-            let payload = match node.data {
-                Some(data) => match node_attrs {
-                    Some(ref callback) => callback.call1(*py, (data,))?,
-                    None => data.into_py_any(*py)?,
-                },
-                None => py.None(),
-            };
-            let node_id = node.id.unwrap_or(0);
-            let idx = NodeIndex::new(node_id);
-
-            // Replace the placeholder with actual data
-            if let Some(weight) = out_graph.node_weight_mut(idx) {
-                *weight = payload;
-            }
-
-            id_mapping.insert(node_id, idx);
-            // Mark this index as used (remove from tmp_nodes)
-            tmp_nodes.retain(|&n| n != idx);
-        }
-
-        // Track if we're removing any nodes (indicates gaps in indices)
-        let has_gaps = !tmp_nodes.is_empty();
-
-        // Remove remaining placeholder nodes
-        for tmp_node in tmp_nodes {
-            out_graph.remove_node(tmp_node);
-        }
-
-        has_gaps
-    } else {
+    let node_removed = if !preserve_ids {
         // No explicit IDs, just add nodes sequentially (legacy behavior)
         for node in graph.nodes {
             let payload = match node.data {
@@ -145,6 +104,49 @@ pub fn parse_node_link_data<Ty: EdgeType>(
             id_mapping.insert(id.index(), id);
         }
         false
+    } else {
+        // Find the maximum node ID to determine how many placeholder nodes we need
+        let max_id = graph.nodes.iter().filter_map(|n| n.id).max().unwrap_or(0);
+
+        // Create placeholder nodes up to max_id
+        let mut tmp_nodes: IndexSet<NodeIndex> = (0..=max_id)
+            .map(|_| out_graph.add_node(py.None()))
+            .collect();
+
+        // Replace placeholder nodes with actual data and track which to keep
+        for node in graph.nodes {
+            let payload = match node.data {
+                Some(data) => match node_attrs {
+                    Some(ref callback) => callback.call1(*py, (data,))?,
+                    None => data.into_py_any(*py)?,
+                },
+                None => py.None(),
+            };
+            let node_id = node.id.ok_or_else(|| {
+                pyo3::exceptions::PyValueError::new_err(
+                    "All nodes must have explicit IDs when any node has an ID",
+                )
+            })?;
+            let idx = NodeIndex::new(node_id);
+
+            // Replace the placeholder with actual data
+            if let Some(weight) = out_graph.node_weight_mut(idx) {
+                *weight = payload;
+            }
+
+            id_mapping.insert(node_id, idx);
+            tmp_nodes.swap_remove(&idx);
+        }
+
+        // Track if we're removing any nodes (indicates gaps in indices)
+        let has_gaps = !tmp_nodes.is_empty();
+
+        // Remove remaining placeholder nodes
+        for tmp_node in tmp_nodes {
+            out_graph.remove_node(tmp_node);
+        }
+
+        has_gaps
     };
 
     for edge in graph.links {
