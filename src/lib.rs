@@ -672,8 +672,8 @@ fn rustworkx(py: Python<'_>, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(graph_dfs_search))?;
     m.add_wrapped(wrap_pyfunction!(digraph_bfs_layers))?;
     m.add_wrapped(wrap_pyfunction!(graph_bfs_layers))?;
-    m.add_wrapped(wrap_pyfunction!(generate_random_path_digraph))?;
-    m.add_wrapped(wrap_pyfunction!(generate_random_path_graph))?;
+    m.add_wrapped(wrap_pyfunction!(digraph_generate_random_path))?;
+    m.add_wrapped(wrap_pyfunction!(graph_generate_random_path))?;
     m.add_wrapped(wrap_pyfunction!(articulation_points))?;
     m.add_wrapped(wrap_pyfunction!(bridges))?;
     m.add_wrapped(wrap_pyfunction!(biconnected_components))?;

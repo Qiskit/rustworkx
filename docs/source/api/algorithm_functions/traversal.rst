@@ -12,8 +12,7 @@ Traversal
    rustworkx.bfs_predecessors
    rustworkx.bfs_search
    rustworkx.dijkstra_search
-   rustworkx.generate_random_path_digraph
-   rustworkx.generate_random_path_graph
+   rustworkx.generate_random_path
    rustworkx.topological_sort
    rustworkx.lexicographical_topological_sort
    rustworkx.descendants

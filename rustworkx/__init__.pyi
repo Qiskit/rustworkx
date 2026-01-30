@@ -259,8 +259,8 @@ from .rustworkx import graph_tensor_product as graph_tensor_product
 from .rustworkx import graph_token_swapper as graph_token_swapper
 from .rustworkx import digraph_transitivity as digraph_transitivity
 from .rustworkx import graph_transitivity as graph_transitivity
-from .rustworkx import generate_random_path_digraph as generate_random_path_digraph
-from .rustworkx import generate_random_path_graph as generate_random_path_graph
+from .rustworkx import digraph_generate_random_path as digraph_generate_random_path
+from .rustworkx import graph_generate_random_path as graph_generate_random_path
 from .rustworkx import digraph_bfs_search as digraph_bfs_search
 from .rustworkx import graph_bfs_search as graph_bfs_search
 from .rustworkx import digraph_bfs_layers as digraph_bfs_layers
@@ -693,3 +693,9 @@ def bfs_layers(
     graph: PyGraph | PyDiGraph,
     sources: Sequence[int] | None = ...,
 ) -> list[list[int]]: ...
+def generate_random_path(
+    graph: PyGraph | PyDiGraph,
+    source: int,
+    length: int,
+    seed: int | None = None,
+) -> Sequence[int]: ...

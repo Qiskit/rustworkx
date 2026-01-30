@@ -20,12 +20,12 @@ class TestRandomWalk(unittest.TestCase):
     def test_invalid_node_error(self):
         graph = rx.PyGraph()
         with self.assertRaises(IndexError):
-            rx.generate_random_path_graph(graph, 0, 10, None)
+            rx.generate_random_path(graph, 0, 10, None)
 
     def test_zero_degree_early_stop(self):
         graph = rx.PyGraph()
         graph.add_node(0)
-        res = rx.generate_random_path_graph(graph, 0, 10, None)
+        res = rx.generate_random_path(graph, 0, 10, None)
         self.assertEqual(res, [0])
 
     def test_node_frequency(self):
@@ -38,7 +38,7 @@ class TestRandomWalk(unittest.TestCase):
         graph.add_edges_from_no_data([(0, 1), (1, 2), (2, 3), (4, 5), (2, 4), (2, 5), (5, 6)])
 
         path_length = 5_000
-        path = rx.generate_random_path_graph(graph, 0, path_length, 5)
+        path = rx.generate_random_path(graph, 0, path_length, 5)
         counts = collections.Counter(path)
 
         # Expected frequency is degree/2 number of edges.

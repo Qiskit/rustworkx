@@ -1210,7 +1210,7 @@ pub fn digraph_bfs_layers(
 /// :rtype: list[int]
 #[pyfunction]
 #[pyo3(signature = (graph, source, length, seed=None))]
-pub fn generate_random_path_digraph(
+pub fn digraph_generate_random_path(
     graph: &digraph::PyDiGraph,
     source: usize,
     length: usize,
@@ -1244,7 +1244,7 @@ pub fn generate_random_path_digraph(
 /// :rtype: list[int]
 #[pyfunction]
 #[pyo3(signature = (graph, source, length, seed=None))]
-pub fn generate_random_path_graph(
+pub fn graph_generate_random_path(
     graph: &graph::PyGraph,
     source: usize,
     length: usize,

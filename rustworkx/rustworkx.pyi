@@ -1087,13 +1087,13 @@ _BFSVisitor = TypeVar("_BFSVisitor", bound=BFSVisitor, default=BFSVisitor)
 _DFSVisitor = TypeVar("_DFSVisitor", bound=DFSVisitor, default=DFSVisitor)
 _DijkstraVisitor = TypeVar("_DijkstraVisitor", bound=DijkstraVisitor, default=DijkstraVisitor)
 
-def generate_random_path_digraph(
+def digraph_generate_random_path(
     graph: PyDiGraph,
     source: int,
     length: int,
     seed: int | None = None,
 ) -> Sequence[int]: ...
-def generate_random_path_graph(
+def graph_generate_random_path(
     graph: PyGraph,
     source: int,
     length: int,

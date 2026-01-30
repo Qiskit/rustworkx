@@ -19,14 +19,14 @@ class TestRandomWalk(unittest.TestCase):
     def test_invalid_node_error(self):
         graph = rx.PyDiGraph()
         with self.assertRaises(IndexError):
-            rx.generate_random_path_digraph(graph, 0, 10, None)
+            rx.generate_random_path(graph, 0, 10, None)
 
     def test_zero_degree_early_stop(self):
         graph = rx.PyDiGraph()
         graph.add_node(0)
         graph.add_node(1)
         graph.add_edge(0, 1, None)
-        res = rx.generate_random_path_digraph(graph, 0, 10, None)
+        res = rx.generate_random_path(graph, 0, 10, None)
         self.assertEqual(res, [0, 1])
 
     def test_alternating_path(self):
@@ -36,4 +36,4 @@ class TestRandomWalk(unittest.TestCase):
         graph.add_edge(0, 1, None)
         graph.add_edge(1, 0, None)
 
-        self.assertEqual(rx.generate_random_path_digraph(graph, 0, 3, None), [0, 1, 0, 1])
+        self.assertEqual(rx.generate_random_path(graph, 0, 3, None), [0, 1, 0, 1])
