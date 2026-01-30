@@ -419,7 +419,7 @@ fn expand_blossom<E>(
                 endpoints,
                 mate,
             )?;
-            // Step to the next S-sub-blossom and note it's forwward endpoint.
+            // Step to the next S-sub-blossom and note it's forward endpoint.
             let endpoint_index = if j < 0 {
                 let tmp = j - endpoint_trick as i128;
                 let length = blossom_endpoints[blossom].len();
