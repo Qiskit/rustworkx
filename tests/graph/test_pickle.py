@@ -81,4 +81,4 @@ class TestPickleGraph(unittest.TestCase):
         self.assertEqual(g.node_indices(), gprime.node_indices())
         self.assertEqual(g.edge_list(), gprime.edge_list())
         self.assertEqual(g.nodes(), gprime.nodes())
-        self.assertEqual(dict(g.edge_index_map()), dict(gprime.edge_index_map()))
+        self.assertDictEqual(dict(g.edge_index_map()), dict(gprime.edge_index_map()))
