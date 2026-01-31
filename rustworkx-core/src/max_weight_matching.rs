@@ -297,7 +297,9 @@ fn add_blossom<E>(
         blossom_best_edges[bv].clear();
         best_edge[bv] = None;
     }
-    blossom_best_edges[blossom] = best_edge_to.values().copied().collect();
+    let mut best_edges: Vec<usize> = best_edge_to.values().copied().collect();
+    best_edges.sort_unstable();
+    blossom_best_edges[blossom] = best_edges;
     //select best_edge[blossom]
     best_edge[blossom] = None;
     for edge_index in &blossom_best_edges[blossom] {

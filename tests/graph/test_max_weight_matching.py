@@ -26,14 +26,17 @@ def match_dict_to_set(match):
 
 
 class TestMaxWeightMatching(unittest.TestCase):
-    def compare_match_sets(self, rx_match, expected_match):
+    def compare_match_sets(self, rx_match, expected_match, extra_failure_text=""):
         for u, v in rx_match:
             if (u, v) not in expected_match and (v, u) not in expected_match:
-                self.fail(
+                failure_text = (
                     f"Element {(u, v)} and its reverse {(v, u)} not found in "
                     f"expected output.\nrustworkx output: {rx_match}\nexpected "
                     f"output: {expected_match}"
                 )
+                if extra_failure_text:
+                    failure_text += f"\n{extra_failure_text}"
+                self.fail(failure_text)
 
     def compare_rx_nx_sets(self, rx_graph, rx_matches, nx_matches, seed, nx_graph):
         def get_rx_weight(edge):
@@ -449,6 +452,57 @@ class TestMaxWeightMatching(unittest.TestCase):
             rustworkx.max_weight_matching(graph, weight_fn=lambda x: x, verify_optimum=True),
             match_dict_to_set(expected),
         )
+
+    def test_determinism_five_node_max_cardinality(self):
+        graph = rustworkx.PyGraph()
+        graph.extend_from_weighted_edge_list(
+            [
+                (0, 1, 1),
+                (0, 4, 2),
+                (1, 4, 2),
+                (2, 4, 1),
+                (3, 4, 1),
+            ]
+        )
+
+        initial_result = rustworkx.max_weight_matching(
+            graph, max_cardinality=True, weight_fn=lambda x: x, verify_optimum=True
+        )
+        for i in range(1, 10):
+            result = rustworkx.max_weight_matching(
+                graph, max_cardinality=True, weight_fn=lambda x: x, verify_optimum=True
+            )
+            self.compare_match_sets(
+                result,
+                initial_result,
+                extra_failure_text=f"Nondeterminism detected: repeating the same problem {i} times yielded a different rustworkx solution",
+            )
+
+    def test_determinism_six_node_no_max_cardinality(self):
+        graph = rustworkx.PyGraph()
+        graph.extend_from_weighted_edge_list(
+            [
+                (0, 1, 1),
+                (0, 2, 2),
+                (0, 5, 2),
+                (2, 5, 1),
+                (3, 5, 1),
+                (4, 5, 1),
+            ]
+        )
+
+        initial_result = rustworkx.max_weight_matching(
+            graph, weight_fn=lambda x: x, verify_optimum=True
+        )
+        for i in range(1, 10):
+            result = rustworkx.max_weight_matching(
+                graph, weight_fn=lambda x: x, verify_optimum=True
+            )
+            self.compare_match_sets(
+                result,
+                initial_result,
+                extra_failure_text=f"Nondeterminism detected: repeating the same problem {i} times yielded a different rustworkx solution",
+            )
 
     def test_gnp_random_against_networkx(self):
         for i in range(1024):
