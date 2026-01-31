@@ -17,8 +17,8 @@
 // paper
 #![allow(clippy::many_single_char_names)]
 
+use crate::dictmap::*;
 use std::cmp::max;
-use std::collections::BTreeMap;
 use std::hash::Hash;
 use std::mem;
 
@@ -261,8 +261,8 @@ fn add_blossom<E>(
         }
         in_blossoms[node] = blossom;
     }
-    // Compute blossom_best_edges[blossom]. Use BTreeMap for deterministic ordering.
-    let mut best_edge_to: BTreeMap<usize, usize> = BTreeMap::new();
+    // Compute blossom_best_edges[blossom]. Use IndexMap for deterministic iteration order.
+    let mut best_edge_to = DictMap::with_capacity(2 * num_nodes);
     for bv_ref in &blossom_children[blossom] {
         let bv = *bv_ref;
         // This sub-blossom does not have a list of least-slack edges;
