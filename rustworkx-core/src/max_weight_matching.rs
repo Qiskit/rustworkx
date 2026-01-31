@@ -20,6 +20,7 @@
 use std::cmp::max;
 use std::hash::Hash;
 use std::mem;
+use std::collections::BTreeMap;
 
 use hashbrown::{HashMap, HashSet};
 
@@ -260,8 +261,8 @@ fn add_blossom<E>(
         }
         in_blossoms[node] = blossom;
     }
-    // Compute blossom_best_edges[blossom]
-    let mut best_edge_to: HashMap<usize, usize> = HashMap::with_capacity(2 * num_nodes);
+    // Compute blossom_best_edges[blossom]. Use BTreeMap for deterministic ordering.
+    let mut best_edge_to: BTreeMap<usize, usize> = BTreeMap::new();
     for bv_ref in &blossom_children[blossom] {
         let bv = *bv_ref;
         // This sub-blossom does not have a list of least-slack edges;
@@ -297,9 +298,7 @@ fn add_blossom<E>(
         blossom_best_edges[bv].clear();
         best_edge[bv] = None;
     }
-    let mut best_edges: Vec<usize> = best_edge_to.values().copied().collect();
-    best_edges.sort_unstable();
-    blossom_best_edges[blossom] = best_edges;
+    blossom_best_edges[blossom] = best_edge_to.values().copied().collect();
     //select best_edge[blossom]
     best_edge[blossom] = None;
     for edge_index in &blossom_best_edges[blossom] {
