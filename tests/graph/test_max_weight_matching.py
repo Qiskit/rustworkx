@@ -475,7 +475,10 @@ class TestMaxWeightMatching(unittest.TestCase):
             self.compare_match_sets(
                 result,
                 initial_result,
-                extra_failure_text=f"Nondeterminism detected: repeating the same problem {i} times yielded a different rustworkx solution",
+                extra_failure_text=(
+                    "Nondeterminism detected: repeating the same "
+                    f"problem {i} times yielded a different rustworkx solution"
+                ),
             )
 
     def test_determinism_six_node_no_max_cardinality(self):
@@ -501,7 +504,10 @@ class TestMaxWeightMatching(unittest.TestCase):
             self.compare_match_sets(
                 result,
                 initial_result,
-                extra_failure_text=f"Nondeterminism detected: repeating the same problem {i} times yielded a different rustworkx solution",
+                extra_failure_text=(
+                    "Nondeterminism detected: repeating the same "
+                    f"problem {i} times yielded a different rustworkx solution"
+                ),
             )
 
     def test_gnp_random_against_networkx(self):
