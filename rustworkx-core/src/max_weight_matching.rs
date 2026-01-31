@@ -18,9 +18,9 @@
 #![allow(clippy::many_single_char_names)]
 
 use std::cmp::max;
+use std::collections::BTreeMap;
 use std::hash::Hash;
 use std::mem;
-use std::collections::BTreeMap;
 
 use hashbrown::{HashMap, HashSet};
 
