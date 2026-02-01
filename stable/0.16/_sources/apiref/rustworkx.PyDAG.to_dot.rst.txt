@@ -1,0 +1,6 @@
+rustworkx.PyDAG.to\_dot
+=======================
+
+.. currentmodule:: rustworkx
+
+.. automethod:: PyDAG.to_dot

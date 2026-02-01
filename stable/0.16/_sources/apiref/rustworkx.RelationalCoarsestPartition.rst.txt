@@ -1,0 +1,10 @@
+﻿RelationalCoarsestPartition
+===========================
+
+.. currentmodule:: rustworkx
+
+.. autoclass:: RelationalCoarsestPartition
+   :no-members:
+   :show-inheritance:
+
+

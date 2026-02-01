@@ -1,0 +1,1205 @@
+
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Rustworkx API Reference &mdash; rustworkx 0.12.1 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!-- <link rel="stylesheet" href="_static/pygments.css" type="text/css" /> -->
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/jupyter-sphinx.css" type="text/css" />
+  <link rel="stylesheet" href="_static/thebelab.css" type="text/css" />
+  <link rel="stylesheet" href="_static/style.css" type="text/css" />
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="PyGraph" href="apiref/rustworkx.PyGraph.html" />
+    <link rel="prev" title="Working with Betweenness Centrality" href="tutorial/betweenness_centrality.html" /> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="pytorch-body">
+
+   
+
+    
+
+    <div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    <span class="rst-current-version-label">0.12</span>
+    <span class="rst-versions-dropdown-icon"></span>
+  </span>
+  <div class="rst-other-versions">
+    <dl>
+      <dt>Versions</dt>
+          <dd><a class="version" href="/documentation/retworkx/index.html">Current Release</a></dd>
+          <dd><a class="version" href="/documentation/retworkx/dev/index.html">Development</a></dd>
+      <dt>Previous Releases</dt>
+        
+            <dd><a class="version" href="/documentation/retworkx/stable/0.12/index.html">0.12</a></dd>
+        
+    </dl>
+  </div>
+  <script>
+    jQuery('.version').click((evt) => {
+      const hash = window.location.hash
+      const complete_url = evt.target.href + hash
+      window.location = complete_url
+      evt.preventDefault()
+    })
+  </script>
+</div>
+
+    <div class="table-of-contents-link-wrapper">
+      <span>Table of Contents</span>
+      <a href="#" class="toggle-table-of-contents" data-behavior="toggle-table-of-contents"></a>
+    </div>
+
+    <nav data-toggle="wy-nav-shift" class="pytorch-left-menu" id="pytorch-left-menu">
+      <div class="pytorch-side-scroll">
+        <div class="pytorch-menu pytorch-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          <div class="pytorch-left-menu-search">
+            
+
+            
+              
+              
+                <div class="version">
+                  0.12.1
+                </div>
+              
+            
+
+            
+
+
+  
+
+
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search Docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+            
+          </div>
+
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="install.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="install.html#installing-rustworkx">Installing Rustworkx</a></li>
+<li class="toctree-l1"><a class="reference internal" href="install.html#platform-support">Platform Support</a></li>
+<li class="toctree-l1"><a class="reference internal" href="install.html#using-rustworkx">Using rustworkx</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorial/index.html">Rustworkx Tutorials and Guides</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Rustworkx API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="visualization.html">Visualization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="CONTRIBUTING.html">Contributing Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="networkx.html">rustworkx for NetworkX users</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <div class="pytorch-container">
+      <div class="pytorch-page-level-bar" id="pytorch-page-level-bar">
+        <div class="pytorch-breadcrumbs-wrapper">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="pytorch-breadcrumbs">
+    
+      <li>
+        <a href="index.html">
+          
+            Docs
+          
+        </a> &gt;
+      </li>
+
+        
+      <li>Rustworkx API Reference</li>
+    
+    
+      <li class="pytorch-breadcrumbs-aside">
+        
+            
+            <a href="_sources/api.rst.txt" rel="nofollow"><img src="_static/images/view-page-source-icon.svg"></a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+</div>
+        </div>
+
+        <div class="pytorch-shortcuts-wrapper" id="pytorch-shortcuts-wrapper">
+          Shortcuts
+        </div>
+      </div>
+
+      <section data-toggle="wy-nav-shift" id="pytorch-content-wrap" class="pytorch-content-wrap">
+        <div class="pytorch-content-left">
+          
+          <div class="rst-content style-external-links">
+          
+            <div role="main" class="main-content" itemscope="itemscope" itemtype="http://schema.org/Article">
+             <article itemprop="articleBody" id="pytorch-article" class="pytorch-article">
+              
+  <br><br><br><section id="rustworkx-api-reference">
+<span id="rustworkx"></span><h1>Rustworkx API Reference<a class="headerlink" href="#rustworkx-api-reference" title="Permalink to this heading">¶</a></h1>
+<section id="graph-classes">
+<h2>Graph Classes<a class="headerlink" href="#graph-classes" title="Permalink to this heading">¶</a></h2>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="apiref/rustworkx.PyGraph.html#rustworkx.PyGraph" title="rustworkx.PyGraph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.PyGraph</span></code></a>([multigraph, attrs])</p></td>
+<td><p>A class for creating undirected graphs</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="apiref/rustworkx.PyDiGraph.html#rustworkx.PyDiGraph" title="rustworkx.PyDiGraph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.PyDiGraph</span></code></a>([check_cycle, ...])</p></td>
+<td><p>A class for creating directed graphs</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="apiref/rustworkx.PyDAG.html#rustworkx.PyDAG" title="rustworkx.PyDAG"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.PyDAG</span></code></a>([check_cycle, multigraph, attrs])</p></td>
+<td><p>A class for creating direct acyclic graphs.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="algorithm-functions">
+<span id="algorithm-api"></span><h2>Algorithm Functions<a class="headerlink" href="#algorithm-functions" title="Permalink to this heading">¶</a></h2>
+<section id="shortest-paths">
+<span id="id1"></span><h3>Shortest Paths<a class="headerlink" href="#shortest-paths" title="Permalink to this heading">¶</a></h3>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="apiref/rustworkx.dijkstra_shortest_paths.html#rustworkx.dijkstra_shortest_paths" title="rustworkx.dijkstra_shortest_paths"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.dijkstra_shortest_paths</span></code></a>(graph, source)</p></td>
+<td><p>Find the shortest path from a node</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="apiref/rustworkx.dijkstra_shortest_path_lengths.html#rustworkx.dijkstra_shortest_path_lengths" title="rustworkx.dijkstra_shortest_path_lengths"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.dijkstra_shortest_path_lengths</span></code></a>(...)</p></td>
+<td><p>Compute the lengths of the shortest paths for a graph object using Dijkstra's algorithm.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="apiref/rustworkx.all_pairs_dijkstra_shortest_paths.html#rustworkx.all_pairs_dijkstra_shortest_paths" title="rustworkx.all_pairs_dijkstra_shortest_paths"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.all_pairs_dijkstra_shortest_paths</span></code></a>(...)</p></td>
+<td><p>For each node in the graph, finds the shortest paths to all others.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="apiref/rustworkx.all_pairs_dijkstra_path_lengths.html#rustworkx.all_pairs_dijkstra_path_lengths" title="rustworkx.all_pairs_dijkstra_path_lengths"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.all_pairs_dijkstra_path_lengths</span></code></a>(...)</p></td>
+<td><p>For each node in the graph, calculates the lengths of the shortest paths to all others.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="apiref/rustworkx.bellman_ford_shortest_paths.html#rustworkx.bellman_ford_shortest_paths" title="rustworkx.bellman_ford_shortest_paths"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.bellman_ford_shortest_paths</span></code></a>(graph, ...)</p></td>
+<td><p>Find the shortest path from a node</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="apiref/rustworkx.bellman_ford_shortest_path_lengths.html#rustworkx.bellman_ford_shortest_path_lengths" title="rustworkx.bellman_ford_shortest_path_lengths"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.bellman_ford_shortest_path_lengths</span></code></a>(...)</p></td>
+<td><p>Compute the lengths of the shortest paths for a graph object using the Bellman-Ford algorithm with the SPFA heuristic.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="apiref/rustworkx.all_pairs_bellman_ford_shortest_paths.html#rustworkx.all_pairs_bellman_ford_shortest_paths" title="rustworkx.all_pairs_bellman_ford_shortest_paths"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.all_pairs_bellman_ford_shortest_paths</span></code></a>(...)</p></td>
+<td><p>For each node in the graph, finds the shortest paths to all others.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="apiref/rustworkx.all_pairs_bellman_ford_path_lengths.html#rustworkx.all_pairs_bellman_ford_path_lengths" title="rustworkx.all_pairs_bellman_ford_path_lengths"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.all_pairs_bellman_ford_path_lengths</span></code></a>(...)</p></td>
+<td><p>For each node in the graph, calculates the lengths of the shortest paths to all others.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="apiref/rustworkx.negative_edge_cycle.html#rustworkx.negative_edge_cycle" title="rustworkx.negative_edge_cycle"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.negative_edge_cycle</span></code></a>(graph, ...)</p></td>
+<td><p>Check if a negative cycle exists on a graph</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="apiref/rustworkx.find_negative_cycle.html#rustworkx.find_negative_cycle" title="rustworkx.find_negative_cycle"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.find_negative_cycle</span></code></a>(graph, ...)</p></td>
+<td><p>Find a negative cycle of a graph</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="apiref/rustworkx.distance_matrix.html#rustworkx.distance_matrix" title="rustworkx.distance_matrix"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.distance_matrix</span></code></a>(graph[, ...])</p></td>
+<td><p>Get the distance matrix for a graph</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="apiref/rustworkx.floyd_warshall.html#rustworkx.floyd_warshall" title="rustworkx.floyd_warshall"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.floyd_warshall</span></code></a>(graph[, weight_fn, ...])</p></td>
+<td><p>Find all-pairs shortest path lengths using Floyd's algorithm</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="apiref/rustworkx.floyd_warshall_numpy.html#rustworkx.floyd_warshall_numpy" title="rustworkx.floyd_warshall_numpy"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.floyd_warshall_numpy</span></code></a>(graph[, ...])</p></td>
+<td><p>Find all-pairs shortest path lengths using Floyd's algorithm</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="apiref/rustworkx.astar_shortest_path.html#rustworkx.astar_shortest_path" title="rustworkx.astar_shortest_path"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.astar_shortest_path</span></code></a>(graph, node, ...)</p></td>
+<td><p>Compute the A* shortest path for a graph</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="apiref/rustworkx.k_shortest_path_lengths.html#rustworkx.k_shortest_path_lengths" title="rustworkx.k_shortest_path_lengths"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.k_shortest_path_lengths</span></code></a>(graph, ...)</p></td>
+<td><p>Compute the length of the kth shortest path</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="apiref/rustworkx.num_shortest_paths_unweighted.html#rustworkx.num_shortest_paths_unweighted" title="rustworkx.num_shortest_paths_unweighted"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.num_shortest_paths_unweighted</span></code></a>(...)</p></td>
+<td><p>Get the number of unweighted shortest paths from a source node</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="apiref/rustworkx.unweighted_average_shortest_path_length.html#rustworkx.unweighted_average_shortest_path_length" title="rustworkx.unweighted_average_shortest_path_length"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.unweighted_average_shortest_path_length</span></code></a>(graph)</p></td>
+<td><p>Return the average shortest path length with unweighted edges.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="centrality">
+<span id="id2"></span><h3>Centrality<a class="headerlink" href="#centrality" title="Permalink to this heading">¶</a></h3>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="apiref/rustworkx.betweenness_centrality.html#rustworkx.betweenness_centrality" title="rustworkx.betweenness_centrality"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.betweenness_centrality</span></code></a>(graph[, ...])</p></td>
+<td><p>Returns the betweenness centrality of each node in the graph.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="apiref/rustworkx.eigenvector_centrality.html#rustworkx.eigenvector_centrality" title="rustworkx.eigenvector_centrality"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.eigenvector_centrality</span></code></a>(graph[, ...])</p></td>
+<td><p>Compute the eigenvector centrality of a graph.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="traversal">
+<span id="id3"></span><h3>Traversal<a class="headerlink" href="#traversal" title="Permalink to this heading">¶</a></h3>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="apiref/rustworkx.dfs_edges.html#rustworkx.dfs_edges" title="rustworkx.dfs_edges"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.dfs_edges</span></code></a>(graph[, source])</p></td>
+<td><p>Get an edge list of the tree edges from a depth-first traversal</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="apiref/rustworkx.dfs_search.html#rustworkx.dfs_search" title="rustworkx.dfs_search"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.dfs_search</span></code></a>(graph, source, visitor)</p></td>
+<td><p>Depth-first traversal of a directed/undirected graph.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="apiref/rustworkx.bfs_successors.html#rustworkx.bfs_successors" title="rustworkx.bfs_successors"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.bfs_successors</span></code></a>(graph, node, /)</p></td>
+<td><p>Return successors in a breadth-first-search from a source node.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="apiref/rustworkx.bfs_search.html#rustworkx.bfs_search" title="rustworkx.bfs_search"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.bfs_search</span></code></a>(graph, source, visitor)</p></td>
+<td><p>Breadth-first traversal of a directed/undirected graph.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="apiref/rustworkx.dijkstra_search.html#rustworkx.dijkstra_search" title="rustworkx.dijkstra_search"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.dijkstra_search</span></code></a>(graph, source, ...)</p></td>
+<td><p>Dijkstra traversal of a graph.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="apiref/rustworkx.topological_sort.html#rustworkx.topological_sort" title="rustworkx.topological_sort"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.topological_sort</span></code></a>(graph, /)</p></td>
+<td><p>Return the topological sort of node indices from the provided graph</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="apiref/rustworkx.lexicographical_topological_sort.html#rustworkx.lexicographical_topological_sort" title="rustworkx.lexicographical_topological_sort"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.lexicographical_topological_sort</span></code></a>(...)</p></td>
+<td><p>Get the lexicographical topological sorted nodes from the provided DAG</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="apiref/rustworkx.descendants.html#rustworkx.descendants" title="rustworkx.descendants"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.descendants</span></code></a>(graph, node, /)</p></td>
+<td><p>Return the descendants of a node in a graph.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="apiref/rustworkx.ancestors.html#rustworkx.ancestors" title="rustworkx.ancestors"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.ancestors</span></code></a>(graph, node, /)</p></td>
+<td><p>Return the ancestors of a node in a graph.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="apiref/rustworkx.collect_runs.html#rustworkx.collect_runs" title="rustworkx.collect_runs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.collect_runs</span></code></a>(graph, filter)</p></td>
+<td><p>Collect runs that match a filter function</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="apiref/rustworkx.collect_bicolor_runs.html#rustworkx.collect_bicolor_runs" title="rustworkx.collect_bicolor_runs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.collect_bicolor_runs</span></code></a>(graph, ...)</p></td>
+<td><p>Collect runs that match a filter function given edge colors</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="apiref/rustworkx.visit.DFSVisitor.html#rustworkx.visit.DFSVisitor" title="rustworkx.visit.DFSVisitor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.visit.DFSVisitor</span></code></a>()</p></td>
+<td><p>A visitor object that is invoked at the event-points inside the <a class="reference internal" href="apiref/rustworkx.dfs_search.html#rustworkx.dfs_search" title="rustworkx.dfs_search"><code class="xref py py-func docutils literal notranslate"><span class="pre">dfs_search()</span></code></a> algorithm.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="apiref/rustworkx.visit.BFSVisitor.html#rustworkx.visit.BFSVisitor" title="rustworkx.visit.BFSVisitor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.visit.BFSVisitor</span></code></a>()</p></td>
+<td><p>A visitor object that is invoked at the event-points inside the <a class="reference internal" href="apiref/rustworkx.bfs_search.html#rustworkx.bfs_search" title="rustworkx.bfs_search"><code class="xref py py-func docutils literal notranslate"><span class="pre">bfs_search()</span></code></a> algorithm.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="apiref/rustworkx.visit.DijkstraVisitor.html#rustworkx.visit.DijkstraVisitor" title="rustworkx.visit.DijkstraVisitor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.visit.DijkstraVisitor</span></code></a>()</p></td>
+<td><p>A visitor object that is invoked at the event-points inside the <a class="reference internal" href="apiref/rustworkx.dijkstra_search.html#rustworkx.dijkstra_search" title="rustworkx.dijkstra_search"><code class="xref py py-func docutils literal notranslate"><span class="pre">dijkstra_search()</span></code></a> algorithm.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="apiref/rustworkx.TopologicalSorter.html#rustworkx.TopologicalSorter" title="rustworkx.TopologicalSorter"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.TopologicalSorter</span></code></a>(graph, /[, ...])</p></td>
+<td><p>Provides functionality to topologically sort a directed graph.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="dag-algorithms">
+<span id="id4"></span><h3>DAG Algorithms<a class="headerlink" href="#dag-algorithms" title="Permalink to this heading">¶</a></h3>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="apiref/rustworkx.dag_longest_path.html#rustworkx.dag_longest_path" title="rustworkx.dag_longest_path"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.dag_longest_path</span></code></a>(graph, /[, weight_fn])</p></td>
+<td><p>Find the longest path in a DAG</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="apiref/rustworkx.dag_longest_path_length.html#rustworkx.dag_longest_path_length" title="rustworkx.dag_longest_path_length"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.dag_longest_path_length</span></code></a>(graph, /)</p></td>
+<td><p>Find the length of the longest path in a DAG</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="apiref/rustworkx.dag_weighted_longest_path.html#rustworkx.dag_weighted_longest_path" title="rustworkx.dag_weighted_longest_path"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.dag_weighted_longest_path</span></code></a>(graph, ...)</p></td>
+<td><p>Find the weighted longest path in a DAG</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="apiref/rustworkx.dag_weighted_longest_path_length.html#rustworkx.dag_weighted_longest_path_length" title="rustworkx.dag_weighted_longest_path_length"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.dag_weighted_longest_path_length</span></code></a>(...)</p></td>
+<td><p>Find the length of the weighted longest path in a DAG</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="apiref/rustworkx.is_directed_acyclic_graph.html#rustworkx.is_directed_acyclic_graph" title="rustworkx.is_directed_acyclic_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.is_directed_acyclic_graph</span></code></a>(graph, /)</p></td>
+<td><p>Check that the PyDiGraph or PyDAG doesn't have a cycle</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="apiref/rustworkx.layers.html#rustworkx.layers" title="rustworkx.layers"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.layers</span></code></a>(dag, first_layer, /[, ...])</p></td>
+<td><p>Return a list of layers</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="tree">
+<span id="id5"></span><h3>Tree<a class="headerlink" href="#tree" title="Permalink to this heading">¶</a></h3>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="apiref/rustworkx.minimum_spanning_edges.html#rustworkx.minimum_spanning_edges" title="rustworkx.minimum_spanning_edges"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.minimum_spanning_edges</span></code></a>(graph[, ...])</p></td>
+<td><p>Find the edges in the minimum spanning tree or forest of a graph using Kruskal's algorithm.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="apiref/rustworkx.minimum_spanning_tree.html#rustworkx.minimum_spanning_tree" title="rustworkx.minimum_spanning_tree"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.minimum_spanning_tree</span></code></a>(graph[, ...])</p></td>
+<td><p>Find the minimum spanning tree or forest of a graph using Kruskal's algorithm.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="apiref/rustworkx.steiner_tree.html#rustworkx.steiner_tree" title="rustworkx.steiner_tree"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.steiner_tree</span></code></a>(graph, ...)</p></td>
+<td><p>Return an approximation to the minimum Steiner tree of a graph.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="isomorphism">
+<span id="id6"></span><h3>Isomorphism<a class="headerlink" href="#isomorphism" title="Permalink to this heading">¶</a></h3>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="apiref/rustworkx.is_isomorphic.html#rustworkx.is_isomorphic" title="rustworkx.is_isomorphic"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.is_isomorphic</span></code></a>(first, second[, ...])</p></td>
+<td><p>Determine if 2 graphs are isomorphic</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="apiref/rustworkx.is_subgraph_isomorphic.html#rustworkx.is_subgraph_isomorphic" title="rustworkx.is_subgraph_isomorphic"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.is_subgraph_isomorphic</span></code></a>(first, second)</p></td>
+<td><p>Determine if 2 graphs are subgraph isomorphic</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="apiref/rustworkx.is_isomorphic_node_match.html#rustworkx.is_isomorphic_node_match" title="rustworkx.is_isomorphic_node_match"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.is_isomorphic_node_match</span></code></a>(first, ...)</p></td>
+<td><p>Determine if 2 graphs are isomorphic</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="apiref/rustworkx.vf2_mapping.html#rustworkx.vf2_mapping" title="rustworkx.vf2_mapping"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.vf2_mapping</span></code></a>(first, second[, ...])</p></td>
+<td><p>Return an iterator over all vf2 mappings between two graphs.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="matching">
+<span id="id7"></span><h3>Matching<a class="headerlink" href="#matching" title="Permalink to this heading">¶</a></h3>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="apiref/rustworkx.max_weight_matching.html#rustworkx.max_weight_matching" title="rustworkx.max_weight_matching"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.max_weight_matching</span></code></a>(graph, /[, ...])</p></td>
+<td><p>Compute a maximum-weighted matching for a <a class="reference internal" href="apiref/rustworkx.PyGraph.html#rustworkx.PyGraph" title="rustworkx.PyGraph"><code class="xref py py-class docutils literal notranslate"><span class="pre">PyGraph</span></code></a></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="apiref/rustworkx.is_matching.html#rustworkx.is_matching" title="rustworkx.is_matching"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.is_matching</span></code></a>(graph, matching, /)</p></td>
+<td><p>Check if matching is valid for graph</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="apiref/rustworkx.is_maximal_matching.html#rustworkx.is_maximal_matching" title="rustworkx.is_maximal_matching"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.is_maximal_matching</span></code></a>(graph, matching, /)</p></td>
+<td><p>Check if a matching is a maximal (<strong>not</strong> maximum) matching for a graph</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="connectivity-and-cycles">
+<span id="connectivity-cycle-finding"></span><h3>Connectivity and Cycles<a class="headerlink" href="#connectivity-and-cycles" title="Permalink to this heading">¶</a></h3>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="apiref/rustworkx.number_connected_components.html#rustworkx.number_connected_components" title="rustworkx.number_connected_components"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.number_connected_components</span></code></a>(graph, /)</p></td>
+<td><p>Find the number of connected components in an undirected graph.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="apiref/rustworkx.connected_components.html#rustworkx.connected_components" title="rustworkx.connected_components"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.connected_components</span></code></a>(graph, /)</p></td>
+<td><p>Find the connected components in an undirected graph</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="apiref/rustworkx.node_connected_component.html#rustworkx.node_connected_component" title="rustworkx.node_connected_component"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.node_connected_component</span></code></a>(graph, ...)</p></td>
+<td><p>Returns the set of nodes in the component of graph containing <cite>node</cite>.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="apiref/rustworkx.is_connected.html#rustworkx.is_connected" title="rustworkx.is_connected"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.is_connected</span></code></a>(graph, /)</p></td>
+<td><p>Check if the graph is connected.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="apiref/rustworkx.strongly_connected_components.html#rustworkx.strongly_connected_components" title="rustworkx.strongly_connected_components"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.strongly_connected_components</span></code></a>(graph, /)</p></td>
+<td><p>Compute the strongly connected components for a directed graph</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="apiref/rustworkx.number_weakly_connected_components.html#rustworkx.number_weakly_connected_components" title="rustworkx.number_weakly_connected_components"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.number_weakly_connected_components</span></code></a>(...)</p></td>
+<td><p>Find the number of weakly connected components in a directed graph</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="apiref/rustworkx.weakly_connected_components.html#rustworkx.weakly_connected_components" title="rustworkx.weakly_connected_components"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.weakly_connected_components</span></code></a>(graph, /)</p></td>
+<td><p>Find the weakly connected components in a directed graph</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="apiref/rustworkx.is_weakly_connected.html#rustworkx.is_weakly_connected" title="rustworkx.is_weakly_connected"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.is_weakly_connected</span></code></a>(graph, /)</p></td>
+<td><p>Check if the graph is weakly connected</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="apiref/rustworkx.cycle_basis.html#rustworkx.cycle_basis" title="rustworkx.cycle_basis"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.cycle_basis</span></code></a>(graph, /[, root])</p></td>
+<td><p>Return a list of cycles which form a basis for cycles of a given PyGraph</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="apiref/rustworkx.simple_cycles.html#rustworkx.simple_cycles" title="rustworkx.simple_cycles"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.simple_cycles</span></code></a>(graph, /)</p></td>
+<td><p>Find all simple cycles of a <a class="reference internal" href="apiref/rustworkx.PyDiGraph.html#rustworkx.PyDiGraph" title="rustworkx.PyDiGraph"><code class="xref py py-class docutils literal notranslate"><span class="pre">PyDiGraph</span></code></a></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="apiref/rustworkx.digraph_find_cycle.html#rustworkx.digraph_find_cycle" title="rustworkx.digraph_find_cycle"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.digraph_find_cycle</span></code></a>(graph, /[, source])</p></td>
+<td><p>Return the first cycle encountered during DFS of a given PyDiGraph, empty list is returned if no cycle is found</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="apiref/rustworkx.articulation_points.html#rustworkx.articulation_points" title="rustworkx.articulation_points"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.articulation_points</span></code></a>(graph, /)</p></td>
+<td><p>Return the articulation points of an undirected graph.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="apiref/rustworkx.biconnected_components.html#rustworkx.biconnected_components" title="rustworkx.biconnected_components"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.biconnected_components</span></code></a>(graph, /)</p></td>
+<td><p>Return the biconnected components of an undirected graph.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="apiref/rustworkx.chain_decomposition.html#rustworkx.chain_decomposition" title="rustworkx.chain_decomposition"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.chain_decomposition</span></code></a>(graph, /[, source])</p></td>
+<td><p>Returns the chain decomposition of a graph.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="apiref/rustworkx.all_simple_paths.html#rustworkx.all_simple_paths" title="rustworkx.all_simple_paths"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.all_simple_paths</span></code></a>(graph, from_, to)</p></td>
+<td><p>Return all simple paths between 2 nodes in a PyGraph object</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="apiref/rustworkx.all_pairs_all_simple_paths.html#rustworkx.all_pairs_all_simple_paths" title="rustworkx.all_pairs_all_simple_paths"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.all_pairs_all_simple_paths</span></code></a>(graph)</p></td>
+<td><p>Return all the simple paths between all pairs of nodes in the graph</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="apiref/rustworkx.stoer_wagner_min_cut.html#rustworkx.stoer_wagner_min_cut" title="rustworkx.stoer_wagner_min_cut"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.stoer_wagner_min_cut</span></code></a>(graph, /[, ...])</p></td>
+<td><p>Compute a weighted minimum cut using the Stoer-Wagner algorithm.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="graph-operations">
+<span id="graph-ops"></span><h3>Graph Operations<a class="headerlink" href="#graph-operations" title="Permalink to this heading">¶</a></h3>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="apiref/rustworkx.complement.html#rustworkx.complement" title="rustworkx.complement"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.complement</span></code></a>(graph)</p></td>
+<td><p>Compute the complement of a graph.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="apiref/rustworkx.union.html#rustworkx.union" title="rustworkx.union"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.union</span></code></a>(first, second[, ...])</p></td>
+<td><p>Return a new graph by forming a union from two input graph objects</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="apiref/rustworkx.cartesian_product.html#rustworkx.cartesian_product" title="rustworkx.cartesian_product"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.cartesian_product</span></code></a>(first, second)</p></td>
+<td><p>Return a new graph by forming the cartesian product from two input graph objects</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="other-algorithm-functions">
+<span id="other-algorithms"></span><h3>Other Algorithm Functions<a class="headerlink" href="#other-algorithm-functions" title="Permalink to this heading">¶</a></h3>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="apiref/rustworkx.adjacency_matrix.html#rustworkx.adjacency_matrix" title="rustworkx.adjacency_matrix"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.adjacency_matrix</span></code></a>(graph[, ...])</p></td>
+<td><p>Return the adjacency matrix for a graph object</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="apiref/rustworkx.transitivity.html#rustworkx.transitivity" title="rustworkx.transitivity"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.transitivity</span></code></a>(graph)</p></td>
+<td><p>Compute the transitivity of a graph.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="apiref/rustworkx.core_number.html#rustworkx.core_number" title="rustworkx.core_number"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.core_number</span></code></a>(graph)</p></td>
+<td><p>Return the core number for each node in the graph.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="apiref/rustworkx.graph_greedy_color.html#rustworkx.graph_greedy_color" title="rustworkx.graph_greedy_color"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.graph_greedy_color</span></code></a>(graph, /)</p></td>
+<td><p>Color a PyGraph using a largest_first strategy greedy graph coloring.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="apiref/rustworkx.metric_closure.html#rustworkx.metric_closure" title="rustworkx.metric_closure"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.metric_closure</span></code></a>(graph, weight_fn, /)</p></td>
+<td><p>Return the metric closure of a graph</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="apiref/rustworkx.is_planar.html#rustworkx.is_planar" title="rustworkx.is_planar"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.is_planar</span></code></a>(graph, /)</p></td>
+<td><p>Check if an undirected graph is planar.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+</section>
+<section id="generators">
+<span id="generator-funcs"></span><h2>Generators<a class="headerlink" href="#generators" title="Permalink to this heading">¶</a></h2>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="apiref/rustworkx.generators.cycle_graph.html#rustworkx.generators.cycle_graph" title="rustworkx.generators.cycle_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.generators.cycle_graph</span></code></a>([...])</p></td>
+<td><p>Generate an undirected cycle graph</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="apiref/rustworkx.generators.directed_cycle_graph.html#rustworkx.generators.directed_cycle_graph" title="rustworkx.generators.directed_cycle_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.generators.directed_cycle_graph</span></code></a>([...])</p></td>
+<td><p>Generate a cycle graph</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="apiref/rustworkx.generators.path_graph.html#rustworkx.generators.path_graph" title="rustworkx.generators.path_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.generators.path_graph</span></code></a>([num_nodes, ...])</p></td>
+<td><p>Generate an undirected path graph</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="apiref/rustworkx.generators.directed_path_graph.html#rustworkx.generators.directed_path_graph" title="rustworkx.generators.directed_path_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.generators.directed_path_graph</span></code></a>([...])</p></td>
+<td><p>Generate a directed path graph</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="apiref/rustworkx.generators.star_graph.html#rustworkx.generators.star_graph" title="rustworkx.generators.star_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.generators.star_graph</span></code></a>([num_nodes, ...])</p></td>
+<td><p>Generate an undirected star graph</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="apiref/rustworkx.generators.directed_star_graph.html#rustworkx.generators.directed_star_graph" title="rustworkx.generators.directed_star_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.generators.directed_star_graph</span></code></a>([...])</p></td>
+<td><p>Generate a directed star graph</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="apiref/rustworkx.generators.mesh_graph.html#rustworkx.generators.mesh_graph" title="rustworkx.generators.mesh_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.generators.mesh_graph</span></code></a>([num_nodes, ...])</p></td>
+<td><p>Generate an undirected mesh graph where every node is connected to every other</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="apiref/rustworkx.generators.directed_mesh_graph.html#rustworkx.generators.directed_mesh_graph" title="rustworkx.generators.directed_mesh_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.generators.directed_mesh_graph</span></code></a>([...])</p></td>
+<td><p>Generate a directed mesh graph where every node is connected to every other</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="apiref/rustworkx.generators.grid_graph.html#rustworkx.generators.grid_graph" title="rustworkx.generators.grid_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.generators.grid_graph</span></code></a>([rows, ...])</p></td>
+<td><p>Generate an undirected grid graph.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="apiref/rustworkx.generators.directed_grid_graph.html#rustworkx.generators.directed_grid_graph" title="rustworkx.generators.directed_grid_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.generators.directed_grid_graph</span></code></a>([...])</p></td>
+<td><p>Generate a directed grid graph. The edges propagate towards right and</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="apiref/rustworkx.generators.binomial_tree_graph.html#rustworkx.generators.binomial_tree_graph" title="rustworkx.generators.binomial_tree_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.generators.binomial_tree_graph</span></code></a>(...)</p></td>
+<td><p>Generate an undirected binomial tree of order n recursively.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="apiref/rustworkx.generators.directed_binomial_tree_graph.html#rustworkx.generators.directed_binomial_tree_graph" title="rustworkx.generators.directed_binomial_tree_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.generators.directed_binomial_tree_graph</span></code></a>(...)</p></td>
+<td><p>Generate an undirected binomial tree of order n recursively.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="apiref/rustworkx.generators.hexagonal_lattice_graph.html#rustworkx.generators.hexagonal_lattice_graph" title="rustworkx.generators.hexagonal_lattice_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.generators.hexagonal_lattice_graph</span></code></a>(...)</p></td>
+<td><p>Generate an undirected hexagonal lattice graph.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="apiref/rustworkx.generators.directed_hexagonal_lattice_graph.html#rustworkx.generators.directed_hexagonal_lattice_graph" title="rustworkx.generators.directed_hexagonal_lattice_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.generators.directed_hexagonal_lattice_graph</span></code></a>(...)</p></td>
+<td><p>Generate a directed hexagonal lattice graph. The edges propagate towards</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="apiref/rustworkx.generators.heavy_square_graph.html#rustworkx.generators.heavy_square_graph" title="rustworkx.generators.heavy_square_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.generators.heavy_square_graph</span></code></a>(d, /)</p></td>
+<td><p>Generate an undirected heavy square graph.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="apiref/rustworkx.generators.directed_heavy_square_graph.html#rustworkx.generators.directed_heavy_square_graph" title="rustworkx.generators.directed_heavy_square_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.generators.directed_heavy_square_graph</span></code></a>(d, /)</p></td>
+<td><p>Generate an directed heavy square graph.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="apiref/rustworkx.generators.heavy_hex_graph.html#rustworkx.generators.heavy_hex_graph" title="rustworkx.generators.heavy_hex_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.generators.heavy_hex_graph</span></code></a>(d, /[, ...])</p></td>
+<td><p>Generate an undirected heavy hex graph.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="apiref/rustworkx.generators.directed_heavy_hex_graph.html#rustworkx.generators.directed_heavy_hex_graph" title="rustworkx.generators.directed_heavy_hex_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.generators.directed_heavy_hex_graph</span></code></a>(d, /)</p></td>
+<td><p>Generate a directed heavy hex graph.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="apiref/rustworkx.generators.lollipop_graph.html#rustworkx.generators.lollipop_graph" title="rustworkx.generators.lollipop_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.generators.lollipop_graph</span></code></a>([...])</p></td>
+<td><p>Generate an undirected lollipop graph where a mesh graph is connected to a path.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="apiref/rustworkx.generators.generalized_petersen_graph.html#rustworkx.generators.generalized_petersen_graph" title="rustworkx.generators.generalized_petersen_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.generators.generalized_petersen_graph</span></code></a>(n, k, /)</p></td>
+<td><p>Generate a generalized Petersen graph <span class="math notranslate nohighlight">\(G(n, k)\)</span> with <span class="math notranslate nohighlight">\(2n\)</span> nodes and <span class="math notranslate nohighlight">\(3n\)</span> edges.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="apiref/rustworkx.generators.barbell_graph.html#rustworkx.generators.barbell_graph" title="rustworkx.generators.barbell_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.generators.barbell_graph</span></code></a>([...])</p></td>
+<td><p>Generate an undirected barbell graph where two identical mesh graphs are connected by a path.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="apiref/rustworkx.generators.full_rary_tree.html#rustworkx.generators.full_rary_tree" title="rustworkx.generators.full_rary_tree"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.generators.full_rary_tree</span></code></a>(...[, ...])</p></td>
+<td><p>Creates a full r-ary tree of <cite>n</cite> nodes.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="random-graph-generator-functions">
+<span id="random-generators"></span><h2>Random Graph Generator Functions<a class="headerlink" href="#random-graph-generator-functions" title="Permalink to this heading">¶</a></h2>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="apiref/rustworkx.directed_gnp_random_graph.html#rustworkx.directed_gnp_random_graph" title="rustworkx.directed_gnp_random_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.directed_gnp_random_graph</span></code></a>(...[, seed])</p></td>
+<td><p>Return a <span class="math notranslate nohighlight">\(G_{np}\)</span> directed random graph, also known as an Erdős-Rényi graph or a binomial graph.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="apiref/rustworkx.undirected_gnp_random_graph.html#rustworkx.undirected_gnp_random_graph" title="rustworkx.undirected_gnp_random_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.undirected_gnp_random_graph</span></code></a>(...[, ...])</p></td>
+<td><p>Return a <span class="math notranslate nohighlight">\(G_{np}\)</span> random undirected graph, also known as an Erdős-Rényi graph or a binomial graph.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="apiref/rustworkx.directed_gnm_random_graph.html#rustworkx.directed_gnm_random_graph" title="rustworkx.directed_gnm_random_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.directed_gnm_random_graph</span></code></a>(...[, seed])</p></td>
+<td><p>Return a <span class="math notranslate nohighlight">\(G_{nm}\)</span> directed graph, also known as an Erdős-Rényi graph.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="apiref/rustworkx.undirected_gnm_random_graph.html#rustworkx.undirected_gnm_random_graph" title="rustworkx.undirected_gnm_random_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.undirected_gnm_random_graph</span></code></a>(...[, ...])</p></td>
+<td><p>Return a <span class="math notranslate nohighlight">\(G_{nm}\)</span> undirected graph, also known as an Erdős-Rényi graph.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="apiref/rustworkx.random_geometric_graph.html#rustworkx.random_geometric_graph" title="rustworkx.random_geometric_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.random_geometric_graph</span></code></a>(num_nodes, ...)</p></td>
+<td><p>Returns a random geometric graph in the unit cube of dimensions <cite>dim</cite>.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="layout-functions">
+<span id="id8"></span><h2>Layout Functions<a class="headerlink" href="#layout-functions" title="Permalink to this heading">¶</a></h2>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="apiref/rustworkx.random_layout.html#rustworkx.random_layout" title="rustworkx.random_layout"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.random_layout</span></code></a>(graph[, center, seed])</p></td>
+<td><p>Generate a random layout</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="apiref/rustworkx.spring_layout.html#rustworkx.spring_layout" title="rustworkx.spring_layout"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.spring_layout</span></code></a>(graph[, pos, fixed, ...])</p></td>
+<td><p>Position nodes using Fruchterman-Reingold force-directed algorithm.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="apiref/rustworkx.bipartite_layout.html#rustworkx.bipartite_layout" title="rustworkx.bipartite_layout"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.bipartite_layout</span></code></a>(graph, first_nodes)</p></td>
+<td><p>Generate a bipartite layout of the graph</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="apiref/rustworkx.circular_layout.html#rustworkx.circular_layout" title="rustworkx.circular_layout"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.circular_layout</span></code></a>(graph[, scale, center])</p></td>
+<td><p>Generate a circular layout of the graph</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="apiref/rustworkx.shell_layout.html#rustworkx.shell_layout" title="rustworkx.shell_layout"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.shell_layout</span></code></a>(graph[, nlist, ...])</p></td>
+<td><p>Generate a shell layout of the graph</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="apiref/rustworkx.spiral_layout.html#rustworkx.spiral_layout" title="rustworkx.spiral_layout"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.spiral_layout</span></code></a>(graph[, scale, ...])</p></td>
+<td><p>Generate a spiral layout of the graph</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="serialization">
+<span id="id9"></span><h2>Serialization<a class="headerlink" href="#serialization" title="Permalink to this heading">¶</a></h2>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="apiref/rustworkx.node_link_json.html#rustworkx.node_link_json" title="rustworkx.node_link_json"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.node_link_json</span></code></a>(graph[, path, ...])</p></td>
+<td><p>Generate a JSON object representing a graph in a node-link format</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="apiref/rustworkx.read_graphml.html#rustworkx.read_graphml" title="rustworkx.read_graphml"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.read_graphml</span></code></a>(path, /)</p></td>
+<td><p>Read a list of graphs from a file in GraphML format.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="converters">
+<span id="id10"></span><h2>Converters<a class="headerlink" href="#converters" title="Permalink to this heading">¶</a></h2>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="apiref/rustworkx.networkx_converter.html#rustworkx.networkx_converter" title="rustworkx.networkx_converter"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.networkx_converter</span></code></a>(graph[, ...])</p></td>
+<td><p>Convert a networkx graph object into a rustworkx graph object.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="api-functions-for-pydigraph">
+<span id="api-functions-pydigraph"></span><h2>API functions for PyDigraph<a class="headerlink" href="#api-functions-for-pydigraph" title="Permalink to this heading">¶</a></h2>
+<p>These functions are algorithm functions that are type specific for
+<a class="reference internal" href="apiref/rustworkx.PyDiGraph.html#rustworkx.PyDiGraph" title="rustworkx.PyDiGraph"><code class="xref py py-class docutils literal notranslate"><span class="pre">PyDiGraph</span></code></a> or <a class="reference internal" href="apiref/rustworkx.PyDAG.html#rustworkx.PyDAG" title="rustworkx.PyDAG"><code class="xref py py-class docutils literal notranslate"><span class="pre">PyDAG</span></code></a> objects. Universal
+functions from Retworkx API that work for both graph types internally call
+the functions from the explicitly typed based on the data type.</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="apiref/rustworkx.digraph_is_isomorphic.html#rustworkx.digraph_is_isomorphic" title="rustworkx.digraph_is_isomorphic"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.digraph_is_isomorphic</span></code></a>(first, second, /)</p></td>
+<td><p>Determine if 2 directed graphs are isomorphic</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="apiref/rustworkx.digraph_is_subgraph_isomorphic.html#rustworkx.digraph_is_subgraph_isomorphic" title="rustworkx.digraph_is_subgraph_isomorphic"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.digraph_is_subgraph_isomorphic</span></code></a>(...)</p></td>
+<td><p>Determine if 2 directed graphs are subgraph - isomorphic</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="apiref/rustworkx.digraph_vf2_mapping.html#rustworkx.digraph_vf2_mapping" title="rustworkx.digraph_vf2_mapping"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.digraph_vf2_mapping</span></code></a>(first, second, /)</p></td>
+<td><p>Return an iterator over all vf2 mappings between two <a class="reference internal" href="apiref/rustworkx.PyDiGraph.html#rustworkx.PyDiGraph" title="rustworkx.PyDiGraph"><code class="xref py py-class docutils literal notranslate"><span class="pre">PyDiGraph</span></code></a> objects</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="apiref/rustworkx.digraph_distance_matrix.html#rustworkx.digraph_distance_matrix" title="rustworkx.digraph_distance_matrix"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.digraph_distance_matrix</span></code></a>(graph, /)</p></td>
+<td><p>Get the distance matrix for a directed graph</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="apiref/rustworkx.digraph_floyd_warshall.html#rustworkx.digraph_floyd_warshall" title="rustworkx.digraph_floyd_warshall"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.digraph_floyd_warshall</span></code></a>(graph, /[, ...])</p></td>
+<td><p>Find all-pairs shortest path lengths using Floyd's algorithm</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="apiref/rustworkx.digraph_floyd_warshall_numpy.html#rustworkx.digraph_floyd_warshall_numpy" title="rustworkx.digraph_floyd_warshall_numpy"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.digraph_floyd_warshall_numpy</span></code></a>(graph, /)</p></td>
+<td><p>Find all-pairs shortest path lengths using Floyd's algorithm</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="apiref/rustworkx.digraph_adjacency_matrix.html#rustworkx.digraph_adjacency_matrix" title="rustworkx.digraph_adjacency_matrix"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.digraph_adjacency_matrix</span></code></a>(graph, /)</p></td>
+<td><p>Return the adjacency matrix for a PyDiGraph object</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="apiref/rustworkx.digraph_all_simple_paths.html#rustworkx.digraph_all_simple_paths" title="rustworkx.digraph_all_simple_paths"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.digraph_all_simple_paths</span></code></a></p></td>
+<td><p>Return all simple paths between 2 nodes in a PyDiGraph object</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="apiref/rustworkx.digraph_all_pairs_all_simple_paths.html#rustworkx.digraph_all_pairs_all_simple_paths" title="rustworkx.digraph_all_pairs_all_simple_paths"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.digraph_all_pairs_all_simple_paths</span></code></a>(...)</p></td>
+<td><p>Return all the simple paths between all pairs of nodes in the graph</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="apiref/rustworkx.digraph_astar_shortest_path.html#rustworkx.digraph_astar_shortest_path" title="rustworkx.digraph_astar_shortest_path"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.digraph_astar_shortest_path</span></code></a>(graph, ...)</p></td>
+<td><p>Compute the A* shortest path for a PyDiGraph</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="apiref/rustworkx.digraph_dijkstra_shortest_paths.html#rustworkx.digraph_dijkstra_shortest_paths" title="rustworkx.digraph_dijkstra_shortest_paths"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.digraph_dijkstra_shortest_paths</span></code></a></p></td>
+<td><p>Find the shortest path from a node</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="apiref/rustworkx.digraph_all_pairs_dijkstra_shortest_paths.html#rustworkx.digraph_all_pairs_dijkstra_shortest_paths" title="rustworkx.digraph_all_pairs_dijkstra_shortest_paths"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.digraph_all_pairs_dijkstra_shortest_paths</span></code></a>(...)</p></td>
+<td><p>For each node in the graph, finds the shortest paths to all others in a <a class="reference internal" href="apiref/rustworkx.PyDiGraph.html#rustworkx.PyDiGraph" title="rustworkx.PyDiGraph"><code class="xref py py-class docutils literal notranslate"><span class="pre">PyDiGraph</span></code></a> object</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="apiref/rustworkx.digraph_dijkstra_shortest_path_lengths.html#rustworkx.digraph_dijkstra_shortest_path_lengths" title="rustworkx.digraph_dijkstra_shortest_path_lengths"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.digraph_dijkstra_shortest_path_lengths</span></code></a>(...)</p></td>
+<td><p>Compute the lengths of the shortest paths for a PyDiGraph object using Dijkstra's algorithm</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="apiref/rustworkx.digraph_all_pairs_dijkstra_path_lengths.html#rustworkx.digraph_all_pairs_dijkstra_path_lengths" title="rustworkx.digraph_all_pairs_dijkstra_path_lengths"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.digraph_all_pairs_dijkstra_path_lengths</span></code></a>(...)</p></td>
+<td><p>For each node in the graph, calculates the lengths of the shortest paths to all others in a <a class="reference internal" href="apiref/rustworkx.PyDiGraph.html#rustworkx.PyDiGraph" title="rustworkx.PyDiGraph"><code class="xref py py-class docutils literal notranslate"><span class="pre">PyDiGraph</span></code></a> object</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="apiref/rustworkx.digraph_bellman_ford_shortest_path_lengths.html#rustworkx.digraph_bellman_ford_shortest_path_lengths" title="rustworkx.digraph_bellman_ford_shortest_path_lengths"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.digraph_bellman_ford_shortest_path_lengths</span></code></a>(...)</p></td>
+<td><p>Compute the lengths of the shortest paths for a PyDiGraph object using the Bellman-Ford algorithm with the SPFA heuristic.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="apiref/rustworkx.digraph_bellman_ford_shortest_path_lengths.html#rustworkx.digraph_bellman_ford_shortest_path_lengths" title="rustworkx.digraph_bellman_ford_shortest_path_lengths"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.digraph_bellman_ford_shortest_path_lengths</span></code></a>(...)</p></td>
+<td><p>Compute the lengths of the shortest paths for a PyDiGraph object using the Bellman-Ford algorithm with the SPFA heuristic.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="apiref/rustworkx.digraph_all_pairs_bellman_ford_shortest_paths.html#rustworkx.digraph_all_pairs_bellman_ford_shortest_paths" title="rustworkx.digraph_all_pairs_bellman_ford_shortest_paths"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.digraph_all_pairs_bellman_ford_shortest_paths</span></code></a>(...)</p></td>
+<td><p>For each node in the graph, finds the shortest paths to all others in a <a class="reference internal" href="apiref/rustworkx.PyDiGraph.html#rustworkx.PyDiGraph" title="rustworkx.PyDiGraph"><code class="xref py py-class docutils literal notranslate"><span class="pre">PyDiGraph</span></code></a> object</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="apiref/rustworkx.digraph_all_pairs_bellman_ford_path_lengths.html#rustworkx.digraph_all_pairs_bellman_ford_path_lengths" title="rustworkx.digraph_all_pairs_bellman_ford_path_lengths"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.digraph_all_pairs_bellman_ford_path_lengths</span></code></a>(...)</p></td>
+<td><p>For each node in the graph, calculates the lengths of the shortest paths to all others in a <a class="reference internal" href="apiref/rustworkx.PyDiGraph.html#rustworkx.PyDiGraph" title="rustworkx.PyDiGraph"><code class="xref py py-class docutils literal notranslate"><span class="pre">PyDiGraph</span></code></a> object</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="apiref/rustworkx.digraph_k_shortest_path_lengths.html#rustworkx.digraph_k_shortest_path_lengths" title="rustworkx.digraph_k_shortest_path_lengths"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.digraph_k_shortest_path_lengths</span></code></a>(...)</p></td>
+<td><p>Compute the length of the kth shortest path</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="apiref/rustworkx.digraph_dfs_edges.html#rustworkx.digraph_dfs_edges" title="rustworkx.digraph_dfs_edges"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.digraph_dfs_edges</span></code></a>(graph, /[, source])</p></td>
+<td><p>Get an edge list of the tree edges from a depth-first traversal</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="apiref/rustworkx.digraph_dfs_search.html#rustworkx.digraph_dfs_search" title="rustworkx.digraph_dfs_search"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.digraph_dfs_search</span></code></a>(graph, source, ...)</p></td>
+<td><p>Depth-first traversal of a directed graph.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="apiref/rustworkx.digraph_find_cycle.html#rustworkx.digraph_find_cycle" title="rustworkx.digraph_find_cycle"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.digraph_find_cycle</span></code></a>(graph, /[, source])</p></td>
+<td><p>Return the first cycle encountered during DFS of a given PyDiGraph, empty list is returned if no cycle is found</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="apiref/rustworkx.digraph_transitivity.html#rustworkx.digraph_transitivity" title="rustworkx.digraph_transitivity"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.digraph_transitivity</span></code></a>(graph, /)</p></td>
+<td><p>Compute the transitivity of a directed graph.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="apiref/rustworkx.digraph_core_number.html#rustworkx.digraph_core_number" title="rustworkx.digraph_core_number"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.digraph_core_number</span></code></a>(graph, /)</p></td>
+<td><p>Return the core number for each node in the directed graph.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="apiref/rustworkx.digraph_complement.html#rustworkx.digraph_complement" title="rustworkx.digraph_complement"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.digraph_complement</span></code></a>(graph, /)</p></td>
+<td><p>Compute the complement of a directed graph.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="apiref/rustworkx.digraph_union.html#rustworkx.digraph_union" title="rustworkx.digraph_union"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.digraph_union</span></code></a>(first, second, /[, ...])</p></td>
+<td><p>Return a new PyDiGraph by forming a union from two input PyDiGraph objects</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="apiref/rustworkx.digraph_tensor_product.html#rustworkx.digraph_tensor_product" title="rustworkx.digraph_tensor_product"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.digraph_tensor_product</span></code></a>(first, ...)</p></td>
+<td><p>Return a new PyDiGraph by forming the tensor product from two input PyGraph objects</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="apiref/rustworkx.digraph_cartesian_product.html#rustworkx.digraph_cartesian_product" title="rustworkx.digraph_cartesian_product"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.digraph_cartesian_product</span></code></a>(first, ...)</p></td>
+<td><p>Return a new PyDiGraph by forming the cartesian product from two input PyDiGraph objects</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="apiref/rustworkx.digraph_random_layout.html#rustworkx.digraph_random_layout" title="rustworkx.digraph_random_layout"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.digraph_random_layout</span></code></a></p></td>
+<td><p>Generate a random layout</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="apiref/rustworkx.digraph_bipartite_layout.html#rustworkx.digraph_bipartite_layout" title="rustworkx.digraph_bipartite_layout"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.digraph_bipartite_layout</span></code></a>(graph, ...)</p></td>
+<td><p>Generate a bipartite layout of the graph</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="apiref/rustworkx.digraph_circular_layout.html#rustworkx.digraph_circular_layout" title="rustworkx.digraph_circular_layout"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.digraph_circular_layout</span></code></a>(graph, /)</p></td>
+<td><p>Generate a circular layout of the graph</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="apiref/rustworkx.digraph_shell_layout.html#rustworkx.digraph_shell_layout" title="rustworkx.digraph_shell_layout"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.digraph_shell_layout</span></code></a>(graph, /[, ...])</p></td>
+<td><p>Generate a shell layout of the graph</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="apiref/rustworkx.digraph_spiral_layout.html#rustworkx.digraph_spiral_layout" title="rustworkx.digraph_spiral_layout"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.digraph_spiral_layout</span></code></a>(graph, /[, ...])</p></td>
+<td><p>Generate a spiral layout of the graph</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="apiref/rustworkx.digraph_spring_layout.html#rustworkx.digraph_spring_layout" title="rustworkx.digraph_spring_layout"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.digraph_spring_layout</span></code></a>(graph[, ...])</p></td>
+<td><p>Position nodes using Fruchterman-Reingold force-directed algorithm.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="apiref/rustworkx.digraph_num_shortest_paths_unweighted.html#rustworkx.digraph_num_shortest_paths_unweighted" title="rustworkx.digraph_num_shortest_paths_unweighted"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.digraph_num_shortest_paths_unweighted</span></code></a>(...)</p></td>
+<td><p>Get the number of unweighted shortest paths from a source node</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="apiref/rustworkx.digraph_betweenness_centrality.html#rustworkx.digraph_betweenness_centrality" title="rustworkx.digraph_betweenness_centrality"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.digraph_betweenness_centrality</span></code></a>(...)</p></td>
+<td><p>Compute the betweenness centrality of all nodes in a PyDiGraph.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="apiref/rustworkx.digraph_eigenvector_centrality.html#rustworkx.digraph_eigenvector_centrality" title="rustworkx.digraph_eigenvector_centrality"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.digraph_eigenvector_centrality</span></code></a>(...)</p></td>
+<td><p>Compute the eigenvector centrality of a <code class="xref py py-class docutils literal notranslate"><span class="pre">PyDiGraph</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="apiref/rustworkx.digraph_unweighted_average_shortest_path_length.html#rustworkx.digraph_unweighted_average_shortest_path_length" title="rustworkx.digraph_unweighted_average_shortest_path_length"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.digraph_unweighted_average_shortest_path_length</span></code></a>(...)</p></td>
+<td><p>Return the average shortest path length for a <a class="reference internal" href="apiref/rustworkx.PyDiGraph.html#rustworkx.PyDiGraph" title="rustworkx.PyDiGraph"><code class="xref py py-class docutils literal notranslate"><span class="pre">PyDiGraph</span></code></a> with unweighted edges.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="apiref/rustworkx.digraph_bfs_search.html#rustworkx.digraph_bfs_search" title="rustworkx.digraph_bfs_search"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.digraph_bfs_search</span></code></a>(graph, source, ...)</p></td>
+<td><p>Breadth-first traversal of a directed graph.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="apiref/rustworkx.digraph_dijkstra_search.html#rustworkx.digraph_dijkstra_search" title="rustworkx.digraph_dijkstra_search"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.digraph_dijkstra_search</span></code></a>(graph, ...)</p></td>
+<td><p>Dijkstra traversal of a directed graph.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="apiref/rustworkx.digraph_node_link_json.html#rustworkx.digraph_node_link_json" title="rustworkx.digraph_node_link_json"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.digraph_node_link_json</span></code></a>(graph, /[, ...])</p></td>
+<td><p>Generate a JSON object representing a <a class="reference internal" href="apiref/rustworkx.PyDiGraph.html#rustworkx.PyDiGraph" title="rustworkx.PyDiGraph"><code class="xref py py-class docutils literal notranslate"><span class="pre">PyDiGraph</span></code></a> in a node-link format</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="api-functions-for-pygraph">
+<span id="api-functions-pygraph"></span><h2>API functions for PyGraph<a class="headerlink" href="#api-functions-for-pygraph" title="Permalink to this heading">¶</a></h2>
+<p>These functions are algorithm functions that are type specific for
+<a class="reference internal" href="apiref/rustworkx.PyGraph.html#rustworkx.PyGraph" title="rustworkx.PyGraph"><code class="xref py py-class docutils literal notranslate"><span class="pre">PyGraph</span></code></a> objects. Universal functions from Rustworkx API that
+work for both graph types internally call the functions from the explicitly
+typed API based on the data type.</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="apiref/rustworkx.graph_is_isomorphic.html#rustworkx.graph_is_isomorphic" title="rustworkx.graph_is_isomorphic"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.graph_is_isomorphic</span></code></a>(first, second, /)</p></td>
+<td><p>Determine if 2 undirected graphs are isomorphic</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="apiref/rustworkx.graph_is_subgraph_isomorphic.html#rustworkx.graph_is_subgraph_isomorphic" title="rustworkx.graph_is_subgraph_isomorphic"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.graph_is_subgraph_isomorphic</span></code></a>(...)</p></td>
+<td><p>Determine if 2 undirected graphs are subgraph - isomorphic</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="apiref/rustworkx.graph_vf2_mapping.html#rustworkx.graph_vf2_mapping" title="rustworkx.graph_vf2_mapping"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.graph_vf2_mapping</span></code></a>(first, second, /)</p></td>
+<td><p>Return an iterator over all vf2 mappings between two <a class="reference internal" href="apiref/rustworkx.PyGraph.html#rustworkx.PyGraph" title="rustworkx.PyGraph"><code class="xref py py-class docutils literal notranslate"><span class="pre">PyGraph</span></code></a> objects</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="apiref/rustworkx.graph_distance_matrix.html#rustworkx.graph_distance_matrix" title="rustworkx.graph_distance_matrix"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.graph_distance_matrix</span></code></a>(graph, /[, ...])</p></td>
+<td><p>Get the distance matrix for an undirected graph</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="apiref/rustworkx.graph_floyd_warshall.html#rustworkx.graph_floyd_warshall" title="rustworkx.graph_floyd_warshall"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.graph_floyd_warshall</span></code></a>(graph, /[, ...])</p></td>
+<td><p>Find all-pairs shortest path lengths using Floyd's algorithm</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="apiref/rustworkx.graph_floyd_warshall_numpy.html#rustworkx.graph_floyd_warshall_numpy" title="rustworkx.graph_floyd_warshall_numpy"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.graph_floyd_warshall_numpy</span></code></a>(graph, /)</p></td>
+<td><p>Find all-pairs shortest path lengths using Floyd's algorithm</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="apiref/rustworkx.graph_adjacency_matrix.html#rustworkx.graph_adjacency_matrix" title="rustworkx.graph_adjacency_matrix"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.graph_adjacency_matrix</span></code></a>(graph, /[, ...])</p></td>
+<td><p>Return the adjacency matrix for a PyGraph class</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="apiref/rustworkx.graph_all_simple_paths.html#rustworkx.graph_all_simple_paths" title="rustworkx.graph_all_simple_paths"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.graph_all_simple_paths</span></code></a></p></td>
+<td><p>Return all simple paths between 2 nodes in a PyGraph object</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="apiref/rustworkx.graph_all_pairs_all_simple_paths.html#rustworkx.graph_all_pairs_all_simple_paths" title="rustworkx.graph_all_pairs_all_simple_paths"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.graph_all_pairs_all_simple_paths</span></code></a>(...)</p></td>
+<td><p>Return all the simple paths between all pairs of nodes in the graph</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="apiref/rustworkx.graph_astar_shortest_path.html#rustworkx.graph_astar_shortest_path" title="rustworkx.graph_astar_shortest_path"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.graph_astar_shortest_path</span></code></a>(graph, ...)</p></td>
+<td><p>Compute the A* shortest path for a PyGraph</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="apiref/rustworkx.graph_dijkstra_shortest_paths.html#rustworkx.graph_dijkstra_shortest_paths" title="rustworkx.graph_dijkstra_shortest_paths"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.graph_dijkstra_shortest_paths</span></code></a></p></td>
+<td><p>Find the shortest path from a node</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="apiref/rustworkx.graph_dijkstra_shortest_path_lengths.html#rustworkx.graph_dijkstra_shortest_path_lengths" title="rustworkx.graph_dijkstra_shortest_path_lengths"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.graph_dijkstra_shortest_path_lengths</span></code></a>(...)</p></td>
+<td><p>Compute the lengths of the shortest paths for a PyGraph object using Dijkstra's algorithm</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="apiref/rustworkx.graph_all_pairs_dijkstra_shortest_paths.html#rustworkx.graph_all_pairs_dijkstra_shortest_paths" title="rustworkx.graph_all_pairs_dijkstra_shortest_paths"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.graph_all_pairs_dijkstra_shortest_paths</span></code></a>(...)</p></td>
+<td><p>For each node in the graph, finds the shortest paths to all others in a <a class="reference internal" href="apiref/rustworkx.PyGraph.html#rustworkx.PyGraph" title="rustworkx.PyGraph"><code class="xref py py-class docutils literal notranslate"><span class="pre">PyGraph</span></code></a> object</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="apiref/rustworkx.graph_k_shortest_path_lengths.html#rustworkx.graph_k_shortest_path_lengths" title="rustworkx.graph_k_shortest_path_lengths"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.graph_k_shortest_path_lengths</span></code></a>(...)</p></td>
+<td><p>Compute the length of the kth shortest path</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="apiref/rustworkx.graph_all_pairs_dijkstra_path_lengths.html#rustworkx.graph_all_pairs_dijkstra_path_lengths" title="rustworkx.graph_all_pairs_dijkstra_path_lengths"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.graph_all_pairs_dijkstra_path_lengths</span></code></a>(...)</p></td>
+<td><p>For each node in the graph, calculates the lengths of the shortest paths to all others in a <a class="reference internal" href="apiref/rustworkx.PyGraph.html#rustworkx.PyGraph" title="rustworkx.PyGraph"><code class="xref py py-class docutils literal notranslate"><span class="pre">PyGraph</span></code></a> object</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="apiref/rustworkx.graph_bellman_ford_shortest_path_lengths.html#rustworkx.graph_bellman_ford_shortest_path_lengths" title="rustworkx.graph_bellman_ford_shortest_path_lengths"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.graph_bellman_ford_shortest_path_lengths</span></code></a>(...)</p></td>
+<td><p>Compute the lengths of the shortest paths for a PyGraph object using the Bellman-Ford algorithm with the SPFA heuristic.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="apiref/rustworkx.graph_bellman_ford_shortest_path_lengths.html#rustworkx.graph_bellman_ford_shortest_path_lengths" title="rustworkx.graph_bellman_ford_shortest_path_lengths"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.graph_bellman_ford_shortest_path_lengths</span></code></a>(...)</p></td>
+<td><p>Compute the lengths of the shortest paths for a PyGraph object using the Bellman-Ford algorithm with the SPFA heuristic.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="apiref/rustworkx.graph_all_pairs_bellman_ford_shortest_paths.html#rustworkx.graph_all_pairs_bellman_ford_shortest_paths" title="rustworkx.graph_all_pairs_bellman_ford_shortest_paths"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.graph_all_pairs_bellman_ford_shortest_paths</span></code></a>(...)</p></td>
+<td><p>For each node in the graph, finds the shortest paths to all others in a <a class="reference internal" href="apiref/rustworkx.PyGraph.html#rustworkx.PyGraph" title="rustworkx.PyGraph"><code class="xref py py-class docutils literal notranslate"><span class="pre">PyGraph</span></code></a> object</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="apiref/rustworkx.graph_all_pairs_bellman_ford_path_lengths.html#rustworkx.graph_all_pairs_bellman_ford_path_lengths" title="rustworkx.graph_all_pairs_bellman_ford_path_lengths"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.graph_all_pairs_bellman_ford_path_lengths</span></code></a>(...)</p></td>
+<td><p>For each node in the graph, calculates the lengths of the shortest paths to all others in a <a class="reference internal" href="apiref/rustworkx.PyGraph.html#rustworkx.PyGraph" title="rustworkx.PyGraph"><code class="xref py py-class docutils literal notranslate"><span class="pre">PyGraph</span></code></a> object</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="apiref/rustworkx.graph_dfs_edges.html#rustworkx.graph_dfs_edges" title="rustworkx.graph_dfs_edges"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.graph_dfs_edges</span></code></a>(graph, /[, source])</p></td>
+<td><p>Get an edge list of the tree edges from a depth-first traversal</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="apiref/rustworkx.graph_dfs_search.html#rustworkx.graph_dfs_search" title="rustworkx.graph_dfs_search"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.graph_dfs_search</span></code></a>(graph, source, ...)</p></td>
+<td><p>Depth-first traversal of an undirected graph.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="apiref/rustworkx.graph_transitivity.html#rustworkx.graph_transitivity" title="rustworkx.graph_transitivity"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.graph_transitivity</span></code></a>(graph, /)</p></td>
+<td><p>Compute the transitivity of an undirected graph.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="apiref/rustworkx.graph_core_number.html#rustworkx.graph_core_number" title="rustworkx.graph_core_number"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.graph_core_number</span></code></a>(graph, /)</p></td>
+<td><p>Return the core number for each node in the graph.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="apiref/rustworkx.graph_complement.html#rustworkx.graph_complement" title="rustworkx.graph_complement"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.graph_complement</span></code></a>(graph, /)</p></td>
+<td><p>Compute the complement of an undirected graph.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="apiref/rustworkx.graph_union.html#rustworkx.graph_union" title="rustworkx.graph_union"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.graph_union</span></code></a>(first, second, /[, ...])</p></td>
+<td><p>Return a new PyGraph by forming a union from two input PyGraph objects</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="apiref/rustworkx.graph_tensor_product.html#rustworkx.graph_tensor_product" title="rustworkx.graph_tensor_product"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.graph_tensor_product</span></code></a>(first, second, /)</p></td>
+<td><p>Return a new PyGraph by forming the tensor product from two input PyGraph objects</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="apiref/rustworkx.graph_cartesian_product.html#rustworkx.graph_cartesian_product" title="rustworkx.graph_cartesian_product"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.graph_cartesian_product</span></code></a>(first, ...)</p></td>
+<td><p>Return a new PyGraph by forming the cartesian product from two input PyGraph objects</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="apiref/rustworkx.graph_random_layout.html#rustworkx.graph_random_layout" title="rustworkx.graph_random_layout"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.graph_random_layout</span></code></a></p></td>
+<td><p>Generate a random layout</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="apiref/rustworkx.graph_bipartite_layout.html#rustworkx.graph_bipartite_layout" title="rustworkx.graph_bipartite_layout"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.graph_bipartite_layout</span></code></a>(graph, ...)</p></td>
+<td><p>Generate a bipartite layout of the graph</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="apiref/rustworkx.graph_circular_layout.html#rustworkx.graph_circular_layout" title="rustworkx.graph_circular_layout"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.graph_circular_layout</span></code></a>(graph, /[, ...])</p></td>
+<td><p>Generate a circular layout of the graph</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="apiref/rustworkx.graph_shell_layout.html#rustworkx.graph_shell_layout" title="rustworkx.graph_shell_layout"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.graph_shell_layout</span></code></a>(graph, /[, ...])</p></td>
+<td><p>Generate a shell layout of the graph</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="apiref/rustworkx.graph_spiral_layout.html#rustworkx.graph_spiral_layout" title="rustworkx.graph_spiral_layout"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.graph_spiral_layout</span></code></a>(graph, /[, ...])</p></td>
+<td><p>Generate a spiral layout of the graph</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="apiref/rustworkx.graph_spring_layout.html#rustworkx.graph_spring_layout" title="rustworkx.graph_spring_layout"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.graph_spring_layout</span></code></a>(graph[, pos, ...])</p></td>
+<td><p>Position nodes using Fruchterman-Reingold force-directed algorithm.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="apiref/rustworkx.graph_num_shortest_paths_unweighted.html#rustworkx.graph_num_shortest_paths_unweighted" title="rustworkx.graph_num_shortest_paths_unweighted"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.graph_num_shortest_paths_unweighted</span></code></a>(...)</p></td>
+<td><p>Get the number of unweighted shortest paths from a source node</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="apiref/rustworkx.graph_betweenness_centrality.html#rustworkx.graph_betweenness_centrality" title="rustworkx.graph_betweenness_centrality"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.graph_betweenness_centrality</span></code></a>(graph, /)</p></td>
+<td><p>Compute the betweenness centrality of all nodes in a PyGraph.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="apiref/rustworkx.graph_eigenvector_centrality.html#rustworkx.graph_eigenvector_centrality" title="rustworkx.graph_eigenvector_centrality"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.graph_eigenvector_centrality</span></code></a>(graph, /)</p></td>
+<td><p>Compute the eigenvector centrality of a <code class="xref py py-class docutils literal notranslate"><span class="pre">PyGraph</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="apiref/rustworkx.graph_unweighted_average_shortest_path_length.html#rustworkx.graph_unweighted_average_shortest_path_length" title="rustworkx.graph_unweighted_average_shortest_path_length"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.graph_unweighted_average_shortest_path_length</span></code></a>(...)</p></td>
+<td><p>Return the average shortest path length for a <a class="reference internal" href="apiref/rustworkx.PyGraph.html#rustworkx.PyGraph" title="rustworkx.PyGraph"><code class="xref py py-class docutils literal notranslate"><span class="pre">PyGraph</span></code></a> with unweighted edges.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="apiref/rustworkx.graph_bfs_search.html#rustworkx.graph_bfs_search" title="rustworkx.graph_bfs_search"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.graph_bfs_search</span></code></a>(graph, source, ...)</p></td>
+<td><p>Breadth-first traversal of an undirected graph.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="apiref/rustworkx.graph_dijkstra_search.html#rustworkx.graph_dijkstra_search" title="rustworkx.graph_dijkstra_search"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.graph_dijkstra_search</span></code></a>(graph, ...)</p></td>
+<td><p>Dijkstra traversal of an undirected graph.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="apiref/rustworkx.graph_node_link_json.html#rustworkx.graph_node_link_json" title="rustworkx.graph_node_link_json"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.graph_node_link_json</span></code></a>(graph, /[, ...])</p></td>
+<td><p>Generate a JSON object representing a <a class="reference internal" href="apiref/rustworkx.PyGraph.html#rustworkx.PyGraph" title="rustworkx.PyGraph"><code class="xref py py-class docutils literal notranslate"><span class="pre">PyGraph</span></code></a> in a node-link format</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="exceptions">
+<h2>Exceptions<a class="headerlink" href="#exceptions" title="Permalink to this heading">¶</a></h2>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="apiref/rustworkx.InvalidNode.html#rustworkx.InvalidNode" title="rustworkx.InvalidNode"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.InvalidNode</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="apiref/rustworkx.DAGWouldCycle.html#rustworkx.DAGWouldCycle" title="rustworkx.DAGWouldCycle"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.DAGWouldCycle</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="apiref/rustworkx.NoEdgeBetweenNodes.html#rustworkx.NoEdgeBetweenNodes" title="rustworkx.NoEdgeBetweenNodes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.NoEdgeBetweenNodes</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="apiref/rustworkx.DAGHasCycle.html#rustworkx.DAGHasCycle" title="rustworkx.DAGHasCycle"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.DAGHasCycle</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="apiref/rustworkx.NegativeCycle.html#rustworkx.NegativeCycle" title="rustworkx.NegativeCycle"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.NegativeCycle</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="apiref/rustworkx.NoSuitableNeighbors.html#rustworkx.NoSuitableNeighbors" title="rustworkx.NoSuitableNeighbors"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.NoSuitableNeighbors</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="apiref/rustworkx.NoPathFound.html#rustworkx.NoPathFound" title="rustworkx.NoPathFound"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.NoPathFound</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="apiref/rustworkx.NullGraph.html#rustworkx.NullGraph" title="rustworkx.NullGraph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.NullGraph</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="apiref/rustworkx.visit.StopSearch.html#rustworkx.visit.StopSearch" title="rustworkx.visit.StopSearch"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.visit.StopSearch</span></code></a></p></td>
+<td><p>Stop graph traversal</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="apiref/rustworkx.visit.PruneSearch.html#rustworkx.visit.PruneSearch" title="rustworkx.visit.PruneSearch"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.visit.PruneSearch</span></code></a></p></td>
+<td><p>Prune part of the search tree while traversing a graph.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="apiref/rustworkx.JSONSerializationError.html#rustworkx.JSONSerializationError" title="rustworkx.JSONSerializationError"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.JSONSerializationError</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="custom-return-types">
+<h2>Custom Return Types<a class="headerlink" href="#custom-return-types" title="Permalink to this heading">¶</a></h2>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="apiref/rustworkx.BFSSuccessors.html#rustworkx.BFSSuccessors" title="rustworkx.BFSSuccessors"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.BFSSuccessors</span></code></a></p></td>
+<td><p>A custom class for the return from <a class="reference internal" href="apiref/rustworkx.bfs_successors.html#rustworkx.bfs_successors" title="rustworkx.bfs_successors"><code class="xref py py-func docutils literal notranslate"><span class="pre">rustworkx.bfs_successors()</span></code></a></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="apiref/rustworkx.NodeIndices.html#rustworkx.NodeIndices" title="rustworkx.NodeIndices"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.NodeIndices</span></code></a></p></td>
+<td><p>A custom class for the return of node indices</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="apiref/rustworkx.EdgeIndices.html#rustworkx.EdgeIndices" title="rustworkx.EdgeIndices"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.EdgeIndices</span></code></a></p></td>
+<td><p>A custom class for the return of edge indices</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="apiref/rustworkx.EdgeList.html#rustworkx.EdgeList" title="rustworkx.EdgeList"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.EdgeList</span></code></a></p></td>
+<td><p>A custom class for the return of edge lists</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="apiref/rustworkx.WeightedEdgeList.html#rustworkx.WeightedEdgeList" title="rustworkx.WeightedEdgeList"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.WeightedEdgeList</span></code></a></p></td>
+<td><p>A custom class for the return of edge lists with weights</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="apiref/rustworkx.EdgeIndexMap.html#rustworkx.EdgeIndexMap" title="rustworkx.EdgeIndexMap"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.EdgeIndexMap</span></code></a></p></td>
+<td><p>A class representing a mapping of edge indices to a tuple of node indices and weight/data payload</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="apiref/rustworkx.PathMapping.html#rustworkx.PathMapping" title="rustworkx.PathMapping"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.PathMapping</span></code></a></p></td>
+<td><p>A custom class for the return of paths to target nodes</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="apiref/rustworkx.PathLengthMapping.html#rustworkx.PathLengthMapping" title="rustworkx.PathLengthMapping"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.PathLengthMapping</span></code></a></p></td>
+<td><p>A custom class for the return of path lengths to target nodes</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="apiref/rustworkx.Pos2DMapping.html#rustworkx.Pos2DMapping" title="rustworkx.Pos2DMapping"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.Pos2DMapping</span></code></a></p></td>
+<td><p>A class representing a mapping of node indices to 2D positions</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="apiref/rustworkx.AllPairsPathMapping.html#rustworkx.AllPairsPathMapping" title="rustworkx.AllPairsPathMapping"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.AllPairsPathMapping</span></code></a></p></td>
+<td><p>A custom class for the return of paths to target nodes from all nodes</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="apiref/rustworkx.AllPairsPathLengthMapping.html#rustworkx.AllPairsPathLengthMapping" title="rustworkx.AllPairsPathLengthMapping"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.AllPairsPathLengthMapping</span></code></a></p></td>
+<td><p>A custom class for the return of path lengths to target nodes from all nodes</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="apiref/rustworkx.CentralityMapping.html#rustworkx.CentralityMapping" title="rustworkx.CentralityMapping"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.CentralityMapping</span></code></a></p></td>
+<td><p>A custom class for the return of centralities at target nodes</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="apiref/rustworkx.Chains.html#rustworkx.Chains" title="rustworkx.Chains"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.Chains</span></code></a></p></td>
+<td><p>A custom class for the return of a list of list of edges.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="apiref/rustworkx.NodeMap.html#rustworkx.NodeMap" title="rustworkx.NodeMap"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.NodeMap</span></code></a></p></td>
+<td><p>A class representing a mapping of node indices to node indices</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="apiref/rustworkx.ProductNodeMap.html#rustworkx.ProductNodeMap" title="rustworkx.ProductNodeMap"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.ProductNodeMap</span></code></a></p></td>
+<td><p>A class representing a mapping of tuple of node indices to node indices.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="apiref/rustworkx.BiconnectedComponents.html#rustworkx.BiconnectedComponents" title="rustworkx.BiconnectedComponents"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rustworkx.BiconnectedComponents</span></code></a></p></td>
+<td><p>A class representing a mapping of edge endpoints to biconnected component number that the edge belongs.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+</section>
+
+
+             </article>
+             
+            </div>
+            <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="apiref/rustworkx.PyGraph.html" class="btn btn-neutral float-right" title="PyGraph" accesskey="n" rel="next">Next <img src="_static/images/chevron-right-orange.svg" class="next-page"></a>
+      
+      
+        <a href="tutorial/betweenness_centrality.html" class="btn btn-neutral" title="Working with Betweenness Centrality" accesskey="p" rel="prev"><img src="_static/images/chevron-right-orange.svg" class="previous-page"> Previous</a>
+      
+    </div>
+  
+
+  
+
+    <hr>
+
+  
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2021, rustworkx Contributors.
+
+    </p>
+  </div>
+    
+      <div>
+        Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+      </div>
+     
+
+</footer>
+
+          </div>
+        </div>
+
+        <div class="pytorch-content-right" id="pytorch-content-right">
+          <div class="pytorch-right-menu" id="pytorch-right-menu">
+            <div class="pytorch-side-scroll" id="pytorch-side-scroll-right">
+              <ul>
+<li><a class="reference internal" href="#">Rustworkx API Reference</a><ul>
+<li><a class="reference internal" href="#graph-classes">Graph Classes</a></li>
+<li><a class="reference internal" href="#algorithm-functions">Algorithm Functions</a><ul>
+<li><a class="reference internal" href="#shortest-paths">Shortest Paths</a></li>
+<li><a class="reference internal" href="#centrality">Centrality</a></li>
+<li><a class="reference internal" href="#traversal">Traversal</a></li>
+<li><a class="reference internal" href="#dag-algorithms">DAG Algorithms</a></li>
+<li><a class="reference internal" href="#tree">Tree</a></li>
+<li><a class="reference internal" href="#isomorphism">Isomorphism</a></li>
+<li><a class="reference internal" href="#matching">Matching</a></li>
+<li><a class="reference internal" href="#connectivity-and-cycles">Connectivity and Cycles</a></li>
+<li><a class="reference internal" href="#graph-operations">Graph Operations</a></li>
+<li><a class="reference internal" href="#other-algorithm-functions">Other Algorithm Functions</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#generators">Generators</a></li>
+<li><a class="reference internal" href="#random-graph-generator-functions">Random Graph Generator Functions</a></li>
+<li><a class="reference internal" href="#layout-functions">Layout Functions</a></li>
+<li><a class="reference internal" href="#serialization">Serialization</a></li>
+<li><a class="reference internal" href="#converters">Converters</a></li>
+<li><a class="reference internal" href="#api-functions-for-pydigraph">API functions for PyDigraph</a></li>
+<li><a class="reference internal" href="#api-functions-for-pygraph">API functions for PyGraph</a></li>
+<li><a class="reference internal" href="#exceptions">Exceptions</a></li>
+<li><a class="reference internal" href="#custom-return-types">Custom Return Types</a></li>
+</ul>
+</li>
+</ul>
+
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+  
+
+     
+       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+         <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+         <script src="_static/jquery.js"></script>
+         <script src="_static/underscore.js"></script>
+         <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+         <script src="_static/doctools.js"></script>
+         <script src="_static/sphinx_highlight.js"></script>
+         <script src="_static/thebelab-helper.js"></script>
+         <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+         <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
+         <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+     
+
+  
+
+  <script type="text/javascript" src="_static/js/vendor/popper.min.js"></script>
+  <script type="text/javascript" src="_static/js/vendor/bootstrap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/list.js/1.5.0/list.min.js"></script>
+  <script type="text/javascript" src="_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+ <script type="text/javascript">
+    $(document).ready(function() {
+        $(".toggle > *").hide();
+        $(".toggle .header").show();
+        $(".toggle .header").click(function() {
+            $(this).parent().children().not(".header").toggle(400);
+            $(this).parent().children(".header").toggleClass("open");
+        })
+    });
+</script>
+
+
+  <div>
+    <br>
+  </div>
+
+  <!-- Begin Mobile Menu -->
+
+  <div class="mobile-main-menu">
+    <div class="container-fluid">
+      <div class="container">
+        <div class="mobile-main-menu-header-container">
+          <a class="header-logo" href="https://qiskit.org/" aria-label="PyTorch"></a>
+          <a class="main-menu-close-button" href="#" data-behavior="close-mobile-menu"></a>
+        </div>
+      </div>
+    </div>
+
+    <div class="mobile-main-menu-links-container">
+      <div class="main-menu">
+        <ul>
+          <li>
+            <a href="https://retworkx.readthedocs.io/en/stable/">Qiskit Documentation</a>
+          </li>
+
+          <li>
+            <a href="https://qiskit.org/learn" target="_blank">Learning Resources</a>
+          </li>
+
+          <li>
+            <a href="https://qiskit.slack.com" target="_blank">Slack Support</a>
+          </li>
+
+          <li>
+            <a href="https://github.com/Qiskit/retworkx" target="_blank">Github</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- End Mobile Menu -->
+
+  <script type="text/javascript" src="_static/js/vendor/anchor.min.js"></script>
+
+  <script type="text/javascript">
+    $(document).ready(function() {
+      mobileMenu.bind();
+      mobileTOC.bind();
+      pytorchAnchors.bind();
+      sideMenus.bind();
+      scrollToAnchor.bind();
+      highlightNavigation.bind();
+      mainMenuDropdown.bind();
+      filterTags.bind();
+
+      // Add class to links that have code blocks, since we cannot create links in code blocks
+      $("article.pytorch-article a span.pre").each(function(e) {
+        $(this).closest("a").addClass("has-code");
+      });
+    })
+  </script>
+</body>
+</html>

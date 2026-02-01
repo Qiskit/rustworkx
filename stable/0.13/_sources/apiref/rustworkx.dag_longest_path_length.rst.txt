@@ -1,0 +1,6 @@
+﻿rustworkx.dag\_longest\_path\_length
+====================================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: dag_longest_path_length

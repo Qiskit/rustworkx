@@ -1,0 +1,6 @@
+rustworkx.PyGraph.remove\_edges\_from
+=====================================
+
+.. currentmodule:: rustworkx
+
+.. automethod:: PyGraph.remove_edges_from

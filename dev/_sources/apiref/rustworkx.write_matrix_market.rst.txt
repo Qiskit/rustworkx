@@ -1,0 +1,6 @@
+﻿rustworkx.write\_matrix\_market
+===============================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: write_matrix_market

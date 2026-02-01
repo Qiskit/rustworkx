@@ -1,0 +1,6 @@
+﻿rustworkx.generators.heavy\_square\_graph
+=========================================
+
+.. currentmodule:: rustworkx.generators
+
+.. autofunction:: heavy_square_graph

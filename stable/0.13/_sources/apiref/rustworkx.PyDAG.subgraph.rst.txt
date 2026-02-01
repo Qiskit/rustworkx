@@ -1,0 +1,6 @@
+rustworkx.PyDAG.subgraph
+========================
+
+.. currentmodule:: rustworkx
+
+.. automethod:: PyDAG.subgraph

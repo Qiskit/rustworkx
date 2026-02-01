@@ -1,0 +1,6 @@
+﻿rustworkx.generators.complete\_graph
+====================================
+
+.. currentmodule:: rustworkx.generators
+
+.. autofunction:: complete_graph

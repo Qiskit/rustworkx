@@ -1,0 +1,6 @@
+﻿rustworkx.is\_directed\_acyclic\_graph
+======================================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: is_directed_acyclic_graph

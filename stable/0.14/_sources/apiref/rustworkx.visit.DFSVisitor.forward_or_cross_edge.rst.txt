@@ -1,0 +1,6 @@
+rustworkx.visit.DFSVisitor.forward\_or\_cross\_edge
+===================================================
+
+.. currentmodule:: rustworkx.visit
+
+.. automethod:: DFSVisitor.forward_or_cross_edge

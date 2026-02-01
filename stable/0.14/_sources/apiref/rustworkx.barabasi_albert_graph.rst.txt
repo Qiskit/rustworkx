@@ -1,0 +1,6 @@
+﻿rustworkx.barabasi\_albert\_graph
+=================================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: barabasi_albert_graph

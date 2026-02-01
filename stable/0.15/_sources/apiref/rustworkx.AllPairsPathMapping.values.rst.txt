@@ -1,0 +1,6 @@
+rustworkx.AllPairsPathMapping.values
+====================================
+
+.. currentmodule:: rustworkx
+
+.. automethod:: AllPairsPathMapping.values

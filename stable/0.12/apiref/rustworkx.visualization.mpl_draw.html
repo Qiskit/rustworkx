@@ -1,0 +1,514 @@
+
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>rustworkx.visualization.mpl_draw &mdash; rustworkx 0.12.1 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <!-- <link rel="stylesheet" href="../_static/pygments.css" type="text/css" /> -->
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/jupyter-sphinx.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/thebelab.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/style.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="rustworkx.visualization.graphviz_draw" href="rustworkx.visualization.graphviz_draw.html" />
+    <link rel="prev" title="Visualization" href="../visualization.html" /> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="pytorch-body">
+
+   
+
+    
+
+    <div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    <span class="rst-current-version-label">0.12</span>
+    <span class="rst-versions-dropdown-icon"></span>
+  </span>
+  <div class="rst-other-versions">
+    <dl>
+      <dt>Versions</dt>
+          <dd><a class="version" href="/documentation/retworkx/index.html">Current Release</a></dd>
+          <dd><a class="version" href="/documentation/retworkx/dev/index.html">Development</a></dd>
+      <dt>Previous Releases</dt>
+        
+            <dd><a class="version" href="/documentation/retworkx/stable/0.12/index.html">0.12</a></dd>
+        
+    </dl>
+  </div>
+  <script>
+    jQuery('.version').click((evt) => {
+      const hash = window.location.hash
+      const complete_url = evt.target.href + hash
+      window.location = complete_url
+      evt.preventDefault()
+    })
+  </script>
+</div>
+
+    <div class="table-of-contents-link-wrapper">
+      <span>Table of Contents</span>
+      <a href="#" class="toggle-table-of-contents" data-behavior="toggle-table-of-contents"></a>
+    </div>
+
+    <nav data-toggle="wy-nav-shift" class="pytorch-left-menu" id="pytorch-left-menu">
+      <div class="pytorch-side-scroll">
+        <div class="pytorch-menu pytorch-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          <div class="pytorch-left-menu-search">
+            
+
+            
+              
+              
+                <div class="version">
+                  0.12.1
+                </div>
+              
+            
+
+            
+
+
+  
+
+
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search Docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+            
+          </div>
+
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../install.html#installing-rustworkx">Installing Rustworkx</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../install.html#platform-support">Platform Support</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../install.html#using-rustworkx">Using rustworkx</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorial/index.html">Rustworkx Tutorials and Guides</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api.html">Rustworkx API</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../visualization.html">Visualization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../CONTRIBUTING.html">Contributing Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../networkx.html">rustworkx for NetworkX users</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <div class="pytorch-container">
+      <div class="pytorch-page-level-bar" id="pytorch-page-level-bar">
+        <div class="pytorch-breadcrumbs-wrapper">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="pytorch-breadcrumbs">
+    
+      <li>
+        <a href="../index.html">
+          
+            Docs
+          
+        </a> &gt;
+      </li>
+
+        
+          <li><a href="../visualization.html">Visualization</a> &gt;</li>
+        
+      <li>rustworkx.visualization.mpl_draw</li>
+    
+    
+      <li class="pytorch-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/apiref/rustworkx.visualization.mpl_draw.rst.txt" rel="nofollow"><img src="../_static/images/view-page-source-icon.svg"></a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+</div>
+        </div>
+
+        <div class="pytorch-shortcuts-wrapper" id="pytorch-shortcuts-wrapper">
+          Shortcuts
+        </div>
+      </div>
+
+      <section data-toggle="wy-nav-shift" id="pytorch-content-wrap" class="pytorch-content-wrap">
+        <div class="pytorch-content-left">
+          
+          <div class="rst-content style-external-links">
+          
+            <div role="main" class="main-content" itemscope="itemscope" itemtype="http://schema.org/Article">
+             <article itemprop="articleBody" id="pytorch-article" class="pytorch-article">
+              
+  <br><br><br><section id="rustworkx-visualization-mpl-draw">
+<h1>rustworkx.visualization.mpl_draw<a class="headerlink" href="#rustworkx-visualization-mpl-draw" title="Permalink to this heading">¶</a></h1>
+<dl class="py function">
+<dt class="sig sig-object py" id="rustworkx.visualization.mpl_draw">
+<span class="sig-name descname"><span class="pre">mpl_draw</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pos</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ax</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">arrows</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">with_labels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwds</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/rustworkx/visualization/matplotlib.html#mpl_draw"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#rustworkx.visualization.mpl_draw" title="Permalink to this definition">¶</a></dt>
+<dd><p>Draw a graph with Matplotlib.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Matplotlib is an optional dependency and will not be installed with
+rustworkx by default. If you intend to use this function make sure that
+you install matplotlib with either <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">matplotlib</span></code> or
+<code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">'rustworkx[mpl]'</span></code></p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>graph</strong> – A rustworkx graph, either a <a class="reference internal" href="rustworkx.PyGraph.html#rustworkx.PyGraph" title="rustworkx.PyGraph"><code class="xref py py-class docutils literal notranslate"><span class="pre">PyGraph</span></code></a> or a
+<a class="reference internal" href="rustworkx.PyDiGraph.html#rustworkx.PyDiGraph" title="rustworkx.PyDiGraph"><code class="xref py py-class docutils literal notranslate"><span class="pre">PyDiGraph</span></code></a>.</p></li>
+<li><p><strong>pos</strong> (<em>dict</em>) – An optional dictionary (or
+a <a class="reference internal" href="rustworkx.Pos2DMapping.html#rustworkx.Pos2DMapping" title="rustworkx.Pos2DMapping"><code class="xref py py-class docutils literal notranslate"><span class="pre">Pos2DMapping</span></code></a> object) with nodes as keys and
+positions as values. If not specified a spring layout positioning will
+be computed. See <cite>layout_functions</cite> for functions that compute
+node positions.</p></li>
+<li><p><strong>ax</strong> (<em>matplotlib.Axes</em>) – An optional Matplotlib Axes object to draw the
+graph in.</p></li>
+<li><p><strong>arrows</strong> (<em>bool</em>) – For <a class="reference internal" href="rustworkx.PyDiGraph.html#rustworkx.PyDiGraph" title="rustworkx.PyDiGraph"><code class="xref py py-class docutils literal notranslate"><span class="pre">PyDiGraph</span></code></a> objects if <code class="docutils literal notranslate"><span class="pre">True</span></code>
+draw arrowheads. (defaults to <code class="docutils literal notranslate"><span class="pre">True</span></code>) Note, that the Arrows will
+be the same color as edges.</p></li>
+<li><p><strong>arrowstyle</strong> (<em>str</em>) – An optional string for directed graphs to choose
+the style of the arrowsheads. See
+<a class="reference external" href="https://matplotlib.org/stable/api/_as_gen/matplotlib.patches.ArrowStyle.html#matplotlib.patches.ArrowStyle" title="(in Matplotlib v3.8.2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">matplotlib.patches.ArrowStyle</span></code></a> for more options. By default the
+value is set to <code class="docutils literal notranslate"><span class="pre">'-\|&gt;'</span></code>.</p></li>
+<li><p><strong>arrow_size</strong> (<em>int</em>) – For directed graphs, choose the size of the arrow
+head’s length and width. See
+<a class="reference external" href="https://matplotlib.org/stable/api/_as_gen/matplotlib.patches.FancyArrowPatch.html#matplotlib.patches.FancyArrowPatch" title="(in Matplotlib v3.8.2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">matplotlib.patches.FancyArrowPatch</span></code></a> attribute and constructor
+kwarg <code class="docutils literal notranslate"><span class="pre">mutation_scale</span></code> for more info. Defaults to 10.</p></li>
+<li><p><strong>with_labels</strong> (<em>bool</em>) – Set to <code class="docutils literal notranslate"><span class="pre">True</span></code> to draw labels on the nodes. Edge
+labels will only be drawn if the <code class="docutils literal notranslate"><span class="pre">edge_labels</span></code> parameter is set to a
+function. Defaults to <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p></li>
+<li><p><strong>node_list</strong> (<em>list</em>) – An optional list of node indices in the graph to
+draw. If not specified all nodes will be drawn.</p></li>
+<li><p><strong>edge_list</strong> (<em>list</em>) – An option list of edges in the graph to draw. If not
+specified all edges will be drawn</p></li>
+<li><p><strong>node_size</strong> (<em>int</em><em>|</em><em>list</em>) – Optional size of nodes. If an array is
+specified it must be the same length as node_list. Defaults to 300</p></li>
+<li><p><strong>node_color</strong> – Optional node color. Can be a single color or
+a sequence of colors with the same length as node_list. Color can be
+string or rgb (or rgba) tuple of floats from 0-1. If numeric values
+are specified they will be mapped to colors using the <code class="docutils literal notranslate"><span class="pre">cmap</span></code> and
+<code class="docutils literal notranslate"><span class="pre">vmin</span></code>,``vmax`` parameters. See <code class="xref py py-func docutils literal notranslate"><span class="pre">matplotlib.scatter()</span></code> for more
+details. Defaults to <code class="docutils literal notranslate"><span class="pre">'#1f78b4'</span></code>)</p></li>
+<li><p><strong>node_shape</strong> (<em>str</em>) – The optional shape node. The specification is the
+same as the <a class="reference external" href="https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.scatter.html#matplotlib.pyplot.scatter" title="(in Matplotlib v3.8.2)"><code class="xref py py-func docutils literal notranslate"><span class="pre">matplotlib.pyplot.scatter()</span></code></a> function’s <code class="docutils literal notranslate"><span class="pre">marker</span></code>
+kwarg, valid options are one of
+<code class="docutils literal notranslate"><span class="pre">['s',</span> <span class="pre">'o',</span> <span class="pre">'^',</span> <span class="pre">'&gt;',</span> <span class="pre">'v',</span> <span class="pre">'&lt;',</span> <span class="pre">'d',</span> <span class="pre">'p',</span> <span class="pre">'h',</span> <span class="pre">'8']</span></code>. Defaults to
+<code class="docutils literal notranslate"><span class="pre">'o'</span></code></p></li>
+<li><p><strong>alpha</strong> (<em>float</em>) – Optional value for node and edge transparency</p></li>
+<li><p><strong>cmap</strong> (<a class="reference external" href="https://matplotlib.org/stable/api/_as_gen/matplotlib.colors.Colormap.html#matplotlib.colors.Colormap" title="(in Matplotlib v3.8.2)"><em>matplotlib.colors.Colormap</em></a>) – An optional Matplotlib colormap
+object for mapping intensities of nodes</p></li>
+<li><p><strong>vmin</strong> (<em>float</em>) – Optional minimum value for node colormap scaling</p></li>
+<li><p><strong>vmax</strong> (<em>float</em>) – Optional minimum value for node colormap scaling</p></li>
+<li><p><strong>linewidths</strong> (<em>float</em><em>|</em><em>sequence</em>) – An optional line width for symbol
+borders. If a sequence is specified it must be the same length as
+node_list. Defaults to 1.0</p></li>
+<li><p><strong>width</strong> (<em>float</em><em>|</em><em>sequence</em>) – An optional width to use for edges. Can
+either be a float or sequence  of floats. If a sequence is specified
+it must be the same length as node_list. Defaults to 1.0</p></li>
+<li><p><strong>edge_color</strong> (<em>str</em><em>|</em><em>sequence</em>) – color or array of colors (default=’k’)
+Edge color. Can be a single color or a sequence of colors with the same
+length as edge_list. Color can be string or rgb (or rgba) tuple of
+floats from 0-1. If numeric values are specified they will be
+mapped to colors using the <code class="docutils literal notranslate"><span class="pre">edge_cmap</span></code> and <code class="docutils literal notranslate"><span class="pre">edge_vmin</span></code>,
+<code class="docutils literal notranslate"><span class="pre">edge_vmax</span></code> parameters.</p></li>
+<li><p><strong>edge_cmap</strong> (<a class="reference external" href="https://matplotlib.org/stable/api/_as_gen/matplotlib.colors.Colormap.html#matplotlib.colors.Colormap" title="(in Matplotlib v3.8.2)"><em>matplotlib.colors.Colormap</em></a>) – An optional Matplotlib
+colormap for mapping intensities of edges.</p></li>
+<li><p><strong>edge_vmin</strong> (<em>float</em>) – Optional minimum value for edge colormap scaling</p></li>
+<li><p><strong>edge_vmax</strong> (<em>float</em>) – Optional maximum value for node colormap scaling</p></li>
+<li><p><strong>style</strong> (<em>str</em>) – An optional string to specify the edge line style.
+For example, <code class="docutils literal notranslate"><span class="pre">'-'</span></code>, <code class="docutils literal notranslate"><span class="pre">'--'</span></code>, <code class="docutils literal notranslate"><span class="pre">'-.'</span></code>, <code class="docutils literal notranslate"><span class="pre">':'</span></code> or words like
+<code class="docutils literal notranslate"><span class="pre">'solid'</span></code> or <code class="docutils literal notranslate"><span class="pre">'dashed'</span></code>. See the
+<a class="reference external" href="https://matplotlib.org/stable/api/_as_gen/matplotlib.patches.FancyArrowPatch.html#matplotlib.patches.FancyArrowPatch" title="(in Matplotlib v3.8.2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">matplotlib.patches.FancyArrowPatch</span></code></a> attribute and kwarg
+<code class="docutils literal notranslate"><span class="pre">linestyle</span></code> for more details. Defaults to <code class="docutils literal notranslate"><span class="pre">'solid'</span></code>.</p></li>
+<li><p><strong>labels</strong> (<em>func</em>) – <p>An optional callback function that will be passed a
+node payload and return a string label for the node. For example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">labels</span><span class="o">=</span><span class="nb">str</span>
+</pre></div>
+</div>
+<p>could be used to just return a string cast of the node’s data payload.
+Or something like:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">labels</span><span class="o">=</span><span class="k">lambda</span> <span class="n">node</span><span class="p">:</span> <span class="n">node</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>could be used if the node payloads are dictionaries.</p>
+</p></li>
+<li><p><strong>edge_labels</strong> (<em>func</em>) – <p>An optional callback function that will be passed
+an edge payload and return a string label for the edge. For example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">edge_labels</span><span class="o">=</span><span class="nb">str</span>
+</pre></div>
+</div>
+<p>could be used to just return a string cast of the edge’s data payload.
+Or something like:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">edge_labels</span><span class="o">=</span><span class="k">lambda</span> <span class="n">edge</span><span class="p">:</span> <span class="n">edge</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>could be used if the edge payloads are dictionaries. If this is set
+edge labels will be drawn in the visualization.</p>
+</p></li>
+<li><p><strong>font_size</strong> (<em>int</em>) – An optional fontsize to use for text labels, By
+default a value of 12 is used for nodes and 10 for edges.</p></li>
+<li><p><strong>font_color</strong> (<em>str</em>) – An optional font color for strings. By default
+<code class="docutils literal notranslate"><span class="pre">'k'</span></code> (ie black) is set.</p></li>
+<li><p><strong>font_weight</strong> (<em>str</em>) – An optional string used to specify the font weight.
+By default a value of <code class="docutils literal notranslate"><span class="pre">'normal'</span></code> is used.</p></li>
+<li><p><strong>font_family</strong> (<em>str</em>) – An optional font family to use for strings. By
+default <code class="docutils literal notranslate"><span class="pre">'sans-serif'</span></code> is used.</p></li>
+<li><p><strong>label</strong> (<em>str</em>) – An optional string label to use for the graph legend.</p></li>
+<li><p><strong>connectionstyle</strong> (<em>str</em>) – An optional value used to create a curved arc
+of rounding radius rad. For example,
+<code class="docutils literal notranslate"><span class="pre">connectionstyle='arc3,rad=0.2'</span></code>. See
+<a class="reference external" href="https://matplotlib.org/stable/api/_as_gen/matplotlib.patches.ConnectionStyle.html#matplotlib.patches.ConnectionStyle" title="(in Matplotlib v3.8.2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">matplotlib.patches.ConnectionStyle</span></code></a> and
+<a class="reference external" href="https://matplotlib.org/stable/api/_as_gen/matplotlib.patches.FancyArrowPatch.html#matplotlib.patches.FancyArrowPatch" title="(in Matplotlib v3.8.2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">matplotlib.patches.FancyArrowPatch</span></code></a> for more info. By default
+this is set to <code class="docutils literal notranslate"><span class="pre">&quot;arc3&quot;</span></code>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A matplotlib figure for the visualization if not running with an
+interactive backend (like in jupyter) or if <code class="docutils literal notranslate"><span class="pre">ax</span></code> is not set.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://matplotlib.org/stable/api/figure_api.html#matplotlib.figure.Figure" title="(in Matplotlib v3.8.2)">matplotlib.figure.Figure</a></p>
+</dd>
+</dl>
+<p>For Example:</p>
+<div class="jupyter_cell jupyter_container docutils container">
+<div class="cell_input code_cell docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+
+<span class="kn">import</span> <span class="nn">rustworkx</span> <span class="k">as</span> <span class="nn">rx</span>
+<span class="kn">from</span> <span class="nn">rustworkx.visualization</span> <span class="kn">import</span> <span class="n">mpl_draw</span>
+
+<span class="n">G</span> <span class="o">=</span> <span class="n">rx</span><span class="o">.</span><span class="n">generators</span><span class="o">.</span><span class="n">directed_path_graph</span><span class="p">(</span><span class="mi">25</span><span class="p">)</span>
+<span class="n">mpl_draw</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">draw</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<img alt="../_images/rustworkx.visualization.mpl_draw_0_0.png" src="../_images/rustworkx.visualization.mpl_draw_0_0.png" />
+</div>
+</div>
+</dd></dl>
+
+</section>
+
+
+             </article>
+             
+            </div>
+            <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="rustworkx.visualization.graphviz_draw.html" class="btn btn-neutral float-right" title="rustworkx.visualization.graphviz_draw" accesskey="n" rel="next">Next <img src="../_static/images/chevron-right-orange.svg" class="next-page"></a>
+      
+      
+        <a href="../visualization.html" class="btn btn-neutral" title="Visualization" accesskey="p" rel="prev"><img src="../_static/images/chevron-right-orange.svg" class="previous-page"> Previous</a>
+      
+    </div>
+  
+
+  
+
+    <hr>
+
+  
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2021, rustworkx Contributors.
+
+    </p>
+  </div>
+    
+      <div>
+        Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+      </div>
+     
+
+</footer>
+
+          </div>
+        </div>
+
+        <div class="pytorch-content-right" id="pytorch-content-right">
+          <div class="pytorch-right-menu" id="pytorch-right-menu">
+            <div class="pytorch-side-scroll" id="pytorch-side-scroll-right">
+              <ul>
+<li><a class="reference internal" href="#">rustworkx.visualization.mpl_draw</a><ul>
+<li><a class="reference internal" href="#rustworkx.visualization.mpl_draw"><code class="docutils literal notranslate"><span class="pre">mpl_draw()</span></code></a></li>
+</ul>
+</li>
+</ul>
+
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+  
+
+     
+       <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+         <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+         <script src="../_static/jquery.js"></script>
+         <script src="../_static/underscore.js"></script>
+         <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+         <script src="../_static/doctools.js"></script>
+         <script src="../_static/sphinx_highlight.js"></script>
+         <script src="../_static/thebelab-helper.js"></script>
+         <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+         <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
+     
+
+  
+
+  <script type="text/javascript" src="../_static/js/vendor/popper.min.js"></script>
+  <script type="text/javascript" src="../_static/js/vendor/bootstrap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/list.js/1.5.0/list.min.js"></script>
+  <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+ <script type="text/javascript">
+    $(document).ready(function() {
+        $(".toggle > *").hide();
+        $(".toggle .header").show();
+        $(".toggle .header").click(function() {
+            $(this).parent().children().not(".header").toggle(400);
+            $(this).parent().children(".header").toggleClass("open");
+        })
+    });
+</script>
+
+
+  <div>
+    <br>
+  </div>
+
+  <!-- Begin Mobile Menu -->
+
+  <div class="mobile-main-menu">
+    <div class="container-fluid">
+      <div class="container">
+        <div class="mobile-main-menu-header-container">
+          <a class="header-logo" href="https://qiskit.org/" aria-label="PyTorch"></a>
+          <a class="main-menu-close-button" href="#" data-behavior="close-mobile-menu"></a>
+        </div>
+      </div>
+    </div>
+
+    <div class="mobile-main-menu-links-container">
+      <div class="main-menu">
+        <ul>
+          <li>
+            <a href="https://retworkx.readthedocs.io/en/stable/">Qiskit Documentation</a>
+          </li>
+
+          <li>
+            <a href="https://qiskit.org/learn" target="_blank">Learning Resources</a>
+          </li>
+
+          <li>
+            <a href="https://qiskit.slack.com" target="_blank">Slack Support</a>
+          </li>
+
+          <li>
+            <a href="https://github.com/Qiskit/retworkx" target="_blank">Github</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- End Mobile Menu -->
+
+  <script type="text/javascript" src="../_static/js/vendor/anchor.min.js"></script>
+
+  <script type="text/javascript">
+    $(document).ready(function() {
+      mobileMenu.bind();
+      mobileTOC.bind();
+      pytorchAnchors.bind();
+      sideMenus.bind();
+      scrollToAnchor.bind();
+      highlightNavigation.bind();
+      mainMenuDropdown.bind();
+      filterTags.bind();
+
+      // Add class to links that have code blocks, since we cannot create links in code blocks
+      $("article.pytorch-article a span.pre").each(function(e) {
+        $(this).closest("a").addClass("has-code");
+      });
+    })
+  </script>
+</body>
+</html>

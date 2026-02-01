@@ -1,0 +1,6 @@
+﻿rustworkx.generators.lollipop\_graph
+====================================
+
+.. currentmodule:: rustworkx.generators
+
+.. autofunction:: lollipop_graph

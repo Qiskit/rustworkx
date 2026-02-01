@@ -1,0 +1,6 @@
+rustworkx.EdgeCentralityMapping.items
+=====================================
+
+.. currentmodule:: rustworkx
+
+.. automethod:: EdgeCentralityMapping.items

@@ -1,0 +1,6 @@
+﻿rustworkx.graph\_unweighted\_average\_shortest\_path\_length
+============================================================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: graph_unweighted_average_shortest_path_length

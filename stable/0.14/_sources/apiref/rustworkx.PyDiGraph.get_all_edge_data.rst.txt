@@ -1,0 +1,6 @@
+rustworkx.PyDiGraph.get\_all\_edge\_data
+========================================
+
+.. currentmodule:: rustworkx
+
+.. automethod:: PyDiGraph.get_all_edge_data

@@ -1,0 +1,6 @@
+﻿rustworkx.bridges
+=================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: bridges

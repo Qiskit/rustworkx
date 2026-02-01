@@ -1,0 +1,6 @@
+﻿rustworkx.FailedToConverge
+==========================
+
+.. currentmodule:: rustworkx
+
+.. autoexception:: FailedToConverge

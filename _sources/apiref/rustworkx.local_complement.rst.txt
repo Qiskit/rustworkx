@@ -1,0 +1,6 @@
+﻿rustworkx.local\_complement
+===========================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: local_complement

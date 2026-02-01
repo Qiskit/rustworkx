@@ -1,0 +1,6 @@
+rustworkx.PyDAG.merge\_nodes
+============================
+
+.. currentmodule:: rustworkx
+
+.. automethod:: PyDAG.merge_nodes

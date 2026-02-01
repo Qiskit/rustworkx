@@ -1,0 +1,6 @@
+﻿rustworkx.dominance\_frontiers
+==============================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: dominance_frontiers

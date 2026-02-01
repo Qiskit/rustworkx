@@ -1,0 +1,6 @@
+﻿rustworkx.graph\_floyd\_warshall
+================================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: graph_floyd_warshall

@@ -1,0 +1,6 @@
+﻿rustworkx.stoer\_wagner\_min\_cut
+=================================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: stoer_wagner_min_cut

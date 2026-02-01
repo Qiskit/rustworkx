@@ -1,0 +1,103 @@
+﻿PyDAG
+=====
+
+.. currentmodule:: rustworkx
+
+.. autoclass:: PyDAG
+   :no-members:
+   :show-inheritance:
+
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+      :toctree: ../apiref/
+
+      ~PyDAG.add_child
+      ~PyDAG.add_edge
+      ~PyDAG.add_edges_from
+      ~PyDAG.add_edges_from_no_data
+      ~PyDAG.add_node
+      ~PyDAG.add_nodes_from
+      ~PyDAG.add_parent
+      ~PyDAG.adj
+      ~PyDAG.adj_direction
+      ~PyDAG.clear
+      ~PyDAG.clear_edges
+      ~PyDAG.compose
+      ~PyDAG.contract_nodes
+      ~PyDAG.copy
+      ~PyDAG.edge_index_map
+      ~PyDAG.edge_indices
+      ~PyDAG.edge_indices_from_endpoints
+      ~PyDAG.edge_list
+      ~PyDAG.edge_subgraph
+      ~PyDAG.edges
+      ~PyDAG.extend_from_edge_list
+      ~PyDAG.extend_from_weighted_edge_list
+      ~PyDAG.filter_edges
+      ~PyDAG.filter_nodes
+      ~PyDAG.find_adjacent_node_by_edge
+      ~PyDAG.find_node_by_weight
+      ~PyDAG.find_predecessor_node_by_edge
+      ~PyDAG.find_predecessors_by_edge
+      ~PyDAG.find_successors_by_edge
+      ~PyDAG.from_adjacency_matrix
+      ~PyDAG.from_complex_adjacency_matrix
+      ~PyDAG.get_all_edge_data
+      ~PyDAG.get_edge_data
+      ~PyDAG.get_edge_data_by_index
+      ~PyDAG.get_edge_endpoints_by_index
+      ~PyDAG.get_node_data
+      ~PyDAG.has_edge
+      ~PyDAG.has_node
+      ~PyDAG.has_parallel_edges
+      ~PyDAG.in_degree
+      ~PyDAG.in_edges
+      ~PyDAG.incident_edge_index_map
+      ~PyDAG.incident_edges
+      ~PyDAG.insert_node_on_in_edges
+      ~PyDAG.insert_node_on_in_edges_multiple
+      ~PyDAG.insert_node_on_out_edges
+      ~PyDAG.insert_node_on_out_edges_multiple
+      ~PyDAG.is_symmetric
+      ~PyDAG.make_symmetric
+      ~PyDAG.merge_nodes
+      ~PyDAG.neighbors
+      ~PyDAG.node_indexes
+      ~PyDAG.node_indices
+      ~PyDAG.nodes
+      ~PyDAG.num_edges
+      ~PyDAG.num_nodes
+      ~PyDAG.out_degree
+      ~PyDAG.out_edges
+      ~PyDAG.predecessor_indices
+      ~PyDAG.predecessors
+      ~PyDAG.read_edge_list
+      ~PyDAG.remove_edge
+      ~PyDAG.remove_edge_from_index
+      ~PyDAG.remove_edges_from
+      ~PyDAG.remove_node
+      ~PyDAG.remove_node_retain_edges
+      ~PyDAG.remove_node_retain_edges_by_id
+      ~PyDAG.remove_node_retain_edges_by_key
+      ~PyDAG.remove_nodes_from
+      ~PyDAG.reverse
+      ~PyDAG.subgraph
+      ~PyDAG.substitute_node_with_subgraph
+      ~PyDAG.successor_indices
+      ~PyDAG.successors
+      ~PyDAG.to_dot
+      ~PyDAG.to_undirected
+      ~PyDAG.update_edge
+      ~PyDAG.update_edge_by_index
+      ~PyDAG.weighted_edge_list
+      ~PyDAG.write_edge_list
+
+
+
+   .. rubric:: Attributes
+
+   .. autoattribute:: attrs
+   .. autoattribute:: check_cycle
+   .. autoattribute:: multigraph

@@ -1,0 +1,6 @@
+﻿rustworkx.bfs\_predecessors
+===========================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: bfs_predecessors

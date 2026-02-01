@@ -1,0 +1,6 @@
+﻿rustworkx.generators.generalized\_petersen\_graph
+=================================================
+
+.. currentmodule:: rustworkx.generators
+
+.. autofunction:: generalized_petersen_graph

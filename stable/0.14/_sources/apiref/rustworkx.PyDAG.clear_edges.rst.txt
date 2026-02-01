@@ -1,0 +1,6 @@
+rustworkx.PyDAG.clear\_edges
+============================
+
+.. currentmodule:: rustworkx
+
+.. automethod:: PyDAG.clear_edges

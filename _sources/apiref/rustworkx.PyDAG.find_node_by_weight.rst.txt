@@ -1,0 +1,6 @@
+rustworkx.PyDAG.find\_node\_by\_weight
+======================================
+
+.. currentmodule:: rustworkx
+
+.. automethod:: PyDAG.find_node_by_weight

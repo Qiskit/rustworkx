@@ -1,0 +1,6 @@
+﻿rustworkx.is\_isomorphic\_node\_match
+=====================================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: is_isomorphic_node_match

@@ -1,0 +1,6 @@
+﻿rustworkx.single\_source\_all\_shortest\_paths
+==============================================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: single_source_all_shortest_paths

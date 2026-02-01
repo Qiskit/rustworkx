@@ -1,0 +1,6 @@
+﻿rustworkx.dfs\_edges
+====================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: dfs_edges

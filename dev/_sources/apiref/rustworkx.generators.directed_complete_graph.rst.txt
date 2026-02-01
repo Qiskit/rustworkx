@@ -1,0 +1,6 @@
+﻿rustworkx.generators.directed\_complete\_graph
+==============================================
+
+.. currentmodule:: rustworkx.generators
+
+.. autofunction:: directed_complete_graph

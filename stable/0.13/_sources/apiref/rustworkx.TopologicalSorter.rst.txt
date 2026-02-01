@@ -1,0 +1,20 @@
+﻿TopologicalSorter
+=================
+
+.. currentmodule:: rustworkx
+
+.. autoclass:: TopologicalSorter
+   :no-members:
+   :show-inheritance:
+
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+      :toctree: ../apiref/
+
+      ~TopologicalSorter.done
+      ~TopologicalSorter.get_ready
+      ~TopologicalSorter.is_active
+
+

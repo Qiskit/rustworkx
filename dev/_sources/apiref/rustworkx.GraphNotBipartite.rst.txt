@@ -1,0 +1,6 @@
+﻿rustworkx.GraphNotBipartite
+===========================
+
+.. currentmodule:: rustworkx
+
+.. autoexception:: GraphNotBipartite

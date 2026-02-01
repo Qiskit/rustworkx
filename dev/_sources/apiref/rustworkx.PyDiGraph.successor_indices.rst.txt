@@ -1,0 +1,6 @@
+rustworkx.PyDiGraph.successor\_indices
+======================================
+
+.. currentmodule:: rustworkx
+
+.. automethod:: PyDiGraph.successor_indices

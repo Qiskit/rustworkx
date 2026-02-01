@@ -1,0 +1,6 @@
+rustworkx.PyDiGraph.add\_parent
+===============================
+
+.. currentmodule:: rustworkx
+
+.. automethod:: PyDiGraph.add_parent

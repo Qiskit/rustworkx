@@ -1,0 +1,6 @@
+﻿rustworkx.shell\_layout
+=======================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: shell_layout

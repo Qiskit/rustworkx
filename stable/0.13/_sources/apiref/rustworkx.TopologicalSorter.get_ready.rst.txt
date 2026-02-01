@@ -1,0 +1,6 @@
+rustworkx.TopologicalSorter.get\_ready
+======================================
+
+.. currentmodule:: rustworkx
+
+.. automethod:: TopologicalSorter.get_ready

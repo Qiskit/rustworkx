@@ -1,0 +1,6 @@
+﻿rustworkx.graph\_astar\_shortest\_path
+======================================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: graph_astar_shortest_path
