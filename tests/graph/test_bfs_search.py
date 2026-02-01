@@ -57,7 +57,6 @@ class TestBfsSearch(unittest.TestCase):
 
     def test_graph_bfs_tree_edges_restricted(self):
         class TreeEdgesRecorderRestricted(rustworkx.visit.BFSVisitor):
-
             prohibited = [(0, 2), (1, 2)]
 
             def __init__(self):
@@ -75,7 +74,6 @@ class TestBfsSearch(unittest.TestCase):
 
     def test_graph_bfs_goal_search_with_stop_search_exception(self):
         class GoalSearch(rustworkx.visit.BFSVisitor):
-
             goal = 3
 
             def __init__(self):
@@ -107,7 +105,6 @@ class TestBfsSearch(unittest.TestCase):
             pass
 
         class GoalSearch(rustworkx.visit.BFSVisitor):
-
             goal = 3
 
             def __init__(self):

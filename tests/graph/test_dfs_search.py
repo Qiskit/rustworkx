@@ -57,7 +57,6 @@ class TestDfsSearch(unittest.TestCase):
 
     def test_graph_dfs_tree_edges_restricted(self):
         class TreeEdgesRecorderRestricted(rustworkx.visit.DFSVisitor):
-
             prohibited = [(0, 2), (1, 2)]
 
             def __init__(self):
@@ -75,7 +74,6 @@ class TestDfsSearch(unittest.TestCase):
 
     def test_graph_dfs_goal_search(self):
         class GoalSearch(rustworkx.visit.DFSVisitor):
-
             goal = 3
 
             def __init__(self):

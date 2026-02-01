@@ -71,7 +71,6 @@ class TestDijkstraSearch(unittest.TestCase):
 
     def test_digraph_dijkstra_goal_search_with_stop_search_exception(self):
         class GoalSearch(rustworkx.visit.DijkstraVisitor):
-
             goal = 3
 
             def __init__(self):
@@ -107,7 +106,6 @@ class TestDijkstraSearch(unittest.TestCase):
             pass
 
         class GoalSearch(rustworkx.visit.DijkstraVisitor):
-
             goal = 3
 
             def __init__(self):
@@ -143,7 +141,6 @@ class TestDijkstraSearch(unittest.TestCase):
 
     def test_digraph_dijkstra_goal_search_with_prohibited_edges(self):
         class GoalSearch(rustworkx.visit.DijkstraVisitor):
-
             goal = 3
             prohibited = [(5, 3)]
 

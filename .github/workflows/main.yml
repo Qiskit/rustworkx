@@ -37,8 +37,8 @@ jobs:
         run: cargo fmt --all -- --check
       - name: Clippy
         run: cargo clippy --workspace --all-targets -- -D warnings
-      - name: Black Codestyle Format
-        run: black --check --diff rustworkx tests
+      - name: Ruff Codestyle Format
+        run: ruff format --check --diff rustworkx tests
       - name: Python Lint
         run: ruff check rustworkx setup.py tests
       - name: Check stray release notes
