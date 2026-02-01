@@ -112,7 +112,7 @@ class TestDot(unittest.TestCase):
         graph = rustworkx.undirected_gnp_random_graph(3, 0.9, seed=42)
         dot_str = graph.to_dot(lambda _: {}, lambda _: {})
         self.assertEqual(
-            "graph {\n0 ;\n1 ;\n2 ;\n1 -- 0 ;\n2 -- 0 ;\n" "2 -- 1 ;\n}\n",
+            "graph {\n0 ;\n1 ;\n2 ;\n1 -- 0 ;\n2 -- 0 ;\n2 -- 1 ;\n}\n",
             dot_str,
         )
 
@@ -120,7 +120,7 @@ class TestDot(unittest.TestCase):
         graph = rustworkx.undirected_gnp_random_graph(3, 0.9, seed=42)
         dot_str = graph.to_dot(lambda _: {}, lambda _: {}, {"bgcolor": "red"})
         self.assertEqual(
-            "graph {\nbgcolor=red ;\n0 ;\n1 ;\n2 ;\n1 -- 0 ;\n" "2 -- 0 ;\n2 -- 1 ;\n}\n",
+            "graph {\nbgcolor=red ;\n0 ;\n1 ;\n2 ;\n1 -- 0 ;\n2 -- 0 ;\n2 -- 1 ;\n}\n",
             dot_str,
         )
 
@@ -150,7 +150,6 @@ class TestDot(unittest.TestCase):
         self.assertEqual(len(g.edges()), 1)
 
     def test_graph_roundtrip_with_attrs(self):
-
         graph = rustworkx.PyGraph()
         graph.add_node(
             {
