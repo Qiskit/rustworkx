@@ -79,7 +79,7 @@ where
         + GraphProp
         + GraphBase
         + std::marker::Sync,
-    <G as GraphBase>::NodeId: std::cmp::Eq + Hash + Send,
+    <G as GraphBase>::NodeId: std::cmp::Eq + Send,
     // rustfmt deletes the following comments if placed inline above
     // + IntoNodeIdentifiers // for node_identifiers()
     // + IntoNeighborsDirected // for neighbors()
@@ -184,8 +184,8 @@ where
         + EdgeCount
         + GraphProp
         + Sync,
-    G::NodeId: Eq + Hash + Send,
-    G::EdgeId: Eq + Hash + Send,
+    G::NodeId: Eq + Send,
+    G::EdgeId: Eq + Send,
 {
     let max_index = graph.node_bound();
     let mut betweenness = vec![None; graph.edge_bound()];
@@ -264,16 +264,15 @@ fn _accumulate_vertices<G>(
         + GraphProp
         + GraphBase
         + std::marker::Sync,
-    <G as GraphBase>::NodeId: std::cmp::Eq + Hash,
+    <G as GraphBase>::NodeId: std::cmp::Eq,
 {
     let mut delta = vec![0.0; max_index];
     for w in &path_calc.verts_sorted_by_distance {
         let iw = graph.to_index(*w);
-        let coeff = (1.0 + delta[iw]) / path_calc.sigma[w];
-        let p_w = path_calc.predecessors.get(w).unwrap();
-        for v in p_w {
-            let iv = graph.to_index(*v);
-            delta[iv] += path_calc.sigma[v] * coeff;
+        let coeff = (1.0 + delta[iw]) / path_calc.sigma[iw];
+        let p_w = path_calc.predecessors.get(iw).unwrap();
+        for iv in p_w {
+            delta[*iv] += path_calc.sigma[*iv] * coeff;
         }
     }
     let mut betweenness = locked_betweenness.write().unwrap();
@@ -304,21 +303,21 @@ fn accumulate_edges<G>(
     graph: G,
 ) where
     G: NodeIndexable + EdgeIndexable + Sync,
-    G::NodeId: Eq + Hash,
-    G::EdgeId: Eq + Hash,
+    G::NodeId: Eq,
+    G::EdgeId: Eq,
 {
     let mut delta = vec![0.0; max_index];
     for w in &path_calc.verts_sorted_by_distance {
         let iw = NodeIndexable::to_index(&graph, *w);
-        let coeff = (1.0 + delta[iw]) / path_calc.sigma[w];
-        let p_w = path_calc.predecessors.get(w).unwrap();
-        let e_w = path_calc.predecessor_edges.get(w).unwrap();
+        let coeff = (1.0 + delta[iw]) / path_calc.sigma[iw];
+        let p_w = path_calc.predecessors.get(iw).unwrap();
+        let e_w = path_calc.predecessor_edges.get(iw).unwrap();
         let mut betweenness = locked_betweenness.write().unwrap();
         for i in 0..p_w.len() {
             let v = p_w[i];
             let iv = NodeIndexable::to_index(&graph, v);
             let ie = EdgeIndexable::to_index(&graph, e_w[i]);
-            let c = path_calc.sigma[&v] * coeff;
+            let c = path_calc.sigma[iv] * coeff;
             betweenness[ie] = betweenness[ie].map(|x| x + c);
             delta[iv] += c;
         }
@@ -358,7 +357,7 @@ where
         + IntoNeighborsDirected
         + NodeCount
         + GraphProp,
-    G::NodeId: Eq + Hash,
+    G::NodeId: Eq,
 {
     let node_count = graph.node_count() as f64;
     let mut centrality = vec![0.0; graph.node_bound()];
@@ -396,46 +395,42 @@ where
 struct ShortestPathData<G>
 where
     G: GraphBase,
-    <G as GraphBase>::NodeId: std::cmp::Eq + Hash,
+    <G as GraphBase>::NodeId: std::cmp::Eq,
 {
     verts_sorted_by_distance: Vec<G::NodeId>,
-    predecessors: HashMap<G::NodeId, Vec<G::NodeId>>,
-    sigma: HashMap<G::NodeId, f64>,
+    predecessors: Vec<Vec<usize>>,
+    sigma: Vec<f64>,
 }
-
 fn shortest_path_for_centrality<G>(graph: G, node_s: &G::NodeId) -> ShortestPathData<G>
 where
     G: NodeIndexable + IntoNodeIdentifiers + IntoNeighborsDirected + NodeCount + GraphBase,
-    <G as GraphBase>::NodeId: std::cmp::Eq + Hash,
+    <G as GraphBase>::NodeId: std::cmp::Eq,
 {
-    let mut verts_sorted_by_distance: Vec<G::NodeId> = Vec::new(); // a stack
     let c = graph.node_count();
-    let mut predecessors = HashMap::<G::NodeId, Vec<G::NodeId>>::with_capacity(c);
-    let mut sigma = HashMap::<G::NodeId, f64>::with_capacity(c);
-    let mut distance = HashMap::<G::NodeId, i64>::with_capacity(c);
+    let max_index = graph.node_bound();
+    let mut verts_sorted_by_distance: Vec<G::NodeId> = Vec::with_capacity(c); // a stack
+    let mut predecessors: Vec<Vec<usize>> = vec![Vec::new(); max_index];
+    let mut sigma: Vec<f64> = vec![0.; max_index];
+    let mut distance: Vec<i64> = vec![-1; max_index];
     #[allow(non_snake_case)]
     let mut Q: VecDeque<G::NodeId> = VecDeque::with_capacity(c);
-
-    for node in graph.node_identifiers() {
-        predecessors.insert(node, Vec::new());
-        sigma.insert(node, 0.0);
-        distance.insert(node, -1);
-    }
-    sigma.insert(*node_s, 1.0);
-    distance.insert(*node_s, 0);
+    let node_s_index = graph.to_index(*node_s);
+    sigma[node_s_index] = 1.0;
+    distance[node_s_index] = 0;
     Q.push_back(*node_s);
     while let Some(v) = Q.pop_front() {
         verts_sorted_by_distance.push(v);
-        let distance_v = distance[&v];
+        let v_idx = graph.to_index(v);
+        let distance_v = distance[v_idx];
         for w in graph.neighbors(v) {
-            if distance[&w] < 0 {
+            let w_idx = graph.to_index(w);
+            if distance[w_idx] < 0 {
                 Q.push_back(w);
-                distance.insert(w, distance_v + 1);
+                distance[w_idx] = distance_v + 1;
             }
-            if distance[&w] == distance_v + 1 {
-                sigma.insert(w, sigma[&w] + sigma[&v]);
-                let e_p = predecessors.get_mut(&w).unwrap();
-                e_p.push(v);
+            if distance[w_idx] == distance_v + 1 {
+                sigma[w_idx] += sigma[v_idx];
+                predecessors[w_idx].push(v_idx);
             }
         }
     }
@@ -450,13 +445,13 @@ where
 struct ShortestPathDataWithEdges<G>
 where
     G: GraphBase,
-    G::NodeId: Eq + Hash,
-    G::EdgeId: Eq + Hash,
+    G::NodeId: Eq,
+    G::EdgeId: Eq,
 {
     verts_sorted_by_distance: Vec<G::NodeId>,
-    predecessors: HashMap<G::NodeId, Vec<G::NodeId>>,
-    predecessor_edges: HashMap<G::NodeId, Vec<G::EdgeId>>,
-    sigma: HashMap<G::NodeId, f64>,
+    predecessors: Vec<Vec<G::NodeId>>,
+    predecessor_edges: Vec<Vec<G::EdgeId>>,
+    sigma: Vec<f64>,
 }
 
 fn shortest_path_for_edge_centrality<G>(
@@ -470,41 +465,37 @@ where
         + NodeCount
         + GraphBase
         + IntoEdges,
-    G::NodeId: Eq + Hash,
-    G::EdgeId: Eq + Hash,
+    G::NodeId: Eq,
+    G::EdgeId: Eq,
 {
     let mut verts_sorted_by_distance: Vec<G::NodeId> = Vec::new(); // a stack
     let c = graph.node_count();
-    let mut predecessors = HashMap::<G::NodeId, Vec<G::NodeId>>::with_capacity(c);
-    let mut predecessor_edges = HashMap::<G::NodeId, Vec<G::EdgeId>>::with_capacity(c);
-    let mut sigma = HashMap::<G::NodeId, f64>::with_capacity(c);
-    let mut distance = HashMap::<G::NodeId, i64>::with_capacity(c);
+    let mut predecessors = vec![Vec::new(); c];
+    let mut predecessor_edges = vec![Vec::new(); c];
+    let mut sigma = vec![0.0; c];
+    let mut distance = vec![-1; c];
     #[allow(non_snake_case)]
     let mut Q: VecDeque<G::NodeId> = VecDeque::with_capacity(c);
 
-    for node in graph.node_identifiers() {
-        predecessors.insert(node, Vec::new());
-        predecessor_edges.insert(node, Vec::new());
-        sigma.insert(node, 0.0);
-        distance.insert(node, -1);
-    }
-    sigma.insert(*node_s, 1.0);
-    distance.insert(*node_s, 0);
+    sigma[graph.to_index(*node_s)] = 1.;
+    distance[graph.to_index(*node_s)] = 0;
     Q.push_back(*node_s);
     while let Some(v) = Q.pop_front() {
         verts_sorted_by_distance.push(v);
-        let distance_v = distance[&v];
+        let v_index = graph.to_index(v);
+        let distance_v = distance[v_index];
         for edge in graph.edges(v) {
             let w = edge.target();
-            if distance[&w] < 0 {
+            let w_index = graph.to_index(w);
+            if distance[w_index] < 0 {
                 Q.push_back(w);
-                distance.insert(w, distance_v + 1);
+                distance[w_index] = distance_v + 1;
             }
-            if distance[&w] == distance_v + 1 {
-                sigma.insert(w, sigma[&w] + sigma[&v]);
-                let e_p = predecessors.get_mut(&w).unwrap();
+            if distance[w_index] == distance_v + 1 {
+                sigma[w_index] += sigma[v_index];
+                let e_p = predecessors.get_mut(w_index).unwrap();
                 e_p.push(v);
-                predecessor_edges.get_mut(&w).unwrap().push(edge.id());
+                predecessor_edges.get_mut(w_index).unwrap().push(edge.id());
             }
         }
     }
@@ -694,7 +685,7 @@ pub fn eigenvector_centrality<G, F, E>(
 ) -> Result<Option<Vec<f64>>, E>
 where
     G: NodeIndexable + IntoNodeIdentifiers + IntoNeighbors + IntoEdges + NodeCount,
-    G::NodeId: Eq + std::hash::Hash,
+    G::NodeId: Eq,
     F: FnMut(G::EdgeRef) -> Result<f64, E>,
 {
     let tol: f64 = tol.unwrap_or(1e-6);
@@ -790,7 +781,7 @@ pub fn katz_centrality<G, F, E>(
 ) -> Result<Option<Vec<f64>>, E>
 where
     G: NodeIndexable + IntoNodeIdentifiers + IntoNeighbors + IntoEdges + NodeCount,
-    G::NodeId: Eq + std::hash::Hash,
+    G::NodeId: Eq,
     F: FnMut(G::EdgeRef) -> Result<f64, E>,
 {
     let alpha: f64 = alpha.unwrap_or(0.1);
