@@ -97,6 +97,26 @@ pub fn graph_betweenness_centrality(
     }
 }
 
+/// A Python function wrapper for degree_centrality
+ 
+fn degree_centrality_py(
+    py: Python,
+    graph: &digraph::PyDiGraph,
+) -> PyResult<CentralityMapping> {
+    // Convert Python object to Rust type
+    let graph_rust = match graph.extract::<SomeRustGraphType>() {
+        Ok(g) => g,
+        Err(e) => return Err(e.into()), 
+    };
+    // Call the Rust function
+    match degree_centrality(graph_rust) {
+        Ok(Some(values)) => Ok(Some(values)),
+        Ok(None) => Ok(None),
+        Err(e) => Err(e.into()), 
+    }
+}
+ 
+
 /// Compute the betweenness centrality of all nodes in a PyDiGraph.
 ///
 /// Betweenness centrality of a node :math:`v` is the sum of the
