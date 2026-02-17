@@ -1,0 +1,6 @@
+---
+fixes:
+  - |
+    Fixed a bug in `~rustworkx.PyDiGraph.find_successor_node_by_edge`  where
+    the method always returned the source node by mistake. Now, it returns
+    any of the successors, as originally intended.

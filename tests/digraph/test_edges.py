@@ -288,7 +288,7 @@ class TestEdges(unittest.TestCase):
             return "b to c" == edge
 
         res = dag.find_successor_node_by_edge(node_b, compare_edges)
-        self.assertEqual("b", res)
+        self.assertEqual("c", res)
 
     def test_find_successor_node_by_edge_no_match(self):
         dag = rustworkx.PyDiGraph()
