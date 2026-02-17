@@ -41,8 +41,13 @@ ARROW_POS = 0.7
 ARROW_SIZE = 12
 
 
-def _render_bezier_spline(control_points: np.ndarray, steps_per_segment: int = 20) -> np.ndarray:
+def _render_bezier_spline(
+    control_points: np.ndarray, min_steps: int = 2, max_steps: int = 20
+) -> np.ndarray:
     """Render a cubic bezier spline from (3n+1, 2) control points.
+
+    The number of interpolation steps per segment adapts to curvature: straight
+    segments use *min_steps* while highly curved segments use up to *max_steps*.
 
     Returns an (m, 2) array of interpolated points.
     """
@@ -54,18 +59,40 @@ def _render_bezier_spline(control_points: np.ndarray, steps_per_segment: int = 2
     segments[:, 0, :] = control_points[:-1:3]
     segments[:, 1:, :] = control_points[1:].reshape(num_segments, 3, 2)
 
-    steps = np.linspace(0, 1, steps_per_segment, endpoint=True)
-    basis = np.stack(
-        [
-            (1 - steps) ** 3,
-            3 * (1 - steps) ** 2 * steps,
-            3 * (1 - steps) * steps**2,
-            steps**3,
-        ],
-        axis=1,
-    )
+    # Estimate curvature per segment: max perpendicular distance of interior
+    # control points from the chord line, normalized by chord length.
+    p0 = segments[:, 0, :]
+    p3 = segments[:, 3, :]
+    chord = p3 - p0
+    chord_len = np.linalg.norm(chord, axis=1).clip(min=1e-12)
+    ch_x = chord[:, 0] / chord_len
+    ch_y = chord[:, 1] / chord_len
+    # 2D cross product: ch_x * dy - ch_y * dx
+    d1 = np.abs(ch_x * (segments[:, 1, 1] - p0[:, 1]) - ch_y * (segments[:, 1, 0] - p0[:, 0]))
+    d2 = np.abs(ch_x * (segments[:, 2, 1] - p0[:, 1]) - ch_y * (segments[:, 2, 0] - p0[:, 0]))
+    deviation = np.maximum(d1, d2) / chord_len
+    step_counts = (min_steps + (max_steps - min_steps) * np.clip(deviation * 10, 0, 1)).astype(int)
 
-    return np.einsum("sf,nfd->nsd", basis, segments).reshape(-1, 2)
+    # Batch-render segments grouped by step count to allow vectorized einsum.
+    results = [None] * num_segments
+    for sc in np.unique(step_counts):
+        mask = step_counts == sc
+        steps = np.linspace(0, 1, sc, endpoint=True)
+        basis = np.stack(
+            [
+                (1 - steps) ** 3,
+                3 * (1 - steps) ** 2 * steps,
+                3 * (1 - steps) * steps**2,
+                steps**3,
+            ],
+            axis=1,
+        )
+        # (steps, 4) @ (batch, 4, 2) -> (batch, steps, 2)
+        batch = np.einsum("sf,nfd->nsd", basis, segments[mask])
+        for rendered, idx in zip(batch, np.where(mask)[0]):
+            results[idx] = rendered
+
+    return np.concatenate(results, axis=0)
 
 
 def _graphviz_layout(
@@ -173,11 +200,16 @@ def plotly_draw(
         weight/data payload for every node in the graph and expected to return
         a dictionary of plotly node attributes. Supported keys are:
         ``color``, ``size``, ``label``, ``symbol``, ``opacity``,
-        ``line_color``, ``line_width``.
+        ``line_color``, ``line_width``, ``hover``. The ``hover`` value
+        sets the hover tooltip text (supports HTML: ``<br>``, ``<b>``,
+        etc.) and defaults to the node index.
     :param edge_attr_fn: An optional callable that will be passed the
         weight/data payload for each edge in the graph and expected to return
         a dictionary of plotly edge attributes. Supported keys are:
-        ``color``, ``width``, ``label``, ``dash``, ``opacity``.
+        ``color``, ``width``, ``label``, ``dash``, ``opacity``,
+        ``hover``. The ``hover`` value sets the hover tooltip text
+        (supports HTML: ``<br>``, ``<b>``, etc.) and defaults to the
+        edge index.
     :param str method: The layout method to use. Available options are
         ``'dot'``, ``'twopi'``, ``'neato'``, ``'circo'``, ``'fdp'``,
         ``'sfdp'`` (all Graphviz), and ``'spring'``
@@ -217,15 +249,17 @@ def plotly_draw(
             "plotly is necessary to use plotly_draw(). " "It can be installed with 'pip install plotly'."
         )
 
-    if method is not None and method not in METHODS:
+    is_directed = isinstance(graph, PyDiGraph)
+
+    # Compute layout
+    if method is None:
+        method = "dot" if has_graphviz() else "spring"
+    elif method not in METHODS:
         raise ValueError(
             f"The specified value for the method argument, '{method}' is "
             f"not a valid choice. It must be one of: {METHODS}"
         )
 
-    is_directed = isinstance(graph, PyDiGraph)
-
-    # Compute layout
     if method == "spring":
         if graph_attr is not None:
             warnings.warn(
@@ -233,22 +267,13 @@ def plotly_draw(
                 stacklevel=2,
             )
         node_positions, edge_splines = _spring_layout(graph, spring_attr=spring_attr)
-    elif has_graphviz():
-        prog = method if method is not None else "dot"
-        node_positions, edge_splines = _graphviz_layout(graph, prog, graph_attr)
     else:
-        if method is not None or graph_attr is not None:
+        if spring_attr is not None:
             warnings.warn(
-                "Graphviz is not available; 'method' and 'graph_attr' arguments "
-                "are ignored. Falling back to spring_layout.",
+                "'spring_attr' is ignored when method is not 'spring'.",
                 stacklevel=2,
             )
-        else:
-            warnings.warn(
-                "Graphviz is not available. Falling back to spring_layout.",
-                stacklevel=2,
-            )
-        node_positions, edge_splines = _spring_layout(graph, spring_attr=spring_attr)
+        node_positions, edge_splines = _graphviz_layout(graph, method, graph_attr)
 
     # Collect per-node attributes
     node_attrs: dict[int, dict] = {}
@@ -299,17 +324,37 @@ def plotly_draw(
                 xs = [src_pos[0], tgt_pos[0]]
                 ys = [src_pos[1], tgt_pos[1]]
 
+            # Ensure enough points for good arrow placement on short edges
+            if len(xs) < 5:
+                mid_x = (src_pos[0] + tgt_pos[0]) / 2
+                mid_y = (src_pos[1] + tgt_pos[1]) / 2
+                xs.insert(len(xs) // 2, mid_x)
+                ys.insert(len(ys) // 2, mid_y)
+
             n_pts = len(xs)
             edge_x.extend(xs)
             edge_y.extend(ys)
-            edge_hover.extend([str(edge_idx)] * n_pts)
+            ea = edge_attrs.get(edge_idx, {})
+            endpoints = f"{src} → {tgt}" if is_directed else f"{src} — {tgt}"
+            if "hover" in ea:
+                hover_text = ea["hover"]
+            elif "label" in ea:
+                hover_text = f"{ea['label']} ({edge_idx}: {endpoints})"
+            else:
+                hover_text = f"{edge_idx}: {endpoints}"
+
+            # Place hover text at the arrow position (directed) or midpoint
+            hover_idx = int(n_pts * ARROW_POS) if is_directed else n_pts // 2
+            hover_idx = max(0, min(hover_idx, n_pts - 1))
+            hover_pts = [None] * n_pts
+            hover_pts[hover_idx] = hover_text
+            edge_hover.extend(hover_pts)
 
             if is_directed and n_pts > 1:
-                arrow_idx = int(n_pts * ARROW_POS)
-                arrow_idx = max(0, min(arrow_idx, n_pts - 1))
+                arrow_idx = hover_idx
                 syms = ["circle"] * n_pts
                 sizes = [0] * n_pts
-                syms[arrow_idx] = "arrow"
+                syms[arrow_idx] = "arrow-up"
                 sizes[arrow_idx] = ARROW_SIZE
                 marker_symbols.extend(syms)
                 marker_sizes.extend(sizes)
@@ -329,7 +374,7 @@ def plotly_draw(
                 x=edge_x,
                 y=edge_y,
                 mode="lines+markers",
-                line=dict(color=color, width=width, dash=dash, shape="spline", smoothing=1.0),
+                line=dict(color=color, width=width, dash=dash),
                 opacity=opacity,
                 hovertext=edge_hover,
                 hoverinfo="text",
@@ -337,7 +382,6 @@ def plotly_draw(
                 marker=dict(
                     size=marker_sizes,
                     symbol=marker_symbols,
-                    color=color,
                     angleref="previous",
                 ),
             )
@@ -346,7 +390,7 @@ def plotly_draw(
                 x=edge_x,
                 y=edge_y,
                 mode="lines",
-                line=dict(color=color, width=width, dash=dash, shape="spline", smoothing=1.0),
+                line=dict(color=color, width=width, dash=dash),
                 opacity=opacity,
                 hovertext=edge_hover,
                 hoverinfo="text",
@@ -372,14 +416,21 @@ def plotly_draw(
     for idx in sorted_indices:
         attrs = node_attrs.get(idx, {})
         node_colors.append(attrs.get("color", "#1f77b4"))
-        node_sizes.append(attrs.get("size", 15))
+        # Scale default node size with label length so digits fit inside
+        default_size = 20 if len(str(idx)) >= 3 else 18 if len(str(idx)) >= 2 else 15
+        node_sizes.append(attrs.get("size", default_size))
         node_symbols.append(attrs.get("symbol", "circle"))
         node_opacities.append(attrs.get("opacity", 1.0))
         node_line_colors.append(attrs.get("line_color", "#000"))
         node_line_widths.append(attrs.get("line_width", 1))
         label = attrs.get("label", str(idx))
         node_labels.append(label)
-        node_hover_texts.append(str(idx))
+        if "hover" in attrs:
+            node_hover_texts.append(attrs["hover"])
+        elif "label" in attrs:
+            node_hover_texts.append(f"{label} ({idx})")
+        else:
+            node_hover_texts.append(str(idx))
         if "label" in attrs:
             has_labels = True
 
@@ -395,7 +446,11 @@ def plotly_draw(
             line=dict(color=node_line_colors, width=node_line_widths),
         ),
         text=node_labels if has_labels else None,
-        textposition="top center",
+        textposition="middle center",
+        textfont=dict(
+            color="white",
+            size=[max(7, s * 0.55) for s in node_sizes] if has_labels else None,
+        ),
         hovertext=node_hover_texts,
         hoverinfo="text",
         showlegend=False,

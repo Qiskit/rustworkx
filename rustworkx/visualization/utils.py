@@ -8,12 +8,17 @@
 
 """Shared utilities for rustworkx visualization modules."""
 
+import functools
 import subprocess
 import tempfile
 
 
+@functools.cache
 def has_graphviz() -> bool:
-    """Check whether the graphviz ``dot`` command is available."""
+    """Check whether the graphviz ``dot`` command is available.
+
+    The result is cached after the first call.
+    """
     try:
         subprocess.run(
             ["dot", "-V"],
