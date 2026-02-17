@@ -248,7 +248,8 @@ def plotly_draw(
     """
     if not HAS_PLOTLY:
         raise ImportError(
-            "plotly is necessary to use plotly_draw(). " "It can be installed with 'pip install plotly'."
+            "plotly is necessary to use plotly_draw(). "
+            "It can be installed with 'pip install plotly'. "
         )
 
     is_directed = isinstance(graph, PyDiGraph)
