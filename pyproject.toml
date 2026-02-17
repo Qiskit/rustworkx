@@ -39,11 +39,13 @@ binding = "PyO3"
 [project.optional-dependencies]
 mpl = ["matplotlib>=3.0"]
 graphviz = ["pillow>=5.4"]
+plotly = ["plotly>=5.0"]
 # TODO: use self-referential rustworkx[mpl] and rustworkx[graphivz]
 # once it is better suported.
 all = [
     "matplotlib>=3.0",
     "pillow>=5.4",
+    "plotly>=5.0",
 ]
 
 [project.urls]

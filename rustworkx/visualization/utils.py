@@ -6,14 +6,21 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""rustworkx visualization functions."""
+"""Shared utilities for rustworkx visualization modules."""
 
-__all__ = [
-    "mpl_draw",
-    "graphviz_draw",
-    "plotly_draw",
-]
+import subprocess
+import tempfile
 
-from .matplotlib import mpl_draw
-from .graphviz import graphviz_draw
-from .plotly import plotly_draw
+
+def has_graphviz() -> bool:
+    """Check whether the graphviz ``dot`` command is available."""
+    try:
+        subprocess.run(
+            ["dot", "-V"],
+            cwd=tempfile.gettempdir(),
+            check=True,
+            capture_output=True,
+        )
+        return True
+    except Exception:
+        return False
