@@ -241,7 +241,9 @@ def plotly_draw(
         from rustworkx.visualization import plotly_draw
 
         graph = rx.generators.directed_star_graph(weights=list(range(8)))
-        plotly_draw(graph)
+        fig = plotly_draw(graph)
+        fig.update_layout(width=600, height=300)
+        fig
 
     """
     if not HAS_PLOTLY:
