@@ -14,16 +14,16 @@ from rustworkx.rustworkx import PyDiGraph, PyGraph
 if typing.TYPE_CHECKING:
     from plotly.graph_objects import Figure
 
-_S = typing.TypeVar("_S")
-_T = typing.TypeVar("_T")
+NodeT = typing.TypeVar("NodeT")
+EdgeT = typing.TypeVar("EdgeT")
 
 def plotly_draw(
-    graph: PyDiGraph[_S, _T] | PyGraph[_S, _T],
-    node_attr_fn: Callable[[_S], dict] | None = ...,
-    edge_attr_fn: Callable[[_T], dict] | None = ...,
-    method: typing.Literal["twopi", "neato", "circo", "fdp", "sfdp", "dot", "spring"] | None = ...,
-    show_node_indices: bool = ...,
-    show_edge_indices: bool = ...,
-    graph_attr: dict[str, str] | None = ...,
-    spring_attr: dict | None = ...,
+    graph: PyDiGraph[NodeT, EdgeT] | PyGraph[NodeT, EdgeT],
+    node_attr_fn: Callable[[NodeT], dict] | None = None,
+    edge_attr_fn: Callable[[EdgeT], dict] | None = None,
+    method: typing.Literal["twopi", "neato", "circo", "fdp", "sfdp", "dot", "spring"] | None = None,
+    show_node_indices: bool = True,
+    show_edge_indices: bool = False,
+    graph_attr: dict[str, str] | None = None,
+    spring_attr: dict | None = None,
 ) -> Figure: ...
