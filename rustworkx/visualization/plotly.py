@@ -146,10 +146,10 @@ def plotly_draw(
     graph: "PyDiGraph[NodeT, EdgeT] | PyGraph[NodeT, EdgeT]",  # noqa
     node_attr_fn: Callable[[NodeT], dict] | None = None,
     edge_attr_fn: Callable[[EdgeT], dict] | None = None,
-    graph_attr: dict[str, str] | None = None,
     method: Literal["twopi", "neato", "circo", "fdp", "sfdp", "dot", "spring"] | None = None,
     show_node_indices: bool = True,
     show_edge_indices: bool = False,
+    graph_attr: dict[str, str] | None = None,
     spring_attr: dict | None = None,
 ) -> go.Figure:
     """Draw a graph or directed graph object using plotly.
@@ -178,10 +178,6 @@ def plotly_draw(
         weight/data payload for each edge in the graph and expected to return
         a dictionary of plotly edge attributes. Supported keys are:
         ``color``, ``width``, ``label``, ``dash``, ``opacity``.
-    :param dict graph_attr: An optional dictionary that specifies any Graphviz
-        graph attributes for the layout. The key and value of this dictionary
-        must be a string. Common options include ``rankdir``, ``ranksep``,
-        ``nodesep``.
     :param str method: The layout method to use. Available options are
         ``'dot'``, ``'twopi'``, ``'neato'``, ``'circo'``, ``'fdp'``,
         ``'sfdp'`` (all Graphviz), and ``'spring'``
@@ -194,6 +190,10 @@ def plotly_draw(
         to ``True``.
     :param bool show_edge_indices: Whether to display edge index integers
         as text annotations on edges. Defaults to ``False``.
+    :param dict graph_attr: An optional dictionary that specifies any Graphviz
+        graph attributes for the layout. The key and value of this dictionary
+        must be a string. Common options include ``rankdir``, ``ranksep``,
+        ``nodesep``.
     :param dict spring_attr: An optional dictionary of keyword arguments
         passed to :func:`~rustworkx.spring_layout` when using ``'spring'``
         layout. Common keys include ``seed``, ``k``, ``num_iter``, and
