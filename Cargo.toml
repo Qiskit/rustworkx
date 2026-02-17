@@ -31,7 +31,6 @@ indexmap = { version = ">=1.9, <3", features = ["rayon"] }
 ndarray = { version = "0.16.1", features = ["rayon"] }
 num-traits = "0.2"
 petgraph = "0.8"
-hashbrown = { version = ">=0.13, <0.16", features = ["rayon"] }
 numpy = "0.26"
 rand = "0.9"
 rand_distr = "0.5"
@@ -45,7 +44,6 @@ crate-type = ["cdylib"]
 [dependencies]
 foldhash.workspace = true
 fixedbitset.workspace = true
-hashbrown.workspace = true
 indexmap.workspace = true
 ndarray.workspace = true
 ndarray-stats = "0.6.0"
@@ -67,6 +65,10 @@ flate2 = "1.0.35"
 pest = "2.8"
 pest_derive = "2.8"
 nalgebra-sparse = { version = "=0.10", features = ["io"] }
+
+[dependencies.hashbrown]
+version = "0.15.0"  # Implicitly required to match PyO3's and `petgraph`'s via cross-API use.
+features = ["rayon"]
 
 [dependencies.pyo3]
 version = "0.26"

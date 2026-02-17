@@ -14,7 +14,6 @@ license.workspace = true
 [dependencies]
 foldhash.workspace = true
 fixedbitset.workspace = true
-hashbrown.workspace = true
 indexmap.workspace = true
 ndarray.workspace = true
 num-traits.workspace = true
@@ -25,6 +24,13 @@ rand_distr.workspace = true
 rand_pcg.workspace = true
 rayon.workspace = true
 rayon-cond = "0.4"
+
+[dependencies.hashbrown]
+# The version here should allow a decent range, because it's used in the public API, meaning
+# downstream crates have to implicitly match us.  The range must at least be compatible with the
+# `rustworkx` Python component.
+version = ">=0.15,<0.17"
+features = ["rayon"]
 
 [dev-dependencies]
 quickcheck = "1.0"
