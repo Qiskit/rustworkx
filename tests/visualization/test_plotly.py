@@ -20,6 +20,7 @@ from rustworkx.visualization.utils import has_graphviz
 
 try:
     import plotly.graph_objects as go
+    from plotly.offline.offline import get_plotlyjs_version
 
     HAS_PLOTLY = True
 except ImportError:
@@ -46,7 +47,7 @@ def _write_gallery():
     parts = [
         "<!DOCTYPE html>",
         "<html><head>",
-        '<script src="https://cdn.plot.ly/plotly-3.3.1.min.js"></script>',
+        f'<script src="https://cdn.plot.ly/plotly-{get_plotlyjs_version()}.min.js"></script>',
         "<style>",
         "  body { font-family: sans-serif; max-width: 1200px; margin: 0 auto; padding: 20px; }",
         "  h2 { border-bottom: 1px solid #ccc; padding-bottom: 4px; }",
