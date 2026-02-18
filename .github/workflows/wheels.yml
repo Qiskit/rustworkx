@@ -91,7 +91,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest]
+        os: [ubuntu-24.04-ppc64le]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -99,10 +99,6 @@ jobs:
         with:
           python-version: '3.12'
       - uses: dtolnay/rust-toolchain@stable
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v2
-        with:
-          platforms: all
       - name: Install cibuildwheel
         run: |
           python -m pip install -U --group releaseinfra
@@ -129,7 +125,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest]
+        os: [ubuntu-24.04-s390x]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -137,10 +133,6 @@ jobs:
         with:
           python-version: '3.12'
       - uses: dtolnay/rust-toolchain@stable
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v2
-        with:
-          platforms: all
       - name: Install cibuildwheel
         run: |
           python -m pip install -U --group releaseinfra
