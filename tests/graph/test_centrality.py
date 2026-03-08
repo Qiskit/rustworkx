@@ -309,3 +309,205 @@ class TestGraphDegreeCentrality(unittest.TestCase):
             2: 0.5,  # Node C has 1 edge
         }
         self.assertEqual(expected, dict(centrality))
+
+
+class TestGroupDegreeCentralityGraph(unittest.TestCase):
+    def test_path_graph(self):
+        graph = rustworkx.generators.path_graph(5)
+        result = rustworkx.graph_group_degree_centrality(graph, [0, 1])
+        self.assertAlmostEqual(result, 1.0 / 3.0)
+
+    def test_complete_graph(self):
+        graph = rustworkx.generators.complete_graph(4)
+        result = rustworkx.graph_group_degree_centrality(graph, [0])
+        self.assertAlmostEqual(result, 1.0)
+
+    def test_single_node_group(self):
+        graph = rustworkx.generators.path_graph(3)
+        result = rustworkx.graph_group_degree_centrality(graph, [1])
+        self.assertAlmostEqual(result, 1.0)
+
+    def test_dispatch(self):
+        graph = rustworkx.generators.path_graph(5)
+        result = rustworkx.group_degree_centrality(graph, [0, 1])
+        self.assertAlmostEqual(result, 1.0 / 3.0)
+
+    def test_invalid_node(self):
+        graph = rustworkx.generators.path_graph(3)
+        with self.assertRaises(ValueError):
+            rustworkx.graph_group_degree_centrality(graph, [10])
+
+
+class TestGroupClosenessCentralityGraph(unittest.TestCase):
+    def test_path_graph(self):
+        graph = rustworkx.generators.path_graph(5)
+        result = rustworkx.graph_group_closeness_centrality(graph, [0, 1])
+        self.assertAlmostEqual(result, 0.5)
+
+    def test_star_center(self):
+        graph = rustworkx.PyGraph()
+        center = graph.add_node("center")
+        for _ in range(4):
+            leaf = graph.add_node("leaf")
+            graph.add_edge(center, leaf, None)
+        result = rustworkx.graph_group_closeness_centrality(graph, [center])
+        self.assertAlmostEqual(result, 1.0)
+
+    def test_dispatch(self):
+        graph = rustworkx.generators.path_graph(5)
+        result = rustworkx.group_closeness_centrality(graph, [0, 1])
+        self.assertAlmostEqual(result, 0.5)
+
+    def test_invalid_node(self):
+        graph = rustworkx.generators.path_graph(3)
+        with self.assertRaises(ValueError):
+            rustworkx.graph_group_closeness_centrality(graph, [10])
+
+
+class TestGroupBetweennessCentralityGraph(unittest.TestCase):
+    def test_path_center(self):
+        graph = rustworkx.generators.path_graph(5)
+        result = rustworkx.graph_group_betweenness_centrality(graph, [2], normalized=False)
+        self.assertAlmostEqual(result, 4.0)
+
+    def test_path_center_normalized(self):
+        graph = rustworkx.generators.path_graph(5)
+        result = rustworkx.graph_group_betweenness_centrality(graph, [2], normalized=True)
+        self.assertAlmostEqual(result, 2.0 / 3.0)
+
+    def test_star_center(self):
+        graph = rustworkx.PyGraph()
+        center = graph.add_node("center")
+        for _ in range(4):
+            leaf = graph.add_node("leaf")
+            graph.add_edge(center, leaf, None)
+        result = rustworkx.graph_group_betweenness_centrality(
+            graph, [center], normalized=False
+        )
+        self.assertAlmostEqual(result, 6.0)
+
+    def test_empty_group(self):
+        graph = rustworkx.generators.path_graph(3)
+        result = rustworkx.graph_group_betweenness_centrality(graph, [], normalized=False)
+        self.assertAlmostEqual(result, 0.0)
+
+    def test_dispatch(self):
+        graph = rustworkx.generators.path_graph(5)
+        result = rustworkx.group_betweenness_centrality(graph, [2])
+        self.assertAlmostEqual(result, 2.0 / 3.0)
+
+    def test_invalid_node(self):
+        graph = rustworkx.generators.path_graph(3)
+        with self.assertRaises(ValueError):
+            rustworkx.graph_group_betweenness_centrality(graph, [10])
+
+
+class TestGroupCentralityNetworkXComparisonGraph(unittest.TestCase):
+    """Cross-validate group centrality results against NetworkX."""
+
+    def _build_graphs(self, nx_graph):
+        rx_graph = rustworkx.PyGraph()
+        node_map = {}
+        for node in nx_graph.nodes():
+            node_map[node] = rx_graph.add_node(node)
+        for u, v in nx_graph.edges():
+            rx_graph.add_edge(node_map[u], node_map[v], None)
+        return rx_graph, node_map
+
+    def test_degree_path_graph(self):
+        g_nx = nx.path_graph(5)
+        g_rx, nmap = self._build_graphs(g_nx)
+        for group_nodes in [{0}, {2}, {0, 1}, {1, 3}, {0, 2, 4}]:
+            rx_group = [nmap[n] for n in group_nodes]
+            expected = nx.group_degree_centrality(g_nx, group_nodes)
+            result = rustworkx.graph_group_degree_centrality(g_rx, rx_group)
+            self.assertAlmostEqual(result, expected, places=10)
+
+    def test_degree_complete_graph(self):
+        g_nx = nx.complete_graph(6)
+        g_rx, nmap = self._build_graphs(g_nx)
+        for group_nodes in [{0}, {0, 1}, {0, 2, 4}]:
+            rx_group = [nmap[n] for n in group_nodes]
+            expected = nx.group_degree_centrality(g_nx, group_nodes)
+            result = rustworkx.graph_group_degree_centrality(g_rx, rx_group)
+            self.assertAlmostEqual(result, expected, places=10)
+
+    def test_degree_cycle_graph(self):
+        g_nx = nx.cycle_graph(8)
+        g_rx, nmap = self._build_graphs(g_nx)
+        for group_nodes in [{0}, {0, 4}, {0, 2, 4, 6}]:
+            rx_group = [nmap[n] for n in group_nodes]
+            expected = nx.group_degree_centrality(g_nx, group_nodes)
+            result = rustworkx.graph_group_degree_centrality(g_rx, rx_group)
+            self.assertAlmostEqual(result, expected, places=10)
+
+    def test_closeness_path_graph(self):
+        g_nx = nx.path_graph(5)
+        g_rx, nmap = self._build_graphs(g_nx)
+        for group_nodes in [{0}, {2}, {0, 1}, {1, 3}, {0, 2, 4}]:
+            rx_group = [nmap[n] for n in group_nodes]
+            expected = nx.group_closeness_centrality(g_nx, group_nodes)
+            result = rustworkx.graph_group_closeness_centrality(g_rx, rx_group)
+            self.assertAlmostEqual(result, expected, places=10)
+
+    def test_closeness_complete_graph(self):
+        g_nx = nx.complete_graph(6)
+        g_rx, nmap = self._build_graphs(g_nx)
+        for group_nodes in [{0}, {0, 1}, {0, 2, 4}]:
+            rx_group = [nmap[n] for n in group_nodes]
+            expected = nx.group_closeness_centrality(g_nx, group_nodes)
+            result = rustworkx.graph_group_closeness_centrality(g_rx, rx_group)
+            self.assertAlmostEqual(result, expected, places=10)
+
+    def test_closeness_cycle_graph(self):
+        g_nx = nx.cycle_graph(8)
+        g_rx, nmap = self._build_graphs(g_nx)
+        for group_nodes in [{0}, {0, 4}, {0, 2, 4, 6}]:
+            rx_group = [nmap[n] for n in group_nodes]
+            expected = nx.group_closeness_centrality(g_nx, group_nodes)
+            result = rustworkx.graph_group_closeness_centrality(g_rx, rx_group)
+            self.assertAlmostEqual(result, expected, places=10)
+
+    def test_betweenness_path_graph(self):
+        g_nx = nx.path_graph(5)
+        g_rx, nmap = self._build_graphs(g_nx)
+        for group_nodes in [{2}, {1, 3}, {0, 4}]:
+            rx_group = [nmap[n] for n in group_nodes]
+            expected = nx.group_betweenness_centrality(g_nx, [group_nodes])[0]
+            result = rustworkx.graph_group_betweenness_centrality(
+                g_rx, rx_group, normalized=True
+            )
+            self.assertAlmostEqual(result, expected, places=10)
+
+    def test_betweenness_complete_graph(self):
+        g_nx = nx.complete_graph(6)
+        g_rx, nmap = self._build_graphs(g_nx)
+        for group_nodes in [{0}, {0, 1}, {0, 2, 4}]:
+            rx_group = [nmap[n] for n in group_nodes]
+            expected = nx.group_betweenness_centrality(g_nx, [group_nodes])[0]
+            result = rustworkx.graph_group_betweenness_centrality(
+                g_rx, rx_group, normalized=True
+            )
+            self.assertAlmostEqual(result, expected, places=10)
+
+    def test_betweenness_star_graph(self):
+        g_nx = nx.star_graph(4)
+        g_rx, nmap = self._build_graphs(g_nx)
+        for group_nodes in [{0}, {1}, {0, 1}]:
+            rx_group = [nmap[n] for n in group_nodes]
+            expected = nx.group_betweenness_centrality(g_nx, [group_nodes])[0]
+            result = rustworkx.graph_group_betweenness_centrality(
+                g_rx, rx_group, normalized=True
+            )
+            self.assertAlmostEqual(result, expected, places=10)
+
+    def test_betweenness_barbell_graph(self):
+        g_nx = nx.barbell_graph(4, 1)
+        g_rx, nmap = self._build_graphs(g_nx)
+        for group_nodes in [{4}, {3, 4, 5}, {0, 8}]:
+            rx_group = [nmap[n] for n in group_nodes]
+            expected = nx.group_betweenness_centrality(g_nx, [group_nodes])[0]
+            result = rustworkx.graph_group_betweenness_centrality(
+                g_rx, rx_group, normalized=True
+            )
+            self.assertAlmostEqual(result, expected, places=10)

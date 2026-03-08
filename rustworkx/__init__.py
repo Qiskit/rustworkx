@@ -1269,6 +1269,92 @@ def degree_centrality(graph):
 
 
 @_rustworkx_dispatch
+def group_degree_centrality(graph, group):
+    r"""Compute the group degree centrality of a set of nodes.
+
+    Group degree centrality measures the fraction of non-group nodes that are
+    connected to at least one member of the group. It is defined as:
+
+    .. math::
+
+        C_D(S) = \frac{|N(S) \setminus S|}{|V| - |S|}
+
+    where :math:`N(S)` is the union of neighborhoods of all nodes in :math:`S`.
+
+    Based on: Everett, M. G., & Borgatti, S. P. (1999).
+    The centrality of groups and classes.
+    Journal of Mathematical Sociology, 23(3), 181-201.
+
+    :param graph: The input graph. Can either be a
+        :class:`~rustworkx.PyGraph` or :class:`~rustworkx.PyDiGraph`.
+    :param list group: A list of node indices representing the group.
+
+    :returns: The group degree centrality as a float.
+    :rtype: float
+    """
+    raise TypeError(f"Invalid Input Type {type(graph)} for graph")
+
+
+@_rustworkx_dispatch
+def group_closeness_centrality(graph, group):
+    r"""Compute the group closeness centrality of a set of nodes.
+
+    Group closeness centrality measures how close a group of nodes is to all
+    non-group nodes. It is defined as:
+
+    .. math::
+
+        C_{close}(S) = \frac{|V \setminus S|}{\sum_{v \in V \setminus S} d(S, v)}
+
+    where :math:`d(S, v) = \min_{u \in S} d(u, v)` is the minimum distance
+    from any group member to node :math:`v`.
+
+    Based on: Everett, M. G., & Borgatti, S. P. (1999).
+    The centrality of groups and classes.
+    Journal of Mathematical Sociology, 23(3), 181-201.
+
+    :param graph: The input graph. Can either be a
+        :class:`~rustworkx.PyGraph` or :class:`~rustworkx.PyDiGraph`.
+    :param list group: A list of node indices representing the group.
+
+    :returns: The group closeness centrality as a float.
+    :rtype: float
+    """
+    raise TypeError(f"Invalid Input Type {type(graph)} for graph")
+
+
+@_rustworkx_dispatch
+def group_betweenness_centrality(graph, group, normalized=True):
+    r"""Compute the group betweenness centrality of a set of nodes.
+
+    Group betweenness centrality measures the fraction of shortest paths
+    between non-group node pairs that pass through at least one group member.
+    It is defined as:
+
+    .. math::
+
+        C_B(S) = \sum_{s,t \in V \setminus S} \frac{\sigma(s, t|S)}{\sigma(s, t)}
+
+    where :math:`\sigma(s,t)` is the number of shortest paths from :math:`s`
+    to :math:`t`, and :math:`\sigma(s,t|S)` is the number of those paths
+    passing through at least one node in :math:`S`.
+
+    Based on: Everett, M. G., & Borgatti, S. P. (1999).
+    The centrality of groups and classes.
+    Journal of Mathematical Sociology, 23(3), 181-201.
+
+    :param graph: The input graph. Can either be a
+        :class:`~rustworkx.PyGraph` or :class:`~rustworkx.PyDiGraph`.
+    :param list group: A list of node indices representing the group.
+    :param bool normalized: Whether to normalize the result. Defaults to True.
+
+    :returns: The group betweenness centrality as a float.
+    :rtype: float
+    """
+    raise TypeError(f"Invalid Input Type {type(graph)} for graph")
+
+
+@_rustworkx_dispatch
 def edge_betweenness_centrality(graph, normalized=True, parallel_threshold=50):
     r"""Compute the edge betweenness centrality of all edges in a graph.
 
