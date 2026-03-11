@@ -14,6 +14,7 @@
 # https://github.com/networkx/networkx/blob/ead0e65bda59862e329f2e6f1da47919c6b07ca9/networkx/drawing/tests/test_pylab.py
 
 import os
+import sys
 import unittest
 
 import rustworkx
@@ -204,3 +205,84 @@ class TestMPLDraw(unittest.TestCase):
         plt.close("all")
         mpl_draw(graph, pos=[graph.get_node_data(n) for n in range(len(graph))])
         _save_images(plt.gcf(), "test_hexagonal_lattice_directed.png")
+
+
+@unittest.skipUnless(HAS_MPL, "matplotlib is required for running these tests")
+@unittest.skipUnless(sys.platform.startswith("linux"), "Assertion tests are Linux-only")
+class TestMPLDrawAssertions(unittest.TestCase):
+    def setUp(self):
+        plt.close("all")
+        self.fig, self.ax = plt.subplots()
+
+    def tearDown(self):
+        plt.close("all")
+
+    def test_node_count(self):
+        graph = rustworkx.PyGraph()
+        graph.add_nodes_from(range(5))
+        mpl_draw(graph, ax=self.ax)
+        node_collection = self.ax.collections[0]
+        self.assertEqual(len(node_collection.get_offsets()), 5)
+
+    def test_node_list_filters_nodes(self):
+        graph = rustworkx.generators.star_graph(10)
+        mpl_draw(graph, ax=self.ax, node_list=[0, 1, 2])
+        node_collection = self.ax.collections[0]
+        self.assertEqual(len(node_collection.get_offsets()), 3)
+
+    def test_node_color_applied(self):
+        graph = rustworkx.PyGraph()
+        graph.add_nodes_from(range(3))
+        mpl_draw(graph, ax=self.ax, node_color=["red", "red", "red"])
+        colors = self.ax.collections[0].get_facecolors()
+        self.assertEqual(len(colors), 3)
+
+    def test_node_labels_drawn(self):
+        graph = rustworkx.PyGraph()
+        graph.add_nodes_from(["x", "y"])
+        mpl_draw(graph, ax=self.ax, with_labels=True, labels=str)
+        texts = [t.get_text() for t in self.ax.texts]
+        self.assertIn("x", texts)
+        self.assertIn("y", texts)
+
+    def test_empty_graph_no_collections(self):
+        graph = rustworkx.PyGraph()
+        mpl_draw(graph, ax=self.ax)
+        # No nodes drawn means no offset collections with data
+        offsets = [
+            c for c in self.ax.collections
+            if hasattr(c, "get_offsets") and len(c.get_offsets()) > 0
+        ]
+        self.assertEqual(len(offsets), 0)
+
+    def test_edge_count(self):
+        graph = rustworkx.PyGraph()
+        graph.add_nodes_from(range(3))
+        graph.add_edges_from([(0, 1, None), (1, 2, None)])
+        mpl_draw(graph, ax=self.ax)
+        # Edges are drawn as LineCollection or FancyArrowPatches
+        self.assertGreater(len(self.ax.collections) + len(self.ax.patches), 1)
+
+    def test_directed_graph_produces_arrows(self):
+        graph = rustworkx.PyDiGraph()
+        graph.add_nodes_from(range(2))
+        graph.add_edge(0, 1, None)
+        mpl_draw(graph, ax=self.ax)
+        # Directed edges are FancyArrowPatch objects in ax.patches
+        self.assertGreater(len(self.ax.patches), 0)
+
+    def test_edge_labels_drawn(self):
+        graph = rustworkx.PyGraph()
+        graph.add_nodes_from(range(2))
+        graph.add_edge(0, 1, "myedge")
+        mpl_draw(graph, ax=self.ax, edge_labels=str)
+        texts = [t.get_text() for t in self.ax.texts]
+        self.assertIn("myedge", texts)
+
+    def test_node_size_zero_draws_no_visible_nodes(self):
+        graph = rustworkx.PyGraph()
+        graph.add_nodes_from(range(3))
+        mpl_draw(graph, ax=self.ax, node_size=0)
+        # With node_size=0, collection exists but sizes should all be 0
+        sizes = self.ax.collections[0].get_sizes()
+        self.assertTrue(all(s == 0 for s in sizes))
