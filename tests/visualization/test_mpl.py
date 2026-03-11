@@ -208,7 +208,9 @@ class TestMPLDraw(unittest.TestCase):
 
 
 @unittest.skipUnless(HAS_MPL, "matplotlib is required for running these tests")
-@unittest.skipUnless(sys.platform.startswith("linux"), "Assertion tests are Linux-only")
+@unittest.skipUnless(
+    sys.platform.startswith("linux"), "Assertion tests are Linux-only"
+)
 class TestMPLDrawAssertions(unittest.TestCase):
     def setUp(self):
         plt.close("all")
@@ -250,7 +252,8 @@ class TestMPLDrawAssertions(unittest.TestCase):
         mpl_draw(graph, ax=self.ax)
         # No nodes drawn means no offset collections with data
         offsets = [
-            c for c in self.ax.collections
+            c
+            for c in self.ax.collections
             if hasattr(c, "get_offsets") and len(c.get_offsets()) > 0
         ]
         self.assertEqual(len(offsets), 0)
@@ -261,7 +264,9 @@ class TestMPLDrawAssertions(unittest.TestCase):
         graph.add_edges_from([(0, 1, None), (1, 2, None)])
         mpl_draw(graph, ax=self.ax)
         # Edges are drawn as LineCollection or FancyArrowPatches
-        self.assertGreater(len(self.ax.collections) + len(self.ax.patches), 1)
+        self.assertGreater(
+            len(self.ax.collections) + len(self.ax.patches), 1
+        )
 
     def test_directed_graph_produces_arrows(self):
         graph = rustworkx.PyDiGraph()
