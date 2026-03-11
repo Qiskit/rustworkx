@@ -223,3 +223,45 @@ class TestNodeLinkJSON(unittest.TestCase):
 """
         with self.assertRaises(rustworkx.JSONDeserializationError):
             rustworkx.parse_node_link_json(invalid_input)
+
+    def test_node_indices_preserved_with_deletion(self):
+        """Test that node indices are preserved after deletion (related to issue #1503)"""
+        graph = rustworkx.PyDiGraph()
+        graph.add_node("A")  # 0
+        graph.add_node("B")  # 1
+        graph.add_node("C")  # 2
+        graph.add_edge(0, 2, "A->C")
+        graph.remove_node(1)  # Remove middle node
+
+        # Verify original has gaps in indices
+        self.assertEqual([0, 2], graph.node_indices())
+
+        # Round-trip through JSON
+        json_str = rustworkx.node_link_json(graph)
+        restored = rustworkx.parse_node_link_json(json_str)
+
+        # Verify indices are preserved
+        self.assertEqual(graph.node_indices(), restored.node_indices())
+        self.assertEqual(graph.edge_list(), restored.edge_list())
+
+    def test_node_indices_preserved_with_contraction(self):
+        """Test that node indices are preserved after contraction (issue #1503)"""
+        graph = rustworkx.PyDiGraph()
+        graph.add_node("A")  # 0
+        graph.add_node("B")  # 1
+        graph.add_node("C")  # 2
+
+        # Contract nodes 0 and 1
+        contracted_idx = graph.contract_nodes([0, 1], "AB")
+        graph.add_edge(2, contracted_idx, "C->AB")
+
+        # Verify original has non-consecutive indices
+        self.assertEqual([2, contracted_idx], graph.node_indices())
+
+        # Round-trip through JSON
+        json_str = rustworkx.node_link_json(graph)
+        restored = rustworkx.parse_node_link_json(json_str)
+
+        # Verify indices are preserved
+        self.assertEqual(graph.node_indices(), restored.node_indices())
+        self.assertEqual(graph.edge_list(), restored.edge_list())

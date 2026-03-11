@@ -12,7 +12,7 @@
 
 use std::hash::Hash;
 
-use hashbrown::{HashMap, HashSet};
+use hashbrown::HashSet;
 
 use petgraph::visit::{
     EdgeCount, IntoNeighbors, IntoNodeIdentifiers, NodeCount, NodeIndexable, Visitable,
@@ -75,7 +75,10 @@ where
     let mut out_vec: Vec<(usize, usize)> = if source.is_some() {
         Vec::new()
     } else {
-        Vec::with_capacity(core::cmp::min(graph.node_count() - 1, graph.edge_count()))
+        Vec::with_capacity(core::cmp::min(
+            graph.node_count().saturating_sub(1),
+            graph.edge_count(),
+        ))
     };
     for start in nodes {
         if visited.contains(&start) {
@@ -84,32 +87,25 @@ where
         visited.insert(start);
         let mut children: Vec<G::NodeId> = graph.neighbors(start).collect();
         children.reverse();
-        let mut stack: Vec<(G::NodeId, Vec<G::NodeId>)> = vec![(start, children)];
-        // Used to track the last position in children vec across iterations
-        let mut index_map: HashMap<G::NodeId, usize> = HashMap::with_capacity(node_count);
-        index_map.insert(start, 0);
-        while !stack.is_empty() {
-            let temp_parent = stack.last().unwrap();
-            let parent = temp_parent.0;
-            let children = temp_parent.1.clone();
-            let count = *index_map.get(&parent).unwrap();
+        // Stack stores (node, children, next_child_index)
+        let mut stack: Vec<(G::NodeId, Vec<G::NodeId>, usize)> = vec![(start, children, 0)];
+        while let Some((parent, children, idx)) = stack.last_mut() {
             let mut found = false;
-            let mut index = count;
-            for child in &children[index..] {
-                index += 1;
-                if !visited.contains(child) {
-                    out_vec.push((graph.to_index(parent), graph.to_index(*child)));
-                    visited.insert(*child);
-                    let mut grandchildren: Vec<G::NodeId> = graph.neighbors(*child).collect();
+            while *idx < children.len() {
+                let child = children[*idx];
+                *idx += 1;
+                if !visited.contains(&child) {
+                    let parent_id = *parent;
+                    out_vec.push((graph.to_index(parent_id), graph.to_index(child)));
+                    visited.insert(child);
+                    let mut grandchildren: Vec<G::NodeId> = graph.neighbors(child).collect();
                     grandchildren.reverse();
-                    stack.push((*child, grandchildren));
-                    index_map.insert(*child, 0);
-                    *index_map.get_mut(&parent).unwrap() = index;
+                    stack.push((child, grandchildren, 0));
                     found = true;
                     break;
                 }
             }
-            if !found || children.is_empty() {
+            if !found {
                 stack.pop();
             }
         }

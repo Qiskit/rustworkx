@@ -62,3 +62,4 @@ typed API based on the data type.
    rustworkx.graph_node_link_json
    rustworkx.graph_longest_simple_path
    rustworkx.graph_write_matrix_market
+   rustworkx.graph_generate_random_path
