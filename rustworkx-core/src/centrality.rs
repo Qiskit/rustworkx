@@ -1855,10 +1855,9 @@ where
         + GraphBase
         + IntoEdges
         + IntoEdgesDirected
-        + Visitable
         + NodeCount,
     G::NodeId: Eq + Hash,
-    G::EdgeId: Eq + Hash,
+    G::EdgeId: Eq,
 {
     let node_count = graph.node_count();
     let group_size = group.len();
