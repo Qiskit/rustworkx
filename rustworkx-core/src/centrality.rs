@@ -1833,6 +1833,10 @@ where
 /// where d(S, v) = min_{u in S} d(u, v) is the minimum distance from any
 /// group member to node v.
 ///
+/// Note: For disconnected graphs, unreachable nodes do not contribute to
+/// the distance sum but are still counted in |V \ S|. This can produce
+/// values greater than 1.0, matching the convention used by NetworkX.
+///
 /// Based on: Everett, M. G., & Borgatti, S. P. (1999).
 /// The centrality of groups and classes.
 /// Journal of Mathematical Sociology, 23(3), 181-201.
@@ -2268,5 +2272,65 @@ mod test_group_betweenness_centrality {
         let result = group_betweenness_centrality(&g, &[0], false);
         // Node 0 is on all 6 shortest paths between leaf pairs
         assert_almost_equal!(result, 6.0, 1e-10);
+    }
+
+    #[test]
+    fn test_directed_path() {
+        // Directed path: 0->1->2->3->4
+        let g = petgraph::graph::DiGraph::<(), ()>::from_edges(&[
+            (0, 1),
+            (1, 2),
+            (2, 3),
+            (3, 4),
+        ]);
+        // Group = {2}. Directed shortest paths through node 2:
+        // (0,3), (0,4), (1,3), (1,4) = 4 pairs
+        let result = group_betweenness_centrality(&g, &[2], false);
+        assert_almost_equal!(result, 4.0, 1e-10);
+    }
+
+    #[test]
+    fn test_directed_path_normalized() {
+        let g = petgraph::graph::DiGraph::<(), ()>::from_edges(&[
+            (0, 1),
+            (1, 2),
+            (2, 3),
+            (3, 4),
+        ]);
+        let result = group_betweenness_centrality(&g, &[2], true);
+        // Non-group = 4 nodes. Directed normalization = 4 * 3 = 12.
+        // Normalized = 4 / 12 = 1/3
+        assert_almost_equal!(result, 1.0 / 3.0, 1e-10);
+    }
+
+    #[test]
+    fn test_directed_star() {
+        // Directed star: 0->1, 0->2, 0->3, 0->4
+        let g = petgraph::graph::DiGraph::<(), ()>::from_edges(&[
+            (0, 1),
+            (0, 2),
+            (0, 3),
+            (0, 4),
+        ]);
+        // Group = {0}. No directed shortest paths between leaf pairs
+        // pass through 0 (leaves are unreachable from each other).
+        let result = group_betweenness_centrality(&g, &[0], false);
+        assert_almost_equal!(result, 0.0, 1e-10);
+    }
+
+    #[test]
+    fn test_directed_bidirectional_star() {
+        // Bidirectional star: edges in both directions between center and leaves
+        let g = petgraph::graph::DiGraph::<(), ()>::from_edges(&[
+            (0, 1), (1, 0),
+            (0, 2), (2, 0),
+            (0, 3), (3, 0),
+            (0, 4), (4, 0),
+        ]);
+        // Group = {0}. All 12 directed shortest paths between leaf pairs
+        // go through node 0 (e.g. 1->0->2, 2->0->1, etc.).
+        // 4 leaves, 4*3 = 12 ordered pairs.
+        let result = group_betweenness_centrality(&g, &[0], false);
+        assert_almost_equal!(result, 12.0, 1e-10);
     }
 }
