@@ -14,6 +14,8 @@ use std::collections::VecDeque;
 use std::hash::Hash;
 use std::sync::RwLock;
 
+use hashbrown::HashSet;
+
 use hashbrown::HashMap;
 use petgraph::algo::dijkstra;
 use petgraph::visit::{
@@ -351,12 +353,7 @@ fn accumulate_edges<G>(
 /// ```
 pub fn degree_centrality<G>(graph: G, direction: Option<petgraph::Direction>) -> Vec<f64>
 where
-    G: NodeIndexable
-        + IntoNodeIdentifiers
-        + IntoNeighbors
-        + IntoNeighborsDirected
-        + NodeCount
-        + GraphProp,
+    G: NodeIndexable + IntoNodeIdentifiers + IntoNeighborsDirected + NodeCount + GraphProp,
     G::NodeId: Eq,
 {
     let node_count = graph.node_count() as f64;
@@ -1737,5 +1734,535 @@ mod test_newman_weighted_closeness_centrality {
         };
         test_case(200); // sequential
         test_case(1); // parallel
+    }
+}
+
+/// Compute the group degree centrality of a set of nodes.
+///
+/// Group degree centrality measures the fraction of non-group nodes that are
+/// connected to at least one member of the group. It is defined as:
+///
+/// C_D(S) = |N(S) \ S| / (|V| - |S|)
+///
+/// where N(S) is the union of neighborhoods of all nodes in S.
+///
+/// Based on: Everett, M. G., & Borgatti, S. P. (1999).
+/// The centrality of groups and classes.
+/// Journal of Mathematical Sociology, 23(3), 181-201.
+///
+/// Arguments:
+///
+/// * `graph` - The graph object to run the algorithm on
+/// * `group` - A slice of node indices representing the group
+/// * `direction` - Optional direction for directed graphs:
+///     - `None` uses outgoing edges (default)
+///     - `Some(Incoming)` counts nodes with edges into the group
+///     - `Some(Outgoing)` counts nodes reachable from the group
+///
+/// # Example
+/// ```rust
+/// use rustworkx_core::petgraph;
+/// use rustworkx_core::centrality::group_degree_centrality;
+///
+/// let g = petgraph::graph::UnGraph::<i32, ()>::from_edges(&[
+///     (0, 1), (1, 2), (2, 3), (3, 4)
+/// ]);
+/// let output = group_degree_centrality(&g, &[0, 1], None);
+/// // Nodes 0,1 are the group. Neighbors of {0,1} outside the group = {2}.
+/// // So centrality = 1 / (5 - 2) = 1/3.
+/// assert!((output - 1.0 / 3.0).abs() < 1e-10);
+/// ```
+pub fn group_degree_centrality<G>(
+    graph: G,
+    group: &[usize],
+    direction: Option<petgraph::Direction>,
+) -> f64
+where
+    G: NodeIndexable + IntoNodeIdentifiers + IntoNeighborsDirected + NodeCount + GraphProp,
+    G::NodeId: Eq + Hash,
+{
+    let node_count = graph.node_count();
+    let group_size = group.len();
+    if group_size >= node_count {
+        return 0.0;
+    }
+
+    let group_set: HashSet<usize> = group.iter().copied().collect();
+    let mut reached: HashSet<usize> = HashSet::new();
+
+    for &node_idx in group {
+        let node_id = graph.from_index(node_idx);
+        let mut process_neighbor = |neighbor: G::NodeId| {
+            let neighbor_idx = graph.to_index(neighbor);
+            if !group_set.contains(&neighbor_idx) {
+                reached.insert(neighbor_idx);
+            }
+        };
+        match direction {
+            Some(dir) => {
+                for neighbor in graph.neighbors_directed(node_id, dir) {
+                    process_neighbor(neighbor);
+                }
+            }
+            None => {
+                for neighbor in graph.neighbors(node_id) {
+                    process_neighbor(neighbor);
+                }
+            }
+        }
+    }
+
+    reached.len() as f64 / (node_count - group_size) as f64
+}
+
+/// Compute the group closeness centrality of a set of nodes.
+///
+/// Group closeness centrality measures how close a group of nodes is to
+/// all non-group nodes. It is defined as:
+///
+/// C_close(S) = |V \ S| / sum_{v in V\S} d(S, v)
+///
+/// where d(S, v) = min_{u in S} d(u, v) is the minimum distance from any
+/// group member to node v.
+///
+/// Note: For disconnected graphs, unreachable nodes do not contribute to
+/// the distance sum but are still counted in |V \ S|. This can produce
+/// values greater than 1.0, matching the convention used by NetworkX.
+///
+/// Based on: Everett, M. G., & Borgatti, S. P. (1999).
+/// The centrality of groups and classes.
+/// Journal of Mathematical Sociology, 23(3), 181-201.
+///
+/// Arguments:
+///
+/// * `graph` - The graph object to run the algorithm on
+/// * `group` - A slice of node indices representing the group
+///
+/// # Example
+/// ```rust
+/// use rustworkx_core::petgraph;
+/// use rustworkx_core::centrality::group_closeness_centrality;
+///
+/// let g = petgraph::graph::UnGraph::<i32, ()>::from_edges(&[
+///     (0, 1), (1, 2), (2, 3), (3, 4)
+/// ]);
+/// let output = group_closeness_centrality(&g, &[0, 1]);
+/// // Group = {0, 1}. Non-group = {2, 3, 4}.
+/// // d({0,1}, 2) = 1, d({0,1}, 3) = 2, d({0,1}, 4) = 3. Sum = 6.
+/// // Closeness = 3 / 6 = 0.5
+/// assert!((output - 0.5).abs() < 1e-10);
+/// ```
+pub fn group_closeness_centrality<G>(graph: G, group: &[usize]) -> f64
+where
+    G: NodeIndexable + IntoNodeIdentifiers + GraphBase + IntoEdges + IntoEdgesDirected + NodeCount,
+    G::NodeId: Eq + Hash,
+    G::EdgeId: Eq,
+{
+    let node_count = graph.node_count();
+    let group_size = group.len();
+    if group_size >= node_count {
+        return 0.0;
+    }
+
+    let group_set: HashSet<usize> = group.iter().copied().collect();
+
+    // Multi-source BFS on Reversed graph (incoming edges), matching the
+    // convention used by NX and by per-node closeness_centrality: d(S,v)
+    // is the distance from v to the nearest group member.
+    let reversed = Reversed(&graph);
+    let max_index = graph.node_bound();
+    let mut distance: Vec<Option<usize>> = vec![None; max_index];
+    let mut queue: VecDeque<G::NodeId> = VecDeque::new();
+
+    for &node_idx in group {
+        let node_id = graph.from_index(node_idx);
+        distance[node_idx] = Some(0);
+        queue.push_back(node_id);
+    }
+
+    while let Some(v) = queue.pop_front() {
+        let v_idx = graph.to_index(v);
+        let dist_v = distance[v_idx].unwrap();
+        for edge in reversed.edges(v) {
+            let w = edge.target();
+            let w_idx = graph.to_index(w);
+            if distance[w_idx].is_none() {
+                distance[w_idx] = Some(dist_v + 1);
+                queue.push_back(w);
+            }
+        }
+    }
+
+    let mut dist_sum: usize = 0;
+    for node in graph.node_identifiers() {
+        let idx = graph.to_index(node);
+        if group_set.contains(&idx) {
+            continue;
+        }
+        if let Some(d) = distance[idx] {
+            dist_sum += d;
+        }
+    }
+
+    if dist_sum == 0 {
+        return 0.0;
+    }
+
+    (node_count - group_size) as f64 / dist_sum as f64
+}
+
+/// Compute the group betweenness centrality of a set of nodes.
+///
+/// Group betweenness centrality measures the fraction of shortest paths
+/// between non-group node pairs that pass through at least one group member.
+/// It is defined as:
+///
+/// C_B(S) = sum_{s,t in V\S} sigma(s,t|S) / sigma(s,t)
+///
+/// where sigma(s,t) is the number of shortest paths from s to t, and
+/// sigma(s,t|S) is the number of those paths passing through at least
+/// one node in S.
+///
+/// Based on: Everett, M. G., & Borgatti, S. P. (1999).
+/// The centrality of groups and classes.
+/// Journal of Mathematical Sociology, 23(3), 181-201.
+///
+/// Arguments:
+///
+/// * `graph` - The graph object to run the algorithm on
+/// * `group` - A slice of node indices representing the group
+/// * `normalized` - Whether to normalize the result
+///
+/// # Example
+/// ```rust
+/// use rustworkx_core::petgraph;
+/// use rustworkx_core::centrality::group_betweenness_centrality;
+///
+/// let g = petgraph::graph::UnGraph::<i32, ()>::from_edges(&[
+///     (0, 1), (1, 2), (2, 3), (3, 4)
+/// ]);
+/// let output = group_betweenness_centrality(&g, &[2], true);
+/// // Node 2 is on every shortest path between {0,1} and {3,4}.
+/// assert!(output > 0.0);
+/// ```
+pub fn group_betweenness_centrality<G>(graph: G, group: &[usize], normalized: bool) -> f64
+where
+    G: NodeIndexable
+        + IntoNodeIdentifiers
+        + IntoNeighborsDirected
+        + NodeCount
+        + GraphProp
+        + GraphBase,
+    G::NodeId: Eq + Hash,
+{
+    let node_count = graph.node_count();
+    let group_size = group.len();
+
+    if group_size == 0 || node_count <= 1 {
+        return 0.0;
+    }
+
+    let group_set: HashSet<usize> = group.iter().copied().collect();
+    let max_index = graph.node_bound();
+
+    // For each non-group source, run BFS on the full graph and on the graph
+    // with group nodes removed. The difference in path counts gives us the
+    // fraction of shortest paths passing through the group.
+    let mut group_betweenness: f64 = 0.0;
+
+    let node_ids: Vec<G::NodeId> = graph.node_identifiers().collect();
+
+    for &source_id in &node_ids {
+        let source_idx = graph.to_index(source_id);
+        if group_set.contains(&source_idx) {
+            continue;
+        }
+
+        // BFS on full graph from source
+        let mut sigma_full = vec![0.0_f64; max_index];
+        let mut dist_full: Vec<Option<usize>> = vec![None; max_index];
+        let mut queue: VecDeque<G::NodeId> = VecDeque::new();
+
+        sigma_full[source_idx] = 1.0;
+        dist_full[source_idx] = Some(0);
+        queue.push_back(source_id);
+
+        while let Some(v) = queue.pop_front() {
+            let v_idx = graph.to_index(v);
+            let dist_v = dist_full[v_idx].unwrap();
+            for w in graph.neighbors(v) {
+                let w_idx = graph.to_index(w);
+                if dist_full[w_idx].is_none() {
+                    dist_full[w_idx] = Some(dist_v + 1);
+                    queue.push_back(w);
+                }
+                if dist_full[w_idx] == Some(dist_v + 1) {
+                    sigma_full[w_idx] += sigma_full[v_idx];
+                }
+            }
+        }
+
+        // BFS on graph with group nodes removed
+        let mut sigma_no_group = vec![0.0_f64; max_index];
+        let mut dist_no_group: Vec<Option<usize>> = vec![None; max_index];
+        let mut queue2: VecDeque<G::NodeId> = VecDeque::new();
+
+        sigma_no_group[source_idx] = 1.0;
+        dist_no_group[source_idx] = Some(0);
+        queue2.push_back(source_id);
+
+        while let Some(v) = queue2.pop_front() {
+            let v_idx = graph.to_index(v);
+            let dist_v = dist_no_group[v_idx].unwrap();
+            for w in graph.neighbors(v) {
+                let w_idx = graph.to_index(w);
+                if group_set.contains(&w_idx) {
+                    continue;
+                }
+                if dist_no_group[w_idx].is_none() {
+                    dist_no_group[w_idx] = Some(dist_v + 1);
+                    queue2.push_back(w);
+                }
+                if dist_no_group[w_idx] == Some(dist_v + 1) {
+                    sigma_no_group[w_idx] += sigma_no_group[v_idx];
+                }
+            }
+        }
+
+        // For each non-group target, accumulate the fraction of shortest paths
+        // that pass through at least one group member.
+        for &target_id in &node_ids {
+            let target_idx = graph.to_index(target_id);
+            if target_idx == source_idx || group_set.contains(&target_idx) {
+                continue;
+            }
+            if sigma_full[target_idx] == 0.0 {
+                continue;
+            }
+
+            // Paths through group = total - paths avoiding group,
+            // but only if the shortest path length is the same. If it differs,
+            // none of the shortest paths avoid the group.
+            let paths_avoiding = if dist_no_group[target_idx] == dist_full[target_idx] {
+                sigma_no_group[target_idx]
+            } else {
+                0.0
+            };
+
+            let fraction_through_group =
+                (sigma_full[target_idx] - paths_avoiding) / sigma_full[target_idx];
+            group_betweenness += fraction_through_group;
+        }
+    }
+
+    if !graph.is_directed() {
+        group_betweenness /= 2.0;
+    }
+
+    if normalized {
+        let non_group = node_count - group_size;
+        if non_group > 1 {
+            let norm = if graph.is_directed() {
+                (non_group * (non_group - 1)) as f64
+            } else {
+                ((non_group * (non_group - 1)) / 2) as f64
+            };
+            group_betweenness /= norm;
+        }
+    }
+
+    group_betweenness
+}
+
+#[cfg(test)]
+mod test_group_degree_centrality {
+    use crate::centrality::group_degree_centrality;
+    use crate::petgraph;
+
+    #[test]
+    fn test_undirected_path() {
+        let g = petgraph::graph::UnGraph::<(), ()>::from_edges(&[(0, 1), (1, 2), (2, 3), (3, 4)]);
+        let result = group_degree_centrality(&g, &[0, 1], None);
+        // Neighbors of {0,1} outside group = {2}. Centrality = 1/3.
+        assert!((result - 1.0 / 3.0).abs() < 1e-10);
+    }
+
+    #[test]
+    fn test_undirected_complete() {
+        let g = petgraph::graph::UnGraph::<(), ()>::from_edges(&[
+            (0, 1),
+            (0, 2),
+            (0, 3),
+            (1, 2),
+            (1, 3),
+            (2, 3),
+        ]);
+        let result = group_degree_centrality(&g, &[0], None);
+        assert!((result - 1.0).abs() < 1e-10);
+    }
+
+    #[test]
+    fn test_directed_out() {
+        let g = petgraph::graph::DiGraph::<(), ()>::from_edges(&[(0, 1), (1, 2), (2, 3)]);
+        let result = group_degree_centrality(&g, &[0, 1], Some(petgraph::Direction::Outgoing));
+        // Out-neighbors of {0,1} outside group = {2}. Centrality = 1/2.
+        assert!((result - 0.5).abs() < 1e-10);
+    }
+
+    #[test]
+    fn test_directed_in() {
+        let g = petgraph::graph::DiGraph::<(), ()>::from_edges(&[(0, 1), (1, 2), (2, 3)]);
+        let result = group_degree_centrality(&g, &[2, 3], Some(petgraph::Direction::Incoming));
+        // In-neighbors of {2,3} outside group = {1}. Centrality = 1/2.
+        assert!((result - 0.5).abs() < 1e-10);
+    }
+}
+
+#[cfg(test)]
+mod test_group_closeness_centrality {
+    use crate::centrality::group_closeness_centrality;
+    use crate::petgraph;
+
+    macro_rules! assert_almost_equal {
+        ($x:expr, $y:expr, $d:expr) => {
+            if ($x - $y).abs() >= $d {
+                panic!("{} != {} within delta of {}", $x, $y, $d);
+            }
+        };
+    }
+
+    #[test]
+    fn test_undirected_path() {
+        let g = petgraph::graph::UnGraph::<(), ()>::from_edges(&[(0, 1), (1, 2), (2, 3), (3, 4)]);
+        let result = group_closeness_centrality(&g, &[0, 1]);
+        // Non-group = {2,3,4}. d(S,2)=1, d(S,3)=2, d(S,4)=3. Sum=6.
+        // Closeness = 3/6 = 0.5
+        assert_almost_equal!(result, 0.5, 1e-10);
+    }
+
+    #[test]
+    fn test_undirected_center_node() {
+        let g = petgraph::graph::UnGraph::<(), ()>::from_edges(&[(0, 2), (1, 2), (2, 3), (2, 4)]);
+        let result = group_closeness_centrality(&g, &[2]);
+        // Non-group = {0,1,3,4}. All at distance 1. Sum=4.
+        // Closeness = 4/4 = 1.0
+        assert_almost_equal!(result, 1.0, 1e-10);
+    }
+
+    #[test]
+    fn test_disconnected() {
+        // Two disconnected components
+        let mut g = petgraph::graph::UnGraph::<(), ()>::new_undirected();
+        g.add_node(());
+        g.add_node(());
+        g.add_node(());
+        g.add_edge(
+            petgraph::graph::NodeIndex::new(0),
+            petgraph::graph::NodeIndex::new(1),
+            (),
+        );
+        // Node 2 is disconnected
+        let result = group_closeness_centrality(&g, &[0]);
+        // |V-S|=2, only node 1 reachable at distance 1. Node 2 unreachable.
+        // dist_sum=1. closeness = 2/1 = 2.0
+        assert_almost_equal!(result, 2.0, 1e-10);
+    }
+}
+
+#[cfg(test)]
+mod test_group_betweenness_centrality {
+    use crate::centrality::group_betweenness_centrality;
+    use crate::petgraph;
+
+    macro_rules! assert_almost_equal {
+        ($x:expr, $y:expr, $d:expr) => {
+            if ($x - $y).abs() >= $d {
+                panic!("{} != {} within delta of {}", $x, $y, $d);
+            }
+        };
+    }
+
+    #[test]
+    fn test_undirected_path_center() {
+        // Path: 0-1-2-3-4
+        let g = petgraph::graph::UnGraph::<(), ()>::from_edges(&[(0, 1), (1, 2), (2, 3), (3, 4)]);
+        // Group = {2}. Node 2 is on all shortest paths between {0,1} and {3,4}.
+        let result = group_betweenness_centrality(&g, &[2], false);
+        // Pairs through node 2: (0,3), (0,4), (1,3), (1,4) = 4 paths
+        assert_almost_equal!(result, 4.0, 1e-10);
+    }
+
+    #[test]
+    fn test_undirected_path_center_normalized() {
+        let g = petgraph::graph::UnGraph::<(), ()>::from_edges(&[(0, 1), (1, 2), (2, 3), (3, 4)]);
+        let result = group_betweenness_centrality(&g, &[2], true);
+        // Non-group size = 4. Normalization = C(4,2) = 6.
+        // Normalized = 4/6 = 2/3
+        assert_almost_equal!(result, 2.0 / 3.0, 1e-10);
+    }
+
+    #[test]
+    fn test_empty_group() {
+        let g = petgraph::graph::UnGraph::<(), ()>::from_edges(&[(0, 1), (1, 2)]);
+        let result = group_betweenness_centrality(&g, &[], false);
+        assert_almost_equal!(result, 0.0, 1e-10);
+    }
+
+    #[test]
+    fn test_single_node_group() {
+        // Star graph: center=0, leaves=1,2,3,4
+        let g = petgraph::graph::UnGraph::<(), ()>::from_edges(&[(0, 1), (0, 2), (0, 3), (0, 4)]);
+        let result = group_betweenness_centrality(&g, &[0], false);
+        // Node 0 is on all 6 shortest paths between leaf pairs
+        assert_almost_equal!(result, 6.0, 1e-10);
+    }
+
+    #[test]
+    fn test_directed_path() {
+        // Directed path: 0->1->2->3->4
+        let g = petgraph::graph::DiGraph::<(), ()>::from_edges(&[(0, 1), (1, 2), (2, 3), (3, 4)]);
+        // Group = {2}. Directed shortest paths through node 2:
+        // (0,3), (0,4), (1,3), (1,4) = 4 pairs
+        let result = group_betweenness_centrality(&g, &[2], false);
+        assert_almost_equal!(result, 4.0, 1e-10);
+    }
+
+    #[test]
+    fn test_directed_path_normalized() {
+        let g = petgraph::graph::DiGraph::<(), ()>::from_edges(&[(0, 1), (1, 2), (2, 3), (3, 4)]);
+        let result = group_betweenness_centrality(&g, &[2], true);
+        // Non-group = 4 nodes. Directed normalization = 4 * 3 = 12.
+        // Normalized = 4 / 12 = 1/3
+        assert_almost_equal!(result, 1.0 / 3.0, 1e-10);
+    }
+
+    #[test]
+    fn test_directed_star() {
+        // Directed star: 0->1, 0->2, 0->3, 0->4
+        let g = petgraph::graph::DiGraph::<(), ()>::from_edges(&[(0, 1), (0, 2), (0, 3), (0, 4)]);
+        // Group = {0}. No directed shortest paths between leaf pairs
+        // pass through 0 (leaves are unreachable from each other).
+        let result = group_betweenness_centrality(&g, &[0], false);
+        assert_almost_equal!(result, 0.0, 1e-10);
+    }
+
+    #[test]
+    fn test_directed_bidirectional_star() {
+        // Bidirectional star: edges in both directions between center and leaves
+        let g = petgraph::graph::DiGraph::<(), ()>::from_edges(&[
+            (0, 1),
+            (1, 0),
+            (0, 2),
+            (2, 0),
+            (0, 3),
+            (3, 0),
+            (0, 4),
+            (4, 0),
+        ]);
+        // Group = {0}. All 12 directed shortest paths between leaf pairs
+        // go through node 0 (e.g. 1->0->2, 2->0->1, etc.).
+        // 4 leaves, 4*3 = 12 ordered pairs.
+        let result = group_betweenness_centrality(&g, &[0], false);
+        assert_almost_equal!(result, 12.0, 1e-10);
     }
 }
