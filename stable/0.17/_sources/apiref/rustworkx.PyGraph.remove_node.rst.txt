@@ -1,0 +1,6 @@
+rustworkx.PyGraph.remove\_node
+==============================
+
+.. currentmodule:: rustworkx
+
+.. automethod:: PyGraph.remove_node
