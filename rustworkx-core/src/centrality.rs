@@ -1800,14 +1800,22 @@ where
 
     for &node_idx in group {
         let node_id = graph.from_index(node_idx);
-        let neighbors: Box<dyn Iterator<Item = G::NodeId>> = match direction {
-            Some(dir) => Box::new(graph.neighbors_directed(node_id, dir)),
-            None => Box::new(graph.neighbors(node_id)),
-        };
-        for neighbor in neighbors {
+        let mut process_neighbor = |neighbor: G::NodeId| {
             let neighbor_idx = graph.to_index(neighbor);
             if !group_set.contains(&neighbor_idx) {
                 reached.insert(neighbor_idx);
+            }
+        };
+        match direction {
+            Some(dir) => {
+                for neighbor in graph.neighbors_directed(node_id, dir) {
+                    process_neighbor(neighbor);
+                }
+            }
+            None => {
+                for neighbor in graph.neighbors(node_id) {
+                    process_neighbor(neighbor);
+                }
             }
         }
     }
