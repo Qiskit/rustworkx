@@ -76,7 +76,7 @@ test = [
   "stestr>=4.1",
 ]
 lint = [
-    "black~=25.9",
+    "black>=25.9,<27.0",
     "ruff==0.14.3",
     "setuptools-rust",
     "typos~=1.39",
