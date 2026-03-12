@@ -355,7 +355,6 @@ pub fn degree_centrality<G>(graph: G, direction: Option<petgraph::Direction>) ->
 where
     G: NodeIndexable
         + IntoNodeIdentifiers
-        + IntoNeighbors
         + IntoNeighborsDirected
         + NodeCount
         + GraphProp,
@@ -1785,7 +1784,6 @@ pub fn group_degree_centrality<G>(
 where
     G: NodeIndexable
         + IntoNodeIdentifiers
-        + IntoNeighbors
         + IntoNeighborsDirected
         + NodeCount
         + GraphProp,
