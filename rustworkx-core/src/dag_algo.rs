@@ -302,9 +302,10 @@ where
     let mut dist: HashMap<G::NodeId, (T, G::NodeId)> = HashMap::with_capacity(nodes.len()); // Stores the distance and the previous node
 
     // Iterate over nodes in topological order
+    let mut incoming_path: Vec<(T, G::NodeId)> = Vec::new();
     for node in nodes {
         let parents = graph.edges_directed(node, petgraph::Direction::Incoming);
-        let mut incoming_path: Vec<(T, G::NodeId)> = Vec::new(); // Stores the distance and the previous node for each parent
+        incoming_path.clear();
         for p_edge in parents {
             let p_node = p_edge.source();
             let weight: T = weight_fn(p_edge)?;
@@ -313,8 +314,9 @@ where
         }
         // Determine the maximum distance and corresponding parent node
         let max_path: (T, G::NodeId) = incoming_path
-            .into_iter()
+            .iter()
             .max_by(|a, b| a.0.partial_cmp(&b.0).unwrap())
+            .copied()
             .unwrap_or((T::zero(), node)); // If there are no incoming edges, the distance is zero
 
         // Store the maximum distance and the corresponding parent node for the current node
