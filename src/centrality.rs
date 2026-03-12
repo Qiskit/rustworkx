@@ -1124,10 +1124,7 @@ pub fn digraph_katz_centrality(
 /// :raises PyValueError: If any node index in the group is not in the graph
 #[pyfunction(signature = (graph, group))]
 #[pyo3(text_signature = "(graph, group, /)")]
-pub fn graph_group_degree_centrality(
-    graph: &graph::PyGraph,
-    group: Vec<usize>,
-) -> PyResult<f64> {
+pub fn graph_group_degree_centrality(graph: &graph::PyGraph, group: Vec<usize>) -> PyResult<f64> {
     for &idx in &group {
         if !graph.graph.contains_node(NodeIndex::new(idx)) {
             return Err(PyValueError::new_err(format!(
@@ -1223,10 +1220,7 @@ pub fn graph_group_closeness_centrality(
             )));
         }
     }
-    Ok(centrality::group_closeness_centrality(
-        &graph.graph,
-        &group,
-    ))
+    Ok(centrality::group_closeness_centrality(&graph.graph, &group))
 }
 
 /// Compute the group closeness centrality of a set of nodes in a
@@ -1266,10 +1260,7 @@ pub fn digraph_group_closeness_centrality(
             )));
         }
     }
-    Ok(centrality::group_closeness_centrality(
-        &graph.graph,
-        &group,
-    ))
+    Ok(centrality::group_closeness_centrality(&graph.graph, &group))
 }
 
 /// Compute the group betweenness centrality of a set of nodes in a

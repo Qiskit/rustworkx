@@ -353,11 +353,7 @@ fn accumulate_edges<G>(
 /// ```
 pub fn degree_centrality<G>(graph: G, direction: Option<petgraph::Direction>) -> Vec<f64>
 where
-    G: NodeIndexable
-        + IntoNodeIdentifiers
-        + IntoNeighborsDirected
-        + NodeCount
-        + GraphProp,
+    G: NodeIndexable + IntoNodeIdentifiers + IntoNeighborsDirected + NodeCount + GraphProp,
     G::NodeId: Eq,
 {
     let node_count = graph.node_count() as f64;
@@ -1782,11 +1778,7 @@ pub fn group_degree_centrality<G>(
     direction: Option<petgraph::Direction>,
 ) -> f64
 where
-    G: NodeIndexable
-        + IntoNodeIdentifiers
-        + IntoNeighborsDirected
-        + NodeCount
-        + GraphProp,
+    G: NodeIndexable + IntoNodeIdentifiers + IntoNeighborsDirected + NodeCount + GraphProp,
     G::NodeId: Eq + Hash,
 {
     let node_count = graph.node_count();
@@ -1862,12 +1854,7 @@ where
 /// ```
 pub fn group_closeness_centrality<G>(graph: G, group: &[usize]) -> f64
 where
-    G: NodeIndexable
-        + IntoNodeIdentifiers
-        + GraphBase
-        + IntoEdges
-        + IntoEdgesDirected
-        + NodeCount,
+    G: NodeIndexable + IntoNodeIdentifiers + GraphBase + IntoEdges + IntoEdgesDirected + NodeCount,
     G::NodeId: Eq + Hash,
     G::EdgeId: Eq,
 {
@@ -1958,11 +1945,7 @@ where
 /// // Node 2 is on every shortest path between {0,1} and {3,4}.
 /// assert!(output > 0.0);
 /// ```
-pub fn group_betweenness_centrality<G>(
-    graph: G,
-    group: &[usize],
-    normalized: bool,
-) -> f64
+pub fn group_betweenness_centrality<G>(graph: G, group: &[usize], normalized: bool) -> f64
 where
     G: NodeIndexable
         + IntoNodeIdentifiers
@@ -2098,12 +2081,7 @@ mod test_group_degree_centrality {
 
     #[test]
     fn test_undirected_path() {
-        let g = petgraph::graph::UnGraph::<(), ()>::from_edges(&[
-            (0, 1),
-            (1, 2),
-            (2, 3),
-            (3, 4),
-        ]);
+        let g = petgraph::graph::UnGraph::<(), ()>::from_edges(&[(0, 1), (1, 2), (2, 3), (3, 4)]);
         let result = group_degree_centrality(&g, &[0, 1], None);
         // Neighbors of {0,1} outside group = {2}. Centrality = 1/3.
         assert!((result - 1.0 / 3.0).abs() < 1e-10);
@@ -2125,26 +2103,16 @@ mod test_group_degree_centrality {
 
     #[test]
     fn test_directed_out() {
-        let g = petgraph::graph::DiGraph::<(), ()>::from_edges(&[
-            (0, 1),
-            (1, 2),
-            (2, 3),
-        ]);
-        let result =
-            group_degree_centrality(&g, &[0, 1], Some(petgraph::Direction::Outgoing));
+        let g = petgraph::graph::DiGraph::<(), ()>::from_edges(&[(0, 1), (1, 2), (2, 3)]);
+        let result = group_degree_centrality(&g, &[0, 1], Some(petgraph::Direction::Outgoing));
         // Out-neighbors of {0,1} outside group = {2}. Centrality = 1/2.
         assert!((result - 0.5).abs() < 1e-10);
     }
 
     #[test]
     fn test_directed_in() {
-        let g = petgraph::graph::DiGraph::<(), ()>::from_edges(&[
-            (0, 1),
-            (1, 2),
-            (2, 3),
-        ]);
-        let result =
-            group_degree_centrality(&g, &[2, 3], Some(petgraph::Direction::Incoming));
+        let g = petgraph::graph::DiGraph::<(), ()>::from_edges(&[(0, 1), (1, 2), (2, 3)]);
+        let result = group_degree_centrality(&g, &[2, 3], Some(petgraph::Direction::Incoming));
         // In-neighbors of {2,3} outside group = {1}. Centrality = 1/2.
         assert!((result - 0.5).abs() < 1e-10);
     }
@@ -2165,12 +2133,7 @@ mod test_group_closeness_centrality {
 
     #[test]
     fn test_undirected_path() {
-        let g = petgraph::graph::UnGraph::<(), ()>::from_edges(&[
-            (0, 1),
-            (1, 2),
-            (2, 3),
-            (3, 4),
-        ]);
+        let g = petgraph::graph::UnGraph::<(), ()>::from_edges(&[(0, 1), (1, 2), (2, 3), (3, 4)]);
         let result = group_closeness_centrality(&g, &[0, 1]);
         // Non-group = {2,3,4}. d(S,2)=1, d(S,3)=2, d(S,4)=3. Sum=6.
         // Closeness = 3/6 = 0.5
@@ -2179,12 +2142,7 @@ mod test_group_closeness_centrality {
 
     #[test]
     fn test_undirected_center_node() {
-        let g = petgraph::graph::UnGraph::<(), ()>::from_edges(&[
-            (0, 2),
-            (1, 2),
-            (2, 3),
-            (2, 4),
-        ]);
+        let g = petgraph::graph::UnGraph::<(), ()>::from_edges(&[(0, 2), (1, 2), (2, 3), (2, 4)]);
         let result = group_closeness_centrality(&g, &[2]);
         // Non-group = {0,1,3,4}. All at distance 1. Sum=4.
         // Closeness = 4/4 = 1.0
@@ -2227,12 +2185,7 @@ mod test_group_betweenness_centrality {
     #[test]
     fn test_undirected_path_center() {
         // Path: 0-1-2-3-4
-        let g = petgraph::graph::UnGraph::<(), ()>::from_edges(&[
-            (0, 1),
-            (1, 2),
-            (2, 3),
-            (3, 4),
-        ]);
+        let g = petgraph::graph::UnGraph::<(), ()>::from_edges(&[(0, 1), (1, 2), (2, 3), (3, 4)]);
         // Group = {2}. Node 2 is on all shortest paths between {0,1} and {3,4}.
         let result = group_betweenness_centrality(&g, &[2], false);
         // Pairs through node 2: (0,3), (0,4), (1,3), (1,4) = 4 paths
@@ -2241,12 +2194,7 @@ mod test_group_betweenness_centrality {
 
     #[test]
     fn test_undirected_path_center_normalized() {
-        let g = petgraph::graph::UnGraph::<(), ()>::from_edges(&[
-            (0, 1),
-            (1, 2),
-            (2, 3),
-            (3, 4),
-        ]);
+        let g = petgraph::graph::UnGraph::<(), ()>::from_edges(&[(0, 1), (1, 2), (2, 3), (3, 4)]);
         let result = group_betweenness_centrality(&g, &[2], true);
         // Non-group size = 4. Normalization = C(4,2) = 6.
         // Normalized = 4/6 = 2/3
@@ -2263,12 +2211,7 @@ mod test_group_betweenness_centrality {
     #[test]
     fn test_single_node_group() {
         // Star graph: center=0, leaves=1,2,3,4
-        let g = petgraph::graph::UnGraph::<(), ()>::from_edges(&[
-            (0, 1),
-            (0, 2),
-            (0, 3),
-            (0, 4),
-        ]);
+        let g = petgraph::graph::UnGraph::<(), ()>::from_edges(&[(0, 1), (0, 2), (0, 3), (0, 4)]);
         let result = group_betweenness_centrality(&g, &[0], false);
         // Node 0 is on all 6 shortest paths between leaf pairs
         assert_almost_equal!(result, 6.0, 1e-10);
@@ -2277,12 +2220,7 @@ mod test_group_betweenness_centrality {
     #[test]
     fn test_directed_path() {
         // Directed path: 0->1->2->3->4
-        let g = petgraph::graph::DiGraph::<(), ()>::from_edges(&[
-            (0, 1),
-            (1, 2),
-            (2, 3),
-            (3, 4),
-        ]);
+        let g = petgraph::graph::DiGraph::<(), ()>::from_edges(&[(0, 1), (1, 2), (2, 3), (3, 4)]);
         // Group = {2}. Directed shortest paths through node 2:
         // (0,3), (0,4), (1,3), (1,4) = 4 pairs
         let result = group_betweenness_centrality(&g, &[2], false);
@@ -2291,12 +2229,7 @@ mod test_group_betweenness_centrality {
 
     #[test]
     fn test_directed_path_normalized() {
-        let g = petgraph::graph::DiGraph::<(), ()>::from_edges(&[
-            (0, 1),
-            (1, 2),
-            (2, 3),
-            (3, 4),
-        ]);
+        let g = petgraph::graph::DiGraph::<(), ()>::from_edges(&[(0, 1), (1, 2), (2, 3), (3, 4)]);
         let result = group_betweenness_centrality(&g, &[2], true);
         // Non-group = 4 nodes. Directed normalization = 4 * 3 = 12.
         // Normalized = 4 / 12 = 1/3
@@ -2306,12 +2239,7 @@ mod test_group_betweenness_centrality {
     #[test]
     fn test_directed_star() {
         // Directed star: 0->1, 0->2, 0->3, 0->4
-        let g = petgraph::graph::DiGraph::<(), ()>::from_edges(&[
-            (0, 1),
-            (0, 2),
-            (0, 3),
-            (0, 4),
-        ]);
+        let g = petgraph::graph::DiGraph::<(), ()>::from_edges(&[(0, 1), (0, 2), (0, 3), (0, 4)]);
         // Group = {0}. No directed shortest paths between leaf pairs
         // pass through 0 (leaves are unreachable from each other).
         let result = group_betweenness_centrality(&g, &[0], false);
@@ -2322,10 +2250,14 @@ mod test_group_betweenness_centrality {
     fn test_directed_bidirectional_star() {
         // Bidirectional star: edges in both directions between center and leaves
         let g = petgraph::graph::DiGraph::<(), ()>::from_edges(&[
-            (0, 1), (1, 0),
-            (0, 2), (2, 0),
-            (0, 3), (3, 0),
-            (0, 4), (4, 0),
+            (0, 1),
+            (1, 0),
+            (0, 2),
+            (2, 0),
+            (0, 3),
+            (3, 0),
+            (0, 4),
+            (4, 0),
         ]);
         // Group = {0}. All 12 directed shortest paths between leaf pairs
         // go through node 0 (e.g. 1->0->2, 2->0->1, etc.).
