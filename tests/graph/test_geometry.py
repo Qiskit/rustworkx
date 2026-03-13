@@ -18,7 +18,6 @@ import rustworkx as rx
 
 
 class TestHyperbolicGreedyRouting(unittest.TestCase):
-
     def test_invalid_node_error(self):
         graph = rx.PyGraph()
         positions = []

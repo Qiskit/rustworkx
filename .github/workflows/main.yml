@@ -37,8 +37,8 @@ jobs:
         run: cargo fmt --all -- --check
       - name: Clippy
         run: cargo clippy --workspace --all-targets -- -D warnings
-      - name: Black Codestyle Format
-        run: black --check --diff rustworkx tests
+      - name: Ruff Codestyle Format
+        run: ruff format --check --diff rustworkx tests
       - name: Python Lint
         run: ruff check rustworkx setup.py tests
       - name: Check stray release notes
@@ -146,7 +146,14 @@ jobs:
       - name: Build rustworkx
         run: pip install .
         env:
-          SETUPTOOLS_RUST_CARGO_PROFILE: "dev"
+          CARGO_PROFILE_RELEASE_OPT_LEVEL: "0"
+          CARGO_PROFILE_RELEASE_DEBUG: "true"
+          CARGO_PROFILE_RELEASE_DEBUG_ASSERTIONS: "true"
+          CARGO_PROFILE_RELEASE_OVERFLOW_CHECKS: "true"
+          CARGO_PROFILE_RELEASE_LTO: "false"
+          CARGO_PROFILE_RELEASE_PANIC: "unwind"
+          CARGO_PROFILE_RELEASE_INCREMENTAL: "true"
+          CARGO_PROFILE_RELEASE_CODEGEN_UNITS: "16"
           CARGO_INCREMENTAL: 0
           RUSTFLAGS: "-Cinstrument-coverage"
           LLVM_PROFILE_FILE: "rustworkx-%p-%m.profraw"
@@ -158,7 +165,7 @@ jobs:
         run: |
           set -e
           mv tests/rustworkx*profraw .
-          ./grcov . --binary-path ./target/debug/ -s . -t lcov --branch --ignore-not-existing --ignore "/*" -o ./coveralls.lcov
+          ./grcov . --binary-path ./target/release/ -s . -t lcov --branch --ignore-not-existing --ignore "/*" -o ./coveralls.lcov
       - uses: actions/upload-artifact@v4
         with:
           name: coverage
