@@ -22,6 +22,7 @@ mod find_cycle;
 mod isolates;
 mod johnson_simple_cycles;
 mod min_cut;
+mod minimal_cycle_basis;
 
 pub use all_simple_paths::{
     all_simple_paths_multiple_targets, longest_simple_path_multiple_targets,
@@ -38,3 +39,4 @@ pub use find_cycle::find_cycle;
 pub use isolates::isolates;
 pub use johnson_simple_cycles::{SimpleCycleIter, johnson_simple_cycles};
 pub use min_cut::stoer_wagner_min_cut;
+pub use minimal_cycle_basis::minimal_cycle_basis;
