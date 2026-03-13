@@ -110,15 +110,17 @@ target-version = ['py310', 'py311', 'py312', 'py313', 'py314']
 [tool.ruff]
 line-length = 105 # more lenient than black due to long function signatures
 src = ["rustworkx", "setup.py", "tests"]
-lint.select = [
+extend-exclude = ["doc"]
+target-version = "py310"
+
+[tool.ruff.lint]
+select = [
     "E",   # pycodestyle
     "F",   # pyflakes
     "UP",  # pyupgrade
     "PYI", # flake8-pyi
     "Q",   # flake8-quotes
 ]
-target-version = "py310"
-extend-exclude = ["doc"]
 
 [tool.ruff.lint.per-file-ignores]
 "rustworkx/__init__.py" = ["F405", "F403"]
@@ -154,3 +156,58 @@ repair-wheel-command = "brew install pipx && pipx ensurepath && pipx run --spec 
 
 [tool.cibuildwheel.windows]
 repair-wheel-command = "cp {wheel} {dest_dir}/. && pipx run abi3audit==0.0.9 --strict --report {wheel}"
+
+[tool.pixi.workspace]
+channels = ["conda-forge"]
+platforms = ["linux-64", "osx-arm64"]
+
+[tool.pixi.environments]
+default = {features = [], solve-group = "default"}
+
+[tool.pixi.dependencies]
+python = "==3.12.7"
+pip="==25.3"
+pyodide-build = "==0.30.9"
+emscripten = "==3.1.58"
+nodejs = ">=25.2.1,<25.3"
+rust = "==1.86"
+rust-std-wasm32-unknown-emscripten = "==1.86"
+rust-src = "==1.86"
+uv = "==0.9.7"
+
+[tool.pixi.tasks.install_xbuildenv]
+cmd = ["pyodide", "xbuildenv", "install", "0.27.7"]
+
+[tool.pixi.tasks.build_pyodide]
+cmd = ["pyodide", "build"]
+env = { RUSTC_BOOTSTRAP = "1", RUSTFLAGS = "$(pyodide config get rustflags) -C target-feature=+atomics,+bulk-memory,+mutable-globals" }
+depends-on = ["install_xbuildenv"]
+
+[tool.pixi.tasks.pyodide_test]
+cmd = [
+    "uv", "cache", "prune", "--ci",
+    "&&",
+    "uvx",
+    "--no-config",
+    "--isolated",
+    "--python", "{{ python_version }}",
+    "--with", "{{ wheel_path }}",
+    "--with", "networkx",
+    "--no-build",
+    "--extra-index-url", "{{ index_url }}",
+    "--index-strategy", "unsafe-best-match",
+    "--directory", "tests",
+    "python", "-m", "unittest", "discover", "."
+]
+args = [
+  { "arg" = "wheel_path", "default" = "$(uvx python tools/find_only_wheel.py)" },
+  { "arg" = "python_version", "default" = "cpython-3.12.7-emscripten-wasm32-musl" },
+  { "arg" = "index_url", "default" = "https://index.pyodide.org/0.27.7/" },
+]
+env = { UV_CACHE_DIR = "$PWD/.uv_pyodide_cache" }
+
+[tool.pixi.tasks.build_pyodide_and_test]
+depends-on = ["build_pyodide", "pyodide_test"]
+
+[tool.pyodide.build]
+xbuildenv_path = ".xbuildenv"
