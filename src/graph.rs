@@ -1371,6 +1371,43 @@ impl PyGraph {
     ///       fd.flush()
     ///       graph = rx.PyGraph.read_edge_list(path=path)
     ///   mpl_draw(graph)
+    ///   
+    /// For example for csv based data, you may use the below code::
+    ///   
+    ///    import rustworkx as rx
+    ///    from rustworkx.visualization import mpl_draw
+    ///    
+    ///    file="/tmp/123.txt"
+    ///
+    ///    with open(file,"w+") as fd:
+    ///       fd.write('0,1,1.5\n')
+    ///       fd.write('0,2,0.5\n')
+    ///       fd.write('0,3,1\n')
+    ///       fd.write('1,2,1\n')
+    ///       fd.write('2,3,2\n')
+    ///       fd.flush()
+    ///
+    ///    graph = rx.PyGraph.read_edge_list(path=file, deliminator=",")
+    ///    mpl_draw(graph)
+    ///
+    ///
+    /// For Labels Based Data::
+    ///
+    ///    import rustworkx as rx
+    ///    from rustworkx.visualization import mpl_draw
+    ///
+    ///    file="/tmp/123.txt"
+    ///
+    ///    with open(file,"w+") as fd:
+    ///      fd.write('A,B,1.5\n')
+    ///      fd.write('A,C,0.5\n')
+    ///      fd.write('A,D,1\n')
+    ///      fd.write('A,C,1\n')
+    ///      fd.write('C,D,2\n')
+    ///    fd.flush()
+    ///
+    ///    graph = rx.PyGraph.read_edge_list(path=file, deliminator=",", labels=True)
+    ///    mpl_draw(graph)
     ///
     #[staticmethod]
     #[pyo3(signature=(path, comment=None, deliminator=None, labels=false, multigraph=true, allow_self_loops=true))]
