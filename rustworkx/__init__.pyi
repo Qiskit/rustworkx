@@ -93,6 +93,7 @@ from .rustworkx import weakly_connected_components as weakly_connected_component
 from .rustworkx import digraph_adjacency_matrix as digraph_adjacency_matrix
 from .rustworkx import graph_adjacency_matrix as graph_adjacency_matrix
 from .rustworkx import cycle_basis as cycle_basis
+from .rustworkx import cycle_basis_edges as cycle_basis_edges
 from .rustworkx import articulation_points as articulation_points
 from .rustworkx import bridges as bridges
 from .rustworkx import biconnected_components as biconnected_components
