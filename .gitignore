@@ -23,5 +23,7 @@ retworkx/*pyd
 **/*.so
 rustworkx-core/Cargo.lock
 **/.DS_Store
+.venv/
 venv/
 .python-version
+.vscode/
