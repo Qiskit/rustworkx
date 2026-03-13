@@ -24,17 +24,11 @@ classifiers=[
 ]
 keywords = ["Networks", "Network", "Graph", "Graph Theory", "DAG"]
 
-[tool.setuptools]
-packages = ["rustworkx", "rustworkx.visualization"]
-include-package-data = true
+[tool.maturin]
+features = ["pyo3/extension-module"]
+locked = true
+bindings = "pyo3"
 
-[tool.distutils.bdist_wheel]
-py-limited-api = "cp310"
-
-[[tool.setuptools-rust.ext-modules]]
-target = "rustworkx.rustworkx"
-path = "Cargo.toml"
-binding = "PyO3"
 
 [project.optional-dependencies]
 mpl = ["matplotlib>=3.0"]
@@ -61,8 +55,8 @@ name = "Ivan Carvalho"
 email = "ivancarvalho@gatech.edu"
 
 [build-system]
-requires = ["setuptools>=77.0.0", "setuptools-rust>=1.9"]
-build-backend = "setuptools.build_meta"
+requires = ["maturin>=1.9,<2.0"]
+build-backend = "maturin"
 
 [dependency-groups]
 testinfra = [
@@ -70,15 +64,14 @@ testinfra = [
     "uv==0.9.7",
 ]
 test = [
-  "setuptools-rust",
+  "maturin>=1.9.0,<2.0",
   "testtools>=2.5.0",
   "networkx>=3.2",
   "stestr>=4.1",
 ]
 lint = [
-    "black~=25.9",
     "ruff==0.14.3",
-    "setuptools-rust",
+    "maturin>=1.9.0,<2.0",
     "typos~=1.39",
 ]
 stubs = [
@@ -103,12 +96,8 @@ releaseinfra = [
     "cibuildwheel==3.3.0; python_version >= '3.11'",
 ]
 
-[tool.black]
-line-length = 100
-target-version = ['py310', 'py311', 'py312', 'py313', 'py314']
-
 [tool.ruff]
-line-length = 105 # more lenient than black due to long function signatures
+line-length = 100
 src = ["rustworkx", "setup.py", "tests"]
 lint.select = [
     "E",   # pycodestyle
@@ -124,6 +113,14 @@ extend-exclude = ["doc"]
 "rustworkx/__init__.py" = ["F405", "F403"]
 "*.pyi" = ["F403", "F405", "PYI001", "PYI002"]
 
+[tool.ruff.lint.pycodestyle]
+max-line-length = 105 #  lint has a larger limit than the formatter because of long signatures
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+docstring-code-format = true
+
 [tool.typos.default]
 extend-ignore-words-re = [
   "[Ss]toer",
@@ -136,7 +133,7 @@ manylinux-i686-image = "manylinux2014"
 skip = "pp* cp314t* *win32 *musllinux*i686"
 test-requires = "networkx"
 test-command = "python -m unittest discover {project}/tests"
-before-build = "pip install -U setuptools-rust"
+before-build = "pip install -U maturin>=1.9.0,<2.0"
 test-skip = "*linux_s390x *ppc64le *i686 *win32"
 
 [tool.cibuildwheel.linux]

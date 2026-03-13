@@ -31,7 +31,7 @@ def test_with_version(session):
 
 @nox.session(python=["3"])
 def lint(session):
-    black(session)
+    format(session)
     typos(session)
     session.install(*lint_deps)
     session.run("ruff", "check", "rustworkx", "setup.py")
@@ -44,7 +44,9 @@ def docs(session):
     session.env["UV_PROJECT_ENVIRONMENT"] = session.virtualenv.location
     session.env["UV_FROZEN"] = "1"
     # faster build as generating docs already takes some time and we discard the env
-    session.env["SETUPTOOLS_RUST_CARGO_PROFILE"] = "dev"
+    session.env["CARGO_PROFILE_RELEASE_OPT_LEVEL"] = "1"
+    session.env["CARGO_PROFILE_RELEASE_CODEGEN_UNITS"] = "16"
+    session.env["CARGO_PROFILE_RELEASE_LTO"] = "thin"
     session.run("uv", "sync", "--only-group", "docs")
     session.install(".")
     session.run(
@@ -72,9 +74,14 @@ def docs_clean(session):
     session.run("rm", "-rf", "build", "source/apiref", external=True)
 
 @nox.session(python=["3"])
+def format(session):
+    session.install(*[d for d in lint_deps if "ruff" in d])
+    session.run("ruff", "format", "rustworkx", "tests", *session.posargs)
+
+@nox.session(python=["3"])
 def black(session):
-    session.install(*[d for d in lint_deps if "black" in d])
-    session.run("black", "rustworkx", "tests", *session.posargs)
+    # Legacy black formatting session is aliased
+    format(session)
 
 @nox.session(python=["3"])
 def typos(session):
