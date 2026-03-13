@@ -129,6 +129,36 @@ where
     betweenness
 }
 
+/// Computes the degree centrality of nodes in a graph.
+///
+/// Degree centrality is defined as the number of edges incident upon a node
+/// normalized by the maximum possible degree in a simple graph (n - 1, where n is the number of nodes).
+///
+/// Arguments:
+/// * `graph` - The graph object to compute degree centrality for.
+///
+/// Returns:
+/// A `Vec<f64>` containing the degree centrality of each node in the graph.
+pub fn degree_centrality<G>(graph: G) -> Result<Option<Vec<f64>>, E>
+    where
+        G: IntoNodeIdentifiers + NodeCount,
+    {
+        let num_nodes = graph.node_count() as f64;
+        let mut centrality_values = vec![0.0; graph.node_count()];
+    {
+            let degree = graph.edges(node).count() as f64;
+            let centrality = if num_nodes <= 1.0 {
+                0.0
+            } else {
+                degree / (num_nodes - 1.0)
+            };
+            centrality_values[graph.to_index(node)] = centrality;
+        }
+ 
+        Ok(Some(centrality_values))
+    }
+
+
 /// Compute the edge betweenness centrality of all edges in a graph.
 ///
 /// The algorithm used in this function is based on:
