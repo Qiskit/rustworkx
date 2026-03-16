@@ -55,7 +55,7 @@ use rayon_cond::CondIterator;
 /// use rustworkx_core::petgraph;
 /// use rustworkx_core::centrality::betweenness_centrality;
 ///
-/// let g = petgraph::graph::UnGraph::<i32, ()>::from_edges([
+/// let g = petgraph::graph::UnGraph::<i32, ()>::from_edges(&[
 ///     (0, 4), (1, 2), (2, 3), (3, 4), (1, 4)
 /// ]);
 /// // Calculate the betweenness centrality
@@ -161,7 +161,7 @@ where
 /// use rustworkx_core::petgraph;
 /// use rustworkx_core::centrality::edge_betweenness_centrality;
 ///
-/// let g = petgraph::graph::UnGraph::<i32, ()>::from_edges([
+/// let g = petgraph::graph::UnGraph::<i32, ()>::from_edges(&[
 ///     (0, 4), (1, 2), (1, 3), (2, 3), (3, 4), (1, 4)
 /// ]);
 ///
@@ -340,20 +340,25 @@ fn accumulate_edges<G>(
 /// use rustworkx_core::centrality::degree_centrality;
 ///
 /// // Undirected graph example
-/// let graph = UnGraph::<i32, ()>::from_edges([
+/// let graph = UnGraph::<i32, ()>::from_edges(&[
 ///     (0, 1), (1, 2), (2, 3), (3, 0)
 /// ]);
 /// let centrality = degree_centrality(&graph, None);
 ///
 /// // Directed graph example
-/// let digraph = DiGraph::<i32, ()>::from_edges([
+/// let digraph = DiGraph::<i32, ()>::from_edges(&[
 ///     (0, 1), (1, 2), (2, 3), (3, 0), (0, 2), (1, 3)
 /// ]);
 /// let centrality = degree_centrality(&digraph, None);
 /// ```
 pub fn degree_centrality<G>(graph: G, direction: Option<petgraph::Direction>) -> Vec<f64>
 where
-    G: NodeIndexable + IntoNodeIdentifiers + IntoNeighborsDirected + NodeCount + GraphProp,
+    G: NodeIndexable
+        + IntoNodeIdentifiers
+        + IntoNeighbors
+        + IntoNeighborsDirected
+        + NodeCount
+        + GraphProp,
     G::NodeId: Eq,
 {
     let node_count = graph.node_count() as f64;
@@ -728,7 +733,7 @@ mod test_betweenness_centrality {
 /// use rustworkx_core::petgraph::visit::{IntoEdges, IntoNodeIdentifiers};
 /// use rustworkx_core::centrality::eigenvector_centrality;
 ///
-/// let g = petgraph::graph::UnGraph::<i32, ()>::from_edges([
+/// let g = petgraph::graph::UnGraph::<i32, ()>::from_edges(&[
 ///     (0, 1), (1, 2)
 /// ]);
 /// // Calculate the eigenvector centrality
@@ -818,7 +823,7 @@ where
 /// use rustworkx_core::petgraph::visit::{IntoEdges, IntoNodeIdentifiers};
 /// use rustworkx_core::centrality::katz_centrality;
 ///
-/// let g = petgraph::graph::UnGraph::<i32, ()>::from_edges([
+/// let g = petgraph::graph::UnGraph::<i32, ()>::from_edges(&[
 ///     (0, 1), (1, 2)
 /// ]);
 /// // Calculate the eigenvector centrality
@@ -1139,7 +1144,7 @@ mod test_katz_centrality {
 /// use rustworkx_core::centrality::closeness_centrality;
 ///
 /// // Calculate the closeness centrality of Graph
-/// let g = petgraph::graph::UnGraph::<i32, ()>::from_edges([
+/// let g = petgraph::graph::UnGraph::<i32, ()>::from_edges(&[
 ///     (0, 4), (1, 2), (2, 3), (3, 4), (1, 4)
 /// ]);
 /// let output = closeness_centrality(&g, true, 200);
@@ -1149,7 +1154,7 @@ mod test_katz_centrality {
 /// );
 ///
 /// // Calculate the closeness centrality of DiGraph
-/// let dg = petgraph::graph::DiGraph::<i32, ()>::from_edges([
+/// let dg = petgraph::graph::DiGraph::<i32, ()>::from_edges(&[
 ///     (0, 4), (1, 2), (2, 3), (3, 4), (1, 4)
 /// ]);
 /// let output = closeness_centrality(&dg, true, 200);
@@ -1276,14 +1281,14 @@ where
 /// use crate::rustworkx_core::petgraph::visit::EdgeRef;
 ///
 /// // Calculate the closeness centrality of Graph
-/// let g = petgraph::graph::UnGraph::<i32, f64>::from_edges([
+/// let g = petgraph::graph::UnGraph::<i32, f64>::from_edges(&[
 ///     (0, 1, 0.7), (1, 2, 0.2), (2, 3, 0.5),
 /// ]);
 /// let output = newman_weighted_closeness_centrality(&g, false, |x| *x.weight(), 200);
 /// assert!(output[1] > output[3]);
 ///
 /// // Calculate the closeness centrality of DiGraph
-/// let g = petgraph::graph::DiGraph::<i32, f64>::from_edges([
+/// let g = petgraph::graph::DiGraph::<i32, f64>::from_edges(&[
 ///     (0, 1, 0.7), (1, 2, 0.2), (2, 3, 0.5),
 /// ]);
 /// let output = newman_weighted_closeness_centrality(&g, false, |x| *x.weight(), 200);
