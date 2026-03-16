@@ -426,94 +426,128 @@ class TestGroupBetweennessCentralityDiGraph(unittest.TestCase):
             rustworkx.digraph_group_betweenness_centrality(graph, [10])
 
 
-class TestGroupCentralityNetworkXComparisonDiGraph(unittest.TestCase):
-    """Cross-validate group centrality results against NetworkX."""
+class TestGroupCentralityExpectedValuesDiGraph(unittest.TestCase):
+    """Test group centrality against known expected values.
 
-    def _build_graphs(self, nx_graph):
-        rx_graph = rustworkx.PyDiGraph()
-        node_map = {}
-        for node in nx_graph.nodes():
-            node_map[node] = rx_graph.add_node(node)
-        for u, v in nx_graph.edges():
-            rx_graph.add_edge(node_map[u], node_map[v], None)
-        return rx_graph, node_map
+    Expected values were obtained with NetworkX 3.6.1:
+        import networkx as nx
+        nx.group_degree_centrality(g, group)
+        nx.group_closeness_centrality(g, group)
+        nx.group_betweenness_centrality(g, [group])[0]  # normalized=True
+    """
 
     def test_degree_directed_path(self):
-        g_nx = nx.path_graph(6, create_using=nx.DiGraph)
-        g_rx, nmap = self._build_graphs(g_nx)
-        for group_nodes in [{0}, {2}, {0, 1}, {1, 3}, {0, 2, 4}]:
-            rx_group = [nmap[n] for n in group_nodes]
-            expected = nx.group_degree_centrality(g_nx, group_nodes)
-            result = rustworkx.digraph_group_degree_centrality(g_rx, rx_group)
+        # obtained with: g = nx.path_graph(6, create_using=nx.DiGraph)
+        graph = rustworkx.generators.directed_path_graph(6)
+        cases = {
+            (0,): 0.2,
+            (2,): 0.2,
+            (0, 1): 0.25,
+            (1, 3): 0.5,
+            (0, 2, 4): 1.0,
+        }
+        for group, expected in cases.items():
+            result = rustworkx.digraph_group_degree_centrality(graph, list(group))
             self.assertAlmostEqual(result, expected, places=10)
 
     def test_degree_directed_cycle(self):
-        g_nx = nx.cycle_graph(6, create_using=nx.DiGraph)
-        g_rx, nmap = self._build_graphs(g_nx)
-        for group_nodes in [{0}, {0, 3}, {0, 2, 4}]:
-            rx_group = [nmap[n] for n in group_nodes]
-            expected = nx.group_degree_centrality(g_nx, group_nodes)
-            result = rustworkx.digraph_group_degree_centrality(g_rx, rx_group)
+        # obtained with: g = nx.cycle_graph(6, create_using=nx.DiGraph)
+        graph = rustworkx.generators.directed_cycle_graph(6)
+        cases = {
+            (0,): 0.2,
+            (0, 3): 0.5,
+            (0, 2, 4): 1.0,
+        }
+        for group, expected in cases.items():
+            result = rustworkx.digraph_group_degree_centrality(graph, list(group))
             self.assertAlmostEqual(result, expected, places=10)
 
     def test_closeness_directed_path(self):
-        g_nx = nx.path_graph(6, create_using=nx.DiGraph)
-        g_rx, nmap = self._build_graphs(g_nx)
-        for group_nodes in [{0}, {2}, {0, 1}, {1, 3}]:
-            rx_group = [nmap[n] for n in group_nodes]
-            expected = nx.group_closeness_centrality(g_nx, group_nodes)
-            result = rustworkx.digraph_group_closeness_centrality(g_rx, rx_group)
+        # obtained with: g = nx.path_graph(6, create_using=nx.DiGraph)
+        # NX uses incoming closeness (reversed BFS); our implementation matches.
+        graph = rustworkx.generators.directed_path_graph(6)
+        cases = {
+            (0,): 0.0,
+            (2,): 5 / 3,
+            (0, 1): 0.0,
+            (1, 3): 2.0,
+        }
+        for group, expected in cases.items():
+            result = rustworkx.digraph_group_closeness_centrality(graph, list(group))
             self.assertAlmostEqual(result, expected, places=10)
 
     def test_closeness_directed_cycle(self):
-        g_nx = nx.cycle_graph(6, create_using=nx.DiGraph)
-        g_rx, nmap = self._build_graphs(g_nx)
-        for group_nodes in [{0}, {0, 3}, {0, 2, 4}]:
-            rx_group = [nmap[n] for n in group_nodes]
-            expected = nx.group_closeness_centrality(g_nx, group_nodes)
-            result = rustworkx.digraph_group_closeness_centrality(g_rx, rx_group)
+        # obtained with: g = nx.cycle_graph(6, create_using=nx.DiGraph)
+        graph = rustworkx.generators.directed_cycle_graph(6)
+        cases = {
+            (0,): 1 / 3,
+            (0, 3): 2 / 3,
+            (0, 2, 4): 1.0,
+        }
+        for group, expected in cases.items():
+            result = rustworkx.digraph_group_closeness_centrality(graph, list(group))
             self.assertAlmostEqual(result, expected, places=10)
 
     def test_betweenness_bidirectional_path(self):
-        g_nx = nx.path_graph(6).to_directed()
-        g_rx, nmap = self._build_graphs(g_nx)
-        for group_nodes in [{2}, {1, 4}, {0, 5}]:
-            rx_group = [nmap[n] for n in group_nodes]
-            expected = nx.group_betweenness_centrality(g_nx, [group_nodes])[0]
+        # obtained with: g = nx.path_graph(6).to_directed()
+        graph = rustworkx.PyDiGraph()
+        for _ in range(6):
+            graph.add_node(None)
+        for i in range(5):
+            graph.add_edge(i, i + 1, None)
+            graph.add_edge(i + 1, i, None)
+        cases = {
+            (2,): 0.6,
+            (1, 4): 5 / 6,
+            (0, 5): 0.0,
+        }
+        for group, expected in cases.items():
             result = rustworkx.digraph_group_betweenness_centrality(
-                g_rx, rx_group, normalized=True
+                graph, list(group), normalized=True
             )
             self.assertAlmostEqual(result, expected, places=10)
 
-    def test_betweenness_directed_star(self):
-        g_nx = nx.star_graph(4).to_directed()
-        g_rx, nmap = self._build_graphs(g_nx)
-        for group_nodes in [{0}, {1, 2}]:
-            rx_group = [nmap[n] for n in group_nodes]
-            expected = nx.group_betweenness_centrality(g_nx, [group_nodes])[0]
+    def test_betweenness_bidirectional_star(self):
+        # obtained with: g = nx.star_graph(4).to_directed()
+        graph = rustworkx.PyDiGraph()
+        for _ in range(5):
+            graph.add_node(None)
+        for i in range(1, 5):
+            graph.add_edge(0, i, None)
+            graph.add_edge(i, 0, None)
+        cases = {
+            (0,): 1.0,
+            (1, 2): 0.0,
+        }
+        for group, expected in cases.items():
             result = rustworkx.digraph_group_betweenness_centrality(
-                g_rx, rx_group, normalized=True
+                graph, list(group), normalized=True
             )
             self.assertAlmostEqual(result, expected, places=10)
 
     def test_betweenness_directed_cycle(self):
-        g_nx = nx.cycle_graph(6, create_using=nx.DiGraph)
-        g_rx, nmap = self._build_graphs(g_nx)
-        for group_nodes in [{0}, {0, 3}]:
-            rx_group = [nmap[n] for n in group_nodes]
-            expected = nx.group_betweenness_centrality(g_nx, [group_nodes])[0]
+        # obtained with: g = nx.cycle_graph(6, create_using=nx.DiGraph)
+        graph = rustworkx.generators.directed_cycle_graph(6)
+        cases = {
+            (0,): 0.5,
+            (0, 3): 5 / 6,
+        }
+        for group, expected in cases.items():
             result = rustworkx.digraph_group_betweenness_centrality(
-                g_rx, rx_group, normalized=True
+                graph, list(group), normalized=True
             )
             self.assertAlmostEqual(result, expected, places=10)
 
     def test_betweenness_complete_digraph(self):
-        g_nx = nx.complete_graph(5, create_using=nx.DiGraph)
-        g_rx, nmap = self._build_graphs(g_nx)
-        for group_nodes in [{0}, {0, 1}, {0, 2, 4}]:
-            rx_group = [nmap[n] for n in group_nodes]
-            expected = nx.group_betweenness_centrality(g_nx, [group_nodes])[0]
+        # obtained with: g = nx.complete_graph(5, create_using=nx.DiGraph)
+        graph = rustworkx.generators.directed_complete_graph(5)
+        cases = {
+            (0,): 0.0,
+            (0, 1): 0.0,
+            (0, 2, 4): 0.0,
+        }
+        for group, expected in cases.items():
             result = rustworkx.digraph_group_betweenness_centrality(
-                g_rx, rx_group, normalized=True
+                graph, list(group), normalized=True
             )
             self.assertAlmostEqual(result, expected, places=10)
