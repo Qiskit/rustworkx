@@ -218,8 +218,7 @@ class TestMPLDrawAssertions(unittest.TestCase):
         plt.close("all")
 
     def test_node_count(self):
-        graph = rustworkx.PyGraph()
-        graph.add_nodes_from(range(5))
+        graph = rustworkx.generators.empty_graph(5)
         mpl_draw(graph, ax=self.ax)
         node_collection = self.ax.collections[0]
         self.assertEqual(len(node_collection.get_offsets()), 5)
@@ -231,8 +230,7 @@ class TestMPLDrawAssertions(unittest.TestCase):
         self.assertEqual(len(node_collection.get_offsets()), 3)
 
     def test_node_color_applied(self):
-        graph = rustworkx.PyGraph()
-        graph.add_nodes_from(range(3))
+        graph = rustworkx.generators.empty_graph(3)
         mpl_draw(graph, ax=self.ax, node_color=["red", "red", "red"])
         colors = self.ax.collections[0].get_facecolors()
         self.assertEqual(len(colors), 3)
