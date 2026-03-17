@@ -218,8 +218,7 @@ class TestMPLDrawAssertions(unittest.TestCase):
         plt.close("all")
 
     def test_node_count(self):
-        graph = rustworkx.PyGraph()
-        graph.add_nodes_from(range(5))
+        graph = rustworkx.generators.empty_graph(5)
         mpl_draw(graph, ax=self.ax)
         node_collection = self.ax.collections[0]
         self.assertEqual(len(node_collection.get_offsets()), 5)
@@ -279,8 +278,7 @@ class TestMPLDrawAssertions(unittest.TestCase):
         self.assertIn("myedge", texts)
 
     def test_node_size_zero_draws_no_visible_nodes(self):
-        graph = rustworkx.PyGraph()
-        graph.add_nodes_from(range(3))
+        graph = rustworkx.generators.empty_graph(3)
         mpl_draw(graph, ax=self.ax, node_size=0)
         # With node_size=0, collection exists but sizes should all be 0
         sizes = self.ax.collections[0].get_sizes()
