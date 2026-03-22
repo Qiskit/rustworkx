@@ -79,11 +79,11 @@ jobs:
           - rust: stable
             python-version: "3.12"
             platform: { os: "ubuntu-24.04-ppc64le", python-architecture: "ppc64le", rust-target: "powerpc64le-unknown-linux-gnu" }
-            use-default-python-architecture: true
+            use-system-python: true
           - rust: stable
             python-version: "3.12"
             platform: { os: "ubuntu-24.04-s390x", python-architecture: "s390x", rust-target: "s390x-unknown-linux-gnu" }
-            use-default-python-architecture: true
+            use-system-python: true
           # Test future versions of Rust and Python
           - rust: beta
             python-version: "3.14" # upgrade to 3.15-dev when the release candidate is available
@@ -92,16 +92,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Set up Python ${{ matrix.python-version }}
-        if: ${{ !matrix.use-default-python-architecture }}
+        if: ${{ !matrix.use-system-python }}
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
           architecture: ${{ matrix.platform.python-architecture }}
-      - name: Set up Python ${{ matrix.python-version }} (runner default arch)
-        if: ${{ matrix.use-default-python-architecture }}
-        uses: actions/setup-python@v5
-        with:
-          python-version: ${{ matrix.python-version }}
+      - name: Set up system Python ${{ matrix.python-version }}
+        if: ${{ matrix.use-system-python }}
+        run: |
+          mkdir -p "$HOME/.local/bin"
+          ln -sf "$(command -v python3.12)" "$HOME/.local/bin/python"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+          python --version
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@master
