@@ -375,6 +375,7 @@ def layers(
     /,
     index_output: bool = ...,
 ) -> list[list[_S]] | list[list[int]]: ...
+
 @final
 class TopologicalSorter:
     def __init__(
@@ -1087,6 +1088,18 @@ _BFSVisitor = TypeVar("_BFSVisitor", bound=BFSVisitor, default=BFSVisitor)
 _DFSVisitor = TypeVar("_DFSVisitor", bound=DFSVisitor, default=DFSVisitor)
 _DijkstraVisitor = TypeVar("_DijkstraVisitor", bound=DijkstraVisitor, default=DijkstraVisitor)
 
+def digraph_generate_random_path(
+    graph: PyDiGraph,
+    source: int,
+    length: int,
+    seed: int | None = None,
+) -> Sequence[int]: ...
+def graph_generate_random_path(
+    graph: PyGraph,
+    source: int,
+    length: int,
+    seed: int | None = None,
+) -> Sequence[int]: ...
 def digraph_bfs_search(
     graph: PyDiGraph,
     source: Sequence[int] | None = ...,

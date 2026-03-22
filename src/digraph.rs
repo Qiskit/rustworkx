@@ -2359,7 +2359,7 @@ impl PyDiGraph {
             let edge_predicate_raw = predicate_callable(edge.weight())?;
             let edge_predicate: bool = edge_predicate_raw.extract(py)?;
             if edge_predicate {
-                return Ok(self.graph.node_weight(edge.source()).unwrap());
+                return Ok(self.graph.node_weight(edge.target()).unwrap());
             }
         }
         Err(NoSuitableNeighbors::new_err("No suitable neighbor"))

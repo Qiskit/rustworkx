@@ -16,6 +16,7 @@ mod bfs_visit;
 mod dfs_edges;
 mod dfs_visit;
 mod dijkstra_visit;
+mod random_walk;
 
 use petgraph::prelude::*;
 use petgraph::visit::GraphRef;
@@ -28,6 +29,7 @@ pub use bfs_visit::{BfsEvent, bfs_layers, breadth_first_search};
 pub use dfs_edges::dfs_edges;
 pub use dfs_visit::{DfsEvent, depth_first_search};
 pub use dijkstra_visit::{DijkstraEvent, dijkstra_search};
+pub use random_walk::generate_random_path;
 
 /// Return if the expression is a break value, execute the provided statement
 /// if it is a prune value.

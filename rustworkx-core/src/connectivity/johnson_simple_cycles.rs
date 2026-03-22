@@ -188,8 +188,7 @@ impl SimpleCycleIter {
             + NodeIndexable,
         <G as GraphBase>::NodeId: Hash + Eq,
     {
-        if self.self_cycles.is_some() {
-            let self_cycles = self.self_cycles.as_mut().unwrap();
+        if let Some(self_cycles) = &mut self.self_cycles {
             let cycle_node = self_cycles.pop().unwrap();
             if self_cycles.is_empty() {
                 self.self_cycles = None;

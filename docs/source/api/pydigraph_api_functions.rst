@@ -61,3 +61,4 @@ the functions from the explicitly typed based on the data type.
    rustworkx.digraph_node_link_json
    rustworkx.digraph_longest_simple_path
    rustworkx.digraph_write_matrix_market
+   rustworkx.digraph_generate_random_path

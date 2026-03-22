@@ -285,7 +285,7 @@ cargo clippy --workspace --all-targets -- -D warnings
 
 Python is used primarily for tests and some small pieces of packaging
 and namespace configuration code in the actual library.
-[black](https://github.com/psf/black) and [flake8](https://flake8.pycqa.org/en/latest/) are used to enforce consistent
+[ruff](https://github.com/astral-sh/ruff) is used to enforce consistent
 style in the python code in the repository. You can run them via Nox using:
 
 ```bash
@@ -295,7 +295,7 @@ nox -e lint
 This will also run `cargo fmt` in check mode to ensure that you ran `cargo fmt`
 and will fail if the Rust code doesn't conform to the style rules.
 
-If black returns a code formatting error you can run `nox -e black` to automatically
+If ruff returns a code formatting error you can run `nox -e format` to automatically
 update the code formatting to conform to the style.
 
 ### Building documentation
@@ -566,9 +566,8 @@ delay everything from merging, including your PR.
 the browser.
 
 Because building for Pyodide is a more involved process, we use [Pixi](https://pixi.sh/latest/)
-to manage the dependencies of the build. Currently, the scripts work only for Linux x86-64.
-It is also possible to run the build on Windows with Windows Subsystem for Linux (WSL). At
-the moment, aarch64 platforms like macOS cannot run the script.
+to manage the dependencies of the build. Currently, the scripts work only for Linux x86-64 and macOS arm64.
+It is also possible to run the build on Windows with Windows Subsystem for Linux (WSL).
 
 Please refer to the [Pixi](https://pixi.sh/latest/) page for the latest instructions on how
 to install Pixi. Once installed, there's a single command that needs to be run.
@@ -611,10 +610,32 @@ pixi run pyodide_test $ABSOLUTE_PATH_TO_WHEEL
 All the dependencies for the Pyodide build are listed under `[tool.pixi.dependencies]`. To find a set
 of versions that works, visit the [pyodide-cross-build-environments.json](https://github.com/pyodide/pyodide/blob/main/pyodide-cross-build-environments.json) file in the `pyodide` repository.
 
-We'll need to align the [Emscripten](https://anaconda.org/conda-forge/emscripten) version from `conda-forge` with one
-of the public releases. Then, we pick a `pyodide-build` version higher than the required build version and the equivalent Python
-version also specified in the cross build environments. Lastly, update `[tool.pixi.tasks.install_xbuildenv]` to install
-the selected version of Pyodide.
+Pixi pulls dependencies from `conda-forge`. Therefore, we need to work with versions published in the [Emscripten feedstock for Conda Forge](https://anaconda.org/conda-forge/emscripten).  Because of the constraints imposed by Pixi, some Pyodide versions will not work with the script as the required Emscripten version is not in Conda Forge.
+
+Once a Pyodide version with a matching Emscripten version has been picked, we need to select a `pyodide-build` version. `pyodide-build` is less tricky because we have a minimum version and not a pinned version. Select any version higher than the required build version and the equivalent Python
+version.
+
+Once all versions are picked, update `[tool.pixi.tasks.install_xbuildenv]` accordingly. For example, the following entry from `pyodide-cross-build-environments.json`: 
+
+```json
+"0.27.7": {
+    "version": "0.27.7",
+    "python_version": "3.12.7",
+    "emscripten_version": "3.1.58",
+    "min_pyodide_build_version": "0.26.0"
+}
+```
+
+Becomes:
+```toml
+[tool.pixi.dependencies]
+python = "==3.12.7"
+pyodide-build = "==0.30.9"
+emscripten = "==3.1.58"
+
+[tool.pixi.tasks.install_xbuildenv]
+cmd = ["pyodide", "xbuildenv", "install", "0.27.7"]
+```
 
 We need to pin the Rust compiler. To find an appropriate Rust compiler version, run:
 
@@ -624,7 +645,7 @@ pyodide config list
 ```
 
 This will output a list including `rust_toolchain`. Currently, `pyodide-build` requires Rust Nightly. Because conda-forge
-only provides stable releases, we'll need to map a nightly version to a stable version. Some repositories like [oxalica/rust-overlay]([oxalica/rust-overlay](https://github.com/oxalica/rust-overlay/tree/master/manifests/nightly/)) contain a list of the nightly releases. For example, `nightly-2025-02-01`
+only provides stable releases, we'll need to map a nightly version to a stable version. Some repositories like [oxalica/rust-overlay](https://github.com/oxalica/rust-overlay/tree/master/manifests/nightly/) contain a list of the nightly releases. For example, `nightly-2025-02-01`
 maps roughly to `1.86`. If that version was not yet stable, we could try picking `1.85` as well.
 
 After updating the versions in `[tool.pixi.dependencies]`, run `pixi lock` which will update `pixi.lock`. Onwards, all builds

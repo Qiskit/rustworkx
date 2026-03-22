@@ -1,0 +1,6 @@
+---
+fixes:
+  - |
+    Fixed a bug in `~rustworkx.node_link_json` that caused issues
+    when serializing graphs with deleted nodes. See 
+    `#1516 <https://github.com/Qiskit/rustworkx/issues/1516>`__ for more details. 

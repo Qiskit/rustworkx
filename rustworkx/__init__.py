@@ -85,12 +85,14 @@ class PyDAG(PyDiGraph):
     attribute to True. For example::
 
         import rustworkx as rx
+
         dag = rx.PyDAG()
         dag.check_cycle = True
 
     or at object creation::
 
         import rustworkx as rx
+
         dag = rx.PyDAG(check_cycle=True)
 
     With check_cycle set to true any calls to :meth:`PyDAG.add_edge` will
@@ -110,6 +112,7 @@ class PyDAG(PyDiGraph):
     For example::
 
         import rustworkx as rx
+
         dag = rx.PyDAG(multigraph=False)
 
     This can only be set at ``PyDiGraph`` initialization and not adjusted after
@@ -303,7 +306,7 @@ def floyd_warshall(
         tells rustworkx/rust how to extract a numerical weight as a ``float``
         for edge object. Some simple examples are::
 
-            floyd_warshall(graph, weight_fn= lambda x: 1)
+            floyd_warshall(graph, weight_fn=lambda x: 1)
 
         to return a weight of 1 for all edges. Also::
 
@@ -489,7 +492,7 @@ def all_pairs_dijkstra_shortest_paths(graph, edge_cost_fn):
         of node indices making the path. For example::
 
             {
-                0: {1: [0, 1],  2: [0, 1, 2]},
+                0: {1: [0, 1], 2: [0, 1, 2]},
                 1: {2: [1, 2]},
                 2: {0: [2, 0]},
             }
@@ -669,8 +672,7 @@ def is_isomorphic(
 
             graph_a = rustworkx.PyGraph()
             graph_b = rustworkx.PyGraph()
-            rustworkx.is_isomorphic(graph_a, graph_b,
-                                lambda x, y: x == y)
+            rustworkx.is_isomorphic(graph_a, graph_b, lambda x, y: x == y)
 
     .. note::
 
@@ -717,8 +719,7 @@ def is_isomorphic_node_match(first, second, matcher, id_order=True):
 
         graph_a = rustworkx.PyDAG()
         graph_b = rustworkx.PyDAG()
-        rustworkx.is_isomorphic_node_match(graph_a, graph_b,
-                                        lambda x, y: x == y)
+        rustworkx.is_isomorphic_node_match(graph_a, graph_b, lambda x, y: x == y)
 
     .. note::
 
@@ -768,8 +769,7 @@ def is_subgraph_isomorphic(
 
             graph_a = rustworkx.PyGraph()
             graph_b = rustworkx.PyGraph()
-            rustworkx.is_subgraph_isomorphic(graph_a, graph_b,
-                                            lambda x, y: x == y)
+            rustworkx.is_subgraph_isomorphic(graph_a, graph_b, lambda x, y: x == y)
 
 
     :param first: The first graph to compare. Can either be a
@@ -2018,7 +2018,7 @@ def all_pairs_bellman_ford_shortest_paths(graph, edge_cost_fn):
         of node indices making the path. For example::
 
             {
-                0: {1: [0, 1],  2: [0, 1, 2]},
+                0: {1: [0, 1], 2: [0, 1, 2]},
                 1: {2: [1, 2]},
                 2: {0: [2, 0]},
             }
@@ -2351,5 +2351,27 @@ def bfs_layers(graph, sources=None):
     :returns: A list of lists where each inner list contains the node indices
         at that BFS layer/level from the source nodes
     :rtype: list[list[int]]
+    """
+    raise TypeError(f"Invalid Input Type {type(graph)} for graph")
+
+
+@_rustworkx_dispatch
+def generate_random_path(graph, /, source, length, seed=None):
+    """Return a random path (or random walk) on a graph.
+
+    The next node to visit is selected uniformly at random from the neighbors
+    (or outgoing neighbors for directed graphs). If a node of the path has no
+    neighbor (or no outgoing neighbor for directed graphs), the path will
+    stop early.
+
+    :param graph: Graph on which the random walk is done. This can be a
+        :class:`~rustworkx.PyGraph` or :class:`~rustworkx.PyDiGraph`.
+    :param int source: Starting node of the path.
+    :param int length: Maximum length of the path.
+    :param Optional[int] seed: seed of the random number generator that chooses the next node.
+
+    :returns: List of visited nodes including the initial node `source`.
+    :rtype: list[int]
+    :raises IndexError: when the graph doesn't contain the source node.
     """
     raise TypeError(f"Invalid Input Type {type(graph)} for graph")
