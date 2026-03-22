@@ -618,10 +618,10 @@ pub fn is_semi_connected(graph: &digraph::PyDiGraph) -> PyResult<bool> {
     }
 
     let mut temp_graph = DiGraph::new();
-    let mut node_map = Vec::new();
+    let mut node_map = vec![NodeIndex::end(); graph.graph.node_bound()];
 
-    for _node in graph.graph.node_indices() {
-        node_map.push(temp_graph.add_node(()));
+    for node in graph.graph.node_indices() {
+        node_map[node.index()] = temp_graph.add_node(());
     }
 
     for edge in graph.graph.edge_indices() {
