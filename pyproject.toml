@@ -70,7 +70,7 @@ test = [
   "stestr>=4.1",
 ]
 lint = [
-    "ruff==0.14.3",
+    "ruff==0.15.7",
     "maturin>=1.9.0,<2.0",
     "typos~=1.39",
 ]
