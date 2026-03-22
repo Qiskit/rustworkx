@@ -375,6 +375,7 @@ def layers(
     /,
     index_output: bool = ...,
 ) -> list[list[_S]] | list[list[int]]: ...
+
 @final
 class TopologicalSorter:
     def __init__(
