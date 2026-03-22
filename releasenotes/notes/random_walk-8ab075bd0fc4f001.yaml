@@ -1,0 +1,6 @@
+features:
+  - |
+    New functions `generate_random_path` in `rustworkx-core`. New functions
+    `generate_random_path` in
+    `rustworkx`. These functions return the nodes visited during a random walk
+    on the graph.
