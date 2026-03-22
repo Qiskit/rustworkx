@@ -64,7 +64,6 @@ class TestSteinerTree(unittest.TestCase):
             if edge in edges:
                 found = True
             if not found:
-
                 if (
                     edge[1],
                     edge[0],

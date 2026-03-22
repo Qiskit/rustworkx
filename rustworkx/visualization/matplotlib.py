@@ -142,23 +142,23 @@ def mpl_draw(graph, pos=None, ax=None, arrows=True, with_labels=False, **kwds):
     :param func labels: An optional callback function that will be passed a
         node payload and return a string label for the node. For example::
 
-            labels=str
+            labels = str
 
         could be used to just return a string cast of the node's data payload.
         Or something like::
 
-            labels=lambda node: node['label']
+            labels = lambda node: node["label"]
 
         could be used if the node payloads are dictionaries.
     :param func edge_labels: An optional callback function that will be passed
         an edge payload and return a string label for the edge. For example::
 
-            edge_labels=str
+            edge_labels = str
 
         could be used to just return a string cast of the edge's data payload.
         Or something like::
 
-            edge_labels=lambda edge: edge['label']
+            edge_labels = lambda edge: edge["label"]
 
         could be used if the edge payloads are dictionaries. If this is set
         edge labels will be drawn in the visualization.
