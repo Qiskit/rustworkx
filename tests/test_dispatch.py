@@ -17,7 +17,6 @@ import numpy
 
 
 class TestDispatchPyGraph(unittest.TestCase):
-
     class_type = "PyGraph"
 
     def setUp(self):
@@ -103,5 +102,4 @@ class TestDispatchPyGraph(unittest.TestCase):
 
 
 class TestDispatchPyDiGraph(TestDispatchPyGraph):
-
     class_type = "PyDiGraph"
