@@ -67,7 +67,7 @@ pest_derive = "2.8"
 nalgebra-sparse = { version = "=0.10", features = ["io"] }
 
 [dependencies.hashbrown]
-version = "0.15.0"  # Implicitly required to match PyO3's and `petgraph`'s via cross-API use.
+version = "0.15"  # Implicitly required to match PyO3's and `petgraph`'s via cross-API use.
 features = ["rayon"]
 
 [dependencies.pyo3]
