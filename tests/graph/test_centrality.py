@@ -381,9 +381,7 @@ class TestGroupBetweennessCentralityGraph(unittest.TestCase):
         for _ in range(4):
             leaf = graph.add_node("leaf")
             graph.add_edge(center, leaf, None)
-        result = rustworkx.graph_group_betweenness_centrality(
-            graph, [center], normalized=False
-        )
+        result = rustworkx.graph_group_betweenness_centrality(graph, [center], normalized=False)
         self.assertAlmostEqual(result, 6.0)
 
     def test_empty_group(self):

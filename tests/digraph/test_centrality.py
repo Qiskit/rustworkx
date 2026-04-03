@@ -396,23 +396,17 @@ class TestGroupClosenessCentralityDiGraph(unittest.TestCase):
 class TestGroupBetweennessCentralityDiGraph(unittest.TestCase):
     def test_directed_path(self):
         graph = rustworkx.generators.directed_path_graph(5)
-        result = rustworkx.digraph_group_betweenness_centrality(
-            graph, [2], normalized=False
-        )
+        result = rustworkx.digraph_group_betweenness_centrality(graph, [2], normalized=False)
         self.assertAlmostEqual(result, 4.0)
 
     def test_directed_path_normalized(self):
         graph = rustworkx.generators.directed_path_graph(5)
-        result = rustworkx.digraph_group_betweenness_centrality(
-            graph, [2], normalized=True
-        )
+        result = rustworkx.digraph_group_betweenness_centrality(graph, [2], normalized=True)
         self.assertAlmostEqual(result, 4.0 / 12.0)
 
     def test_empty_group(self):
         graph = rustworkx.generators.directed_path_graph(3)
-        result = rustworkx.digraph_group_betweenness_centrality(
-            graph, [], normalized=False
-        )
+        result = rustworkx.digraph_group_betweenness_centrality(graph, [], normalized=False)
         self.assertAlmostEqual(result, 0.0)
 
     def test_dispatch(self):
