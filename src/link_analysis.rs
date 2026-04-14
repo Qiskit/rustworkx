@@ -199,7 +199,14 @@ pub fn pagerank(
         let new_popularity =
             alpha * ((&a * &popularity) + (dangling_sum * &dangling_weights)) + &damping;
         let norm: f64 = new_popularity.l1_dist(&popularity).unwrap();
-        if norm < (n as f64) * tol {
+        // The L1 distance between two probability vectors is bounded by 2, so
+        // `(n as f64) * tol` becomes a useless threshold once N > 2/tol (e.g.
+        // N > 2000 with the default tol = 1e-6). On large sparse graphs the
+        // first power-iteration step's L1 diff from the uniform starting
+        // vector can trivially fall below `n * tol`, causing this check to
+        // return the initial uniform vector and report convergence silently.
+        // See https://github.com/Qiskit/rustworkx/issues/1575
+        if norm < tol {
             has_converged = true;
             break;
         } else {

@@ -1,0 +1,13 @@
+---
+fixes:
+  - |
+    Fixed a silent convergence bug in :func:`~rustworkx.pagerank` that caused
+    the function to return the initial uniform ``1/N`` distribution on large
+    sparse graphs with no error. The convergence check ``norm < n * tol``
+    scaled the L1 tolerance by graph size, which (since L1 distance between
+    probability vectors is bounded by 2) rendered the threshold useless once
+    ``N > 2/tol``. On such graphs the first power-iteration step's L1 diff
+    from the uniform starting vector could trivially fall below ``n * tol``,
+    incorrectly reporting convergence. The threshold is now an absolute
+    ``norm < tol``, matching the docstring semantics. See
+    `#1575 <https://github.com/Qiskit/rustworkx/issues/1575>`__ for details.
