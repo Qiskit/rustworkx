@@ -39,11 +39,15 @@ use sprs::{CsMat, TriMat};
 ///
 /// This function uses a power iteration method to compute the PageRank
 /// and convergence is not guaranteed. The function will stop when `max_iter`
-/// iterations is reached or when the computed vector between two iterations
-/// is smaller than the error tolerance multiplied by the number of nodes.
-/// The implementation of this algorithm tries to match NetworkX's
+/// iterations is reached or when the L1 distance between successive iterates
+/// is smaller than the error tolerance ``tol``. If `max_iter` is exhausted
+/// without converging, a :class:`~rustworkx.exceptions.FailedToConverge`
+/// exception is raised.
+/// The implementation of this algorithm closely follows NetworkX's
 /// `pagerank() <https://networkx.org/documentation/stable/reference/algorithms/generated/networkx.algorithms.link_analysis.pagerank_alg.pagerank.html>`__
-/// implementation.
+/// implementation, but uses an absolute L1 tolerance whereas NetworkX scales
+/// the threshold by ``len(G)`` (see
+/// `#1575 <https://github.com/Qiskit/rustworkx/issues/1575>`__).
 ///
 /// In the case of multigraphs the weights of any parallel edges will be
 /// summed when computing the PageRank.
@@ -199,7 +203,10 @@ pub fn pagerank(
         let new_popularity =
             alpha * ((&a * &popularity) + (dangling_sum * &dangling_weights)) + &damping;
         let norm: f64 = new_popularity.l1_dist(&popularity).unwrap();
-        if norm < (n as f64) * tol {
+        // Absolute L1 tolerance. NetworkX uses `len(G) * tol`, but L1 distance
+        // between probability vectors is bounded by 2, so an N-scaled
+        // threshold becomes meaningless once N > 2/tol — see issue #1575.
+        if norm < tol {
             has_converged = true;
             break;
         } else {

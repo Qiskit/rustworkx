@@ -1,0 +1,40 @@
+---
+fixes:
+  - |
+    Fixed a silent convergence bug in :func:`~rustworkx.pagerank` that caused
+    the function to return the initial uniform ``1/N`` distribution on large
+    sparse graphs with no error. The convergence check ``norm < n * tol``
+    scaled the L1 tolerance by graph size, which (since L1 distance between
+    probability vectors is bounded by 2) rendered the threshold useless once
+    ``N > 2/tol``. On such graphs the first power-iteration step's L1 diff
+    from the uniform starting vector could trivially fall below ``n * tol``,
+    incorrectly reporting convergence. The threshold is now an absolute
+    ``norm < tol``. See
+    `#1575 <https://github.com/Qiskit/rustworkx/issues/1575>`__ for details.
+upgrade:
+  - |
+    The convergence threshold of :func:`~rustworkx.pagerank` is now an absolute
+    L1 tolerance (``norm < tol``) instead of being scaled by graph size
+    (``norm < n * tol``). This is a deliberate divergence from NetworkX's
+    ``pagerank()``, which still uses ``len(G) * tol``.
+
+    Practical impact:
+
+    * The ``tol`` parameter now means what its name suggests — an absolute L1
+      error tolerance. Passing the same ``tol`` value as before will require
+      strictly tighter convergence; on most graphs this means ~2-3x more
+      power-iteration steps (typically 10-20 vs 5-10), well within the default
+      ``max_iter=100``.
+    * On graphs that previously "converged" only because the loose threshold
+      tripped early — including the bug case where the initial uniform vector
+      was returned — :func:`~rustworkx.pagerank` may now raise
+      :class:`~rustworkx.exceptions.FailedToConverge` if ``max_iter`` is
+      exhausted before reaching ``tol``. This is intentional: a loud failure
+      with a recoverable signal (raise ``max_iter`` or relax ``tol``) is
+      strictly preferable to silent corruption.
+    * To recover behavior closer to the previous threshold without
+      re-introducing the bug, pass ``tol=N*1e-6`` explicitly (where ``N`` is
+      the graph size) — but verify the result against
+      :func:`~rustworkx.pagerank` with a tighter ``tol`` on a representative
+      sample first; the old behavior often returned non-converged vectors
+      even when it didn't return the literal uniform vector.
