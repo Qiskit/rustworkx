@@ -68,6 +68,14 @@ from .rustworkx import digraph_degree_centrality as digraph_degree_centrality
 from .rustworkx import graph_degree_centrality as graph_degree_centrality
 from .rustworkx import in_degree_centrality as in_degree_centrality
 from .rustworkx import out_degree_centrality as out_degree_centrality
+from .rustworkx import graph_group_degree_centrality as graph_group_degree_centrality
+from .rustworkx import digraph_group_degree_centrality as digraph_group_degree_centrality
+from .rustworkx import graph_group_closeness_centrality as graph_group_closeness_centrality
+from .rustworkx import digraph_group_closeness_centrality as digraph_group_closeness_centrality
+from .rustworkx import graph_group_betweenness_centrality as graph_group_betweenness_centrality
+from .rustworkx import (
+    digraph_group_betweenness_centrality as digraph_group_betweenness_centrality,
+)
 from .rustworkx import graph_greedy_color as graph_greedy_color
 from .rustworkx import graph_greedy_edge_color as graph_greedy_edge_color
 from .rustworkx import graph_is_bipartite as graph_is_bipartite
@@ -548,6 +556,20 @@ def newman_weighted_closeness_centrality(
 def degree_centrality(
     graph: PyGraph[_S, _T] | PyDiGraph[_S, _T],
 ) -> CentralityMapping: ...
+def group_degree_centrality(
+    graph: PyGraph[_S, _T] | PyDiGraph[_S, _T],
+    group: list[int],
+) -> float: ...
+def group_closeness_centrality(
+    graph: PyGraph[_S, _T] | PyDiGraph[_S, _T],
+    group: list[int],
+) -> float: ...
+def group_betweenness_centrality(
+    graph: PyGraph[_S, _T] | PyDiGraph[_S, _T],
+    group: list[int],
+    normalized: bool = ...,
+    parallel_threshold: int = ...,
+) -> float: ...
 def edge_betweenness_centrality(
     graph: PyGraph[_S, _T] | PyDiGraph[_S, _T],
     normalized: bool = ...,
