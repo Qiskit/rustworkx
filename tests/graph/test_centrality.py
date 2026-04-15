@@ -370,6 +370,13 @@ class TestGroupBetweennessCentralityGraph(unittest.TestCase):
         result = rustworkx.graph_group_betweenness_centrality(graph, [2], normalized=False)
         self.assertAlmostEqual(result, 4.0)
 
+    def test_path_center_parallel(self):
+        graph = rustworkx.generators.path_graph(5)
+        result = rustworkx.graph_group_betweenness_centrality(
+            graph, [2], normalized=False, parallel_threshold=1
+        )
+        self.assertAlmostEqual(result, 4.0)
+
     def test_path_center_normalized(self):
         graph = rustworkx.generators.path_graph(5)
         result = rustworkx.graph_group_betweenness_centrality(graph, [2], normalized=True)
@@ -392,6 +399,11 @@ class TestGroupBetweennessCentralityGraph(unittest.TestCase):
     def test_dispatch(self):
         graph = rustworkx.generators.path_graph(5)
         result = rustworkx.group_betweenness_centrality(graph, [2])
+        self.assertAlmostEqual(result, 2.0 / 3.0)
+
+    def test_dispatch_parallel(self):
+        graph = rustworkx.generators.path_graph(5)
+        result = rustworkx.group_betweenness_centrality(graph, [2], parallel_threshold=1)
         self.assertAlmostEqual(result, 2.0 / 3.0)
 
     def test_invalid_node(self):

@@ -214,12 +214,14 @@ def graph_group_betweenness_centrality(
     group: list[int],
     /,
     normalized: bool = ...,
+    parallel_threshold: int = ...,
 ) -> float: ...
 def digraph_group_betweenness_centrality(
     graph: PyDiGraph[_S, _T],
     group: list[int],
     /,
     normalized: bool = ...,
+    parallel_threshold: int = ...,
 ) -> float: ...
 def digraph_katz_centrality(
     graph: PyDiGraph[_S, _T],

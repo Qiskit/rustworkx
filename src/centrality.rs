@@ -1282,21 +1282,31 @@ pub fn digraph_group_closeness_centrality(
 /// The centrality of groups and classes.
 /// Journal of Mathematical Sociology, 23(3), 181-201.
 ///
+/// This function is multithreaded and will run in parallel if the number
+/// of nodes in the graph is above the value of ``parallel_threshold`` (it
+/// defaults to 50). If the function will be running in parallel the env var
+/// ``RAYON_NUM_THREADS`` can be used to adjust how many threads will be used.
+///
 /// :param PyGraph graph: The input graph
 /// :param list group: A list of node indices representing the group
 /// :param bool normalized: Whether to normalize the result. If True,
 ///     the result is divided by the number of non-group node pairs.
+/// :param int parallel_threshold: The number of nodes to calculate the
+///     the group betweenness centrality in parallel at if the number of nodes
+///     in the graph is less than this value it will run in a single thread.
+///     The default value is 50.
 ///
 /// :returns: The group betweenness centrality as a float
 /// :rtype: float
 ///
 /// :raises PyValueError: If any node index in the group is not in the graph
-#[pyfunction(signature = (graph, group, normalized=true))]
-#[pyo3(text_signature = "(graph, group, /, normalized=True)")]
+#[pyfunction(signature = (graph, group, normalized=true, parallel_threshold=50))]
+#[pyo3(text_signature = "(graph, group, /, normalized=True, parallel_threshold=50)")]
 pub fn graph_group_betweenness_centrality(
     graph: &graph::PyGraph,
     group: Vec<usize>,
     normalized: bool,
+    parallel_threshold: usize,
 ) -> PyResult<f64> {
     for &idx in &group {
         if !graph.graph.contains_node(NodeIndex::new(idx)) {
@@ -1309,6 +1319,7 @@ pub fn graph_group_betweenness_centrality(
         &graph.graph,
         &group,
         normalized,
+        parallel_threshold,
     ))
 }
 
@@ -1331,21 +1342,31 @@ pub fn graph_group_betweenness_centrality(
 /// The centrality of groups and classes.
 /// Journal of Mathematical Sociology, 23(3), 181-201.
 ///
+/// This function is multithreaded and will run in parallel if the number
+/// of nodes in the graph is above the value of ``parallel_threshold`` (it
+/// defaults to 50). If the function will be running in parallel the env var
+/// ``RAYON_NUM_THREADS`` can be used to adjust how many threads will be used.
+///
 /// :param PyDiGraph graph: The input graph
 /// :param list group: A list of node indices representing the group
 /// :param bool normalized: Whether to normalize the result. If True,
 ///     the result is divided by the number of non-group node pairs.
+/// :param int parallel_threshold: The number of nodes to calculate the
+///     the group betweenness centrality in parallel at if the number of nodes
+///     in the graph is less than this value it will run in a single thread.
+///     The default value is 50.
 ///
 /// :returns: The group betweenness centrality as a float
 /// :rtype: float
 ///
 /// :raises PyValueError: If any node index in the group is not in the graph
-#[pyfunction(signature = (graph, group, normalized=true))]
-#[pyo3(text_signature = "(graph, group, /, normalized=True)")]
+#[pyfunction(signature = (graph, group, normalized=true, parallel_threshold=50))]
+#[pyo3(text_signature = "(graph, group, /, normalized=True, parallel_threshold=50)")]
 pub fn digraph_group_betweenness_centrality(
     graph: &digraph::PyDiGraph,
     group: Vec<usize>,
     normalized: bool,
+    parallel_threshold: usize,
 ) -> PyResult<f64> {
     for &idx in &group {
         if !graph.graph.contains_node(NodeIndex::new(idx)) {
@@ -1358,5 +1379,6 @@ pub fn digraph_group_betweenness_centrality(
         &graph.graph,
         &group,
         normalized,
+        parallel_threshold,
     ))
 }

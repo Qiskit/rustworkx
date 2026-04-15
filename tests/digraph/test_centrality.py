@@ -399,6 +399,13 @@ class TestGroupBetweennessCentralityDiGraph(unittest.TestCase):
         result = rustworkx.digraph_group_betweenness_centrality(graph, [2], normalized=False)
         self.assertAlmostEqual(result, 4.0)
 
+    def test_directed_path_parallel(self):
+        graph = rustworkx.generators.directed_path_graph(5)
+        result = rustworkx.digraph_group_betweenness_centrality(
+            graph, [2], normalized=False, parallel_threshold=1
+        )
+        self.assertAlmostEqual(result, 4.0)
+
     def test_directed_path_normalized(self):
         graph = rustworkx.generators.directed_path_graph(5)
         result = rustworkx.digraph_group_betweenness_centrality(graph, [2], normalized=True)
@@ -412,6 +419,11 @@ class TestGroupBetweennessCentralityDiGraph(unittest.TestCase):
     def test_dispatch(self):
         graph = rustworkx.generators.directed_path_graph(5)
         result = rustworkx.group_betweenness_centrality(graph, [2])
+        self.assertAlmostEqual(result, 4.0 / 12.0)
+
+    def test_dispatch_parallel(self):
+        graph = rustworkx.generators.directed_path_graph(5)
+        result = rustworkx.group_betweenness_centrality(graph, [2], parallel_threshold=1)
         self.assertAlmostEqual(result, 4.0 / 12.0)
 
     def test_invalid_node(self):

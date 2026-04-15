@@ -1324,7 +1324,7 @@ def group_closeness_centrality(graph, group):
 
 
 @_rustworkx_dispatch
-def group_betweenness_centrality(graph, group, normalized=True):
+def group_betweenness_centrality(graph, group, normalized=True, parallel_threshold=50):
     r"""Compute the group betweenness centrality of a set of nodes.
 
     Group betweenness centrality measures the fraction of shortest paths
@@ -1343,10 +1343,19 @@ def group_betweenness_centrality(graph, group, normalized=True):
     The centrality of groups and classes.
     Journal of Mathematical Sociology, 23(3), 181-201.
 
+    This function is multithreaded and will run in parallel if the number
+    of nodes in the graph is above the value of ``parallel_threshold`` (it
+    defaults to 50). If the function will be running in parallel the env var
+    ``RAYON_NUM_THREADS`` can be used to adjust how many threads will be used.
+
     :param graph: The input graph. Can either be a
         :class:`~rustworkx.PyGraph` or :class:`~rustworkx.PyDiGraph`.
     :param list group: A list of node indices representing the group.
     :param bool normalized: Whether to normalize the result. Defaults to True.
+    :param int parallel_threshold: The number of nodes to calculate the
+        the group betweenness centrality in parallel at if the number of nodes
+        in the graph is less than this value it will run in a single thread.
+        The default value is 50.
 
     :returns: The group betweenness centrality as a float.
     :rtype: float

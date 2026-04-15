@@ -568,6 +568,7 @@ def group_betweenness_centrality(
     graph: PyGraph[_S, _T] | PyDiGraph[_S, _T],
     group: list[int],
     normalized: bool = ...,
+    parallel_threshold: int = ...,
 ) -> float: ...
 def edge_betweenness_centrality(
     graph: PyGraph[_S, _T] | PyDiGraph[_S, _T],
