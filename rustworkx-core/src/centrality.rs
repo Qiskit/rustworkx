@@ -1787,15 +1787,15 @@ where
     G::NodeId: Eq + Hash,
 {
     let node_count = graph.node_count();
-    let group_size = group.len();
+    let group_set: HashSet<usize> = group.iter().copied().collect();
+    let group_size = group_set.len();
     if group_size >= node_count {
         return 0.0;
     }
 
-    let group_set: HashSet<usize> = group.iter().copied().collect();
     let mut reached: HashSet<usize> = HashSet::new();
 
-    for &node_idx in group {
+    for &node_idx in &group_set {
         let node_id = graph.from_index(node_idx);
         let mut process_neighbor = |neighbor: G::NodeId| {
             let neighbor_idx = graph.to_index(neighbor);
@@ -1864,12 +1864,11 @@ where
     G::EdgeId: Eq,
 {
     let node_count = graph.node_count();
-    let group_size = group.len();
+    let group_set: HashSet<usize> = group.iter().copied().collect();
+    let group_size = group_set.len();
     if group_size >= node_count {
         return 0.0;
     }
-
-    let group_set: HashSet<usize> = group.iter().copied().collect();
 
     // Multi-source BFS on Reversed graph (incoming edges), matching the
     // convention used by NX and by per-node closeness_centrality: d(S,v)
@@ -1879,7 +1878,7 @@ where
     let mut distance: Vec<Option<usize>> = vec![None; max_index];
     let mut queue: VecDeque<G::NodeId> = VecDeque::new();
 
-    for &node_idx in group {
+    for &node_idx in &group_set {
         let node_id = graph.from_index(node_idx);
         distance[node_idx] = Some(0);
         queue.push_back(node_id);
@@ -1961,13 +1960,13 @@ where
     G::NodeId: Eq + Hash,
 {
     let node_count = graph.node_count();
-    let group_size = group.len();
+    let group_set: HashSet<usize> = group.iter().copied().collect();
+    let group_size = group_set.len();
 
     if group_size == 0 || node_count <= 1 {
         return 0.0;
     }
 
-    let group_set: HashSet<usize> = group.iter().copied().collect();
     let max_index = graph.node_bound();
 
     // For each non-group source, run BFS on the full graph and on the graph
@@ -2121,6 +2120,13 @@ mod test_group_degree_centrality {
         // In-neighbors of {2,3} outside group = {1}. Centrality = 1/2.
         assert!((result - 0.5).abs() < 1e-10);
     }
+
+    #[test]
+    fn test_duplicate_group_nodes_are_counted_once() {
+        let g = petgraph::graph::UnGraph::<(), ()>::from_edges([(0, 1), (1, 2)]);
+        let result = group_degree_centrality(&g, &[1, 1], None);
+        assert!((result - 1.0).abs() < 1e-10);
+    }
 }
 
 #[cfg(test)]
@@ -2172,11 +2178,18 @@ mod test_group_closeness_centrality {
         // dist_sum=1. closeness = 2/1 = 2.0
         assert_almost_equal!(result, 2.0, 1e-10);
     }
+
+    #[test]
+    fn test_duplicate_group_nodes_are_counted_once() {
+        let g = petgraph::graph::UnGraph::<(), ()>::from_edges([(0, 1), (1, 2)]);
+        let result = group_closeness_centrality(&g, &[1, 1]);
+        assert_almost_equal!(result, 1.0, 1e-10);
+    }
 }
 
 #[cfg(test)]
 mod test_group_betweenness_centrality {
-    use crate::centrality::group_betweenness_centrality;
+    use crate::centrality::{betweenness_centrality, group_betweenness_centrality};
     use crate::petgraph;
 
     macro_rules! assert_almost_equal {
@@ -2269,5 +2282,34 @@ mod test_group_betweenness_centrality {
         // 4 leaves, 4*3 = 12 ordered pairs.
         let result = group_betweenness_centrality(&g, &[0], false);
         assert_almost_equal!(result, 12.0, 1e-10);
+    }
+
+    #[test]
+    fn test_duplicate_group_nodes_are_counted_once() {
+        let g = petgraph::graph::UnGraph::<(), ()>::from_edges([(0, 1), (1, 2), (2, 3), (3, 4)]);
+        let result = group_betweenness_centrality(&g, &[2, 2], true);
+        assert_almost_equal!(result, 2.0 / 3.0, 1e-10);
+    }
+
+    #[test]
+    fn test_singleton_group_matches_betweenness_on_directed_path() {
+        let g = petgraph::graph::DiGraph::<(), ()>::from_edges([(0, 1), (1, 2), (2, 3)]);
+        let per_node = betweenness_centrality(&g, false, false, 200);
+
+        for node in 0..4 {
+            let group_result = group_betweenness_centrality(&g, &[node], false);
+            assert_almost_equal!(group_result, per_node[node].unwrap(), 1e-10);
+        }
+    }
+
+    #[test]
+    fn test_singleton_group_matches_normalized_betweenness_on_directed_path() {
+        let g = petgraph::graph::DiGraph::<(), ()>::from_edges([(0, 1), (1, 2), (2, 3)]);
+        let per_node = betweenness_centrality(&g, false, true, 200);
+
+        for node in 0..4 {
+            let group_result = group_betweenness_centrality(&g, &[node], true);
+            assert_almost_equal!(group_result, per_node[node].unwrap(), 1e-10);
+        }
     }
 }
