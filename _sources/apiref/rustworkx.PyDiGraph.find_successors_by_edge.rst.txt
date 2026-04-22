@@ -1,0 +1,6 @@
+rustworkx.PyDiGraph.find\_successors\_by\_edge
+==============================================
+
+.. currentmodule:: rustworkx
+
+.. automethod:: PyDiGraph.find_successors_by_edge

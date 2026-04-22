@@ -1,0 +1,6 @@
+﻿rustworkx.generators.star\_graph
+================================
+
+.. currentmodule:: rustworkx.generators
+
+.. autofunction:: star_graph

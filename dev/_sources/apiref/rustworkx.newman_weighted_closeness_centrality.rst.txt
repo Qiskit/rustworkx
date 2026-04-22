@@ -1,0 +1,6 @@
+﻿rustworkx.newman\_weighted\_closeness\_centrality
+=================================================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: newman_weighted_closeness_centrality

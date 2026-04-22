@@ -1,0 +1,10 @@
+﻿EdgeList
+========
+
+.. currentmodule:: rustworkx
+
+.. autoclass:: EdgeList
+   :no-members:
+   :show-inheritance:
+
+

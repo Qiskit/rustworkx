@@ -1,0 +1,6 @@
+rustworkx.PyDAG.update\_edge\_by\_index
+=======================================
+
+.. currentmodule:: rustworkx
+
+.. automethod:: PyDAG.update_edge_by_index
