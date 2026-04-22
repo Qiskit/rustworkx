@@ -113,6 +113,11 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/cd/3a/577b549de0cc09d95f11087ee63c739bba856cd3952697eec4c4bb91350a/bleach-6.3.0-py3-none-any.whl", hash = "sha256:fe10ec77c93ddf3d13a73b035abaac7a9f5e436513864ccdad516693213c65d6", size = 164437, upload-time = "2025-10-27T17:57:37.538Z" },
 ]
 
+[package.optional-dependencies]
+css = [
+    { name = "tinycss2" },
+]
+
 [[package]]
 name = "bracex"
 version = "2.6"
@@ -707,15 +712,6 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/5b/41/1458313472c4f3b6560b4cd4eff84ad0987ead6265a38261a391ab8b8596/dulwich-1.1.0-cp314-cp314t-win32.whl", hash = "sha256:a05a1049b3928205672913f4c490cf7b08afaa3e7ee7e55e15476e696412672f", size = 1025585, upload-time = "2026-02-17T21:20:00.357Z" },
     { url = "https://files.pythonhosted.org/packages/37/15/a240999ea53cfbb40cf54e79e672f0f46f3b2544387d8c97b43336dac641/dulwich-1.1.0-cp314-cp314t-win_amd64.whl", hash = "sha256:ba6f3f0807868f788b7f1d53b9ac0be3e425136b16563994f5ef6ecf5b7c7863", size = 1041927, upload-time = "2026-02-17T21:20:01.888Z" },
     { url = "https://files.pythonhosted.org/packages/16/4c/ba5b5f88b8e0dd43b2629aca66f472d1c3e03644da120a124586d7dc65ca/dulwich-1.1.0-py3-none-any.whl", hash = "sha256:bcd67e7f9bdffb4b660330c4597d251cd33e74f5df6898a2c1e6a1730a62af06", size = 673697, upload-time = "2026-02-17T21:20:03.346Z" },
-]
-
-[[package]]
-name = "entrypoints"
-version = "0.4"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/ea/8d/a7121ffe5f402dc015277d2d31eb82d2187334503a011c18f2e78ecbb9b2/entrypoints-0.4.tar.gz", hash = "sha256:b706eddaa9218a19ebcd67b56818f05bb27589b1ca9e8d797b74affad4ccacd4", size = 13974, upload-time = "2022-02-02T21:30:28.172Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/35/a8/365059bbcd4572cbc41de17fd5b682be5868b218c3c5479071865cab9078/entrypoints-0.4-py3-none-any.whl", hash = "sha256:f174b5ff827504fd3cd97cc3f8649f3693f51538c7e4bdf3ef002c8429d42f9f", size = 5294, upload-time = "2022-02-02T21:30:26.024Z" },
 ]
 
 [[package]]
@@ -1407,15 +1403,15 @@ wheels = [
 
 [[package]]
 name = "m2r2"
-version = "0.3.4"
+version = "0.3.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "docutils" },
     { name = "mistune" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/26/a9/ab03ff21972cfb2e6ea766b1dc015c2c081af70f8f956806e948c62044ba/m2r2-0.3.4.tar.gz", hash = "sha256:e278f5f337e9aa7b2080fcc3e94b051bda9615b02e36c6fb3f23ff019872f043", size = 17082, upload-time = "2025-05-01T16:55:53.244Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/3c/70/f38317d303dc0e29d74d5e310037ffc3f88ec2c2b98cbd938ce9bb5164f2/m2r2-0.3.1.tar.gz", hash = "sha256:6bf2d74e4cd15ce8a795999326cc7a4924af69ac1d114cac8064c1599ab11892", size = 16966, upload-time = "2021-07-18T09:35:46.794Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/a9/50/5b1d70de548fb1e11e15ea9ebec0480365462d202f98b66ad7e154284327/m2r2-0.3.4-py3-none-any.whl", hash = "sha256:1a445514af8a229496bfb1380c52da8dd38313e48600359ee92b2c9d2e4df34a", size = 11199, upload-time = "2025-05-01T16:55:51.87Z" },
+    { url = "https://files.pythonhosted.org/packages/36/0b/6bb31ff9101100e78bddb36ebbb5ed13790add34d400fe5a705f6dd4de49/m2r2-0.3.1-py3-none-any.whl", hash = "sha256:c2b62b8dec16f82d9e4d8aecf58830a87835ca90441716fc571e573e32c7d829", size = 11124, upload-time = "2021-07-18T09:35:45.377Z" },
 ]
 
 [[package]]
@@ -1613,11 +1609,14 @@ wheels = [
 
 [[package]]
 name = "mistune"
-version = "0.8.4"
+version = "3.2.0"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/2d/a4/509f6e7783ddd35482feda27bc7f72e65b5e7dc910eca4ab2164daf9c577/mistune-0.8.4.tar.gz", hash = "sha256:59a3429db53c50b5c6bcc8a07f8848cb00d7dc8bdb431a4ab41920d201d4756e", size = 58322, upload-time = "2018-10-11T06:59:27.908Z" }
+dependencies = [
+    { name = "typing-extensions", marker = "python_full_version < '3.11'" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/9d/55/d01f0c4b45ade6536c51170b9043db8b2ec6ddf4a35c7ea3f5f559ac935b/mistune-3.2.0.tar.gz", hash = "sha256:708487c8a8cdd99c9d90eb3ed4c3ed961246ff78ac82f03418f5183ab70e398a", size = 95467, upload-time = "2025-12-23T11:36:34.994Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/09/ec/4b43dae793655b7d8a25f76119624350b4d65eb663459eb9603d7f1f0345/mistune-0.8.4-py2.py3-none-any.whl", hash = "sha256:88a1051873018da288eee8538d476dffe1262495144b33ecb586c4ab266bb8d4", size = 16220, upload-time = "2018-10-11T06:59:26.044Z" },
+    { url = "https://files.pythonhosted.org/packages/9b/f7/4a5e785ec9fbd65146a27b6b70b6cdc161a66f2024e4b04ac06a67f5578b/mistune-3.2.0-py3-none-any.whl", hash = "sha256:febdc629a3c78616b94393c6580551e0e34cc289987ec6c35ed3f4be42d0eee1", size = 53598, upload-time = "2025-12-23T11:36:33.211Z" },
 ]
 
 [[package]]
@@ -1691,17 +1690,15 @@ wheels = [
 
 [[package]]
 name = "nbconvert"
-version = "6.5.4"
+version = "7.17.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "beautifulsoup4" },
-    { name = "bleach" },
+    { name = "bleach", extra = ["css"] },
     { name = "defusedxml" },
-    { name = "entrypoints" },
     { name = "jinja2" },
     { name = "jupyter-core" },
     { name = "jupyterlab-pygments" },
-    { name = "lxml" },
     { name = "markupsafe" },
     { name = "mistune" },
     { name = "nbclient" },
@@ -1709,12 +1706,11 @@ dependencies = [
     { name = "packaging" },
     { name = "pandocfilters" },
     { name = "pygments" },
-    { name = "tinycss2" },
     { name = "traitlets" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/1f/5b/f8dcd336fade9b02afa40c88924415a83ccb5ba5a24ee5e15bb22ee2f3d1/nbconvert-6.5.4.tar.gz", hash = "sha256:9e3c7c6d491374cbdd5f35d268c05809357716d346f4573186bbeab32ee50bc1", size = 910864, upload-time = "2022-09-26T14:38:09.844Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/01/b1/708e53fe2e429c103c6e6e159106bcf0357ac41aa4c28772bd8402339051/nbconvert-7.17.1.tar.gz", hash = "sha256:34d0d0a7e73ce3cbab6c5aae8f4f468797280b01fd8bd2ca746da8569eddd7d2", size = 865311, upload-time = "2026-04-08T00:44:14.914Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/78/19/e3aa3145650e26936bcbc3bbf1f5fa5e1fb5f9a8b2bfd94063383c315a48/nbconvert-6.5.4-py3-none-any.whl", hash = "sha256:d679a947f849a966cbbd0bf6e7fedcfdb64be3b20ce7cef11ad55c13f5820e19", size = 563832, upload-time = "2022-09-26T14:38:07.743Z" },
+    { url = "https://files.pythonhosted.org/packages/67/f8/bb0a9d5f46819c821dc1f004aa2cc29b1d91453297dbf5ff20470f00f193/nbconvert-7.17.1-py3-none-any.whl", hash = "sha256:aa85c087b435e7bf1ffd03319f658e285f2b89eccab33bc1ba7025495ab3e7c8", size = 261927, upload-time = "2026-04-08T00:44:12.845Z" },
 ]
 
 [[package]]
@@ -3075,14 +3071,14 @@ wheels = [
 
 [[package]]
 name = "tinycss2"
-version = "1.5.1"
+version = "1.4.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "webencodings" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/a3/ae/2ca4913e5c0f09781d75482874c3a95db9105462a92ddd303c7d285d3df2/tinycss2-1.5.1.tar.gz", hash = "sha256:d339d2b616ba90ccce58da8495a78f46e55d4d25f9fd71dfd526f07e7d53f957", size = 88195, upload-time = "2025-11-23T10:29:10.082Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/7a/fd/7a5ee21fd08ff70d3d33a5781c255cbe779659bd03278feb98b19ee550f4/tinycss2-1.4.0.tar.gz", hash = "sha256:10c0972f6fc0fbee87c3edb76549357415e94548c1ae10ebccdea16fb404a9b7", size = 87085, upload-time = "2024-10-24T14:58:29.895Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/60/45/c7b5c3168458db837e8ceab06dc77824e18202679d0463f0e8f002143a97/tinycss2-1.5.1-py3-none-any.whl", hash = "sha256:3415ba0f5839c062696996998176c4a3751d18b7edaaeeb658c9ce21ec150661", size = 28404, upload-time = "2025-11-23T10:29:08.676Z" },
+    { url = "https://files.pythonhosted.org/packages/e6/34/ebdc18bae6aa14fbee1a08b63c015c72b64868ff7dae68808ab500c492e2/tinycss2-1.4.0-py3-none-any.whl", hash = "sha256:3a49cf47b7675da0b15d0c6e1df8df4ebd96e9394bb905a5775adb0d884c5289", size = 26610, upload-time = "2024-10-24T14:58:28.029Z" },
 ]
 
 [[package]]
