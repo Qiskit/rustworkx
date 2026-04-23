@@ -303,19 +303,18 @@ where
 
     // Iterate over nodes in topological order
     for node in nodes {
-        let parents = graph.edges_directed(node, petgraph::Direction::Incoming);
-        let mut incoming_path: Vec<(T, G::NodeId)> = Vec::new(); // Stores the distance and the previous node for each parent
-        for p_edge in parents {
-            let p_node = p_edge.source();
-            let weight: T = weight_fn(p_edge)?;
-            let length = dist[&p_node].0 + weight;
-            incoming_path.push((length, p_node));
-        }
-        // Determine the maximum distance and corresponding parent node
-        let max_path: (T, G::NodeId) = incoming_path
-            .into_iter()
-            .max_by(|a, b| a.0.partial_cmp(&b.0).unwrap())
-            .unwrap_or((T::zero(), node)); // If there are no incoming edges, the distance is zero
+        let max_path = graph
+            .edges_directed(node, petgraph::Direction::Incoming)
+            .try_fold((T::zero(), node), |longest, p_edge| -> Result<_, E> {
+                let p_node = p_edge.source();
+                let weight: T = weight_fn(p_edge)?;
+                let length = dist[&p_node].0 + weight;
+                if length >= longest.0 {
+                    Ok((length, p_node))
+                } else {
+                    Ok(longest)
+                }
+            })?;
 
         // Store the maximum distance and the corresponding parent node for the current node
         dist.insert(node, max_path);
