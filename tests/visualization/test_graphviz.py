@@ -11,23 +11,16 @@
 # under the License.
 
 import os
-import subprocess
-import tempfile
 import unittest
 import rustworkx
 from rustworkx.visualization import graphviz_draw
+from rustworkx.visualization.utils import has_graphviz
 
 try:
     import PIL
 
-    subprocess.run(
-        ["dot", "-V"],
-        cwd=tempfile.gettempdir(),
-        check=True,
-        capture_output=True,
-    )
-    HAS_PILLOW = True
-except Exception:
+    HAS_PILLOW = has_graphviz()
+except ImportError:
     HAS_PILLOW = False
 
 SAVE_IMAGES = os.getenv("RUSTWORKX_TEST_PRESERVE_IMAGES", None)
