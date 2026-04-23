@@ -1778,7 +1778,7 @@ pub fn karate_club_graph(py: Python, multigraph: bool) -> PyResult<graph::PyGrap
     })
 }
 
-#[pymodule]
+#[pymodule(gil_used = false)]
 pub fn generators(_py: Python, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(cycle_graph))?;
     m.add_wrapped(wrap_pyfunction!(directed_cycle_graph))?;

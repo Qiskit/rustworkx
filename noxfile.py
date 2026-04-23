@@ -44,7 +44,9 @@ def docs(session):
     session.env["UV_PROJECT_ENVIRONMENT"] = session.virtualenv.location
     session.env["UV_FROZEN"] = "1"
     # faster build as generating docs already takes some time and we discard the env
-    session.env["SETUPTOOLS_RUST_CARGO_PROFILE"] = "dev"
+    session.env["CARGO_PROFILE_RELEASE_OPT_LEVEL"] = "1"
+    session.env["CARGO_PROFILE_RELEASE_CODEGEN_UNITS"] = "16"
+    session.env["CARGO_PROFILE_RELEASE_LTO"] = "thin"
     session.run("uv", "sync", "--only-group", "docs")
     session.install(".")
     session.run(
