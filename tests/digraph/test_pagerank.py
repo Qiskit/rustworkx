@@ -321,3 +321,34 @@ class TestPageRank(unittest.TestCase):
 
         for v in multi_graph.node_indices():
             self.assertAlmostEqual(ranks_multi[v], ranks_weight[v], delta=1.0e-4)
+
+    def test_sparse_large_graph_does_not_return_uniform(self):
+        """Regression test for #1575.
+
+        On a large graph with very few active edges, the first power-iteration
+        step's L1 diff from the uniform starting vector can be very small.
+        The old convergence check `norm < n * tol` would trip on iteration 0
+        (because `n * tol` grows with graph size) and return the uniform
+        initial vector, silently corrupting results.
+
+        This test builds a 2000-node graph with only 2 edges (path 0->1->2)
+        and verifies that pagerank returns non-uniform scores — specifically
+        that node 2 has a higher score than node 0 (since mass flows 0->1->2).
+        """
+        graph = rustworkx.PyDiGraph()
+        for _ in range(2000):
+            graph.add_node(None)
+        graph.add_edge(0, 1, None)
+        graph.add_edge(1, 2, None)
+
+        ranks = rustworkx.pagerank(graph, alpha=0.85)
+
+        uniform_value = 1.0 / 2000
+        # Node 2 should have meaningfully higher PR than uniform
+        self.assertGreater(ranks[2], uniform_value * 2.0)
+        # Node 1 should also have higher PR than uniform (mass flows through it)
+        self.assertGreater(ranks[1], uniform_value * 1.5)
+        # Node 0 (dangling endpoint of flow) should be near uniform
+        self.assertAlmostEqual(ranks[0], uniform_value, delta=uniform_value * 0.5)
+        # A randomly picked isolated node should be uniform
+        self.assertAlmostEqual(ranks[500], uniform_value, delta=uniform_value * 0.1)
