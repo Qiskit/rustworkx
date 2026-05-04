@@ -144,6 +144,8 @@ from .rustworkx import digraph_bipartite_layout as digraph_bipartite_layout
 from .rustworkx import graph_bipartite_layout as graph_bipartite_layout
 from .rustworkx import digraph_circular_layout as digraph_circular_layout
 from .rustworkx import graph_circular_layout as graph_circular_layout
+from .rustworkx import digraph_kamada_kawai_layout as digraph_kamada_kawai_layout
+from .rustworkx import graph_kamada_kawai_layout as graph_kamada_kawai_layout
 from .rustworkx import digraph_random_layout as digraph_random_layout
 from .rustworkx import graph_random_layout as graph_random_layout
 from .rustworkx import digraph_shell_layout as digraph_shell_layout
@@ -503,6 +505,18 @@ def spring_layout(
     scale: int = ...,
     center: tuple[float, float] | None = ...,
     seed: int | None = ...,
+) -> Pos2DMapping: ...
+def kamada_kawai_layout(
+    graph: PyGraph[_S, _T] | PyDiGraph[_S, _T],
+    pos: dict[int, tuple[float, float]] | None = ...,
+    fixed: set[int] | None = ...,
+    weight_fn: Callable[[_T], float] | None = ...,
+    default_weight: float = ...,
+    epsilon: float = ...,
+    max_outer: int = ...,
+    max_inner: int = ...,
+    scale: float = ...,
+    center: tuple[float, float] | None = ...,
 ) -> Pos2DMapping: ...
 def networkx_converter(graph: Any, keep_attributes: bool = ...) -> PyGraph | PyDiGraph: ...
 def bipartite_layout(

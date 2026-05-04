@@ -12,6 +12,7 @@
 
 mod bipartite;
 mod circular;
+mod kamada_kawai;
 mod random;
 mod shell;
 mod spiral;
@@ -192,6 +193,124 @@ pub fn digraph_spring_layout(
         Some(scale),
         center,
         seed,
+    )
+}
+
+/// Position nodes using the Kamada-Kawai path-length cost-function.
+///
+/// The layout minimises the energy
+/// :math:`E = \frac{1}{2} \sum_{i<j} k_{ij} (|p_i - p_j| - l_{ij})^2`
+/// where :math:`d_{ij}` is the graph-theoretic shortest path between
+/// :math:`i` and :math:`j`, :math:`l_{ij} \propto d_{ij}` is the desired
+/// display distance and :math:`k_{ij} = 1 / d_{ij}^2` is the spring
+/// constant.  The minimisation uses the original Kamada and Kawai (1989)
+/// scheme: at each outer step the node with the largest partial-gradient
+/// norm is selected and its position is updated by a 2D Newton step
+/// against the local 2x2 Hessian, repeating until either the maximum
+/// gradient norm falls below ``epsilon`` or ``max_outer`` is reached.
+///
+/// Disconnected graphs are laid out by running Kamada-Kawai independently
+/// on each connected component and packing the components in a row.
+///
+/// :param PyGraph graph: Graph to be used.
+/// :param dict pos:
+///     Initial node positions as a dictionary with node ids as keys and
+///     values as a coordinate list.  If ``None``, then a circular layout
+///     is used as the starting point.  (``default=None``)
+/// :param set fixed: Nodes to keep fixed at initial position.  Error
+///     raised if ``fixed`` specified and ``pos`` is not.  (``default=None``)
+/// :param weight_fn: An optional weight function for an edge.  It will
+///     accept a single argument, the edge's weight object, and will
+///     return a float used as the edge weight in the all-pairs shortest
+///     path computation.  If unspecified, every edge has weight
+///     ``default_weight``.
+/// :param float default_weight: Edge weight to use when ``weight_fn`` is
+///     not provided.  (``default=1.0``)
+/// :param float epsilon: Convergence threshold for the maximum
+///     partial-gradient norm.  (``default=1e-4``)
+/// :param int max_outer: Maximum number of outer iterations.
+///     (``default=500``)
+/// :param int max_inner: Maximum number of inner Newton steps per outer
+///     iteration.  (``default=10``)
+/// :param float|None scale: Scale factor for the final positions.  Not
+///     used unless ``fixed`` is ``None``.  (``default=1.0``)
+/// :param list center: Coordinate pair around which to center the
+///     layout.  Not used unless ``fixed`` is ``None``.  (``default=None``)
+///
+/// :returns: A dictionary of positions keyed by node id.
+/// :rtype: dict
+#[pyfunction]
+#[pyo3(
+    signature=(graph, pos=None, fixed=None, weight_fn=None, default_weight=1., epsilon=1e-4, max_outer=500, max_inner=10, scale=1., center=None),
+    text_signature = "(graph, pos=None, fixed=None, weight_fn=None, default_weight=1.0,
+                     epsilon=1e-4, max_outer=500, max_inner=10, scale=1.0, center=None, /)"
+)]
+#[allow(clippy::too_many_arguments)]
+pub fn graph_kamada_kawai_layout(
+    py: Python,
+    graph: &graph::PyGraph,
+    pos: Option<HashMap<usize, Point>>,
+    fixed: Option<HashSet<usize>>,
+    weight_fn: Option<Py<PyAny>>,
+    default_weight: f64,
+    epsilon: f64,
+    max_outer: usize,
+    max_inner: usize,
+    scale: f64,
+    center: Option<Point>,
+) -> PyResult<Pos2DMapping> {
+    kamada_kawai::kamada_kawai_layout(
+        py,
+        &graph.graph,
+        pos,
+        fixed,
+        weight_fn,
+        default_weight,
+        epsilon,
+        max_outer,
+        max_inner,
+        Some(scale),
+        center,
+    )
+}
+
+/// Position nodes using the Kamada-Kawai path-length cost-function.
+///
+/// See :func:`~rustworkx.graph_kamada_kawai_layout` for a full parameter
+/// description.  Directed edges are treated as undirected for the
+/// purposes of computing graph-theoretic distances.
+#[pyfunction]
+#[pyo3(
+    signature=(graph, pos=None, fixed=None, weight_fn=None, default_weight=1., epsilon=1e-4, max_outer=500, max_inner=10, scale=1., center=None),
+    text_signature = "(graph, pos=None, fixed=None, weight_fn=None, default_weight=1.0,
+                     epsilon=1e-4, max_outer=500, max_inner=10, scale=1.0, center=None, /)"
+)]
+#[allow(clippy::too_many_arguments)]
+pub fn digraph_kamada_kawai_layout(
+    py: Python,
+    graph: &digraph::PyDiGraph,
+    pos: Option<HashMap<usize, Point>>,
+    fixed: Option<HashSet<usize>>,
+    weight_fn: Option<Py<PyAny>>,
+    default_weight: f64,
+    epsilon: f64,
+    max_outer: usize,
+    max_inner: usize,
+    scale: f64,
+    center: Option<Point>,
+) -> PyResult<Pos2DMapping> {
+    kamada_kawai::kamada_kawai_layout(
+        py,
+        &graph.graph,
+        pos,
+        fixed,
+        weight_fn,
+        default_weight,
+        epsilon,
+        max_outer,
+        max_inner,
+        Some(scale),
+        center,
     )
 }
 

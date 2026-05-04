@@ -474,3 +474,86 @@ class TestSpiralLayout(LayoutTest):
             9: (-1.0, 0.2018583081028111),
         }
         self.assertLayoutEquiv(expected, res)
+
+
+class TestKamadaKawaiLayout(LayoutTest):
+    """Structural tests for kamada_kawai_layout on PyDiGraph.
+
+    K-K is fundamentally undirected -- the implementation symmetrises
+    the all-pairs distance matrix before optimising -- so the same
+    structural properties as the PyGraph case should hold.
+    """
+
+    @staticmethod
+    def _dist(pos, i, j):
+        import math
+        return math.hypot(pos[i][0] - pos[j][0], pos[i][1] - pos[j][1])
+
+    @staticmethod
+    def _centroid(pos):
+        xs = [p[0] for p in pos.values()]
+        ys = [p[1] for p in pos.values()]
+        n = len(pos)
+        return (sum(xs) / n, sum(ys) / n)
+
+    def test_empty_graph(self):
+        graph = rustworkx.PyDiGraph()
+        result = rustworkx.kamada_kawai_layout(graph)
+        self.assertEqual(len(result), 0)
+
+    def test_single_node(self):
+        graph = rustworkx.PyDiGraph()
+        graph.add_node(0)
+        result = rustworkx.kamada_kawai_layout(graph)
+        self.assertEqual(len(result), 1)
+
+    def test_directed_4_cycle_is_square(self):
+        # Without symmetrisation a directed 4-cycle would have
+        # asymmetric distances (1, 2, 3 around the cycle).  Our
+        # implementation symmetrises, so the layout should still be a
+        # square: equal sides and diag/side = sqrt(2).
+        import math
+        graph = rustworkx.generators.directed_cycle_graph(4)
+        result = rustworkx.kamada_kawai_layout(graph)
+        sides = [self._dist(result, i, (i + 1) % 4) for i in range(4)]
+        diagonals = [self._dist(result, 0, 2), self._dist(result, 1, 3)]
+        for s in sides:
+            self.assertAlmostEqual(s, sides[0], places=2)
+        self.assertAlmostEqual(diagonals[0] / sides[0], math.sqrt(2), places=2)
+
+    def test_fixed_nodes_do_not_move(self):
+        graph = rustworkx.generators.directed_cycle_graph(5)
+        initial = {0: (0.0, 0.0), 1: (1.0, 0.0)}
+        result = rustworkx.kamada_kawai_layout(
+            graph, pos=initial, fixed={0, 1}
+        )
+        self.assertAlmostEqual(result[0][0], 0.0, places=10)
+        self.assertAlmostEqual(result[1][0], 1.0, places=10)
+
+    def test_fixed_without_pos_raises(self):
+        graph = rustworkx.generators.directed_cycle_graph(4)
+        with self.assertRaises(ValueError):
+            rustworkx.kamada_kawai_layout(graph, fixed={0})
+
+    def test_negative_weight_raises(self):
+        graph = rustworkx.PyDiGraph()
+        graph.add_nodes_from([0, 1])
+        graph.add_edge(0, 1, -1.0)
+        with self.assertRaises(ValueError):
+            rustworkx.kamada_kawai_layout(
+                graph, weight_fn=lambda w: float(w)
+            )
+
+    def test_disconnected_graph_returns_layout_for_all_nodes(self):
+        import math
+        graph = rustworkx.PyDiGraph()
+        graph.add_nodes_from(list(range(6)))
+        graph.add_edges_from([
+            (0, 1, 1.0), (1, 2, 1.0), (2, 0, 1.0),
+            (3, 4, 1.0), (4, 5, 1.0), (5, 3, 1.0),
+        ])
+        result = rustworkx.kamada_kawai_layout(graph)
+        self.assertEqual(len(result), 6)
+        for p in result.values():
+            self.assertTrue(math.isfinite(p[0]))
+            self.assertTrue(math.isfinite(p[1]))

@@ -657,6 +657,8 @@ fn rustworkx(py: Python<'_>, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(digraph_bipartite_layout))?;
     m.add_wrapped(wrap_pyfunction!(graph_circular_layout))?;
     m.add_wrapped(wrap_pyfunction!(digraph_circular_layout))?;
+    m.add_wrapped(wrap_pyfunction!(graph_kamada_kawai_layout))?;
+    m.add_wrapped(wrap_pyfunction!(digraph_kamada_kawai_layout))?;
     m.add_wrapped(wrap_pyfunction!(graph_shell_layout))?;
     m.add_wrapped(wrap_pyfunction!(digraph_shell_layout))?;
     m.add_wrapped(wrap_pyfunction!(graph_spiral_layout))?;
