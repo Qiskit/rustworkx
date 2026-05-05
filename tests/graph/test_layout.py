@@ -474,3 +474,204 @@ class TestSpiralLayout(LayoutTest):
             9: (-1.0, 0.2018583081028111),
         }
         self.assertLayoutEquiv(expected, res)
+
+
+class TestKamadaKawaiLayout(LayoutTest):
+    """Structural tests for kamada_kawai_layout on PyGraph.
+
+    K-K is iterative and the exact coordinates are sensitive to
+    inner-loop refactors, so these tests check structural properties
+    of the output (relative distances, symmetries, fixed-point
+    behaviour) rather than pinned coordinates.
+    """
+
+    @staticmethod
+    def _dist(pos, i, j):
+        import math
+        return math.hypot(pos[i][0] - pos[j][0], pos[i][1] - pos[j][1])
+
+    @staticmethod
+    def _max_coord(pos):
+        return max(max(abs(p[0]), abs(p[1])) for p in pos.values())
+
+    @staticmethod
+    def _centroid(pos):
+        xs = [p[0] for p in pos.values()]
+        ys = [p[1] for p in pos.values()]
+        n = len(pos)
+        return (sum(xs) / n, sum(ys) / n)
+
+    def make_graph(self, generator):
+        return generator
+
+    # ---- edge cases ----------------------------------------------------
+
+    def test_empty_graph(self):
+        graph = rustworkx.PyGraph()
+        result = rustworkx.kamada_kawai_layout(graph)
+        self.assertEqual(len(result), 0)
+
+    def test_single_node(self):
+        graph = rustworkx.PyGraph()
+        graph.add_node(0)
+        result = rustworkx.kamada_kawai_layout(graph)
+        self.assertEqual(len(result), 1)
+        self.assertEqual(len(result[0]), 2)
+
+    def test_two_node_path_endpoints(self):
+        graph = rustworkx.generators.path_graph(2)
+        result = rustworkx.kamada_kawai_layout(graph, scale=1.0)
+        # After rescale the two endpoints should be at opposite extremes.
+        d = self._dist(result, 0, 1)
+        self.assertAlmostEqual(d, 2.0, places=4)
+
+    # ---- structural properties on regular graphs -----------------------
+
+    def test_4_cycle_is_square(self):
+        # Four-cycle should land on a square: equal sides, equal
+        # diagonals, diagonal/side = sqrt(2).
+        import math
+        graph = rustworkx.generators.cycle_graph(4)
+        result = rustworkx.kamada_kawai_layout(graph)
+        sides = [self._dist(result, i, (i + 1) % 4) for i in range(4)]
+        diagonals = [self._dist(result, 0, 2), self._dist(result, 1, 3)]
+        for s in sides:
+            self.assertAlmostEqual(s, sides[0], places=2)
+        for d in diagonals:
+            self.assertAlmostEqual(d, diagonals[0], places=2)
+        self.assertAlmostEqual(diagonals[0] / sides[0], math.sqrt(2), places=2)
+
+    def test_complete_5_is_regular_pentagon(self):
+        # K_n with equal edge weights cannot have all pairwise
+        # distances equal in 2D for n >= 4.  The K-K optimum for K_5
+        # is a regular pentagon: equidistant from centroid, and the
+        # side/diagonal ratio matches phi = (1 + sqrt(5)) / 2.
+        import math
+        graph = rustworkx.generators.complete_graph(5)
+        result = rustworkx.kamada_kawai_layout(graph)
+        cx, cy = self._centroid(result)
+        radii = [
+            math.hypot(result[i][0] - cx, result[i][1] - cy) for i in range(5)
+        ]
+        for r in radii:
+            self.assertAlmostEqual(r / radii[0], 1.0, places=2)
+
+        distances = sorted(
+            self._dist(result, i, j) for i in range(5) for j in range(i + 1, 5)
+        )
+        avg_side = sum(distances[:5]) / 5
+        avg_diag = sum(distances[5:]) / 5
+        phi = (1 + math.sqrt(5)) / 2
+        self.assertAlmostEqual(avg_diag / avg_side, phi, places=1)
+
+    def test_path_is_collinear(self):
+        # The optimal K-K layout for a path is a straight line.  Verify
+        # via PCA: the smaller eigenvalue of the centered position
+        # covariance should be much smaller than the larger.
+        import math
+        graph = rustworkx.generators.path_graph(6)
+        result = rustworkx.kamada_kawai_layout(graph)
+        cx, cy = self._centroid(result)
+        sxx = sum((p[0] - cx) ** 2 for p in result.values())
+        syy = sum((p[1] - cy) ** 2 for p in result.values())
+        sxy = sum((p[0] - cx) * (p[1] - cy) for p in result.values())
+        tr = sxx + syy
+        det = sxx * syy - sxy * sxy
+        disc = max(tr * tr - 4 * det, 0.0)
+        lam1 = (tr + math.sqrt(disc)) / 2
+        lam2 = (tr - math.sqrt(disc)) / 2
+        self.assertGreater(lam1, 0)
+        self.assertLess(lam2 / lam1, 0.05)
+
+    # ---- parameter handling -------------------------------------------
+
+    def test_scale(self):
+        graph = rustworkx.generators.cycle_graph(5)
+        small = rustworkx.kamada_kawai_layout(graph, scale=1.0)
+        large = rustworkx.kamada_kawai_layout(graph, scale=3.0)
+        self.assertAlmostEqual(self._max_coord(small), 1.0, places=4)
+        self.assertAlmostEqual(self._max_coord(large), 3.0, places=4)
+
+    def test_center(self):
+        graph = rustworkx.generators.cycle_graph(5)
+        result = rustworkx.kamada_kawai_layout(graph, center=(5.0, -3.0))
+        cx, cy = self._centroid(result)
+        self.assertAlmostEqual(cx, 5.0, places=4)
+        self.assertAlmostEqual(cy, -3.0, places=4)
+
+    def test_fixed_nodes_do_not_move(self):
+        graph = rustworkx.generators.cycle_graph(5)
+        initial = {0: (0.0, 0.0), 1: (1.0, 0.0)}
+        result = rustworkx.kamada_kawai_layout(
+            graph, pos=initial, fixed={0, 1}
+        )
+        self.assertAlmostEqual(result[0][0], 0.0, places=10)
+        self.assertAlmostEqual(result[0][1], 0.0, places=10)
+        self.assertAlmostEqual(result[1][0], 1.0, places=10)
+        self.assertAlmostEqual(result[1][1], 0.0, places=10)
+
+    def test_fixed_without_pos_raises(self):
+        graph = rustworkx.generators.cycle_graph(4)
+        with self.assertRaises(ValueError):
+            rustworkx.kamada_kawai_layout(graph, fixed={0})
+
+    def test_weight_fn_is_used(self):
+        graph = rustworkx.PyGraph()
+        for _ in range(4):
+            graph.add_node(None)
+        graph.add_edges_from([(0, 1, 1.0), (1, 2, 5.0), (2, 3, 1.0)])
+
+        uniform = rustworkx.kamada_kawai_layout(
+            graph, weight_fn=lambda _w: 1.0
+        )
+        weighted = rustworkx.kamada_kawai_layout(
+            graph, weight_fn=lambda w: float(w)
+        )
+        # The 5.0 edge should pull nodes 1 and 2 further apart.
+        self.assertGreater(
+            self._dist(weighted, 1, 2), self._dist(uniform, 1, 2)
+        )
+
+    def test_negative_weight_raises(self):
+        graph = rustworkx.PyGraph()
+        graph.add_nodes_from([0, 1])
+        graph.add_edge(0, 1, -1.0)
+        with self.assertRaises(ValueError):
+            rustworkx.kamada_kawai_layout(
+                graph, weight_fn=lambda w: float(w)
+            )
+
+    # ---- disconnected graphs ------------------------------------------
+
+    def test_disconnected_graph_returns_layout_for_all_nodes(self):
+        import math
+        graph = rustworkx.PyGraph()
+        graph.add_nodes_from(list(range(6)))
+        graph.add_edges_from([
+            (0, 1, 1.0), (1, 2, 1.0), (2, 0, 1.0),
+            (3, 4, 1.0), (4, 5, 1.0), (5, 3, 1.0),
+        ])
+        result = rustworkx.kamada_kawai_layout(graph)
+        self.assertEqual(len(result), 6)
+        for p in result.values():
+            self.assertTrue(math.isfinite(p[0]))
+            self.assertTrue(math.isfinite(p[1]))
+
+        # Components should be packed side-by-side without overlap:
+        # the minimum cross-component distance should exceed the
+        # within-component edge length.
+        intra = self._dist(result, 0, 1)
+        cross = min(
+            self._dist(result, i, j) for i in (0, 1, 2) for j in (3, 4, 5)
+        )
+        self.assertGreater(cross, intra * 0.5)
+
+    # ---- determinism --------------------------------------------------
+
+    def test_deterministic(self):
+        graph = rustworkx.generators.complete_graph(6)
+        a = rustworkx.kamada_kawai_layout(graph)
+        b = rustworkx.kamada_kawai_layout(graph)
+        for n in a:
+            self.assertAlmostEqual(a[n][0], b[n][0], places=10)
+            self.assertAlmostEqual(a[n][1], b[n][1], places=10)

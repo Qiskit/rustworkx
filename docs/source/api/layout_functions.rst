@@ -8,6 +8,7 @@ Layout Functions
 
    rustworkx.random_layout
    rustworkx.spring_layout
+   rustworkx.kamada_kawai_layout
    rustworkx.bipartite_layout
    rustworkx.circular_layout
    rustworkx.shell_layout
