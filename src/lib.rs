@@ -593,6 +593,12 @@ fn rustworkx(py: Python<'_>, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(digraph_degree_centrality))?;
     m.add_wrapped(wrap_pyfunction!(in_degree_centrality))?;
     m.add_wrapped(wrap_pyfunction!(out_degree_centrality))?;
+    m.add_wrapped(wrap_pyfunction!(graph_group_degree_centrality))?;
+    m.add_wrapped(wrap_pyfunction!(digraph_group_degree_centrality))?;
+    m.add_wrapped(wrap_pyfunction!(graph_group_closeness_centrality))?;
+    m.add_wrapped(wrap_pyfunction!(digraph_group_closeness_centrality))?;
+    m.add_wrapped(wrap_pyfunction!(graph_group_betweenness_centrality))?;
+    m.add_wrapped(wrap_pyfunction!(digraph_group_betweenness_centrality))?;
     m.add_wrapped(wrap_pyfunction!(graph_astar_shortest_path))?;
     m.add_wrapped(wrap_pyfunction!(digraph_astar_shortest_path))?;
     m.add_wrapped(wrap_pyfunction!(graph_greedy_color))?;

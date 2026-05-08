@@ -588,17 +588,15 @@ where
         };
     }
 
+    let mut colors = Vec::new();
     for node in nodes {
         if let Some(is_match) = filter_fn(node)? {
+            colors.clear();
             let raw_edges = graph.edges_directed(node, petgraph::Direction::Outgoing);
 
-            // Remove all edges that yield errors from color_fn
-            let colors = raw_edges
-                .map(|edge| color_fn(edge.id()))
-                .collect::<Result<Vec<Option<usize>>, _>>()?;
-
-            // Remove null edges from color_fn
-            let colors = colors.into_iter().flatten().collect::<Vec<usize>>();
+            for color in raw_edges.filter_map(|edge| color_fn(edge.id()).transpose()) {
+                colors.push(color?);
+            }
 
             match (colors.len(), is_match) {
                 (1, true) => {
@@ -638,13 +636,13 @@ where
                     }
                 }
                 _ => {
-                    for color in colors {
-                        ensure_vector_has_index!(pending_list, block_id, color);
-                        if let Some(color_block_id) = block_id[color] {
-                            block_list[color_block_id].append(&mut pending_list[color]);
+                    for color in &colors {
+                        ensure_vector_has_index!(pending_list, block_id, *color);
+                        if let Some(color_block_id) = block_id[*color] {
+                            block_list[color_block_id].append(&mut pending_list[*color]);
                         }
-                        block_id[color] = None;
-                        pending_list[color].clear();
+                        block_id[*color] = None;
+                        pending_list[*color].clear();
                     }
                 }
             }
