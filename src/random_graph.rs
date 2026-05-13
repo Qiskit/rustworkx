@@ -32,6 +32,38 @@ use rand_pcg::Pcg64;
 
 use rustworkx_core::generators as core_generators;
 
+// TODO: docs
+#[pyfunction]
+#[pyo3(text_signature = "(num_nodes, degree, /, seed=None)", signature = (num_nodes, degree, seed=None))]
+pub fn random_regular_graph(
+    py: Python,
+    num_nodes: usize,
+    degree: usize,
+    seed: Option<u64>,
+) -> PyResult<graph::PyGraph> {
+    let default_fn = || py.None();
+    let mut graph: StablePyGraph<Undirected> = match core_generators::random_regular_graph(
+        num_nodes, degree, seed, default_fn, default_fn,
+    ) {
+        Ok(graph) => graph,
+        Err(_) => {
+            return Err(PyValueError::new_err("num_nodes or degree invalid input"));
+        }
+    };
+    // Core function does not put index into node payload, so for backwards compat
+    // in the python interface, we do it here.
+    let nodes: Vec<NodeIndex> = graph.node_indices().collect();
+    for node in nodes.iter() {
+        graph[*node] = node.index().into_py_any(py)?;
+    }
+    Ok(graph::PyGraph {
+        graph,
+        node_removed: false,
+        multigraph: true,
+        attrs: py.None(),
+    })
+}
+
 /// Return a :math:`G_{np}` directed random graph, also known as an
 /// Erdős-Rényi graph or a binomial graph.
 ///
