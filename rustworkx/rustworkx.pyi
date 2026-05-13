@@ -656,6 +656,12 @@ def is_planar(graph: PyGraph, /) -> bool: ...
 
 # Random Graph
 
+def random_regular_graph(
+    num_nodes: int,
+    degree: int,
+    /,
+    seed: int | None = ...,
+) -> PyGraph: ...
 def directed_gnm_random_graph(
     num_nodes: int,
     num_edges: int,
