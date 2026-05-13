@@ -32,7 +32,22 @@ use rand_pcg::Pcg64;
 
 use rustworkx_core::generators as core_generators;
 
-// TODO: docs
+/// Return a random undirected :math:`d`-regular graph on :math:`n` nodes.
+///
+/// A regular graph is a graph where each node has the same number of neighbors,
+/// i.e., the same degree :math:`d`.  The product :math:`n d` must be even.
+/// The resulting graph has no self-loops or parallel edges.
+///
+/// This implementation is based on the networkx function ``random_regular_graph`` [1]_.
+///
+/// :param int num_nodes: The number of nodes to create in the graph
+/// :param int degree: The degree that every node will have
+/// :param int seed: An optional seed to use for the random number generator
+///
+/// :return: A PyGraph object
+/// :rtype: PyGraph
+///
+/// .. [1] https://github.com/networkx/networkx/blob/networkx-2.4/networkx/generators/random_graphs.py#L495
 #[pyfunction]
 #[pyo3(text_signature = "(num_nodes, degree, /, seed=None)", signature = (num_nodes, degree, seed=None))]
 pub fn random_regular_graph(
