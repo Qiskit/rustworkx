@@ -593,6 +593,12 @@ fn rustworkx(py: Python<'_>, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(digraph_degree_centrality))?;
     m.add_wrapped(wrap_pyfunction!(in_degree_centrality))?;
     m.add_wrapped(wrap_pyfunction!(out_degree_centrality))?;
+    m.add_wrapped(wrap_pyfunction!(graph_group_degree_centrality))?;
+    m.add_wrapped(wrap_pyfunction!(digraph_group_degree_centrality))?;
+    m.add_wrapped(wrap_pyfunction!(graph_group_closeness_centrality))?;
+    m.add_wrapped(wrap_pyfunction!(digraph_group_closeness_centrality))?;
+    m.add_wrapped(wrap_pyfunction!(graph_group_betweenness_centrality))?;
+    m.add_wrapped(wrap_pyfunction!(digraph_group_betweenness_centrality))?;
     m.add_wrapped(wrap_pyfunction!(graph_astar_shortest_path))?;
     m.add_wrapped(wrap_pyfunction!(digraph_astar_shortest_path))?;
     m.add_wrapped(wrap_pyfunction!(graph_greedy_color))?;
@@ -606,6 +612,7 @@ fn rustworkx(py: Python<'_>, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(graph_line_graph))?;
     m.add_wrapped(wrap_pyfunction!(graph_tensor_product))?;
     m.add_wrapped(wrap_pyfunction!(digraph_tensor_product))?;
+    m.add_wrapped(wrap_pyfunction!(random_regular_graph))?;
     m.add_wrapped(wrap_pyfunction!(directed_gnp_random_graph))?;
     m.add_wrapped(wrap_pyfunction!(undirected_gnp_random_graph))?;
     m.add_wrapped(wrap_pyfunction!(directed_gnm_random_graph))?;
