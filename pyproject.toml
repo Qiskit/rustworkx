@@ -67,7 +67,7 @@ build-backend = "setuptools.build_meta"
 [dependency-groups]
 testinfra = [
     "nox==2025.10.16",
-    "uv==0.11.2",
+    "uv==0.11.6",
 ]
 test = [
   "setuptools-rust",
