@@ -32,6 +32,53 @@ use rand_pcg::Pcg64;
 
 use rustworkx_core::generators as core_generators;
 
+/// Return a random undirected :math:`d`-regular graph on :math:`n` nodes.
+///
+/// A regular graph is a graph where each node has the same number of neighbors,
+/// i.e., the same degree :math:`d`. The product :math:`n d` must be even.
+/// The resulting graph has no self-loops or parallel edges.
+///
+/// This implementation is based on the networkx function ``random_regular_graph`` [1]_.
+///
+/// :param int num_nodes: The number of nodes to create in the graph
+/// :param int degree: The degree that every node will have
+/// :param int seed: An optional seed to use for the random number generator
+///
+/// :return: A PyGraph object
+/// :rtype: PyGraph
+///
+/// .. [1] https://github.com/networkx/networkx/blob/networkx-2.4/networkx/generators/random_graphs.py#L495
+#[pyfunction]
+#[pyo3(text_signature = "(num_nodes, degree, /, seed=None)", signature = (num_nodes, degree, seed=None))]
+pub fn random_regular_graph(
+    py: Python,
+    num_nodes: usize,
+    degree: usize,
+    seed: Option<u64>,
+) -> PyResult<graph::PyGraph> {
+    let default_fn = || py.None();
+    let mut graph: StablePyGraph<Undirected> = match core_generators::random_regular_graph(
+        num_nodes, degree, seed, default_fn, default_fn,
+    ) {
+        Ok(graph) => graph,
+        Err(_) => {
+            return Err(PyValueError::new_err("num_nodes or degree invalid input"));
+        }
+    };
+    // Core function does not put index into node payload, so for backwards compat
+    // in the python interface, we do it here.
+    let nodes: Vec<NodeIndex> = graph.node_indices().collect();
+    for node in nodes.iter() {
+        graph[*node] = node.index().into_py_any(py)?;
+    }
+    Ok(graph::PyGraph {
+        graph,
+        node_removed: false,
+        multigraph: true,
+        attrs: py.None(),
+    })
+}
+
 /// Return a :math:`G_{np}` directed random graph, also known as an
 /// Erdős-Rényi graph or a binomial graph.
 ///

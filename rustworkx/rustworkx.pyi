@@ -189,6 +189,40 @@ def graph_degree_centrality(
     graph: PyGraph[_S, _T],
     /,
 ) -> CentralityMapping: ...
+def graph_group_degree_centrality(
+    graph: PyGraph[_S, _T],
+    group: list[int],
+    /,
+) -> float: ...
+def digraph_group_degree_centrality(
+    graph: PyDiGraph[_S, _T],
+    group: list[int],
+    /,
+) -> float: ...
+def graph_group_closeness_centrality(
+    graph: PyGraph[_S, _T],
+    group: list[int],
+    /,
+) -> float: ...
+def digraph_group_closeness_centrality(
+    graph: PyDiGraph[_S, _T],
+    group: list[int],
+    /,
+) -> float: ...
+def graph_group_betweenness_centrality(
+    graph: PyGraph[_S, _T],
+    group: list[int],
+    /,
+    normalized: bool = ...,
+    parallel_threshold: int = ...,
+) -> float: ...
+def digraph_group_betweenness_centrality(
+    graph: PyDiGraph[_S, _T],
+    group: list[int],
+    /,
+    normalized: bool = ...,
+    parallel_threshold: int = ...,
+) -> float: ...
 def digraph_katz_centrality(
     graph: PyDiGraph[_S, _T],
     /,
@@ -622,6 +656,12 @@ def is_planar(graph: PyGraph, /) -> bool: ...
 
 # Random Graph
 
+def random_regular_graph(
+    num_nodes: int,
+    degree: int,
+    /,
+    seed: int | None = ...,
+) -> PyGraph: ...
 def directed_gnm_random_graph(
     num_nodes: int,
     num_edges: int,
