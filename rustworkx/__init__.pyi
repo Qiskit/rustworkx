@@ -159,6 +159,7 @@ from .rustworkx import max_weight_matching as max_weight_matching
 from .rustworkx import is_matching as is_matching
 from .rustworkx import is_maximal_matching as is_maximal_matching
 from .rustworkx import is_planar as is_planar
+from .rustworkx import random_regular_graph as random_regular_graph
 from .rustworkx import directed_gnm_random_graph as directed_gnm_random_graph
 from .rustworkx import undirected_gnm_random_graph as undirected_gnm_random_graph
 from .rustworkx import directed_gnp_random_graph as directed_gnp_random_graph
