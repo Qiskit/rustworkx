@@ -18,6 +18,51 @@ import numpy as np
 import rustworkx
 
 
+class TestRandomRegularGraph(unittest.TestCase):
+    def test_random_regular_degrees1(self):
+        graph = rustworkx.random_regular_graph(20, 4)
+        self.assertEqual(len(graph), 20)
+        for i in range(20):
+            self.assertEqual(graph.degree(i), 4)
+
+    def test_random_regular_degrees2(self):
+        graph = rustworkx.random_regular_graph(22, 7)
+        self.assertEqual(len(graph), 22)
+        for i in range(22):
+            self.assertEqual(graph.degree(i), 7)
+
+    def test_random_regular_empty(self):
+        graph = rustworkx.random_regular_graph(20, 0)
+        self.assertEqual(len(graph), 20)
+        self.assertEqual(len(graph.edges()), 0)
+
+    def test_random_regular_complete(self):
+        graph = rustworkx.random_regular_graph(10, 9)
+        self.assertEqual(len(graph), 10)
+        self.assertEqual(len(graph.edges()), 45)
+
+    def test_random_regular_same_seed(self):
+        # with other arguments equal, same seed results in same graph
+        graph_1 = rustworkx.random_regular_graph(20, 4, seed=123)
+        graph_2 = rustworkx.random_regular_graph(20, 4, seed=123)
+        self.assertEqual(graph_1.edge_list(), graph_2.edge_list())
+
+    def test_random_regular_invalid_num_nodes(self):
+        with self.assertRaises(ValueError):
+            rustworkx.random_regular_graph(0, 5)
+
+    def test_random_regular_invalid_degree(self):
+        with self.assertRaises(OverflowError):
+            rustworkx.random_regular_graph(20, -1)
+        with self.assertRaises(ValueError):
+            rustworkx.random_regular_graph(20, 20)
+
+    def test_random_regular_incompat(self):
+        with self.assertRaises(ValueError):
+            # at least one of `num_nodes` and `degree` must be even
+            rustworkx.random_regular_graph(13, 5)
+
+
 class TestGNPRandomGraph(unittest.TestCase):
     def test_random_gnp_directed_1(self):
         graph = rustworkx.directed_gnp_random_graph(15, 0.7, seed=20)
