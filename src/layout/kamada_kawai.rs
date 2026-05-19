@@ -26,8 +26,9 @@
 //!
 //! Disconnected graphs are handled by laying out each component
 //! independently and packing the results in a horizontal row so that
-//! components don't overlap.  Directed graphs have their distance
-//! matrix symmetrised (Kamada-Kawai is fundamentally undirected).
+//! components don't overlap.  Directed graphs have their distances
+//! computed on the underlying undirected graph (Kamada-Kawai is
+//! fundamentally undirected).
 
 use std::iter::Iterator;
 
@@ -38,7 +39,8 @@ use pyo3::prelude::*;
 
 use petgraph::EdgeType;
 use petgraph::graph::NodeIndex;
-use petgraph::visit::{EdgeRef, NodeIndexable};
+use petgraph::stable_graph::StableUnGraph;
+use petgraph::visit::{EdgeRef, IntoEdgeReferences, NodeIndexable};
 
 use rayon::prelude::*;
 
@@ -71,16 +73,27 @@ fn distance_matrix<Ty: EdgeType + Sync>(
         ));
     }
 
-    let edge_cost = |e: petgraph::stable_graph::EdgeIndex| -> PyResult<Nt> {
-        edge_weights[e.index()].ok_or_else(|| PyValueError::new_err("Missing edge weight"))
-    };
+    // K-K's distance model is undirected.  Build an undirected view
+    // and run Dijkstra on it so that weakly-connected digraphs get
+    // finite distances between nodes that aren't reachable via
+    // directed paths.
+    let mut undirected: StableUnGraph<(), Nt> =
+        StableUnGraph::with_capacity(n_bound, graph.edge_count());
+    for _ in 0..n_bound {
+        undirected.add_node(());
+    }
+    for e in graph.edge_references() {
+        if let Some(w) = edge_weights[e.id().index()] {
+            undirected.add_edge(e.source(), e.target(), w);
+        }
+    }
 
     let nodes: Vec<NodeIndex> = graph.node_indices().collect();
     let rows: Vec<(usize, Vec<Option<Nt>>)> = nodes
         .par_iter()
         .map(|src| {
-            let lengths: PyResult<Vec<Option<Nt>>> =
-                dijkstra(graph, *src, None, |e| edge_cost(e.id()), None);
+            let lengths: Result<Vec<Option<Nt>>, PyErr> =
+                dijkstra(&undirected, *src, None, |e| Ok(*e.weight()), None);
             (src.index(), lengths.unwrap())
         })
         .collect();
@@ -91,18 +104,6 @@ fn distance_matrix<Ty: EdgeType + Sync>(
         for (j, d_opt) in lengths.into_iter().enumerate() {
             if let Some(d) = d_opt {
                 matrix[i * n_bound + j] = d;
-            }
-        }
-    }
-
-    if Ty::is_directed() {
-        for i in 0..n_bound {
-            for j in (i + 1)..n_bound {
-                let d_ij = matrix[i * n_bound + j];
-                let d_ji = matrix[j * n_bound + i];
-                let d = d_ij.min(d_ji);
-                matrix[i * n_bound + j] = d;
-                matrix[j * n_bound + i] = d;
             }
         }
     }
