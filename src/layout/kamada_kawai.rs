@@ -31,7 +31,7 @@
 
 use std::iter::Iterator;
 
-use hashbrown::{HashMap, HashSet};
+use hashbrown::HashSet;
 
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
@@ -43,6 +43,7 @@ use petgraph::visit::{EdgeIndexable, EdgeRef, IntoEdgeReferences, NodeIndexable}
 use rayon::prelude::*;
 
 use rustworkx_core::connectivity::connected_components;
+use rustworkx_core::dictmap::DictMap;
 use rustworkx_core::shortest_path::dijkstra;
 
 use crate::StablePyGraph;
@@ -305,7 +306,7 @@ fn pack_components(pos: &mut [Point], components: &[Vec<usize>]) {
 pub fn kamada_kawai_layout<Ty: EdgeType + Sync>(
     py: Python,
     graph: &StablePyGraph<Ty>,
-    pos: Option<HashMap<usize, Point>>,
+    pos: Option<DictMap<usize, Point>>,
     fixed: Option<HashSet<usize>>,
     weight_fn: Option<Py<PyAny>>,
     default_weight: Nt,
@@ -321,7 +322,7 @@ pub fn kamada_kawai_layout<Ty: EdgeType + Sync>(
 
     if graph.node_count() == 0 {
         return Ok(Pos2DMapping {
-            pos_map: rustworkx_core::dictmap::DictMap::default(),
+            pos_map: DictMap::default(),
         });
     }
 

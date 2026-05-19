@@ -26,6 +26,8 @@ use hashbrown::{HashMap, HashSet};
 use pyo3::Python;
 use pyo3::prelude::*;
 
+use rustworkx_core::dictmap::DictMap;
+
 use crate::iterators::Pos2DMapping;
 
 /// Position nodes using Fruchterman-Reingold force-directed algorithm.
@@ -249,7 +251,7 @@ pub fn digraph_spring_layout(
 pub fn graph_kamada_kawai_layout(
     py: Python,
     graph: &graph::PyGraph,
-    pos: Option<HashMap<usize, Point>>,
+    pos: Option<DictMap<usize, Point>>,
     fixed: Option<HashSet<usize>>,
     weight_fn: Option<Py<PyAny>>,
     default_weight: f64,
@@ -289,7 +291,7 @@ pub fn graph_kamada_kawai_layout(
 pub fn digraph_kamada_kawai_layout(
     py: Python,
     graph: &digraph::PyDiGraph,
-    pos: Option<HashMap<usize, Point>>,
+    pos: Option<DictMap<usize, Point>>,
     fixed: Option<HashSet<usize>>,
     weight_fn: Option<Py<PyAny>>,
     default_weight: f64,
