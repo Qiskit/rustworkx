@@ -488,6 +488,7 @@ class TestKamadaKawaiLayout(LayoutTest):
     @staticmethod
     def _dist(pos, i, j):
         import math
+
         return math.hypot(pos[i][0] - pos[j][0], pos[i][1] - pos[j][1])
 
     @staticmethod
@@ -531,6 +532,7 @@ class TestKamadaKawaiLayout(LayoutTest):
         # Four-cycle should land on a square: equal sides, equal
         # diagonals, diagonal/side = sqrt(2).
         import math
+
         graph = rustworkx.generators.cycle_graph(4)
         result = rustworkx.kamada_kawai_layout(graph)
         sides = [self._dist(result, i, (i + 1) % 4) for i in range(4)]
@@ -547,18 +549,15 @@ class TestKamadaKawaiLayout(LayoutTest):
         # is a regular pentagon: equidistant from centroid, and the
         # side/diagonal ratio matches phi = (1 + sqrt(5)) / 2.
         import math
+
         graph = rustworkx.generators.complete_graph(5)
         result = rustworkx.kamada_kawai_layout(graph)
         cx, cy = self._centroid(result)
-        radii = [
-            math.hypot(result[i][0] - cx, result[i][1] - cy) for i in range(5)
-        ]
+        radii = [math.hypot(result[i][0] - cx, result[i][1] - cy) for i in range(5)]
         for r in radii:
             self.assertAlmostEqual(r / radii[0], 1.0, places=2)
 
-        distances = sorted(
-            self._dist(result, i, j) for i in range(5) for j in range(i + 1, 5)
-        )
+        distances = sorted(self._dist(result, i, j) for i in range(5) for j in range(i + 1, 5))
         avg_side = sum(distances[:5]) / 5
         avg_diag = sum(distances[5:]) / 5
         phi = (1 + math.sqrt(5)) / 2
@@ -569,6 +568,7 @@ class TestKamadaKawaiLayout(LayoutTest):
         # via PCA: the smaller eigenvalue of the centered position
         # covariance should be much smaller than the larger.
         import math
+
         graph = rustworkx.generators.path_graph(6)
         result = rustworkx.kamada_kawai_layout(graph)
         cx, cy = self._centroid(result)
@@ -602,9 +602,7 @@ class TestKamadaKawaiLayout(LayoutTest):
     def test_fixed_nodes_do_not_move(self):
         graph = rustworkx.generators.cycle_graph(5)
         initial = {0: (0.0, 0.0), 1: (1.0, 0.0)}
-        result = rustworkx.kamada_kawai_layout(
-            graph, pos=initial, fixed={0, 1}
-        )
+        result = rustworkx.kamada_kawai_layout(graph, pos=initial, fixed={0, 1})
         self.assertAlmostEqual(result[0][0], 0.0, places=10)
         self.assertAlmostEqual(result[0][1], 0.0, places=10)
         self.assertAlmostEqual(result[1][0], 1.0, places=10)
@@ -621,36 +619,35 @@ class TestKamadaKawaiLayout(LayoutTest):
             graph.add_node(None)
         graph.add_edges_from([(0, 1, 1.0), (1, 2, 5.0), (2, 3, 1.0)])
 
-        uniform = rustworkx.kamada_kawai_layout(
-            graph, weight_fn=lambda _w: 1.0
-        )
-        weighted = rustworkx.kamada_kawai_layout(
-            graph, weight_fn=lambda w: float(w)
-        )
+        uniform = rustworkx.kamada_kawai_layout(graph, weight_fn=lambda _w: 1.0)
+        weighted = rustworkx.kamada_kawai_layout(graph, weight_fn=lambda w: float(w))
         # The 5.0 edge should pull nodes 1 and 2 further apart.
-        self.assertGreater(
-            self._dist(weighted, 1, 2), self._dist(uniform, 1, 2)
-        )
+        self.assertGreater(self._dist(weighted, 1, 2), self._dist(uniform, 1, 2))
 
     def test_negative_weight_raises(self):
         graph = rustworkx.PyGraph()
         graph.add_nodes_from([0, 1])
         graph.add_edge(0, 1, -1.0)
         with self.assertRaises(ValueError):
-            rustworkx.kamada_kawai_layout(
-                graph, weight_fn=lambda w: float(w)
-            )
+            rustworkx.kamada_kawai_layout(graph, weight_fn=lambda w: float(w))
 
     # ---- disconnected graphs ------------------------------------------
 
     def test_disconnected_graph_returns_layout_for_all_nodes(self):
         import math
+
         graph = rustworkx.PyGraph()
         graph.add_nodes_from(list(range(6)))
-        graph.add_edges_from([
-            (0, 1, 1.0), (1, 2, 1.0), (2, 0, 1.0),
-            (3, 4, 1.0), (4, 5, 1.0), (5, 3, 1.0),
-        ])
+        graph.add_edges_from(
+            [
+                (0, 1, 1.0),
+                (1, 2, 1.0),
+                (2, 0, 1.0),
+                (3, 4, 1.0),
+                (4, 5, 1.0),
+                (5, 3, 1.0),
+            ]
+        )
         result = rustworkx.kamada_kawai_layout(graph)
         self.assertEqual(len(result), 6)
         for p in result.values():
@@ -661,9 +658,7 @@ class TestKamadaKawaiLayout(LayoutTest):
         # the minimum cross-component distance should exceed the
         # within-component edge length.
         intra = self._dist(result, 0, 1)
-        cross = min(
-            self._dist(result, i, j) for i in (0, 1, 2) for j in (3, 4, 5)
-        )
+        cross = min(self._dist(result, i, j) for i in (0, 1, 2) for j in (3, 4, 5))
         self.assertGreater(cross, intra * 0.5)
 
     # ---- determinism --------------------------------------------------

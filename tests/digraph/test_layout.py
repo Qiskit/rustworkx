@@ -487,6 +487,7 @@ class TestKamadaKawaiLayout(LayoutTest):
     @staticmethod
     def _dist(pos, i, j):
         import math
+
         return math.hypot(pos[i][0] - pos[j][0], pos[i][1] - pos[j][1])
 
     @staticmethod
@@ -513,6 +514,7 @@ class TestKamadaKawaiLayout(LayoutTest):
         # implementation symmetrises, so the layout should still be a
         # square: equal sides and diag/side = sqrt(2).
         import math
+
         graph = rustworkx.generators.directed_cycle_graph(4)
         result = rustworkx.kamada_kawai_layout(graph)
         sides = [self._dist(result, i, (i + 1) % 4) for i in range(4)]
@@ -524,9 +526,7 @@ class TestKamadaKawaiLayout(LayoutTest):
     def test_fixed_nodes_do_not_move(self):
         graph = rustworkx.generators.directed_cycle_graph(5)
         initial = {0: (0.0, 0.0), 1: (1.0, 0.0)}
-        result = rustworkx.kamada_kawai_layout(
-            graph, pos=initial, fixed={0, 1}
-        )
+        result = rustworkx.kamada_kawai_layout(graph, pos=initial, fixed={0, 1})
         self.assertAlmostEqual(result[0][0], 0.0, places=10)
         self.assertAlmostEqual(result[1][0], 1.0, places=10)
 
@@ -540,18 +540,23 @@ class TestKamadaKawaiLayout(LayoutTest):
         graph.add_nodes_from([0, 1])
         graph.add_edge(0, 1, -1.0)
         with self.assertRaises(ValueError):
-            rustworkx.kamada_kawai_layout(
-                graph, weight_fn=lambda w: float(w)
-            )
+            rustworkx.kamada_kawai_layout(graph, weight_fn=lambda w: float(w))
 
     def test_disconnected_graph_returns_layout_for_all_nodes(self):
         import math
+
         graph = rustworkx.PyDiGraph()
         graph.add_nodes_from(list(range(6)))
-        graph.add_edges_from([
-            (0, 1, 1.0), (1, 2, 1.0), (2, 0, 1.0),
-            (3, 4, 1.0), (4, 5, 1.0), (5, 3, 1.0),
-        ])
+        graph.add_edges_from(
+            [
+                (0, 1, 1.0),
+                (1, 2, 1.0),
+                (2, 0, 1.0),
+                (3, 4, 1.0),
+                (4, 5, 1.0),
+                (5, 3, 1.0),
+            ]
+        )
         result = rustworkx.kamada_kawai_layout(graph)
         self.assertEqual(len(result), 6)
         for p in result.values():
