@@ -562,3 +562,23 @@ class TestKamadaKawaiLayout(LayoutTest):
         for p in result.values():
             self.assertTrue(math.isfinite(p[0]))
             self.assertTrue(math.isfinite(p[1]))
+
+    def test_weakly_connected_path(self):
+        # 0 -> 1 <- 2 -> 3 <- 4: weakly connected but no strongly-connected
+        # path between any two endpoints.  Distances must be computed on the
+        # underlying undirected graph, otherwise the layout collapses.
+        import math
+
+        graph = rustworkx.PyDiGraph()
+        graph.add_nodes_from(list(range(5)))
+        graph.add_edges_from([(0, 1, 1.0), (2, 1, 1.0), (2, 3, 1.0), (4, 3, 1.0)])
+        result = rustworkx.kamada_kawai_layout(graph)
+        self.assertEqual(len(result), 5)
+        for p in result.values():
+            self.assertTrue(math.isfinite(p[0]))
+            self.assertTrue(math.isfinite(p[1]))
+        # Endpoints 0 and 4 are 4 undirected-edges apart and should land
+        # further apart than adjacent pair (0, 1).
+        d_01 = math.hypot(result[0][0] - result[1][0], result[0][1] - result[1][1])
+        d_04 = math.hypot(result[0][0] - result[4][0], result[0][1] - result[4][1])
+        self.assertGreater(d_04, d_01)
