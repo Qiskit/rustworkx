@@ -38,7 +38,7 @@ use pyo3::prelude::*;
 
 use petgraph::EdgeType;
 use petgraph::graph::NodeIndex;
-use petgraph::visit::{EdgeIndexable, EdgeRef, IntoEdgeReferences, NodeIndexable};
+use petgraph::visit::{EdgeRef, NodeIndexable};
 
 use rayon::prelude::*;
 
@@ -47,8 +47,8 @@ use rustworkx_core::dictmap::DictMap;
 use rustworkx_core::shortest_path::dijkstra;
 
 use crate::StablePyGraph;
+use crate::edge_weights_from_callable;
 use crate::iterators::Pos2DMapping;
-use crate::weight_callable;
 
 use super::spring::{Point, recenter, rescale};
 
@@ -63,16 +63,12 @@ fn distance_matrix<Ty: EdgeType + Sync>(
     default_weight: Nt,
 ) -> PyResult<Vec<Nt>> {
     let n_bound = graph.node_bound();
-
-    let mut edge_weights: Vec<Option<Nt>> = vec![None; graph.edge_bound() + 1];
-    for e in graph.edge_references() {
-        let w = weight_callable(py, weight_fn, e.weight(), default_weight)?;
-        if w < 0.0 {
-            return Err(PyValueError::new_err(
-                "kamada_kawai_layout requires non-negative edge weights",
-            ));
-        }
-        edge_weights[e.id().index()] = Some(w);
+    let edge_weights: Vec<Option<Nt>> =
+        edge_weights_from_callable(py, graph, weight_fn, default_weight)?;
+    if edge_weights.iter().flatten().any(|w| *w < 0.0) {
+        return Err(PyValueError::new_err(
+            "kamada_kawai_layout requires non-negative edge weights",
+        ));
     }
 
     let edge_cost = |e: petgraph::stable_graph::EdgeIndex| -> PyResult<Nt> {
