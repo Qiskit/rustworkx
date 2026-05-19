@@ -597,6 +597,32 @@ def graph_spring_layout(
     seed: int | None = ...,
     /,
 ) -> Pos2DMapping: ...
+def digraph_kamada_kawai_layout(
+    graph: PyDiGraph[_S, _T],
+    pos: dict[int, tuple[float, float]] | None = ...,
+    fixed: set[int] | None = ...,
+    weight_fn: Callable[[_T], float] | None = ...,
+    default_weight: float = ...,
+    epsilon: float = ...,
+    max_outer: int = ...,
+    max_inner: int = ...,
+    scale: float = ...,
+    center: tuple[float, float] | None = ...,
+    /,
+) -> Pos2DMapping: ...
+def graph_kamada_kawai_layout(
+    graph: PyGraph[_S, _T],
+    pos: dict[int, tuple[float, float]] | None = ...,
+    fixed: set[int] | None = ...,
+    weight_fn: Callable[[_T], float] | None = ...,
+    default_weight: float = ...,
+    epsilon: float = ...,
+    max_outer: int = ...,
+    max_inner: int = ...,
+    scale: float = ...,
+    center: tuple[float, float] | None = ...,
+    /,
+) -> Pos2DMapping: ...
 
 # Line graph
 
