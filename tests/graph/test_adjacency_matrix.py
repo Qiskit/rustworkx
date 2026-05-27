@@ -375,3 +375,151 @@ class TestFromComplexAdjacencyMatrix(unittest.TestCase):
             rustworkx.graph_adjacency_matrix(
                 graph, weight_fn=lambda x: float(x), parallel_edge="error"
             )
+
+
+class TestGraphBiadjacencyMatrix(unittest.TestCase):
+    def test_from_biadjacency_matrix(self):
+        input_array = np.array(
+            [[1.0, 0.0, 2.0], [0.0, 3.0, 0.0]],
+            dtype=np.float64,
+        )
+        graph = rustworkx.PyGraph.from_biadjacency_matrix(input_array)
+        self.assertEqual(5, graph.num_nodes())
+        self.assertEqual(
+            [(0, 2, 1.0), (0, 4, 2.0), (1, 3, 3.0)],
+            graph.weighted_edge_list(),
+        )
+
+    def test_from_biadjacency_matrix_non_zero_null(self):
+        input_array = np.array(
+            [[np.inf, -1.0], [2.0, np.inf], [np.inf, 4.0]],
+            dtype=np.float64,
+        )
+        graph = rustworkx.PyGraph.from_biadjacency_matrix(input_array, null_value=np.inf)
+        self.assertEqual(5, graph.num_nodes())
+        self.assertEqual(
+            [(0, 4, -1.0), (1, 3, 2.0), (2, 4, 4.0)],
+            graph.weighted_edge_list(),
+        )
+
+    def test_from_biadjacency_matrix_nan_null(self):
+        input_array = np.array(
+            [[np.nan, 1.0], [2.0, np.nan]],
+            dtype=np.float64,
+        )
+        graph = rustworkx.PyGraph.from_biadjacency_matrix(input_array, null_value=np.nan)
+        self.assertEqual(
+            [(0, 3, 1.0), (1, 2, 2.0)],
+            graph.weighted_edge_list(),
+        )
+
+    def test_from_biadjacency_matrix_different_dtype(self):
+        input_array = np.array([[1, 0], [0, 1]], dtype=np.int64)
+        with self.assertRaises(TypeError):
+            rustworkx.PyGraph.from_biadjacency_matrix(input_array)
+
+    def test_from_biadjacency_matrix_empty_dimension(self):
+        graph = rustworkx.PyGraph.from_biadjacency_matrix(np.zeros((0, 3), dtype=np.float64))
+        self.assertEqual(3, graph.num_nodes())
+        self.assertEqual([], graph.weighted_edge_list())
+
+    def test_biadjacency_matrix(self):
+        graph = rustworkx.PyGraph()
+        graph.add_nodes_from(range(5))
+        graph.add_edges_from([(0, 2, 1.0), (0, 4, 2.0), (1, 3, 3.0)])
+
+        matrix = rustworkx.graph_biadjacency_matrix(graph, [0, 1], [2, 3, 4], weight_fn=lambda x: x)
+        expected = np.array([[1.0, 0.0, 2.0], [0.0, 3.0, 0.0]])
+        np.testing.assert_array_equal(expected, matrix)
+
+    def test_biadjacency_matrix_reverse_edge_order(self):
+        graph = rustworkx.PyGraph()
+        graph.add_nodes_from(range(3))
+        graph.add_edge(2, 0, 7.0)
+
+        matrix = rustworkx.graph_biadjacency_matrix(graph, [0], [2], weight_fn=float)
+        np.testing.assert_array_equal([[7.0]], matrix)
+
+    def test_biadjacency_matrix_parallel_edges(self):
+        graph = rustworkx.PyGraph()
+        graph.add_nodes_from(range(2))
+        graph.add_edges_from([(0, 1, 1.0), (0, 1, 3.0)])
+
+        sum_matrix = rustworkx.graph_biadjacency_matrix(
+            graph, [0], [1], weight_fn=float, parallel_edge="sum"
+        )
+        np.testing.assert_array_equal([[4.0]], sum_matrix)
+
+        avg_matrix = rustworkx.graph_biadjacency_matrix(
+            graph, [0], [1], weight_fn=float, parallel_edge="avg"
+        )
+        np.testing.assert_array_equal([[2.0]], avg_matrix)
+
+    def test_biadjacency_matrix_default_weight(self):
+        graph = rustworkx.PyGraph()
+        graph.add_nodes_from(range(2))
+        graph.add_edge(0, 1, "edge")
+
+        matrix = rustworkx.graph_biadjacency_matrix(graph, [0], [1], default_weight=5.0)
+        np.testing.assert_array_equal([[5.0]], matrix)
+
+    def test_biadjacency_matrix_null_value(self):
+        graph = rustworkx.PyGraph()
+        graph.add_nodes_from(range(3))
+        graph.add_edge(0, 1, 2.0)
+
+        matrix = rustworkx.graph_biadjacency_matrix(
+            graph, [0], [1, 2], weight_fn=float, null_value=-1.0
+        )
+        np.testing.assert_array_equal([[2.0, -1.0]], matrix)
+
+    def test_biadjacency_matrix_invalid_parallel_edge(self):
+        graph = rustworkx.PyGraph()
+        graph.add_nodes_from(range(2))
+        graph.add_edge(0, 1, 1.0)
+
+        with self.assertRaises(ValueError):
+            rustworkx.graph_biadjacency_matrix(
+                graph, [0], [1], weight_fn=float, parallel_edge="error"
+            )
+
+    def test_biadjacency_matrix_missing_node(self):
+        graph = rustworkx.PyGraph()
+        graph.add_node(0)
+        with self.assertRaises(ValueError):
+            rustworkx.graph_biadjacency_matrix(graph, [0], [1])
+
+    def test_biadjacency_matrix_duplicate_node_order(self):
+        graph = rustworkx.PyGraph()
+        graph.add_nodes_from(range(3))
+
+        with self.assertRaisesRegex(ValueError, "row_order contains duplicate node index 0"):
+            rustworkx.graph_biadjacency_matrix(graph, [0, 0], [1])
+        with self.assertRaisesRegex(ValueError, "column_order contains duplicate node index 1"):
+            rustworkx.graph_biadjacency_matrix(graph, [0], [1, 1])
+
+    def test_biadjacency_matrix_overlapping_node_order(self):
+        graph = rustworkx.PyGraph()
+        graph.add_nodes_from(range(2))
+
+        with self.assertRaisesRegex(ValueError, "must be disjoint"):
+            rustworkx.graph_biadjacency_matrix(graph, [0], [0, 1])
+
+    def test_biadjacency_matrix_non_contiguous_node_indices(self):
+        graph = rustworkx.PyGraph()
+        graph.add_nodes_from(range(4))
+        graph.add_edge(0, 3, 7.0)
+        graph.remove_node(1)
+
+        matrix = rustworkx.graph_biadjacency_matrix(graph, [0], [3], weight_fn=float)
+        np.testing.assert_array_equal([[7.0]], matrix)
+
+        with self.assertRaises(ValueError):
+            rustworkx.graph_biadjacency_matrix(graph, [0], [1])
+
+    def test_biadjacency_matrix_empty_order(self):
+        graph = rustworkx.PyGraph()
+        graph.add_nodes_from(range(2))
+
+        matrix = rustworkx.graph_biadjacency_matrix(graph, [], [1])
+        self.assertEqual((0, 1), matrix.shape)

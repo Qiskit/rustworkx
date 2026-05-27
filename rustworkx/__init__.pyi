@@ -100,6 +100,8 @@ from .rustworkx import graph_condensation as graph_condensation
 from .rustworkx import weakly_connected_components as weakly_connected_components
 from .rustworkx import digraph_adjacency_matrix as digraph_adjacency_matrix
 from .rustworkx import graph_adjacency_matrix as graph_adjacency_matrix
+from .rustworkx import digraph_biadjacency_matrix as digraph_biadjacency_matrix
+from .rustworkx import graph_biadjacency_matrix as graph_biadjacency_matrix
 from .rustworkx import cycle_basis as cycle_basis
 from .rustworkx import articulation_points as articulation_points
 from .rustworkx import bridges as bridges
