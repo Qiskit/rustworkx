@@ -734,6 +734,178 @@ pub fn digraph_adjacency_matrix<'py>(
     Ok(matrix.into_pyarray(py))
 }
 
+type ParallelEdgeFn = fn(f64, f64, usize) -> f64;
+
+fn parallel_edge_fn(parallel_edge: &str) -> PyResult<ParallelEdgeFn> {
+    match parallel_edge {
+        "sum" => Ok(|current, edge_weight, _| current + edge_weight),
+        "min" => Ok(|current, edge_weight, _| current.min(edge_weight)),
+        "max" => Ok(|current, edge_weight, _| current.max(edge_weight)),
+        "avg" => Ok(|current, edge_weight, count| {
+            (current * count as f64 + edge_weight) / ((count + 1) as f64)
+        }),
+        _ => Err(PyValueError::new_err(
+            "Parallel edges can currently only be dealt with using \"sum\", \"min\", \"max\", or \"avg\".",
+        )),
+    }
+}
+
+fn apply_biadjacency_edge(
+    matrix: &mut Array2<f64>,
+    parallel_edge_count: &mut HashMap<[usize; 2], usize>,
+    row: usize,
+    column: usize,
+    edge_weight: f64,
+    parallel_edge_fn: ParallelEdgeFn,
+) {
+    let key = [row, column];
+    let count = parallel_edge_count.entry(key).or_insert(0);
+    if *count == 0 {
+        matrix[[row, column]] = edge_weight;
+    } else {
+        matrix[[row, column]] = parallel_edge_fn(matrix[[row, column]], edge_weight, *count);
+    }
+    *count += 1;
+}
+
+fn validate_biadjacency_node_order<Ty: EdgeType>(
+    graph: &StablePyGraph<Ty>,
+    row_order: &[usize],
+    column_order: &[usize],
+) -> PyResult<()> {
+    let mut row_nodes = HashSet::new();
+    for node in row_order {
+        if !row_nodes.insert(*node) {
+            return Err(PyValueError::new_err(format!(
+                "row_order contains duplicate node index {node}"
+            )));
+        }
+    }
+
+    let mut column_nodes = HashSet::new();
+    for node in column_order {
+        if !column_nodes.insert(*node) {
+            return Err(PyValueError::new_err(format!(
+                "column_order contains duplicate node index {node}"
+            )));
+        }
+        if row_nodes.contains(node) {
+            return Err(PyValueError::new_err(format!(
+                "row_order and column_order must be disjoint; node index {node} appears in both"
+            )));
+        }
+    }
+
+    for node in row_order.iter().chain(column_order.iter()) {
+        if !graph.contains_node(NodeIndex::new(*node)) {
+            return Err(PyValueError::new_err(format!(
+                "Node index {node} is not present in the graph"
+            )));
+        }
+    }
+    Ok(())
+}
+
+fn biadjacency_node_map(node_order: &[usize]) -> HashMap<usize, usize> {
+    node_order
+        .iter()
+        .enumerate()
+        .map(|(index, node)| (*node, index))
+        .collect()
+}
+
+fn graph_biadjacency_index(
+    source: usize,
+    target: usize,
+    row_map: &HashMap<usize, usize>,
+    column_map: &HashMap<usize, usize>,
+) -> Option<(usize, usize)> {
+    row_map
+        .get(&source)
+        .and_then(|row| column_map.get(&target).map(|column| (*row, *column)))
+        .or_else(|| {
+            row_map
+                .get(&target)
+                .and_then(|row| column_map.get(&source).map(|column| (*row, *column)))
+        })
+}
+
+/// Return the biadjacency matrix for a PyDiGraph class
+///
+/// This function returns a dense numpy array with rows and columns ordered
+/// according to the explicit node index lists passed in. Only directed edges
+/// from ``row_order`` nodes to ``column_order`` nodes are included. The row
+/// and column orders must contain unique node indices and must be disjoint.
+///
+/// In the case where there are multiple edges between nodes the value in the
+/// output matrix will be assigned based on a given parameter. Currently, the minimum, maximum, average, and default sum are supported.
+///
+/// :param PyDiGraph graph: The DiGraph used to generate the biadjacency matrix
+///     from
+/// :param list row_order: The node indices to use for the rows of the output
+///     matrix.
+/// :param list column_order: The node indices to use for the columns of the
+///     output matrix.
+/// :param callable weight_fn: A callable object (function, lambda, etc) which
+///     will be passed the edge object and expected to return a ``float``.
+/// :param float default_weight: If ``weight_fn`` is not used this can be
+///     optionally used to specify a default weight to use for all edges.
+/// :param float null_value: An optional float that will treated as a null
+///     value. This is the default value in the output matrix and it is used
+///     to indicate the absence of an edge between 2 nodes. By default this is
+///     ``0.0``.
+/// :param String parallel_edge: Optional argument that determines how the function handles parallel edges.
+///     ``"min"`` causes the value in the output matrix to be the minimum of the edges' weights, and similar behavior can be expected for ``"max"`` and ``"avg"``.
+///     The function defaults to ``"sum"`` behavior, where the value in the output matrix is the sum of all parallel edge weights.
+///
+/// :return: The biadjacency matrix for the input directed graph as a numpy array
+/// :rtype: numpy.ndarray
+#[pyfunction]
+#[pyo3(
+    signature=(graph, row_order, column_order, weight_fn=None, default_weight=1.0, null_value=0.0, parallel_edge="sum"),
+    text_signature = "(graph, row_order, column_order, /, weight_fn=None, default_weight=1.0, null_value=0.0, parallel_edge=\"sum\")"
+)]
+#[allow(clippy::too_many_arguments)]
+pub fn digraph_biadjacency_matrix<'py>(
+    py: Python<'py>,
+    graph: &digraph::PyDiGraph,
+    row_order: Vec<usize>,
+    column_order: Vec<usize>,
+    weight_fn: Option<Py<PyAny>>,
+    default_weight: f64,
+    null_value: f64,
+    parallel_edge: &str,
+) -> PyResult<Bound<'py, PyArray2<f64>>> {
+    validate_biadjacency_node_order(&graph.graph, &row_order, &column_order)?;
+    let parallel_edge_fn = parallel_edge_fn(parallel_edge)?;
+    let row_map = biadjacency_node_map(&row_order);
+    let column_map = biadjacency_node_map(&column_order);
+    let mut matrix = Array2::<f64>::from_elem((row_order.len(), column_order.len()), null_value);
+    let mut parallel_edge_count = HashMap::new();
+
+    let biadjacency_edges = graph.graph.edge_references().filter_map(|edge| {
+        let source = edge.source().index();
+        let target = edge.target().index();
+        row_map
+            .get(&source)
+            .and_then(|row| column_map.get(&target).map(|column| (*row, *column)))
+            .map(|(row, column)| (row, column, edge.weight()))
+    });
+
+    for (row, column, weight) in biadjacency_edges {
+        let edge_weight = weight_callable(py, &weight_fn, weight, default_weight)?;
+        apply_biadjacency_edge(
+            &mut matrix,
+            &mut parallel_edge_count,
+            row,
+            column,
+            edge_weight,
+            parallel_edge_fn,
+        );
+    }
+    Ok(matrix.into_pyarray(py))
+}
+
 /// Return the adjacency matrix for a PyGraph class
 ///
 /// In the case where there are multiple edges between nodes the value in the
@@ -825,6 +997,79 @@ pub fn graph_adjacency_matrix<'py>(
                 }
             }
         }
+    }
+    Ok(matrix.into_pyarray(py))
+}
+
+/// Return the biadjacency matrix for a PyGraph class
+///
+/// This function returns a dense numpy array with rows and columns ordered
+/// according to the explicit node index lists passed in. Edges between
+/// ``row_order`` nodes and ``column_order`` nodes are included. The row and
+/// column orders must contain unique node indices and must be disjoint.
+///
+/// In the case where there are multiple edges between nodes the value in the
+/// output matrix will be assigned based on a given parameter. Currently, the minimum, maximum, average, and default sum are supported.
+///
+/// :param PyGraph graph: The graph used to generate the biadjacency matrix from
+/// :param list row_order: The node indices to use for the rows of the output
+///     matrix.
+/// :param list column_order: The node indices to use for the columns of the
+///     output matrix.
+/// :param callable weight_fn: A callable object (function, lambda, etc) which
+///     will be passed the edge object and expected to return a ``float``.
+/// :param float default_weight: If ``weight_fn`` is not used this can be
+///     optionally used to specify a default weight to use for all edges.
+/// :param float null_value: An optional float that will treated as a null
+///     value. This is the default value in the output matrix and it is used
+///     to indicate the absence of an edge between 2 nodes. By default this is
+///     ``0.0``.
+/// :param String parallel_edge: Optional argument that determines how the function handles parallel edges.
+///     ``"min"`` causes the value in the output matrix to be the minimum of the edges' weights, and similar behavior can be expected for ``"max"`` and ``"avg"``.
+///     The function defaults to ``"sum"`` behavior, where the value in the output matrix is the sum of all parallel edge weights.
+///
+/// :return: The biadjacency matrix for the input graph as a numpy array
+/// :rtype: numpy.ndarray
+#[pyfunction]
+#[pyo3(
+    signature=(graph, row_order, column_order, weight_fn=None, default_weight=1.0, null_value=0.0, parallel_edge="sum"),
+    text_signature = "(graph, row_order, column_order, /, weight_fn=None, default_weight=1.0, null_value=0.0, parallel_edge=\"sum\")"
+)]
+#[allow(clippy::too_many_arguments)]
+pub fn graph_biadjacency_matrix<'py>(
+    py: Python<'py>,
+    graph: &graph::PyGraph,
+    row_order: Vec<usize>,
+    column_order: Vec<usize>,
+    weight_fn: Option<Py<PyAny>>,
+    default_weight: f64,
+    null_value: f64,
+    parallel_edge: &str,
+) -> PyResult<Bound<'py, PyArray2<f64>>> {
+    validate_biadjacency_node_order(&graph.graph, &row_order, &column_order)?;
+    let parallel_edge_fn = parallel_edge_fn(parallel_edge)?;
+    let row_map = biadjacency_node_map(&row_order);
+    let column_map = biadjacency_node_map(&column_order);
+    let mut matrix = Array2::<f64>::from_elem((row_order.len(), column_order.len()), null_value);
+    let mut parallel_edge_count = HashMap::new();
+
+    let biadjacency_edges = graph.graph.edge_references().filter_map(|edge| {
+        let source = edge.source().index();
+        let target = edge.target().index();
+        graph_biadjacency_index(source, target, &row_map, &column_map)
+            .map(|(row, column)| (row, column, edge.weight()))
+    });
+
+    for (row, column, weight) in biadjacency_edges {
+        let edge_weight = weight_callable(py, &weight_fn, weight, default_weight)?;
+        apply_biadjacency_edge(
+            &mut matrix,
+            &mut parallel_edge_count,
+            row,
+            column,
+            edge_weight,
+            parallel_edge_fn,
+        );
     }
     Ok(matrix.into_pyarray(py))
 }
