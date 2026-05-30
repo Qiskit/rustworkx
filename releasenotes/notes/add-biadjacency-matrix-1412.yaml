@@ -1,0 +1,8 @@
+---
+features:
+  - |
+    Added :meth:`~rustworkx.PyGraph.from_biadjacency_matrix`,
+    :meth:`~rustworkx.PyDiGraph.from_biadjacency_matrix`,
+    :func:`~rustworkx.graph_biadjacency_matrix`, and
+    :func:`~rustworkx.digraph_biadjacency_matrix` for dense NumPy
+    biadjacency matrix conversion.

@@ -2687,6 +2687,35 @@ impl PyDiGraph {
         _from_adjacency_matrix(py, matrix, null_value)
     }
 
+    /// Create a new :class:`~rustworkx.PyDiGraph` object from a biadjacency
+    /// matrix with matrix elements of type ``float``.
+    ///
+    /// This method can be used to construct a new bipartite
+    /// :class:`~rustworkx.PyDiGraph` object from an input biadjacency matrix.
+    /// For an input matrix with shape ``(m, n)``, the first ``m`` nodes are
+    /// generated from the rows and the next ``n`` nodes are generated from the
+    /// columns. Each non-null matrix entry creates an edge from row node ``i``
+    /// to column node ``m + j``.
+    ///
+    /// :param ndarray matrix: The input numpy array biadjacency matrix to
+    ///     create a new :class:`~rustworkx.PyDiGraph` object from. It must be
+    ///     a 2 dimensional array and be a ``float``/``np.float64`` data type.
+    /// :param float null_value: An optional float that will treated as a null
+    ///     value. If any element in the input matrix is this value it will be
+    ///     treated as not an edge. By default this is ``0.0``.
+    ///
+    /// :returns: A new graph object generated from the biadjacency matrix
+    /// :rtype: PyDiGraph
+    #[staticmethod]
+    #[pyo3(signature=(matrix, null_value=0.0), text_signature = "(matrix, /, null_value=0.0)")]
+    pub fn from_biadjacency_matrix<'p>(
+        py: Python<'p>,
+        matrix: PyReadonlyArray2<'p, f64>,
+        null_value: f64,
+    ) -> PyResult<PyDiGraph> {
+        _from_biadjacency_matrix(py, matrix, null_value)
+    }
+
     /// Create a new :class:`~rustworkx.PyDiGraph` object from an adjacency matrix
     /// with matrix elements of type ``complex``
     ///
@@ -3619,6 +3648,50 @@ where
                     elem.into_py_any(py)?,
                 );
             }
+        }
+    }
+    Ok(PyDiGraph {
+        graph: out_graph,
+        cycle_state: algo::DfsSpace::default(),
+        check_cycle: false,
+        node_removed: false,
+        multigraph: true,
+        attrs: py.None(),
+    })
+}
+
+fn is_not_matrix_null<T>(elem: &T, null_value: T) -> bool
+where
+    T: Copy + std::cmp::PartialEq + IsNan,
+{
+    if null_value.is_nan() {
+        !elem.is_nan()
+    } else {
+        *elem != null_value
+    }
+}
+
+fn _from_biadjacency_matrix<'p, T>(
+    py: Python<'p>,
+    matrix: PyReadonlyArray2<'p, T>,
+    null_value: T,
+) -> PyResult<PyDiGraph>
+where
+    T: Copy + std::cmp::PartialEq + numpy::Element + pyo3::IntoPyObject<'p> + IsNan,
+{
+    let array = matrix.as_array();
+    let shape = array.shape();
+    let mut out_graph = StablePyGraph::<Directed>::new();
+    let _node_indices: Vec<NodeIndex> = (0..(shape[0] + shape[1]))
+        .map(|node| Ok(out_graph.add_node(node.into_py_any(py)?)))
+        .collect::<PyResult<Vec<NodeIndex>>>()?;
+    for ((source, target), elem) in array.indexed_iter() {
+        if is_not_matrix_null(elem, null_value) {
+            out_graph.add_edge(
+                NodeIndex::new(source),
+                NodeIndex::new(shape[0] + target),
+                elem.into_py_any(py)?,
+            );
         }
     }
     Ok(PyDiGraph {
