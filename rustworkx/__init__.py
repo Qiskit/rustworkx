@@ -222,7 +222,7 @@ def unweighted_average_shortest_path_length(graph, parallel_threshold=300, disco
 
 
 @_rustworkx_dispatch
-def adjacency_matrix(graph, weight_fn=None, default_weight=1.0, null_value=0.0):
+def adjacency_matrix(graph, weight_fn=None, default_weight=1.0, null_value=0.0, node_list=None):
     """Return the adjacency matrix for a graph object
 
     In the case where there are multiple edges between nodes the value in the
@@ -250,6 +250,9 @@ def adjacency_matrix(graph, weight_fn=None, default_weight=1.0, null_value=0.0):
         value. This is the default value in the output matrix and it is used
         to indicate the absence of an edge between 2 nodes. By default this is
         ``0.0``.
+    :param list node_list: Optional list of node indices used to determine the
+        row and column order of the output matrix. If fewer than all graph nodes
+        are provided, only edges between listed nodes are included.
 
      :return: The adjacency matrix for the input dag as a numpy array
      :rtype: numpy.ndarray

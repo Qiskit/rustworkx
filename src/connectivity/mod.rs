@@ -16,9 +16,7 @@ mod all_pairs_all_simple_paths;
 mod johnson_simple_cycles;
 mod subgraphs;
 
-use super::{
-    InvalidNode, NullGraph, digraph, get_edge_iter_with_weights, graph, score, weight_callable,
-};
+use super::{InvalidNode, NullGraph, digraph, graph, score, weight_callable};
 
 use hashbrown::{HashMap, HashSet};
 use indexmap::IndexSet;
@@ -646,6 +644,50 @@ pub fn is_semi_connected(graph: &digraph::PyDiGraph) -> PyResult<bool> {
     }
 }
 
+fn adjacency_matrix_index_map<Ty: EdgeType>(
+    graph: &StablePyGraph<Ty>,
+    node_list: Option<Vec<usize>>,
+) -> PyResult<(usize, Option<HashMap<usize, usize>>)> {
+    if let Some(nodes) = node_list {
+        let mut node_map = HashMap::with_capacity(nodes.len());
+        for (matrix_index, node) in nodes.into_iter().enumerate() {
+            let node_index = NodeIndex::new(node);
+            if !graph.contains_node(node_index) {
+                return Err(InvalidNode::new_err(format!(
+                    "The input index {node} in 'node_list' is not a valid node index"
+                )));
+            }
+            if node_map.insert(node, matrix_index).is_some() {
+                return Err(PyValueError::new_err(
+                    "node_list contains duplicate node indices",
+                ));
+            }
+        }
+        return Ok((node_map.len(), Some(node_map)));
+    }
+
+    if graph.node_bound() != graph.node_count() {
+        let mut node_map = HashMap::with_capacity(graph.node_count());
+        for (matrix_index, node) in graph.node_indices().enumerate() {
+            node_map.insert(node.index(), matrix_index);
+        }
+        return Ok((graph.node_count(), Some(node_map)));
+    }
+
+    Ok((graph.node_count(), None))
+}
+
+fn adjacency_matrix_edge_indices(
+    source: usize,
+    target: usize,
+    node_map: &Option<HashMap<usize, usize>>,
+) -> Option<(usize, usize)> {
+    match node_map {
+        Some(map) => Some((*map.get(&source)?, *map.get(&target)?)),
+        None => Some((source, target)),
+    }
+}
+
 /// Return the adjacency matrix for a PyDiGraph object
 ///
 /// In the case where there are multiple edges between nodes the value in the
@@ -676,13 +718,16 @@ pub fn is_semi_connected(graph: &digraph::PyDiGraph) -> PyResult<bool> {
 /// :param String parallel_edge: Optional argument that determines how the function handles parallel edges.
 ///     ``"min"`` causes the value in the output matrix to be the minimum of the edges' weights, and similar behavior can be expected for ``"max"`` and ``"avg"``.
 ///     The function defaults to ``"sum"`` behavior, where the value in the output matrix is the sum of all parallel edge weights.
+/// :param list node_list: Optional list of node indices used to determine the
+///     row and column order of the output matrix. If fewer than all graph nodes
+///     are provided, only edges between listed nodes are included.
 ///
 ///  :return: The adjacency matrix for the input directed graph as a numpy array
 ///  :rtype: numpy.ndarray
 #[pyfunction]
 #[pyo3(
-    signature=(graph, weight_fn=None, default_weight=1.0, null_value=0.0, parallel_edge="sum"),
-    text_signature = "(graph, /, weight_fn=None, default_weight=1.0, null_value=0.0, parallel_edge=\"sum\")"
+    signature=(graph, weight_fn=None, default_weight=1.0, null_value=0.0, parallel_edge="sum", node_list=None),
+    text_signature = "(graph, /, weight_fn=None, default_weight=1.0, null_value=0.0, parallel_edge=\"sum\", node_list=None)"
 )]
 pub fn digraph_adjacency_matrix<'py>(
     py: Python<'py>,
@@ -691,11 +736,18 @@ pub fn digraph_adjacency_matrix<'py>(
     default_weight: f64,
     null_value: f64,
     parallel_edge: &str,
+    node_list: Option<Vec<usize>>,
 ) -> PyResult<Bound<'py, PyArray2<f64>>> {
-    let n = graph.node_count();
+    let (n, node_map) = adjacency_matrix_index_map(&graph.graph, node_list)?;
     let mut matrix = Array2::<f64>::from_elem((n, n), null_value);
     let mut parallel_edge_count = HashMap::new();
-    for (i, j, weight) in get_edge_iter_with_weights(&graph.graph) {
+    for edge in graph.graph.edge_references() {
+        let Some((i, j)) =
+            adjacency_matrix_edge_indices(edge.source().index(), edge.target().index(), &node_map)
+        else {
+            continue;
+        };
+        let weight = edge.weight().clone();
         let edge_weight = weight_callable(py, &weight_fn, &weight, default_weight)?;
         if matrix[[i, j]] == null_value || (null_value.is_nan() && matrix[[i, j]].is_nan()) {
             matrix[[i, j]] = edge_weight;
@@ -763,13 +815,16 @@ pub fn digraph_adjacency_matrix<'py>(
 /// :param String parallel_edge: Optional argument that determines how the function handles parallel edges.
 ///     ``"min"`` causes the value in the output matrix to be the minimum of the edges' weights, and similar behavior can be expected for ``"max"`` and ``"avg"``.
 ///     The function defaults to ``"sum"`` behavior, where the value in the output matrix is the sum of all parallel edge weights.
+/// :param list node_list: Optional list of node indices used to determine the
+///     row and column order of the output matrix. If fewer than all graph nodes
+///     are provided, only edges between listed nodes are included.
 ///
 /// :return: The adjacency matrix for the input graph as a numpy array
 /// :rtype: numpy.ndarray
 #[pyfunction]
 #[pyo3(
-    signature=(graph, weight_fn=None, default_weight=1.0, null_value=0.0, parallel_edge="sum"),
-    text_signature = "(graph, /, weight_fn=None, default_weight=1.0, null_value=0.0, parallel_edge=\"sum\")"
+    signature=(graph, weight_fn=None, default_weight=1.0, null_value=0.0, parallel_edge="sum", node_list=None),
+    text_signature = "(graph, /, weight_fn=None, default_weight=1.0, null_value=0.0, parallel_edge=\"sum\", node_list=None)"
 )]
 pub fn graph_adjacency_matrix<'py>(
     py: Python<'py>,
@@ -778,11 +833,18 @@ pub fn graph_adjacency_matrix<'py>(
     default_weight: f64,
     null_value: f64,
     parallel_edge: &str,
+    node_list: Option<Vec<usize>>,
 ) -> PyResult<Bound<'py, PyArray2<f64>>> {
-    let n = graph.node_count();
+    let (n, node_map) = adjacency_matrix_index_map(&graph.graph, node_list)?;
     let mut matrix = Array2::<f64>::from_elem((n, n), null_value);
     let mut parallel_edge_count = HashMap::new();
-    for (i, j, weight) in get_edge_iter_with_weights(&graph.graph) {
+    for edge in graph.graph.edge_references() {
+        let Some((i, j)) =
+            adjacency_matrix_edge_indices(edge.source().index(), edge.target().index(), &node_map)
+        else {
+            continue;
+        };
+        let weight = edge.weight().clone();
         let edge_weight = weight_callable(py, &weight_fn, &weight, default_weight)?;
         if matrix[[i, j]] == null_value || (null_value.is_nan() && matrix[[i, j]].is_nan()) {
             matrix[[i, j]] = edge_weight;
