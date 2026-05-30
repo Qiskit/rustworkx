@@ -43,10 +43,7 @@ def lint(session):
 def docs(session):
     session.env["UV_PROJECT_ENVIRONMENT"] = session.virtualenv.location
     session.env["UV_FROZEN"] = "1"
-    # faster build as generating docs already takes some time and we discard the env
-    session.env["CARGO_PROFILE_RELEASE_OPT_LEVEL"] = "1"
-    session.env["CARGO_PROFILE_RELEASE_CODEGEN_UNITS"] = "16"
-    session.env["CARGO_PROFILE_RELEASE_LTO"] = "thin"
+    session.env["MATURIN_PEP517_ARGS"] = "--profile dev"
     session.run("uv", "sync", "--only-group", "docs")
     session.install(".")
     session.run(
