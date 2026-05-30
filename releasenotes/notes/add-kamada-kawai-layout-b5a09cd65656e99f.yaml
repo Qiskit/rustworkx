@@ -1,0 +1,27 @@
+---
+features:
+  - |
+    Added a new layout function,
+    :func:`~rustworkx.kamada_kawai_layout`, which positions nodes using
+    the Kamada-Kawai path-length cost function.  The function works with
+    both :class:`~rustworkx.PyGraph` and :class:`~rustworkx.PyDiGraph`
+    inputs.  The implementation follows the original 1989 algorithm of
+    Kamada and Kawai: an outer loop selects the node with the largest
+    partial-gradient norm and an inner loop applies a 2D Newton step
+    against the local Hessian until convergence.
+
+    Disconnected graphs are handled by laying out each connected
+    component independently and packing the components in a horizontal
+    row.  This avoids the visual collapse seen with single-objective
+    Kamada-Kawai on disconnected inputs.
+
+    Example usage:
+
+    .. jupyter-execute::
+
+      import rustworkx
+      from rustworkx.visualization import mpl_draw
+
+      graph = rustworkx.generators.hexagonal_lattice_graph(2, 2)
+      layout = rustworkx.kamada_kawai_layout(graph)
+      mpl_draw(graph, pos=layout)

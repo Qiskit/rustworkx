@@ -1,0 +1,8 @@
+---
+features:
+  - |
+    Added a ``node_list`` argument to :func:`~rustworkx.adjacency_matrix`,
+    :func:`~rustworkx.graph_adjacency_matrix`, and
+    :func:`~rustworkx.digraph_adjacency_matrix`. The argument controls the
+    output matrix row and column order and can be used to build a matrix for
+    a subset of graph nodes.

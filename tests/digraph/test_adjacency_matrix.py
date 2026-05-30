@@ -116,6 +116,70 @@ class TestDAGAdjacencyMatrix(unittest.TestCase):
         self.assertIsInstance(res, np.ndarray)
         self.assertTrue(np.array_equal(np.array([[0, 1], [0, 0]]), res))
 
+    def test_node_list_with_index_holes(self):
+        graph = rustworkx.PyDiGraph()
+        node_a = graph.add_node("a")
+        node_b = graph.add_node("b")
+        node_c = graph.add_node("c")
+        node_d = graph.add_node("d")
+        graph.add_edge(node_a, node_b, 1.0)
+        graph.add_edge(node_b, node_c, 2.0)
+        graph.add_edge(node_c, node_d, 3.0)
+        graph.add_edge(node_a, node_d, 4.0)
+        graph.remove_node(node_b)
+
+        res = rustworkx.digraph_adjacency_matrix(graph, lambda x: float(x))
+
+        self.assertTrue(
+            np.array_equal(
+                np.array([[0.0, 0.0, 4.0], [0.0, 0.0, 3.0], [0.0, 0.0, 0.0]]),
+                res,
+            )
+        )
+
+        res = rustworkx.digraph_adjacency_matrix(
+            graph, lambda x: float(x), node_list=[node_d, node_a, node_c]
+        )
+
+        self.assertTrue(
+            np.array_equal(
+                np.array([[0.0, 0.0, 0.0], [4.0, 0.0, 0.0], [3.0, 0.0, 0.0]]),
+                res,
+            )
+        )
+
+    def test_node_list_order_and_subset(self):
+        graph = rustworkx.PyDiGraph()
+        node_a = graph.add_node("a")
+        node_b = graph.add_node("b")
+        node_c = graph.add_node("c")
+        graph.add_edge(node_a, node_b, 1.0)
+        graph.add_edge(node_b, node_c, 2.0)
+        graph.add_edge(node_a, node_c, 3.0)
+
+        res = rustworkx.digraph_adjacency_matrix(graph, lambda x: float(x), node_list=[2, 0, 1])
+
+        self.assertTrue(
+            np.array_equal(
+                np.array([[0.0, 0.0, 0.0], [3.0, 0.0, 1.0], [2.0, 0.0, 0.0]]),
+                res,
+            )
+        )
+
+        res = rustworkx.adjacency_matrix(graph, lambda x: float(x), 1.0, 0.0, node_list=[2, 0])
+
+        self.assertTrue(np.array_equal(np.array([[0.0, 0.0], [3.0, 0.0]]), res))
+
+    def test_node_list_errors(self):
+        graph = rustworkx.PyDiGraph()
+        graph.add_node("a")
+
+        with self.assertRaises(rustworkx.InvalidNode):
+            rustworkx.digraph_adjacency_matrix(graph, node_list=[0, 1])
+
+        with self.assertRaises(ValueError):
+            rustworkx.digraph_adjacency_matrix(graph, node_list=[0, 0])
+
     def test_from_adjacency_matrix(self):
         input_array = np.array(
             [[0.0, 4.0, 0.0], [4.0, 0.0, 4.0], [0.0, 4.0, 0.0]],
