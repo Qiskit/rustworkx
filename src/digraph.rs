@@ -2431,8 +2431,17 @@ impl PyDiGraph {
     ) -> PyResult<Option<Bound<'py, PyString>>> {
         match filename {
             Some(filename) => {
-                let mut file = File::create(filename)?;
-                build_dot(py, &self.graph, &mut file, graph_attr, node_attr, edge_attr)?;
+                let file = File::create(filename)?;
+                let mut buf_writer = BufWriter::new(file);
+                build_dot(
+                    py,
+                    &self.graph,
+                    &mut buf_writer,
+                    graph_attr,
+                    node_attr,
+                    edge_attr,
+                )?;
+                buf_writer.flush()?;
                 Ok(None)
             }
             None => {

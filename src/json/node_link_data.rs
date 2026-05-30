@@ -224,7 +224,7 @@ pub fn node_link_data<Ty: EdgeType>(
         },
         Some(filename) => {
             let file = File::create(filename)?;
-            let mut buffer = BufWriter::with_capacity(64 * 1024, file);
+            let mut buffer = BufWriter::new(file);
             let res = match serde_json::to_writer(&mut buffer, &output_struct) {
                 Ok(_) => {
                     buffer.flush()?;
