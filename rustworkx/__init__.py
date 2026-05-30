@@ -260,20 +260,6 @@ def adjacency_matrix(graph, weight_fn=None, default_weight=1.0, null_value=0.0, 
     raise TypeError(f"Invalid Input Type {type(graph)} for graph")
 
 
-@adjacency_matrix.register(PyDiGraph)
-def _digraph_adjacency_matrix_dispatch(
-    graph, weight_fn=None, default_weight=1.0, null_value=0.0, node_list=None
-):
-    return digraph_adjacency_matrix(graph, weight_fn, default_weight, null_value, "sum", node_list)
-
-
-@adjacency_matrix.register(PyGraph)
-def _graph_adjacency_matrix_dispatch(
-    graph, weight_fn=None, default_weight=1.0, null_value=0.0, node_list=None
-):
-    return graph_adjacency_matrix(graph, weight_fn, default_weight, null_value, "sum", node_list)
-
-
 @_rustworkx_dispatch
 def all_simple_paths(graph, from_, to, min_depth=None, cutoff=None):
     """Return all simple paths between 2 nodes in a PyGraph object
