@@ -287,6 +287,7 @@ def digraph_adjacency_matrix(
     default_weight: float = ...,
     null_value: float = ...,
     parallel_edge: str = ...,
+    node_list: Sequence[int] | None = ...,
 ) -> npt.NDArray[np.float64]: ...
 def graph_adjacency_matrix(
     graph: PyGraph[_S, _T],
@@ -295,6 +296,7 @@ def graph_adjacency_matrix(
     default_weight: float = ...,
     null_value: float = ...,
     parallel_edge: str = ...,
+    node_list: Sequence[int] | None = ...,
 ) -> npt.NDArray[np.float64]: ...
 def cycle_basis(graph: PyGraph, /, root: int | None = ...) -> list[list[int]]: ...
 def articulation_points(graph: PyGraph, /) -> set[int]: ...
@@ -595,6 +597,32 @@ def graph_spring_layout(
     scale: float = ...,
     center: tuple[float, float] | None = ...,
     seed: int | None = ...,
+    /,
+) -> Pos2DMapping: ...
+def digraph_kamada_kawai_layout(
+    graph: PyDiGraph[_S, _T],
+    pos: dict[int, tuple[float, float]] | None = ...,
+    fixed: set[int] | None = ...,
+    weight_fn: Callable[[_T], float] | None = ...,
+    default_weight: float = ...,
+    epsilon: float = ...,
+    max_outer: int = ...,
+    max_inner: int = ...,
+    scale: float = ...,
+    center: tuple[float, float] | None = ...,
+    /,
+) -> Pos2DMapping: ...
+def graph_kamada_kawai_layout(
+    graph: PyGraph[_S, _T],
+    pos: dict[int, tuple[float, float]] | None = ...,
+    fixed: set[int] | None = ...,
+    weight_fn: Callable[[_T], float] | None = ...,
+    default_weight: float = ...,
+    epsilon: float = ...,
+    max_outer: int = ...,
+    max_inner: int = ...,
+    scale: float = ...,
+    center: tuple[float, float] | None = ...,
     /,
 ) -> Pos2DMapping: ...
 
