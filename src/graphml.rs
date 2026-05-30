@@ -16,7 +16,7 @@ use std::borrow::{Borrow, Cow};
 use std::convert::From;
 use std::ffi::OsStr;
 use std::fs::File;
-use std::io::{BufRead, BufReader, BufWriter};
+use std::io::{BufRead, BufReader, BufWriter, Write};
 use std::iter::{FromIterator, Iterator};
 use std::num::{ParseFloatError, ParseIntError};
 use std::path::Path;
@@ -1157,11 +1157,13 @@ impl GraphML {
             let gzip_encoder = GzEncoder::new(buf_writer, Compression::default());
             let mut writer = Writer::new(gzip_encoder);
             self.write_graph_to_writer(&mut writer)?;
-            writer.into_inner().finish()?;
+            writer.into_inner().finish()?.flush()?;
         } else {
             let file = File::create(path)?;
-            let mut writer = Writer::new(file);
+            let buf_writer = BufWriter::new(file);
+            let mut writer = Writer::new(buf_writer);
             self.write_graph_to_writer(&mut writer)?;
+            writer.into_inner().flush()?;
         }
         Ok(())
     }
