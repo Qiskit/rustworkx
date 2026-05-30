@@ -12,6 +12,7 @@
 
 use std::collections::BTreeMap;
 use std::fs::File;
+use std::io::BufWriter;
 
 use hashbrown::HashMap;
 use indexmap::IndexSet;
@@ -222,7 +223,8 @@ pub fn node_link_data<Ty: EdgeType>(
         },
         Some(filename) => {
             let file = File::create(filename)?;
-            match serde_json::to_writer(file, &output_struct) {
+            let buffer = BufWriter::with_capacity(64 * 1024, file);
+            match serde_json::to_writer(buffer, &output_struct) {
                 Ok(_) => Ok(None),
                 Err(e) => Err(JSONSerializationError::new_err(format!("JSON Error: {e}"))),
             }
