@@ -280,13 +280,11 @@ where
                 self.lowpt.insert(ei, v_height);
                 self.lowpt_2.insert(ei, w_height);
             }
-            DfsEvent::BackEdge(v, w, _) => {
-                // do *not* consider ``(v, w)`` as a back edge if ``(w, v)`` is a tree edge.
-                if Some(&(w, v)) != self.eparent.get(&v) {
-                    let ei = (v, w);
-                    self.lowpt.insert(ei, self.height[&w]);
-                    self.lowpt_2.insert(ei, self.height[&v]);
-                }
+            // Do *not* consider ``(v, w)`` as a back edge if ``(w, v)`` is a tree edge.
+            DfsEvent::BackEdge(v, w, _) if Some(&(w, v)) != self.eparent.get(&v) => {
+                let ei = (v, w);
+                self.lowpt.insert(ei, self.height[&w]);
+                self.lowpt_2.insert(ei, self.height[&v]);
             }
             DfsEvent::Finish(v, _) => {
                 for edge in self.graph.edges(v) {
