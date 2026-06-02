@@ -650,7 +650,7 @@ mod test_bipartite_coloring {
         // Check that every edge has valid color
         for edge in graph.edge_references() {
             if !colors.contains_key(&edge.id()) {
-                panic!("Edge {:?} has no color assigned.", &edge.id());
+                panic!("Edge {:?} has no color assigned.", edge.id());
             }
         }
 
@@ -690,7 +690,7 @@ mod test_bipartite_coloring {
         // Check that every edge has valid color
         for edge in graph.edge_references() {
             if !colors.contains_key(&edge.id()) {
-                panic!("Edge {:?} has no color assigned.", &edge.id());
+                panic!("Edge {:?} has no color assigned.", edge.id());
             }
         }
 

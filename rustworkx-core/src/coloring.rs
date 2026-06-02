@@ -1684,7 +1684,7 @@ mod test_misra_gries_edge_coloring {
         // Check that every edge has valid color
         for edge in graph.edge_references() {
             if !colors.contains_key(&edge.id()) {
-                panic!("Problem: edge {:?} has no color assigned.", &edge.id());
+                panic!("Problem: edge {:?} has no color assigned.", edge.id());
             }
         }
 
