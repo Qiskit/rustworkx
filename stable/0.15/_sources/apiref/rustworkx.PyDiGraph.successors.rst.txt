@@ -1,0 +1,6 @@
+rustworkx.PyDiGraph.successors
+==============================
+
+.. currentmodule:: rustworkx
+
+.. automethod:: PyDiGraph.successors

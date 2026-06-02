@@ -1,0 +1,6 @@
+﻿rustworkx.graph\_bipartite\_edge\_color
+=======================================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: graph_bipartite_edge_color

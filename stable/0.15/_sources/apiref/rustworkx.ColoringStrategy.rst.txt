@@ -1,0 +1,16 @@
+﻿ColoringStrategy
+================
+
+.. currentmodule:: rustworkx
+
+.. autoclass:: ColoringStrategy
+   :no-members:
+   :show-inheritance:
+
+
+
+   .. rubric:: Attributes
+
+   .. autoattribute:: Degree
+   .. autoattribute:: IndependentSet
+   .. autoattribute:: Saturation

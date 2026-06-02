@@ -1,0 +1,6 @@
+rustworkx.PyDiGraph.in\_degree
+==============================
+
+.. currentmodule:: rustworkx
+
+.. automethod:: PyDiGraph.in_degree

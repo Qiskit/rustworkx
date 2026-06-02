@@ -1,0 +1,6 @@
+﻿rustworkx.number\_weakly\_connected\_components
+===============================================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: number_weakly_connected_components

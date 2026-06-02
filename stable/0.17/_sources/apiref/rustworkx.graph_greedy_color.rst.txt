@@ -1,0 +1,6 @@
+﻿rustworkx.graph\_greedy\_color
+==============================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: graph_greedy_color

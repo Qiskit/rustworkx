@@ -1,0 +1,6 @@
+﻿rustworkx.NegativeCycle
+=======================
+
+.. currentmodule:: rustworkx
+
+.. autoexception:: NegativeCycle

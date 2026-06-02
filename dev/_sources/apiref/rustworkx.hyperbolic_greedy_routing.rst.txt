@@ -1,0 +1,6 @@
+﻿rustworkx.hyperbolic\_greedy\_routing
+=====================================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: hyperbolic_greedy_routing

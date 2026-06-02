@@ -1,0 +1,6 @@
+rustworkx.Pos2DMapping.items
+============================
+
+.. currentmodule:: rustworkx
+
+.. automethod:: Pos2DMapping.items

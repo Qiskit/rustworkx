@@ -1,0 +1,6 @@
+rustworkx.PyGraph.update\_edge\_by\_index
+=========================================
+
+.. currentmodule:: rustworkx
+
+.. automethod:: PyGraph.update_edge_by_index

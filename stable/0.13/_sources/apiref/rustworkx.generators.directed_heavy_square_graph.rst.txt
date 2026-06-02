@@ -1,0 +1,6 @@
+﻿rustworkx.generators.directed\_heavy\_square\_graph
+===================================================
+
+.. currentmodule:: rustworkx.generators
+
+.. autofunction:: directed_heavy_square_graph

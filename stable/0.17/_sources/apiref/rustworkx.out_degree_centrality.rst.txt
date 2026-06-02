@@ -1,0 +1,6 @@
+﻿rustworkx.out\_degree\_centrality
+=================================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: out_degree_centrality
