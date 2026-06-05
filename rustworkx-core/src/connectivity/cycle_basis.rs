@@ -11,10 +11,112 @@
 // under the License.
 
 use hashbrown::{HashMap, HashSet};
-use petgraph::visit::{IntoNeighbors, IntoNodeIdentifiers, NodeCount};
+use petgraph::visit::{EdgeRef, IntoEdges, IntoNeighbors, IntoNodeIdentifiers, NodeCount};
 use std::hash::Hash;
 
-/// Return a list of cycles which form a basis for cycles of a given graph.
+/// Inner private function for `cycle_basis` and `cycle_basis_edges`.
+/// Returns a list of cycles which forms a basis of cycles of a given
+/// graph.
+///
+/// A basis for cycles of a graph is a minimal collection of
+/// cycles such that any cycle in the graph can be written
+/// as a sum of cycles in the basis.  Here summation of cycles
+/// is defined as the exclusive-or of the edges.
+///
+/// This is adapted from
+///    Paton, K. An algorithm for finding a fundamental set of
+///    cycles of a graph. Comm. ACM 12, 9 (Sept 1969), 514-518.
+///
+/// The function implicitly assumes that there are no parallel edges.
+/// It may produce incorrect/unexpected results if the input graph has
+/// parallel edges.
+///
+/// Arguments:
+///
+/// * `graph` - The graph in which to find the basis.
+/// * `root` - Optional node index for starting the basis search. If not
+///   specified, an arbitrary node is chosen.
+/// * `self_cycle_filter` - Specifies the behavior when a single node cycle
+///   is found.
+/// * `cycle_filter` - Specifies the behavior when a cycle is found
+fn inner_cycle_basis<G, T>(
+    graph: G,
+    root: Option<G::NodeId>,
+    self_cycle_filter: impl Fn(G, G::NodeId) -> Vec<T>,
+    cycle_filter: impl Fn(
+        G,
+        &HashSet<G::NodeId>,
+        &HashMap<G::NodeId, G::NodeId>,
+        G::NodeId,
+        G::NodeId,
+    ) -> Vec<T>,
+) -> Vec<Vec<T>>
+where
+    G: NodeCount,
+    G: IntoNeighbors,
+    G: IntoNodeIdentifiers,
+    T: Eq + Hash,
+    G::NodeId: Eq + Hash,
+{
+    let mut root_node: Option<G::NodeId> = root;
+    let mut graph_nodes: HashSet<G::NodeId> = graph.node_identifiers().collect();
+    let mut cycles: Vec<Vec<T>> = Vec::new();
+
+    while !graph_nodes.is_empty() {
+        let temp_value: G::NodeId;
+        // If root_node is not set get an arbitrary node from the set of graph
+        // nodes we've not "examined"
+        let root_index = match root_node {
+            Some(root_node) => root_node,
+            None => {
+                temp_value = *graph_nodes.iter().next().unwrap();
+                graph_nodes.remove(&temp_value);
+                temp_value
+            }
+        };
+        // Stack (ie "pushdown list") of vertices already in the spanning tree
+        let mut stack: Vec<G::NodeId> = vec![root_index];
+        // Map of node index to predecessor node index
+        let mut pred: HashMap<G::NodeId, G::NodeId> = HashMap::new();
+        pred.insert(root_index, root_index);
+        // Set of examined nodes during this iteration
+        let mut used: HashMap<G::NodeId, HashSet<G::NodeId>> = HashMap::new();
+        used.insert(root_index, HashSet::new());
+        // Walk the spanning tree
+        while let Some(z) = stack.pop() {
+            // Use the last element added so that cycles are easier to find
+            for neighbor in graph.neighbors(z) {
+                // A new node was encountered:
+                if !used.contains_key(&neighbor) {
+                    pred.insert(neighbor, z);
+                    stack.push(neighbor);
+                    let mut temp_set: HashSet<G::NodeId> = HashSet::new();
+                    temp_set.insert(z);
+                    used.insert(neighbor, temp_set);
+                // A self loop:
+                } else if z == neighbor {
+                    cycles.push(self_cycle_filter(graph, z))
+                // A cycle was found:
+                } else if !used.get(&z).unwrap().contains(&neighbor) {
+                    let prev_n = used.get(&neighbor).unwrap();
+                    cycles.push(cycle_filter(graph, prev_n, &pred, z, neighbor));
+                    let neighbor_set: &mut HashSet<G::NodeId> = used.get_mut(&neighbor).unwrap();
+                    neighbor_set.insert(z);
+                }
+            }
+        }
+        let mut temp_hashset: HashSet<G::NodeId> = HashSet::new();
+        for key in pred.keys() {
+            temp_hashset.insert(*key);
+        }
+        graph_nodes = graph_nodes.difference(&temp_hashset).copied().collect();
+        root_node = None;
+    }
+    cycles
+}
+
+/// Returns lists of `NodeIndex` representing cycles which form
+/// a basis for cycles of a given graph.
 ///
 /// A basis for cycles of a graph is a minimal collection of
 /// cycles such that any cycle in the graph can be written
@@ -52,79 +154,127 @@ where
     G: IntoNodeIdentifiers,
     G::NodeId: Eq + Hash,
 {
-    let mut root_node = root;
-    let mut graph_nodes: HashSet<G::NodeId> = graph.node_identifiers().collect();
-    let mut cycles: Vec<Vec<G::NodeId>> = Vec::new();
-    while !graph_nodes.is_empty() {
-        let temp_value: G::NodeId;
-        // If root_node is not set get an arbitrary node from the set of graph
-        // nodes we've not "examined"
-        let root_index = match root_node {
-            Some(root_node) => root_node,
-            None => {
-                temp_value = *graph_nodes.iter().next().unwrap();
-                graph_nodes.remove(&temp_value);
-                temp_value
-            }
-        };
-        // Stack (ie "pushdown list") of vertices already in the spanning tree
-        let mut stack: Vec<G::NodeId> = vec![root_index];
-        // Map of node index to predecessor node index
-        let mut pred: HashMap<G::NodeId, G::NodeId> = HashMap::new();
-        pred.insert(root_index, root_index);
-        // Set of examined nodes during this iteration
-        let mut used: HashMap<G::NodeId, HashSet<G::NodeId>> = HashMap::new();
-        used.insert(root_index, HashSet::new());
-        // Walk the spanning tree
-        // Use the last element added so that cycles are easier to find
-        while let Some(z) = stack.pop() {
-            for neighbor in graph.neighbors(z) {
-                // A new node was encountered:
-                if !used.contains_key(&neighbor) {
-                    pred.insert(neighbor, z);
-                    stack.push(neighbor);
-                    let mut temp_set: HashSet<G::NodeId> = HashSet::new();
-                    temp_set.insert(z);
-                    used.insert(neighbor, temp_set);
-                // A self loop:
-                } else if z == neighbor {
-                    let cycle: Vec<G::NodeId> = vec![z];
-                    cycles.push(cycle);
-                // A cycle was found:
-                } else if !used.get(&z).unwrap().contains(&neighbor) {
-                    let prev_n = used.get(&neighbor).unwrap();
-                    let mut cycle: Vec<G::NodeId> = vec![neighbor, z];
-                    let mut p = pred.get(&z).unwrap();
-                    while !prev_n.contains(p) {
-                        cycle.push(*p);
-                        p = pred.get(p).unwrap();
-                    }
-                    cycle.push(*p);
-                    cycles.push(cycle);
-                    let neighbor_set = used.get_mut(&neighbor).unwrap();
-                    neighbor_set.insert(z);
-                }
-            }
+    // inner_cycle_basis(graph, root, false).unwrap_nodes()
+    let self_cycle_filter = |_graph: G, node: G::NodeId| -> Vec<G::NodeId> { vec![node] };
+    let cycle_filter = |_graph: G,
+                        prev_n: &HashSet<G::NodeId>,
+                        pred_to_node: &HashMap<G::NodeId, G::NodeId>,
+                        origin: G::NodeId,
+                        neighbor: G::NodeId|
+     -> Vec<G::NodeId> {
+        let mut p = pred_to_node.get(&origin).unwrap();
+        // Append neighbor and z to cycle.
+        let mut cycle: Vec<G::NodeId> = vec![neighbor, origin];
+        while !prev_n.contains(p) {
+            cycle.push(*p);
+            p = pred_to_node.get(p).unwrap();
         }
-        let mut temp_hashset: HashSet<G::NodeId> = HashSet::new();
-        for key in pred.keys() {
-            temp_hashset.insert(*key);
-        }
-        graph_nodes = graph_nodes.difference(&temp_hashset).copied().collect();
-        root_node = None;
+        cycle.push(*p);
+        cycle
+    };
+    inner_cycle_basis(graph, root, self_cycle_filter, cycle_filter)
+}
+
+/// Returns lists of `EdgeIndex` representing cycles which form
+/// a basis for cycles of a given graph.
+///
+/// A basis for cycles of a graph is a minimal collection of
+/// cycles such that any cycle in the graph can be written
+/// as a sum of cycles in the basis.  Here summation of cycles
+/// is defined as the exclusive-or of the edges.
+///
+/// This is adapted from
+///    Paton, K. An algorithm for finding a fundamental set of
+///    cycles of a graph. Comm. ACM 12, 9 (Sept 1969), 514-518.
+///
+/// The function implicitly assumes that there are no parallel edges.
+/// It may produce incorrect/unexpected results if the input graph has
+/// parallel edges.
+///
+///
+/// Arguments:
+///
+/// * `graph` - The graph in which to find the basis.
+/// * `root` - Optional node index for starting the basis search. If not
+///   specified, an arbitrary node is chosen.
+///
+/// # Example
+/// ```rust
+/// use petgraph::prelude::*;
+/// use rustworkx_core::connectivity::cycle_basis_edges;
+///
+/// let edge_list = [(0, 1), (0, 3), (0, 5), (1, 2), (2, 3), (3, 4), (4, 5)];
+/// let graph = UnGraph::<i32, i32>::from_edges(&edge_list);
+/// let mut res: Vec<Vec<EdgeIndex>> = cycle_basis_edges(&graph, Some(NodeIndex::new(0)));
+/// ```
+pub fn cycle_basis_edges<G>(graph: G, root: Option<G::NodeId>) -> Vec<Vec<G::EdgeId>>
+where
+    G: NodeCount,
+    G: IntoEdges,
+    G: IntoNodeIdentifiers,
+    G::NodeId: Eq + Hash,
+    G::EdgeId: Eq + Hash,
+{
+    /// Method used to retrieve all the edges between an origin node and a target node.
+    fn get_edge_between<G>(orig_graph: G, origin: G::NodeId, target: G::NodeId) -> G::EdgeId
+    where
+        G: IntoEdges,
+    {
+        orig_graph
+            .edges(origin)
+            .filter_map(|edge: G::EdgeRef| (edge.target() == target).then_some(edge.id()))
+            .next()
+            .expect("An edge should exist between origin and target node")
     }
-    cycles
+
+    // inner_cycle_basis(graph, root, false).unwrap_nodes()
+    let self_cycle_filter =
+        |graph: G, node: G::NodeId| -> Vec<G::EdgeId> { vec![get_edge_between(graph, node, node)] };
+    let cycle_filter = |graph: G,
+                        prev_n: &HashSet<G::NodeId>,
+                        pred_to_node: &HashMap<G::NodeId, G::NodeId>,
+                        origin: G::NodeId,
+                        neighbor: G::NodeId|
+     -> Vec<G::EdgeId> {
+        let mut p = pred_to_node.get(&origin).unwrap();
+        let mut cycle: Vec<G::EdgeId> = Vec::new();
+        // Retrieve all edges from z to neighbor and push to cycle
+        cycle.push(get_edge_between(graph, origin, neighbor));
+
+        // Make last p_node == z
+        let mut prev_p: &G::NodeId = &origin;
+        // While p is in the neighborhood of neighbor
+        while !prev_n.contains(p) {
+            // Retrieve all edges from prev_p to p and vice versa append to cycle
+            cycle.push(get_edge_between(graph, *prev_p, *p));
+            // Update prev_p to p
+            prev_p = p;
+            // Retrieve a new predecessor node from p and replace p
+            p = pred_to_node.get(p).unwrap();
+        }
+        // When loop ends add remaining edges from prev_p to p.
+        cycle.push(get_edge_between(graph, *prev_p, *p));
+        // Also retrieve all edges between the last p and neighbor
+        cycle.push(get_edge_between(graph, *p, neighbor));
+        cycle
+    };
+    inner_cycle_basis(graph, root, self_cycle_filter, cycle_filter)
 }
 
 #[cfg(test)]
 mod tests {
     use crate::connectivity::cycle_basis;
+    use crate::connectivity::cycle_basis_edges;
     use petgraph::prelude::*;
+    use petgraph::stable_graph::GraphIndex;
 
-    fn sorted_cycle(cycles: Vec<Vec<NodeIndex>>) -> Vec<Vec<usize>> {
+    fn sorted_cycle<T>(cycles: Vec<Vec<T>>) -> Vec<Vec<usize>>
+    where
+        T: GraphIndex,
+    {
         let mut sorted_cycles: Vec<Vec<usize>> = vec![];
         for cycle in cycles {
-            let mut cycle: Vec<usize> = cycle.iter().map(|x| x.index()).collect();
+            let mut cycle: Vec<usize> = cycle.iter().map(|x: &T| x.index()).collect();
             cycle.sort();
             sorted_cycles.push(cycle);
         }
@@ -159,6 +309,28 @@ mod tests {
     }
 
     #[test]
+    fn test_cycle_edge_basis_source() {
+        let edge_list = vec![
+            (0, 0),
+            (0, 1),
+            (1, 2),
+            (2, 3),
+            (2, 5),
+            (5, 6),
+            (3, 6),
+            (3, 4),
+        ];
+        let graph = UnGraph::<i32, i32>::from_edges(&edge_list);
+        let expected = vec![vec![0], vec![3, 4, 5, 6]];
+        let res_0 = cycle_basis_edges(&graph, Some(NodeIndex::new(0)));
+        assert_eq!(sorted_cycle(res_0), expected);
+        let res_1 = cycle_basis_edges(&graph, Some(NodeIndex::new(2)));
+        assert_eq!(sorted_cycle(res_1), expected);
+        let res_9 = cycle_basis_edges(&graph, Some(NodeIndex::new(6)));
+        assert_eq!(sorted_cycle(res_9), expected);
+    }
+
+    #[test]
     fn test_self_loop() {
         let edge_list = vec![
             (0, 1),
@@ -184,6 +356,36 @@ mod tests {
                 vec![0, 1, 6, 7, 8],
                 vec![0, 3, 4, 5],
                 vec![1]
+            ]
+        );
+    }
+
+    #[test]
+    fn test_self_loop_edges() {
+        let edge_list = vec![
+            (0, 1),
+            (0, 3),
+            (0, 5),
+            (0, 8),
+            (1, 2),
+            (1, 6),
+            (2, 3),
+            (3, 4),
+            (4, 5),
+            (6, 7),
+            (7, 8),
+            (8, 9),
+        ];
+        let mut graph = UnGraph::<i32, i32>::from_edges(&edge_list);
+        graph.add_edge(NodeIndex::new(1), NodeIndex::new(1), 0);
+        let res_0 = cycle_basis_edges(&graph, Some(NodeIndex::new(0)));
+        assert_eq!(
+            sorted_cycle(res_0),
+            vec![
+                vec![0, 1, 4, 6],
+                vec![0, 3, 5, 9, 10],
+                vec![1, 2, 7, 8],
+                vec![12],
             ]
         );
     }
