@@ -11,11 +11,11 @@
 // under the License.
 
 use hashbrown::{HashMap, HashSet};
+use petgraph::Direction::Outgoing;
 use petgraph::algo;
 use petgraph::visit::{
     EdgeCount, GraphBase, IntoNeighborsDirected, IntoNodeIdentifiers, NodeCount, Visitable,
 };
-use petgraph::Direction::Outgoing;
 use std::hash::Hash;
 
 /// Return the first cycle encountered during DFS of a given directed graph.

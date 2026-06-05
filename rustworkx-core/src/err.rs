@@ -40,7 +40,7 @@ impl<E: Error> Display for ContractSimpleError<E> {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
             ContractSimpleError::DAGWouldCycle => fmt_dag_would_cycle(f),
-            ContractSimpleError::MergeError(ref e) => fmt_merge_error(f, e),
+            ContractSimpleError::MergeError(e) => fmt_merge_error(f, e),
         }
     }
 }
@@ -52,7 +52,7 @@ fn fmt_dag_would_cycle(f: &mut Formatter<'_>) -> std::fmt::Result {
 }
 
 fn fmt_merge_error<E: Error>(f: &mut Formatter<'_>, inner: &E) -> std::fmt::Result {
-    write!(f, "The merge callback failed with: {:?}", inner)
+    write!(f, "The merge callback failed with: {inner:?}")
 }
 
 /// Error returned by Layers function when an index is not part of the graph.

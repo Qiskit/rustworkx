@@ -17,14 +17,14 @@ use rustworkx_core::shortest_path::dijkstra;
 
 use std::sync::RwLock;
 
+use pyo3::Python;
 use pyo3::exceptions::PyIndexError;
 use pyo3::prelude::*;
-use pyo3::Python;
 
+use petgraph::EdgeType;
 use petgraph::graph::NodeIndex;
 use petgraph::prelude::*;
 use petgraph::visit::EdgeIndexable;
-use petgraph::EdgeType;
 
 use rayon::prelude::*;
 
@@ -36,7 +36,7 @@ use crate::{CostFn, StablePyGraph};
 pub fn all_pairs_dijkstra_path_lengths<Ty: EdgeType + Sync>(
     py: Python,
     graph: &StablePyGraph<Ty>,
-    edge_cost_fn: PyObject,
+    edge_cost_fn: Py<PyAny>,
 ) -> PyResult<AllPairsPathLengthMapping> {
     if graph.node_count() == 0 {
         return Ok(AllPairsPathLengthMapping {
@@ -103,7 +103,7 @@ pub fn all_pairs_dijkstra_path_lengths<Ty: EdgeType + Sync>(
 pub fn all_pairs_dijkstra_shortest_paths<Ty: EdgeType + Sync>(
     py: Python,
     graph: &StablePyGraph<Ty>,
-    edge_cost_fn: PyObject,
+    edge_cost_fn: Py<PyAny>,
     distances: Option<&mut HashMap<usize, DictMap<NodeIndex, f64>>>,
 ) -> PyResult<AllPairsPathMapping> {
     if graph.node_count() == 0 {

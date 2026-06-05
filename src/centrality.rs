@@ -14,11 +14,11 @@
 
 use std::convert::TryFrom;
 
+use crate::CostFn;
+use crate::FailedToConverge;
 use crate::digraph;
 use crate::graph;
 use crate::iterators::{CentralityMapping, EdgeCentralityMapping};
-use crate::CostFn;
-use crate::FailedToConverge;
 
 use hashbrown::HashMap;
 use petgraph::graph::NodeIndex;
@@ -433,7 +433,7 @@ pub fn digraph_closeness_centrality(
 pub fn graph_newman_weighted_closeness_centrality(
     py: Python,
     graph: &graph::PyGraph,
-    weight_fn: Option<PyObject>,
+    weight_fn: Option<Py<PyAny>>,
     wf_improved: bool,
     default_weight: f64,
     parallel_threshold: usize,
@@ -513,7 +513,7 @@ pub fn graph_newman_weighted_closeness_centrality(
 pub fn digraph_newman_weighted_closeness_centrality(
     py: Python,
     graph: &digraph::PyDiGraph,
-    weight_fn: Option<PyObject>,
+    weight_fn: Option<Py<PyAny>>,
     wf_improved: bool,
     default_weight: f64,
     parallel_threshold: usize,
@@ -714,7 +714,7 @@ pub fn digraph_edge_betweenness_centrality(
 pub fn graph_eigenvector_centrality(
     py: Python,
     graph: &graph::PyGraph,
-    weight_fn: Option<PyObject>,
+    weight_fn: Option<Py<PyAny>>,
     default_weight: f64,
     max_iter: usize,
     tol: f64,
@@ -748,8 +748,7 @@ pub fn graph_eigenvector_centrality(
                 .collect(),
         }),
         None => Err(FailedToConverge::new_err(format!(
-            "Function failed to converge on a solution in {} iterations",
-            max_iter
+            "Function failed to converge on a solution in {max_iter} iterations"
         ))),
     }
 }
@@ -801,7 +800,7 @@ pub fn graph_eigenvector_centrality(
 pub fn digraph_eigenvector_centrality(
     py: Python,
     graph: &digraph::PyDiGraph,
-    weight_fn: Option<PyObject>,
+    weight_fn: Option<Py<PyAny>>,
     default_weight: f64,
     max_iter: usize,
     tol: f64,
@@ -836,8 +835,7 @@ pub fn digraph_eigenvector_centrality(
                 .collect(),
         }),
         None => Err(FailedToConverge::new_err(format!(
-            "Function failed to converge on a solution in {} iterations",
-            max_iter
+            "Function failed to converge on a solution in {max_iter} iterations"
         ))),
     }
 }
@@ -898,8 +896,8 @@ pub fn graph_katz_centrality(
     py: Python,
     graph: &graph::PyGraph,
     alpha: f64,
-    beta: Option<PyObject>,
-    weight_fn: Option<PyObject>,
+    beta: Option<Py<PyAny>>,
+    weight_fn: Option<Py<PyAny>>,
     default_weight: f64,
     max_iter: usize,
     tol: f64,
@@ -966,8 +964,7 @@ pub fn graph_katz_centrality(
                 .collect(),
         }),
         None => Err(FailedToConverge::new_err(format!(
-            "Function failed to converge on a solution in {} iterations",
-            max_iter
+            "Function failed to converge on a solution in {max_iter} iterations"
         ))),
     }
 }
@@ -1028,8 +1025,8 @@ pub fn digraph_katz_centrality(
     py: Python,
     graph: &digraph::PyDiGraph,
     alpha: f64,
-    beta: Option<PyObject>,
-    weight_fn: Option<PyObject>,
+    beta: Option<Py<PyAny>>,
+    weight_fn: Option<Py<PyAny>>,
     default_weight: f64,
     max_iter: usize,
     tol: f64,
@@ -1097,8 +1094,291 @@ pub fn digraph_katz_centrality(
                 .collect(),
         }),
         None => Err(FailedToConverge::new_err(format!(
-            "Function failed to converge on a solution in {} iterations",
-            max_iter
+            "Function failed to converge on a solution in {max_iter} iterations"
         ))),
     }
+}
+
+/// Compute the group degree centrality of a set of nodes in a
+/// :class:`~rustworkx.PyGraph`.
+///
+/// Group degree centrality measures the fraction of non-group nodes that are
+/// connected to at least one member of the group. It is defined as:
+///
+/// .. math::
+///
+///     C_D(S) = \frac{|N(S) \setminus S|}{|V| - |S|}
+///
+/// where :math:`N(S)` is the union of neighborhoods of all nodes in :math:`S`.
+///
+/// Based on: Everett, M. G., & Borgatti, S. P. (1999).
+/// The centrality of groups and classes.
+/// Journal of Mathematical Sociology, 23(3), 181-201.
+///
+/// :param PyGraph graph: The input graph
+/// :param list group: A list of node indices representing the group
+///
+/// :returns: The group degree centrality as a float
+/// :rtype: float
+///
+/// :raises PyValueError: If any node index in the group is not in the graph
+#[pyfunction(signature = (graph, group))]
+#[pyo3(text_signature = "(graph, group, /)")]
+pub fn graph_group_degree_centrality(graph: &graph::PyGraph, group: Vec<usize>) -> PyResult<f64> {
+    for &idx in &group {
+        if !graph.graph.contains_node(NodeIndex::new(idx)) {
+            return Err(PyValueError::new_err(format!(
+                "Node index {idx} is not in the graph"
+            )));
+        }
+    }
+    Ok(centrality::group_degree_centrality(
+        &graph.graph,
+        &group,
+        None,
+    ))
+}
+
+/// Compute the group degree centrality of a set of nodes in a
+/// :class:`~rustworkx.PyDiGraph`.
+///
+/// Group degree centrality measures the fraction of non-group nodes that are
+/// connected to at least one member of the group. For directed graphs, this
+/// uses outgoing edges by default.
+///
+/// .. math::
+///
+///     C_D(S) = \frac{|N(S) \setminus S|}{|V| - |S|}
+///
+/// where :math:`N(S)` is the union of neighborhoods of all nodes in :math:`S`.
+///
+/// Based on: Everett, M. G., & Borgatti, S. P. (1999).
+/// The centrality of groups and classes.
+/// Journal of Mathematical Sociology, 23(3), 181-201.
+///
+/// :param PyDiGraph graph: The input graph
+/// :param list group: A list of node indices representing the group
+///
+/// :returns: The group degree centrality as a float
+/// :rtype: float
+///
+/// :raises PyValueError: If any node index in the group is not in the graph
+#[pyfunction(signature = (graph, group))]
+#[pyo3(text_signature = "(graph, group, /)")]
+pub fn digraph_group_degree_centrality(
+    graph: &digraph::PyDiGraph,
+    group: Vec<usize>,
+) -> PyResult<f64> {
+    for &idx in &group {
+        if !graph.graph.contains_node(NodeIndex::new(idx)) {
+            return Err(PyValueError::new_err(format!(
+                "Node index {idx} is not in the graph"
+            )));
+        }
+    }
+    Ok(centrality::group_degree_centrality(
+        &graph.graph,
+        &group,
+        None,
+    ))
+}
+
+/// Compute the group closeness centrality of a set of nodes in a
+/// :class:`~rustworkx.PyGraph`.
+///
+/// Group closeness centrality measures how close a group of nodes is to all
+/// non-group nodes. It is defined as:
+///
+/// .. math::
+///
+///     C_{close}(S) = \frac{|V \setminus S|}{\sum_{v \in V \setminus S} d(S, v)}
+///
+/// where :math:`d(S, v) = \min_{u \in S} d(u, v)` is the minimum distance
+/// from any group member to node :math:`v`.
+///
+/// Based on: Everett, M. G., & Borgatti, S. P. (1999).
+/// The centrality of groups and classes.
+/// Journal of Mathematical Sociology, 23(3), 181-201.
+///
+/// :param PyGraph graph: The input graph
+/// :param list group: A list of node indices representing the group
+///
+/// :returns: The group closeness centrality as a float
+/// :rtype: float
+///
+/// :raises PyValueError: If any node index in the group is not in the graph
+#[pyfunction(signature = (graph, group))]
+#[pyo3(text_signature = "(graph, group, /)")]
+pub fn graph_group_closeness_centrality(
+    graph: &graph::PyGraph,
+    group: Vec<usize>,
+) -> PyResult<f64> {
+    for &idx in &group {
+        if !graph.graph.contains_node(NodeIndex::new(idx)) {
+            return Err(PyValueError::new_err(format!(
+                "Node index {idx} is not in the graph"
+            )));
+        }
+    }
+    Ok(centrality::group_closeness_centrality(&graph.graph, &group))
+}
+
+/// Compute the group closeness centrality of a set of nodes in a
+/// :class:`~rustworkx.PyDiGraph`.
+///
+/// Group closeness centrality measures how close a group of nodes is to all
+/// non-group nodes. It is defined as:
+///
+/// .. math::
+///
+///     C_{close}(S) = \frac{|V \setminus S|}{\sum_{v \in V \setminus S} d(S, v)}
+///
+/// where :math:`d(S, v) = \min_{u \in S} d(u, v)` is the minimum distance
+/// from any group member to node :math:`v`.
+///
+/// Based on: Everett, M. G., & Borgatti, S. P. (1999).
+/// The centrality of groups and classes.
+/// Journal of Mathematical Sociology, 23(3), 181-201.
+///
+/// :param PyDiGraph graph: The input graph
+/// :param list group: A list of node indices representing the group
+///
+/// :returns: The group closeness centrality as a float
+/// :rtype: float
+///
+/// :raises PyValueError: If any node index in the group is not in the graph
+#[pyfunction(signature = (graph, group))]
+#[pyo3(text_signature = "(graph, group, /)")]
+pub fn digraph_group_closeness_centrality(
+    graph: &digraph::PyDiGraph,
+    group: Vec<usize>,
+) -> PyResult<f64> {
+    for &idx in &group {
+        if !graph.graph.contains_node(NodeIndex::new(idx)) {
+            return Err(PyValueError::new_err(format!(
+                "Node index {idx} is not in the graph"
+            )));
+        }
+    }
+    Ok(centrality::group_closeness_centrality(&graph.graph, &group))
+}
+
+/// Compute the group betweenness centrality of a set of nodes in a
+/// :class:`~rustworkx.PyGraph`.
+///
+/// Group betweenness centrality measures the fraction of shortest paths
+/// between non-group node pairs that pass through at least one group member.
+/// It is defined as:
+///
+/// .. math::
+///
+///     C_B(S) = \sum_{s,t \in V \setminus S} \frac{\sigma(s, t|S)}{\sigma(s, t)}
+///
+/// where :math:`\sigma(s,t)` is the number of shortest paths from :math:`s`
+/// to :math:`t`, and :math:`\sigma(s,t|S)` is the number of those paths
+/// passing through at least one node in :math:`S`.
+///
+/// Based on: Everett, M. G., & Borgatti, S. P. (1999).
+/// The centrality of groups and classes.
+/// Journal of Mathematical Sociology, 23(3), 181-201.
+///
+/// This function is multithreaded and will run in parallel if the number
+/// of nodes in the graph is above the value of ``parallel_threshold`` (it
+/// defaults to 50). If the function will be running in parallel the env var
+/// ``RAYON_NUM_THREADS`` can be used to adjust how many threads will be used.
+///
+/// :param PyGraph graph: The input graph
+/// :param list group: A list of node indices representing the group
+/// :param bool normalized: Whether to normalize the result. If True,
+///     the result is divided by the number of non-group node pairs.
+/// :param int parallel_threshold: The number of nodes to calculate the
+///     the group betweenness centrality in parallel at if the number of nodes
+///     in the graph is less than this value it will run in a single thread.
+///     The default value is 50.
+///
+/// :returns: The group betweenness centrality as a float
+/// :rtype: float
+///
+/// :raises PyValueError: If any node index in the group is not in the graph
+#[pyfunction(signature = (graph, group, normalized=true, parallel_threshold=50))]
+#[pyo3(text_signature = "(graph, group, /, normalized=True, parallel_threshold=50)")]
+pub fn graph_group_betweenness_centrality(
+    graph: &graph::PyGraph,
+    group: Vec<usize>,
+    normalized: bool,
+    parallel_threshold: usize,
+) -> PyResult<f64> {
+    for &idx in &group {
+        if !graph.graph.contains_node(NodeIndex::new(idx)) {
+            return Err(PyValueError::new_err(format!(
+                "Node index {idx} is not in the graph"
+            )));
+        }
+    }
+    Ok(centrality::group_betweenness_centrality(
+        &graph.graph,
+        &group,
+        normalized,
+        parallel_threshold,
+    ))
+}
+
+/// Compute the group betweenness centrality of a set of nodes in a
+/// :class:`~rustworkx.PyDiGraph`.
+///
+/// Group betweenness centrality measures the fraction of shortest paths
+/// between non-group node pairs that pass through at least one group member.
+/// It is defined as:
+///
+/// .. math::
+///
+///     C_B(S) = \sum_{s,t \in V \setminus S} \frac{\sigma(s, t|S)}{\sigma(s, t)}
+///
+/// where :math:`\sigma(s,t)` is the number of shortest paths from :math:`s`
+/// to :math:`t`, and :math:`\sigma(s,t|S)` is the number of those paths
+/// passing through at least one node in :math:`S`.
+///
+/// Based on: Everett, M. G., & Borgatti, S. P. (1999).
+/// The centrality of groups and classes.
+/// Journal of Mathematical Sociology, 23(3), 181-201.
+///
+/// This function is multithreaded and will run in parallel if the number
+/// of nodes in the graph is above the value of ``parallel_threshold`` (it
+/// defaults to 50). If the function will be running in parallel the env var
+/// ``RAYON_NUM_THREADS`` can be used to adjust how many threads will be used.
+///
+/// :param PyDiGraph graph: The input graph
+/// :param list group: A list of node indices representing the group
+/// :param bool normalized: Whether to normalize the result. If True,
+///     the result is divided by the number of non-group node pairs.
+/// :param int parallel_threshold: The number of nodes to calculate the
+///     the group betweenness centrality in parallel at if the number of nodes
+///     in the graph is less than this value it will run in a single thread.
+///     The default value is 50.
+///
+/// :returns: The group betweenness centrality as a float
+/// :rtype: float
+///
+/// :raises PyValueError: If any node index in the group is not in the graph
+#[pyfunction(signature = (graph, group, normalized=true, parallel_threshold=50))]
+#[pyo3(text_signature = "(graph, group, /, normalized=True, parallel_threshold=50)")]
+pub fn digraph_group_betweenness_centrality(
+    graph: &digraph::PyDiGraph,
+    group: Vec<usize>,
+    normalized: bool,
+    parallel_threshold: usize,
+) -> PyResult<f64> {
+    for &idx in &group {
+        if !graph.graph.contains_node(NodeIndex::new(idx)) {
+            return Err(PyValueError::new_err(format!(
+                "Node index {idx} is not in the graph"
+            )));
+        }
+    }
+    Ok(centrality::group_betweenness_centrality(
+        &graph.graph,
+        &group,
+        normalized,
+        parallel_threshold,
+    ))
 }

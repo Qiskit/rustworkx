@@ -263,3 +263,26 @@ class TestContractNodesSimpleGraph(unittest.TestCase):
         self.dag.contract_nodes(self.dag.node_indexes(), "m")
         self.assertEqual(set(self.dag.nodes()), {"m"})
         self.assertFalse(self.dag.edges())
+
+
+class TestCanContractWithoutCycle(unittest.TestCase):
+    def test_can_contract_without_cycle_true(self):
+        # a -> b -> c (contract b and c, should be allowed)
+        graph = rustworkx.PyDiGraph()
+        a = graph.add_node("a")
+        b = graph.add_node("b")
+        c = graph.add_node("c")
+        graph.add_edge(a, b, 0)
+        graph.add_edge(b, c, 0)
+        self.assertTrue(graph.can_contract_without_cycle([b, c]))
+
+    def test_can_contract_without_cycle_false(self):
+        # a -> b -> c, c -> a (contract a and c, would create a cycle)
+        graph = rustworkx.PyDiGraph()
+        a = graph.add_node("a")
+        b = graph.add_node("b")
+        c = graph.add_node("c")
+        graph.add_edge(a, b, 0)
+        graph.add_edge(b, c, 0)
+        graph.add_edge(c, a, 0)
+        self.assertFalse(graph.can_contract_without_cycle([a, c]))

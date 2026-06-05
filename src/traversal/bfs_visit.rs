@@ -20,18 +20,18 @@ use rustworkx_core::traversal::BfsEvent;
 
 #[derive(FromPyObject)]
 pub struct PyBfsVisitor {
-    discover_vertex: PyObject,
-    finish_vertex: PyObject,
-    tree_edge: PyObject,
-    non_tree_edge: PyObject,
-    gray_target_edge: PyObject,
-    black_target_edge: PyObject,
+    discover_vertex: Py<PyAny>,
+    finish_vertex: Py<PyAny>,
+    tree_edge: Py<PyAny>,
+    non_tree_edge: Py<PyAny>,
+    gray_target_edge: Py<PyAny>,
+    black_target_edge: Py<PyAny>,
 }
 
 pub fn bfs_handler(
     py: Python,
     vis: &PyBfsVisitor,
-    event: BfsEvent<NodeIndex, &PyObject>,
+    event: BfsEvent<NodeIndex, &Py<PyAny>>,
 ) -> PyResult<Control<()>> {
     let res = match event {
         BfsEvent::Discover(u) => vis.discover_vertex.call1(py, (u.index(),)),

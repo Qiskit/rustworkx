@@ -15,12 +15,12 @@ mod node_link_data;
 use std::fs::File;
 use std::io::BufReader;
 
-use crate::{digraph, graph, JSONDeserializationError, StablePyGraph};
-use petgraph::{algo, Directed, Undirected};
+use crate::{JSONDeserializationError, StablePyGraph, digraph, graph};
+use petgraph::{Directed, Undirected, algo};
 
-use pyo3::prelude::*;
 use pyo3::IntoPyObjectExt;
 use pyo3::Python;
+use pyo3::prelude::*;
 
 /// Parse a node-link format JSON file to generate a graph
 ///
@@ -48,9 +48,9 @@ use pyo3::Python;
 pub fn from_node_link_json_file<'py>(
     py: Python<'py>,
     path: &str,
-    graph_attrs: Option<PyObject>,
-    node_attrs: Option<PyObject>,
-    edge_attrs: Option<PyObject>,
+    graph_attrs: Option<Py<PyAny>>,
+    node_attrs: Option<Py<PyAny>>,
+    edge_attrs: Option<Py<PyAny>>,
 ) -> PyResult<Bound<'py, PyAny>> {
     let file = File::open(path)?;
     let reader = BufReader::new(file);
@@ -58,12 +58,11 @@ pub fn from_node_link_json_file<'py>(
         Ok(v) => v,
         Err(e) => {
             return Err(JSONDeserializationError::new_err(format!(
-                "JSON Deserialization Error {}",
-                e
+                "JSON Deserialization Error {e}"
             )));
         }
     };
-    let attrs: PyObject = match graph.attrs {
+    let attrs: Py<PyAny> = match graph.attrs {
         Some(ref attrs) => match graph_attrs {
             Some(ref callback) => callback.call1(py, (attrs.clone(),))?,
             None => attrs.into_py_any(py)?,
@@ -75,12 +74,18 @@ pub fn from_node_link_json_file<'py>(
     Ok(if graph.directed {
         let mut inner_graph: StablePyGraph<Directed> =
             StablePyGraph::with_capacity(graph.nodes.len(), graph.links.len());
-        node_link_data::parse_node_link_data(&py, graph, &mut inner_graph, node_attrs, edge_attrs)?;
+        let node_removed = node_link_data::parse_node_link_data(
+            &py,
+            graph,
+            &mut inner_graph,
+            node_attrs,
+            edge_attrs,
+        )?;
         digraph::PyDiGraph {
             graph: inner_graph,
             cycle_state: algo::DfsSpace::default(),
             check_cycle: false,
-            node_removed: false,
+            node_removed,
             multigraph,
             attrs,
         }
@@ -89,11 +94,17 @@ pub fn from_node_link_json_file<'py>(
     } else {
         let mut inner_graph: StablePyGraph<Undirected> =
             StablePyGraph::with_capacity(graph.nodes.len(), graph.links.len());
-        node_link_data::parse_node_link_data(&py, graph, &mut inner_graph, node_attrs, edge_attrs)?;
+        let node_removed = node_link_data::parse_node_link_data(
+            &py,
+            graph,
+            &mut inner_graph,
+            node_attrs,
+            edge_attrs,
+        )?;
 
         graph::PyGraph {
             graph: inner_graph,
-            node_removed: false,
+            node_removed,
             multigraph,
             attrs,
         }
@@ -128,20 +139,19 @@ pub fn from_node_link_json_file<'py>(
 pub fn parse_node_link_json<'py>(
     py: Python<'py>,
     data: &str,
-    graph_attrs: Option<PyObject>,
-    node_attrs: Option<PyObject>,
-    edge_attrs: Option<PyObject>,
+    graph_attrs: Option<Py<PyAny>>,
+    node_attrs: Option<Py<PyAny>>,
+    edge_attrs: Option<Py<PyAny>>,
 ) -> PyResult<Bound<'py, PyAny>> {
     let graph: node_link_data::GraphInput = match serde_json::from_str(data) {
         Ok(v) => v,
         Err(e) => {
             return Err(JSONDeserializationError::new_err(format!(
-                "JSON Deserialization Error {}",
-                e
+                "JSON Deserialization Error {e}"
             )));
         }
     };
-    let attrs: PyObject = match graph.attrs {
+    let attrs: Py<PyAny> = match graph.attrs {
         Some(ref attrs) => match graph_attrs {
             Some(ref callback) => callback.call1(py, (attrs.clone(),))?,
             None => attrs.into_py_any(py)?,
@@ -152,12 +162,18 @@ pub fn parse_node_link_json<'py>(
     Ok(if graph.directed {
         let mut inner_graph: StablePyGraph<Directed> =
             StablePyGraph::with_capacity(graph.nodes.len(), graph.links.len());
-        node_link_data::parse_node_link_data(&py, graph, &mut inner_graph, node_attrs, edge_attrs)?;
+        let node_removed = node_link_data::parse_node_link_data(
+            &py,
+            graph,
+            &mut inner_graph,
+            node_attrs,
+            edge_attrs,
+        )?;
         digraph::PyDiGraph {
             graph: inner_graph,
             cycle_state: algo::DfsSpace::default(),
             check_cycle: false,
-            node_removed: false,
+            node_removed,
             multigraph,
             attrs,
         }
@@ -166,10 +182,16 @@ pub fn parse_node_link_json<'py>(
     } else {
         let mut inner_graph: StablePyGraph<Undirected> =
             StablePyGraph::with_capacity(graph.nodes.len(), graph.links.len());
-        node_link_data::parse_node_link_data(&py, graph, &mut inner_graph, node_attrs, edge_attrs)?;
+        let node_removed = node_link_data::parse_node_link_data(
+            &py,
+            graph,
+            &mut inner_graph,
+            node_attrs,
+            edge_attrs,
+        )?;
         graph::PyGraph {
             graph: inner_graph,
-            node_removed: false,
+            node_removed,
             multigraph,
             attrs,
         }
@@ -210,9 +232,9 @@ pub fn digraph_node_link_json(
     py: Python,
     graph: &digraph::PyDiGraph,
     path: Option<String>,
-    graph_attrs: Option<PyObject>,
-    node_attrs: Option<PyObject>,
-    edge_attrs: Option<PyObject>,
+    graph_attrs: Option<Py<PyAny>>,
+    node_attrs: Option<Py<PyAny>>,
+    edge_attrs: Option<Py<PyAny>>,
 ) -> PyResult<Option<String>> {
     node_link_data::node_link_data(
         py,
@@ -258,9 +280,9 @@ pub fn graph_node_link_json(
     py: Python,
     graph: &graph::PyGraph,
     path: Option<String>,
-    graph_attrs: Option<PyObject>,
-    node_attrs: Option<PyObject>,
-    edge_attrs: Option<PyObject>,
+    graph_attrs: Option<Py<PyAny>>,
+    node_attrs: Option<Py<PyAny>>,
+    edge_attrs: Option<Py<PyAny>>,
 ) -> PyResult<Option<String>> {
     node_link_data::node_link_data(
         py,

@@ -26,7 +26,7 @@ docs_url_prefix = ""
 # The short X.Y version.
 version = '0.17'
 # The full version, including alpha/beta/rc tags.
-release = '0.17.0'
+release = '0.17.1'
 
 extensions = ['sphinx.ext.autodoc',
               'sphinx.ext.autosummary',

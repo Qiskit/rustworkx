@@ -13,8 +13,9 @@ import sys
 import numpy as np
 import numpy.typing as npt
 
-from typing import Generic, Any, Callable, overload
-from collections.abc import Iterator, Sequence
+from typing import Generic, Any, overload
+from collections.abc import Callable
+from collections.abc import Iterable, Iterator, Sequence
 
 if sys.version_info >= (3, 13):
     from typing import TypeVar
@@ -67,6 +68,14 @@ from .rustworkx import digraph_degree_centrality as digraph_degree_centrality
 from .rustworkx import graph_degree_centrality as graph_degree_centrality
 from .rustworkx import in_degree_centrality as in_degree_centrality
 from .rustworkx import out_degree_centrality as out_degree_centrality
+from .rustworkx import graph_group_degree_centrality as graph_group_degree_centrality
+from .rustworkx import digraph_group_degree_centrality as digraph_group_degree_centrality
+from .rustworkx import graph_group_closeness_centrality as graph_group_closeness_centrality
+from .rustworkx import digraph_group_closeness_centrality as digraph_group_closeness_centrality
+from .rustworkx import graph_group_betweenness_centrality as graph_group_betweenness_centrality
+from .rustworkx import (
+    digraph_group_betweenness_centrality as digraph_group_betweenness_centrality,
+)
 from .rustworkx import graph_greedy_color as graph_greedy_color
 from .rustworkx import graph_greedy_edge_color as graph_greedy_edge_color
 from .rustworkx import graph_is_bipartite as graph_is_bipartite
@@ -86,6 +95,8 @@ from .rustworkx import number_strongly_connected_components as number_strongly_c
 from .rustworkx import number_weakly_connected_components as number_weakly_connected_components
 from .rustworkx import node_connected_component as node_connected_component
 from .rustworkx import strongly_connected_components as strongly_connected_components
+from .rustworkx import digraph_condensation as digraph_condensation
+from .rustworkx import graph_condensation as graph_condensation
 from .rustworkx import weakly_connected_components as weakly_connected_components
 from .rustworkx import digraph_adjacency_matrix as digraph_adjacency_matrix
 from .rustworkx import graph_adjacency_matrix as graph_adjacency_matrix
@@ -134,6 +145,8 @@ from .rustworkx import digraph_bipartite_layout as digraph_bipartite_layout
 from .rustworkx import graph_bipartite_layout as graph_bipartite_layout
 from .rustworkx import digraph_circular_layout as digraph_circular_layout
 from .rustworkx import graph_circular_layout as graph_circular_layout
+from .rustworkx import digraph_kamada_kawai_layout as digraph_kamada_kawai_layout
+from .rustworkx import graph_kamada_kawai_layout as graph_kamada_kawai_layout
 from .rustworkx import digraph_random_layout as digraph_random_layout
 from .rustworkx import graph_random_layout as graph_random_layout
 from .rustworkx import digraph_shell_layout as digraph_shell_layout
@@ -149,6 +162,7 @@ from .rustworkx import max_weight_matching as max_weight_matching
 from .rustworkx import is_matching as is_matching
 from .rustworkx import is_maximal_matching as is_maximal_matching
 from .rustworkx import is_planar as is_planar
+from .rustworkx import random_regular_graph as random_regular_graph
 from .rustworkx import directed_gnm_random_graph as directed_gnm_random_graph
 from .rustworkx import undirected_gnm_random_graph as undirected_gnm_random_graph
 from .rustworkx import directed_gnp_random_graph as directed_gnp_random_graph
@@ -162,10 +176,20 @@ from .rustworkx import directed_barabasi_albert_graph as directed_barabasi_alber
 from .rustworkx import undirected_random_bipartite_graph as undirected_random_bipartite_graph
 from .rustworkx import directed_random_bipartite_graph as directed_random_bipartite_graph
 from .rustworkx import read_graphml as read_graphml
+from .rustworkx import graph_write_graphml as graph_write_graphml
+from .rustworkx import digraph_write_graphml as digraph_write_graphml
+from .rustworkx import GraphMLKey as GraphMLKey
 from .rustworkx import digraph_node_link_json as digraph_node_link_json
 from .rustworkx import graph_node_link_json as graph_node_link_json
 from .rustworkx import from_node_link_json_file as from_node_link_json_file
+from .rustworkx import from_dot as from_dot
+from .rustworkx import graph_write_matrix_market as graph_write_matrix_market
+from .rustworkx import digraph_write_matrix_market as digraph_write_matrix_market
+from .rustworkx import read_matrix_market_file as read_matrix_market_file
+from .rustworkx import read_matrix_market as read_matrix_market
 from .rustworkx import parse_node_link_json as parse_node_link_json
+from .rustworkx import hyperbolic_greedy_routing as hyperbolic_greedy_routing
+from .rustworkx import hyperbolic_greedy_success_rate as hyperbolic_greedy_success_rate
 from .rustworkx import digraph_bellman_ford_shortest_paths as digraph_bellman_ford_shortest_paths
 from .rustworkx import graph_bellman_ford_shortest_paths as graph_bellman_ford_shortest_paths
 from .rustworkx import (
@@ -236,13 +260,23 @@ from .rustworkx import find_negative_cycle as find_negative_cycle
 from .rustworkx import negative_edge_cycle as negative_edge_cycle
 from .rustworkx import digraph_all_shortest_paths as digraph_all_shortest_paths
 from .rustworkx import graph_all_shortest_paths as graph_all_shortest_paths
+from .rustworkx import (
+    graph_single_source_all_shortest_paths as graph_single_source_all_shortest_paths,
+)
+from .rustworkx import (
+    digraph_single_source_all_shortest_paths as digraph_single_source_all_shortest_paths,
+)
 from .rustworkx import digraph_tensor_product as digraph_tensor_product
 from .rustworkx import graph_tensor_product as graph_tensor_product
 from .rustworkx import graph_token_swapper as graph_token_swapper
 from .rustworkx import digraph_transitivity as digraph_transitivity
 from .rustworkx import graph_transitivity as graph_transitivity
+from .rustworkx import digraph_generate_random_path as digraph_generate_random_path
+from .rustworkx import graph_generate_random_path as graph_generate_random_path
 from .rustworkx import digraph_bfs_search as digraph_bfs_search
 from .rustworkx import graph_bfs_search as graph_bfs_search
+from .rustworkx import digraph_bfs_layers as digraph_bfs_layers
+from .rustworkx import graph_bfs_layers as graph_bfs_layers
 from .rustworkx import digraph_dfs_search as digraph_dfs_search
 from .rustworkx import graph_dfs_search as graph_dfs_search
 from .rustworkx import digraph_dijkstra_search as digraph_dijkstra_search
@@ -293,7 +327,7 @@ _BFSVisitor = TypeVar("_BFSVisitor", bound=visit.BFSVisitor)
 _DFSVisitor = TypeVar("_DFSVisitor", bound=visit.DFSVisitor)
 _DijkstraVisitor = TypeVar("_DijkstraVisitor", bound=visit.DijkstraVisitor)
 
-class PyDAG(Generic[_S, _T], PyDiGraph[_S, _T]): ...
+class PyDAG(PyDiGraph[_S, _T], Generic[_S, _T]): ...
 
 def distance_matrix(
     graph: PyGraph | PyDiGraph,
@@ -311,11 +345,12 @@ def adjacency_matrix(
     weight_fn: Callable[[_T], float] | None = ...,
     default_weight: float = ...,
     null_value: float = ...,
+    node_list: Sequence[int] | None = ...,
 ) -> npt.NDArray[np.float64]: ...
 def all_simple_paths(
     graph: PyGraph | PyDiGraph,
     from_: int,
-    to: int,
+    to: int | Iterable[int],
     min_depth: int | None = ...,
     cutoff: int | None = ...,
 ) -> list[list[int]]: ...
@@ -389,6 +424,13 @@ def all_shortest_paths(
     default_weight: float = ...,
     as_undirected: bool = ...,
 ) -> list[list[int]]: ...
+def single_source_all_shortest_paths(
+    graph: PyGraph[_S, _T] | PyDiGraph[_S, _T],
+    source: int,
+    weight_fn: Callable[[_T], float] | None = ...,
+    default_weight: float = 1.0,
+    as_undirected: bool = False,
+) -> dict[int, list[list[int]]]: ...
 def dfs_edges(graph: PyGraph[_S, _T] | PyDiGraph[_S, _T], source: int | None = ...) -> EdgeList: ...
 @overload
 def is_isomorphic(
@@ -467,6 +509,18 @@ def spring_layout(
     center: tuple[float, float] | None = ...,
     seed: int | None = ...,
 ) -> Pos2DMapping: ...
+def kamada_kawai_layout(
+    graph: PyGraph[_S, _T] | PyDiGraph[_S, _T],
+    pos: dict[int, tuple[float, float]] | None = ...,
+    fixed: set[int] | None = ...,
+    weight_fn: Callable[[_T], float] | None = ...,
+    default_weight: float = ...,
+    epsilon: float = ...,
+    max_outer: int = ...,
+    max_inner: int = ...,
+    scale: float = ...,
+    center: tuple[float, float] | None = ...,
+) -> Pos2DMapping: ...
 def networkx_converter(graph: Any, keep_attributes: bool = ...) -> PyGraph | PyDiGraph: ...
 def bipartite_layout(
     graph: PyGraph[_S, _T] | PyDiGraph[_S, _T],
@@ -519,6 +573,20 @@ def newman_weighted_closeness_centrality(
 def degree_centrality(
     graph: PyGraph[_S, _T] | PyDiGraph[_S, _T],
 ) -> CentralityMapping: ...
+def group_degree_centrality(
+    graph: PyGraph[_S, _T] | PyDiGraph[_S, _T],
+    group: list[int],
+) -> float: ...
+def group_closeness_centrality(
+    graph: PyGraph[_S, _T] | PyDiGraph[_S, _T],
+    group: list[int],
+) -> float: ...
+def group_betweenness_centrality(
+    graph: PyGraph[_S, _T] | PyDiGraph[_S, _T],
+    group: list[int],
+    normalized: bool = ...,
+    parallel_threshold: int = ...,
+) -> float: ...
 def edge_betweenness_centrality(
     graph: PyGraph[_S, _T] | PyDiGraph[_S, _T],
     normalized: bool = ...,
@@ -645,3 +713,29 @@ def longest_simple_path(graph: PyGraph[_S, _T] | PyDiGraph[_S, _T]) -> NodeIndic
 def isolates(graph: PyGraph[_S, _T] | PyDiGraph[_S, _T]) -> NodeIndices: ...
 def two_color(graph: PyGraph[_S, _T] | PyDiGraph[_S, _T]) -> dict[int, int]: ...
 def is_bipartite(graph: PyGraph[_S, _T] | PyDiGraph[_S, _T]) -> bool: ...
+def condensation(
+    graph: PyDiGraph | PyGraph, /, sccs: list[int] | None = ...
+) -> PyDiGraph | PyGraph: ...
+def write_graphml(
+    graph: PyGraph | PyDiGraph,
+    path: str,
+    /,
+    keys: list[GraphMLKey] | None = ...,
+    compression: str | None = ...,
+) -> None: ...
+def write_matrix_market(
+    graph: PyGraph | PyDiGraph,
+    /,
+    path: str | None = ...,
+) -> None: ...
+def bfs_layers(
+    graph: PyGraph | PyDiGraph,
+    sources: Sequence[int] | None = ...,
+) -> list[list[int]]: ...
+def generate_random_path(
+    graph: PyGraph | PyDiGraph,
+    /,
+    source: int,
+    length: int,
+    seed: int | None = None,
+) -> Sequence[int]: ...

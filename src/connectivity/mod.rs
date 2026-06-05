@@ -16,26 +16,26 @@ mod all_pairs_all_simple_paths;
 mod johnson_simple_cycles;
 mod subgraphs;
 
-use super::{
-    digraph, get_edge_iter_with_weights, graph, score, weight_callable, InvalidNode, NullGraph,
-};
+use super::{InvalidNode, NullGraph, digraph, graph, score, weight_callable};
 
 use hashbrown::{HashMap, HashSet};
 use indexmap::IndexSet;
-use petgraph::algo;
-use petgraph::algo::condensation;
-use petgraph::graph::DiGraph;
+use petgraph::graph::{DiGraph, IndexType};
 use petgraph::stable_graph::NodeIndex;
 use petgraph::unionfind::UnionFind;
 use petgraph::visit::{EdgeRef, IntoEdgeReferences, NodeCount, NodeIndexable, Visitable};
+use petgraph::{Graph, algo};
+use pyo3::BoundObject;
+use pyo3::IntoPyObject;
+use pyo3::Python;
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use pyo3::types::PyDict;
-use pyo3::Python;
 use rayon::prelude::*;
 
 use ndarray::prelude::*;
 use numpy::{IntoPyArray, PyArray2};
+use petgraph::prelude::StableGraph;
 
 use crate::iterators::{
     AllPairsMultiplePathMapping, BiconnectedComponents, Chains, EdgeList, NodeIndices,
@@ -224,6 +224,153 @@ pub fn is_strongly_connected(graph: &digraph::PyDiGraph) -> PyResult<bool> {
         return Err(NullGraph::new_err("Invalid operation on a NullGraph"));
     }
     Ok(algo::kosaraju_scc(&graph.graph).len() == 1)
+}
+
+/// Compute the condensation of a graph (directed or undirected).
+///
+/// For directed graphs, this returns the condensation (quotient graph) where each node
+/// represents a strongly connected component (SCC) of the input graph. For undirected graphs,
+/// each node represents a connected component.
+///
+/// The returned graph has a node attribute 'node_map' which is a list mapping each original
+/// node index to the index of the condensed node it belongs to.
+///
+/// :param graph: The input graph (PyDiGraph or PyGraph)
+/// :param sccs: (Optional, directed only) List of SCCs to use instead of computing them
+/// :returns: The condensed graph (PyDiGraph or PyGraph) with a 'node_map' attribute
+/// :rtype: PyDiGraph or PyGraph
+fn condensation_inner<'py, N, E, Ty, Ix>(
+    py: Python<'py>,
+    g: Graph<N, E, Ty, Ix>,
+    make_acyclic: bool,
+    sccs: Option<Vec<Vec<usize>>>,
+) -> PyResult<(StablePyGraph<Ty>, Vec<Option<usize>>)>
+where
+    Ty: EdgeType,
+    Ix: IndexType,
+    N: IntoPyObject<'py, Target = PyAny> + Clone,
+    E: IntoPyObject<'py, Target = PyAny> + Clone,
+{
+    // For directed graphs, use SCCs; for undirected, use connected components
+    let components: Vec<Vec<NodeIndex<Ix>>> = if Ty::is_directed() {
+        if let Some(sccs) = sccs {
+            sccs.into_iter()
+                .map(|row| row.into_iter().map(NodeIndex::new).collect())
+                .collect()
+        } else {
+            algo::kosaraju_scc(&g)
+        }
+    } else {
+        connectivity::connected_components(&g)
+            .into_iter()
+            .map(|set| set.into_iter().collect())
+            .collect()
+    };
+
+    // Convert all NodeIndex<Ix> to NodeIndex<usize> for the output graph
+    let components_usize: Vec<Vec<NodeIndex<usize>>> = components
+        .iter()
+        .map(|comp| comp.iter().map(|ix| NodeIndex::new(ix.index())).collect())
+        .collect();
+
+    let mut condensed: StableGraph<Vec<N>, E, Ty, u32> =
+        StableGraph::with_capacity(components_usize.len(), g.edge_count());
+
+    // Build a map from old indices to new ones.
+    let mut node_map = vec![None; g.node_count()];
+    for comp in components_usize.iter() {
+        let new_nix = condensed.add_node(Vec::new());
+        for nix in comp {
+            node_map[nix.index()] = Some(new_nix.index());
+        }
+    }
+
+    // Consume nodes and edges of the old graph and insert them into the new one.
+    let (nodes, edges) = g.into_nodes_edges();
+    for (nix, node) in nodes.into_iter().enumerate() {
+        if let Some(Some(idx)) = node_map.get(nix).copied() {
+            condensed[NodeIndex::new(idx)].push(node.weight);
+        }
+    }
+    for edge in edges {
+        let (source, target) = match (
+            node_map.get(edge.source().index()),
+            node_map.get(edge.target().index()),
+        ) {
+            (Some(Some(s)), Some(Some(t))) => (NodeIndex::new(*s), NodeIndex::new(*t)),
+            _ => continue,
+        };
+
+        if make_acyclic && Ty::is_directed() {
+            if source != target {
+                condensed.update_edge(source, target, edge.weight);
+            }
+        } else {
+            condensed.add_edge(source, target, edge.weight);
+        }
+    }
+
+    let mapped = condensed.map(
+        |_, w| match w.clone().into_pyobject(py) {
+            Ok(bound) => bound.unbind(),
+            Err(_) => PyValueError::new_err("Node conversion failed")
+                .into_pyobject(py)
+                .unwrap()
+                .unbind()
+                .into(),
+        },
+        |_, w| match w.clone().into_pyobject(py) {
+            Ok(bound) => bound.unbind(),
+            Err(_) => PyValueError::new_err("Edge conversion failed")
+                .into_pyobject(py)
+                .unwrap()
+                .unbind()
+                .into(),
+        },
+    );
+    Ok((mapped, node_map))
+}
+
+#[pyfunction]
+#[pyo3(text_signature = "(graph, /, sccs=None)", signature=(graph, sccs=None))]
+pub fn digraph_condensation(
+    py: Python,
+    graph: digraph::PyDiGraph,
+    sccs: Option<Vec<Vec<usize>>>,
+) -> PyResult<digraph::PyDiGraph> {
+    let g = graph.graph.clone();
+    let (condensed, node_map) = condensation_inner(py, g.into(), true, sccs)?;
+
+    let mut attrs = HashMap::new();
+    attrs.insert("node_map", node_map.clone());
+
+    let result = digraph::PyDiGraph {
+        graph: condensed,
+        cycle_state: algo::DfsSpace::default(),
+        check_cycle: false,
+        node_removed: false,
+        multigraph: true,
+        attrs: attrs.into_pyobject(py)?.into(),
+    };
+    Ok(result)
+}
+
+#[pyfunction]
+#[pyo3(text_signature = "(graph, /)")]
+pub fn graph_condensation(py: Python, graph: graph::PyGraph) -> PyResult<graph::PyGraph> {
+    let g = graph.graph.clone();
+    let (condensed, node_map) = condensation_inner(py, g.into(), false, None)?;
+
+    let mut attrs = HashMap::new();
+    attrs.insert("node_map", node_map.clone());
+
+    let result = graph::PyGraph {
+        graph: condensed,
+        node_removed: false,
+        multigraph: graph.multigraph,
+        attrs: attrs.into_pyobject(py)?.into(),
+    };
+    Ok(result)
 }
 
 /// Return the first cycle encountered during DFS of a given PyDiGraph,
@@ -503,10 +650,10 @@ pub fn is_semi_connected(graph: &digraph::PyDiGraph) -> PyResult<bool> {
     }
 
     let mut temp_graph = DiGraph::new();
-    let mut node_map = Vec::new();
+    let mut node_map = vec![NodeIndex::end(); graph.graph.node_bound()];
 
-    for _node in graph.graph.node_indices() {
-        node_map.push(temp_graph.add_node(()));
+    for node in graph.graph.node_indices() {
+        node_map[node.index()] = temp_graph.add_node(());
     }
 
     for edge in graph.graph.edge_indices() {
@@ -514,7 +661,7 @@ pub fn is_semi_connected(graph: &digraph::PyDiGraph) -> PyResult<bool> {
         temp_graph.add_edge(node_map[source.index()], node_map[target.index()], ());
     }
 
-    let condensed = condensation(temp_graph, true);
+    let condensed = algo::condensation(temp_graph, true);
     let n = condensed.node_count();
     let weight_fn =
         |_: petgraph::graph::EdgeReference<()>| Ok::<usize, std::convert::Infallible>(1usize);
@@ -528,6 +675,50 @@ pub fn is_semi_connected(graph: &digraph::PyDiGraph) -> PyResult<bool> {
             }
         }
         Err(_) => Err(PyValueError::new_err("Graph could not be condensed")),
+    }
+}
+
+fn adjacency_matrix_index_map<Ty: EdgeType>(
+    graph: &StablePyGraph<Ty>,
+    node_list: Option<Vec<usize>>,
+) -> PyResult<(usize, Option<HashMap<usize, usize>>)> {
+    if let Some(nodes) = node_list {
+        let mut node_map = HashMap::with_capacity(nodes.len());
+        for (matrix_index, node) in nodes.into_iter().enumerate() {
+            let node_index = NodeIndex::new(node);
+            if !graph.contains_node(node_index) {
+                return Err(InvalidNode::new_err(format!(
+                    "The input index {node} in 'node_list' is not a valid node index"
+                )));
+            }
+            if node_map.insert(node, matrix_index).is_some() {
+                return Err(PyValueError::new_err(
+                    "node_list contains duplicate node indices",
+                ));
+            }
+        }
+        return Ok((node_map.len(), Some(node_map)));
+    }
+
+    if graph.node_bound() != graph.node_count() {
+        let mut node_map = HashMap::with_capacity(graph.node_count());
+        for (matrix_index, node) in graph.node_indices().enumerate() {
+            node_map.insert(node.index(), matrix_index);
+        }
+        return Ok((graph.node_count(), Some(node_map)));
+    }
+
+    Ok((graph.node_count(), None))
+}
+
+fn adjacency_matrix_edge_indices(
+    source: usize,
+    target: usize,
+    node_map: &Option<HashMap<usize, usize>>,
+) -> Option<(usize, usize)> {
+    match node_map {
+        Some(map) => Some((*map.get(&source)?, *map.get(&target)?)),
+        None => Some((source, target)),
     }
 }
 
@@ -561,26 +752,36 @@ pub fn is_semi_connected(graph: &digraph::PyDiGraph) -> PyResult<bool> {
 /// :param String parallel_edge: Optional argument that determines how the function handles parallel edges.
 ///     ``"min"`` causes the value in the output matrix to be the minimum of the edges' weights, and similar behavior can be expected for ``"max"`` and ``"avg"``.
 ///     The function defaults to ``"sum"`` behavior, where the value in the output matrix is the sum of all parallel edge weights.
+/// :param list node_list: Optional list of node indices used to determine the
+///     row and column order of the output matrix. If fewer than all graph nodes
+///     are provided, only edges between listed nodes are included.
 ///
 ///  :return: The adjacency matrix for the input directed graph as a numpy array
 ///  :rtype: numpy.ndarray
 #[pyfunction]
 #[pyo3(
-    signature=(graph, weight_fn=None, default_weight=1.0, null_value=0.0, parallel_edge="sum"),
-    text_signature = "(graph, /, weight_fn=None, default_weight=1.0, null_value=0.0, parallel_edge=\"sum\")"
+    signature=(graph, weight_fn=None, default_weight=1.0, null_value=0.0, parallel_edge="sum", node_list=None),
+    text_signature = "(graph, /, weight_fn=None, default_weight=1.0, null_value=0.0, parallel_edge=\"sum\", node_list=None)"
 )]
 pub fn digraph_adjacency_matrix<'py>(
     py: Python<'py>,
     graph: &digraph::PyDiGraph,
-    weight_fn: Option<PyObject>,
+    weight_fn: Option<Py<PyAny>>,
     default_weight: f64,
     null_value: f64,
     parallel_edge: &str,
+    node_list: Option<Vec<usize>>,
 ) -> PyResult<Bound<'py, PyArray2<f64>>> {
-    let n = graph.node_count();
+    let (n, node_map) = adjacency_matrix_index_map(&graph.graph, node_list)?;
     let mut matrix = Array2::<f64>::from_elem((n, n), null_value);
     let mut parallel_edge_count = HashMap::new();
-    for (i, j, weight) in get_edge_iter_with_weights(&graph.graph) {
+    for edge in graph.graph.edge_references() {
+        let Some((i, j)) =
+            adjacency_matrix_edge_indices(edge.source().index(), edge.target().index(), &node_map)
+        else {
+            continue;
+        };
+        let weight = edge.weight().clone();
         let edge_weight = weight_callable(py, &weight_fn, &weight, default_weight)?;
         if matrix[[i, j]] == null_value || (null_value.is_nan() && matrix[[i, j]].is_nan()) {
             matrix[[i, j]] = edge_weight;
@@ -609,7 +810,9 @@ pub fn digraph_adjacency_matrix<'py>(
                     }
                 }
                 _ => {
-                    return Err(PyValueError::new_err("Parallel edges can currently only be dealt with using \"sum\", \"min\", \"max\", or \"avg\"."));
+                    return Err(PyValueError::new_err(
+                        "Parallel edges can currently only be dealt with using \"sum\", \"min\", \"max\", or \"avg\".",
+                    ));
                 }
             }
         }
@@ -646,26 +849,36 @@ pub fn digraph_adjacency_matrix<'py>(
 /// :param String parallel_edge: Optional argument that determines how the function handles parallel edges.
 ///     ``"min"`` causes the value in the output matrix to be the minimum of the edges' weights, and similar behavior can be expected for ``"max"`` and ``"avg"``.
 ///     The function defaults to ``"sum"`` behavior, where the value in the output matrix is the sum of all parallel edge weights.
+/// :param list node_list: Optional list of node indices used to determine the
+///     row and column order of the output matrix. If fewer than all graph nodes
+///     are provided, only edges between listed nodes are included.
 ///
 /// :return: The adjacency matrix for the input graph as a numpy array
 /// :rtype: numpy.ndarray
 #[pyfunction]
 #[pyo3(
-    signature=(graph, weight_fn=None, default_weight=1.0, null_value=0.0, parallel_edge="sum"),
-    text_signature = "(graph, /, weight_fn=None, default_weight=1.0, null_value=0.0, parallel_edge=\"sum\")"
+    signature=(graph, weight_fn=None, default_weight=1.0, null_value=0.0, parallel_edge="sum", node_list=None),
+    text_signature = "(graph, /, weight_fn=None, default_weight=1.0, null_value=0.0, parallel_edge=\"sum\", node_list=None)"
 )]
 pub fn graph_adjacency_matrix<'py>(
     py: Python<'py>,
     graph: &graph::PyGraph,
-    weight_fn: Option<PyObject>,
+    weight_fn: Option<Py<PyAny>>,
     default_weight: f64,
     null_value: f64,
     parallel_edge: &str,
+    node_list: Option<Vec<usize>>,
 ) -> PyResult<Bound<'py, PyArray2<f64>>> {
-    let n = graph.node_count();
+    let (n, node_map) = adjacency_matrix_index_map(&graph.graph, node_list)?;
     let mut matrix = Array2::<f64>::from_elem((n, n), null_value);
     let mut parallel_edge_count = HashMap::new();
-    for (i, j, weight) in get_edge_iter_with_weights(&graph.graph) {
+    for edge in graph.graph.edge_references() {
+        let Some((i, j)) =
+            adjacency_matrix_edge_indices(edge.source().index(), edge.target().index(), &node_map)
+        else {
+            continue;
+        };
+        let weight = edge.weight().clone();
         let edge_weight = weight_callable(py, &weight_fn, &weight, default_weight)?;
         if matrix[[i, j]] == null_value || (null_value.is_nan() && matrix[[i, j]].is_nan()) {
             matrix[[i, j]] = edge_weight;
@@ -702,7 +915,9 @@ pub fn graph_adjacency_matrix<'py>(
                     }
                 }
                 _ => {
-                    return Err(PyValueError::new_err("Parallel edges can currently only be dealt with using \"sum\", \"min\", \"max\", or \"avg\"."));
+                    return Err(PyValueError::new_err(
+                        "Parallel edges can currently only be dealt with using \"sum\", \"min\", \"max\", or \"avg\".",
+                    ));
                 }
             }
         }
@@ -835,13 +1050,37 @@ pub fn local_complement(
     Ok(complement_graph)
 }
 
+/// Represents target nodes for path-finding operations.
+///
+/// This enum allows functions to accept either a single target node
+/// or multiple target nodes, providing flexibility in path-finding algorithms.
+pub enum TargetNodes {
+    Single(NodeIndex),
+    Multiple(HashSet<NodeIndex>),
+}
+
+impl<'py> FromPyObject<'py> for TargetNodes {
+    fn extract_bound(ob: &Bound<'py, PyAny>) -> PyResult<Self> {
+        if let Ok(int) = ob.extract::<usize>() {
+            Ok(Self::Single(NodeIndex::new(int)))
+        } else {
+            let mut target_set: HashSet<NodeIndex> = HashSet::new();
+            for target in ob.try_iter()? {
+                let target_index = NodeIndex::new(target?.extract::<usize>()?);
+                target_set.insert(target_index);
+            }
+            Ok(Self::Multiple(target_set))
+        }
+    }
+}
+
 /// Return all simple paths between 2 nodes in a PyGraph object
 ///
 /// A simple path is a path with no repeated nodes.
 ///
 /// :param PyGraph graph: The graph to find the path in
 /// :param int origin: The node index to find the paths from
-/// :param int to: The node index to find the paths to
+/// :param int | iterable[int] to: The node index(es) to find the paths to
 /// :param int min_depth: The minimum depth of the path to include in the output
 ///     list of paths. By default all paths are included regardless of depth,
 ///     setting to 0 will behave like the default.
@@ -856,7 +1095,7 @@ pub fn local_complement(
 pub fn graph_all_simple_paths(
     graph: &graph::PyGraph,
     origin: usize,
-    to: usize,
+    to: TargetNodes,
     min_depth: Option<usize>,
     cutoff: Option<usize>,
 ) -> PyResult<Vec<Vec<usize>>> {
@@ -866,27 +1105,46 @@ pub fn graph_all_simple_paths(
             "The input index for 'from' is not a valid node index",
         ));
     }
-    let to_index = NodeIndex::new(to);
-    if !graph.graph.contains_node(to_index) {
-        return Err(InvalidNode::new_err(
-            "The input index for 'to' is not a valid node index",
-        ));
-    }
     let min_intermediate_nodes: usize = match min_depth {
         Some(0) | None => 0,
         Some(depth) => depth - 2,
     };
     let cutoff_petgraph: Option<usize> = cutoff.map(|depth| depth - 2);
-    let result: Vec<Vec<usize>> = algo::all_simple_paths::<Vec<_>, _, ahash::RandomState>(
-        &graph.graph,
-        from_index,
-        to_index,
-        min_intermediate_nodes,
-        cutoff_petgraph,
-    )
-    .map(|v: Vec<NodeIndex>| v.into_iter().map(|i| i.index()).collect())
-    .collect();
-    Ok(result)
+
+    match to {
+        TargetNodes::Single(to_index) => {
+            if !graph.graph.contains_node(to_index) {
+                return Err(InvalidNode::new_err(
+                    "The input index for 'to' is not a valid node index",
+                ));
+            }
+
+            let result: Vec<Vec<usize>> =
+                algo::all_simple_paths::<Vec<_>, _, foldhash::fast::RandomState>(
+                    &graph.graph,
+                    from_index,
+                    to_index,
+                    min_intermediate_nodes,
+                    cutoff_petgraph,
+                )
+                .map(|v: Vec<NodeIndex>| v.into_iter().map(|i| i.index()).collect())
+                .collect();
+            Ok(result)
+        }
+        TargetNodes::Multiple(target_set) => {
+            let result: Vec<Vec<usize>> =
+                algo::all_simple_paths_multi::<Vec<_>, _, foldhash::fast::RandomState>(
+                    &graph.graph,
+                    from_index,
+                    &target_set,
+                    min_intermediate_nodes,
+                    cutoff_petgraph,
+                )
+                .map(|v: Vec<NodeIndex>| v.into_iter().map(|i| i.index()).collect())
+                .collect();
+            Ok(result)
+        }
+    }
 }
 
 /// Return all simple paths between 2 nodes in a PyDiGraph object
@@ -895,7 +1153,7 @@ pub fn graph_all_simple_paths(
 ///
 /// :param PyDiGraph graph: The graph to find the path in
 /// :param int origin: The node index to find the paths from
-/// :param int to: The node index to find the paths to
+/// :param int | iterable[int] to: The node index(es) to find the paths to
 /// :param int min_depth: The minimum depth of the path to include in the output
 ///     list of paths. By default all paths are included regardless of depth,
 ///     setting to 0 will behave like the default.
@@ -910,7 +1168,7 @@ pub fn graph_all_simple_paths(
 pub fn digraph_all_simple_paths(
     graph: &digraph::PyDiGraph,
     origin: usize,
-    to: usize,
+    to: TargetNodes,
     min_depth: Option<usize>,
     cutoff: Option<usize>,
 ) -> PyResult<Vec<Vec<usize>>> {
@@ -920,27 +1178,46 @@ pub fn digraph_all_simple_paths(
             "The input index for 'from' is not a valid node index",
         ));
     }
-    let to_index = NodeIndex::new(to);
-    if !graph.graph.contains_node(to_index) {
-        return Err(InvalidNode::new_err(
-            "The input index for 'to' is not a valid node index",
-        ));
-    }
     let min_intermediate_nodes: usize = match min_depth {
         Some(0) | None => 0,
         Some(depth) => depth - 2,
     };
     let cutoff_petgraph: Option<usize> = cutoff.map(|depth| depth - 2);
-    let result: Vec<Vec<usize>> = algo::all_simple_paths::<Vec<_>, _, ahash::RandomState>(
-        &graph.graph,
-        from_index,
-        to_index,
-        min_intermediate_nodes,
-        cutoff_petgraph,
-    )
-    .map(|v: Vec<NodeIndex>| v.into_iter().map(|i| i.index()).collect())
-    .collect();
-    Ok(result)
+
+    match to {
+        TargetNodes::Single(to_index) => {
+            if !graph.graph.contains_node(to_index) {
+                return Err(InvalidNode::new_err(
+                    "The input index for 'to' is not a valid node index",
+                ));
+            }
+
+            let result: Vec<Vec<usize>> =
+                algo::all_simple_paths::<Vec<_>, _, foldhash::fast::RandomState>(
+                    &graph.graph,
+                    from_index,
+                    to_index,
+                    min_intermediate_nodes,
+                    cutoff_petgraph,
+                )
+                .map(|v: Vec<NodeIndex>| v.into_iter().map(|i| i.index()).collect())
+                .collect();
+            Ok(result)
+        }
+        TargetNodes::Multiple(target_set) => {
+            let result: Vec<Vec<usize>> =
+                algo::all_simple_paths_multi::<Vec<_>, _, foldhash::fast::RandomState>(
+                    &graph.graph,
+                    from_index,
+                    &target_set,
+                    min_intermediate_nodes,
+                    cutoff_petgraph,
+                )
+                .map(|v: Vec<NodeIndex>| v.into_iter().map(|i| i.index()).collect())
+                .collect();
+            Ok(result)
+        }
+    }
 }
 
 /// Return all the simple paths between all pairs of nodes in the graph
@@ -1160,7 +1437,7 @@ pub fn graph_longest_simple_path(graph: &graph::PyGraph) -> Option<NodeIndices> 
 /// :rtype: dict
 #[pyfunction]
 #[pyo3(text_signature = "(graph, /)")]
-pub fn graph_core_number(py: Python, graph: &graph::PyGraph) -> PyResult<PyObject> {
+pub fn graph_core_number(py: Python, graph: &graph::PyGraph) -> PyResult<Py<PyAny>> {
     let cores = connectivity::core_number(&graph.graph);
     let out_dict = PyDict::new(py);
     for (k, v) in cores {
@@ -1186,7 +1463,7 @@ pub fn graph_core_number(py: Python, graph: &graph::PyGraph) -> PyResult<PyObjec
 /// :rtype: dict
 #[pyfunction]
 #[pyo3(text_signature = "(graph, /)")]
-pub fn digraph_core_number(py: Python, graph: &digraph::PyDiGraph) -> PyResult<PyObject> {
+pub fn digraph_core_number(py: Python, graph: &digraph::PyDiGraph) -> PyResult<Py<PyAny>> {
     let cores = connectivity::core_number(&graph.graph);
     let out_dict = PyDict::new(py);
     for (k, v) in cores {
@@ -1220,7 +1497,7 @@ pub fn digraph_core_number(py: Python, graph: &digraph::PyDiGraph) -> PyResult<P
 pub fn stoer_wagner_min_cut(
     py: Python,
     graph: &graph::PyGraph,
-    weight_fn: Option<PyObject>,
+    weight_fn: Option<Py<PyAny>>,
 ) -> PyResult<Option<(f64, NodeIndices)>> {
     let cut = connectivity::stoer_wagner_min_cut(&graph.graph, |edge| -> PyResult<_> {
         let val: f64 = weight_callable(py, &weight_fn, edge.weight(), 1.0)?;

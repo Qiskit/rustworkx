@@ -111,7 +111,7 @@ you'll want to run the test suite locally.
 
 The easiest way to run the test suite is to use
 [**Nox**](https://nox.thea.codes/en/stable/). You can install Nox
-with pip: `pip install -U nox`. Nox provides several advantages, but the
+with pip: `pip install -U "nox[uv]"`. Nox provides several advantages, but the
 biggest one is that it builds an isolated virtualenv for running tests. This
 means it does not pollute your system python when running. However, by default
 Nox will recompile rustworkx from source every time it is run even if there
@@ -285,7 +285,7 @@ cargo clippy --workspace --all-targets -- -D warnings
 
 Python is used primarily for tests and some small pieces of packaging
 and namespace configuration code in the actual library.
-[black](https://github.com/psf/black) and [flake8](https://flake8.pycqa.org/en/latest/) are used to enforce consistent
+[ruff](https://github.com/astral-sh/ruff) is used to enforce consistent
 style in the python code in the repository. You can run them via Nox using:
 
 ```bash
@@ -295,19 +295,27 @@ nox -e lint
 This will also run `cargo fmt` in check mode to ensure that you ran `cargo fmt`
 and will fail if the Rust code doesn't conform to the style rules.
 
-If black returns a code formatting error you can run `nox -e black` to automatically
+If ruff returns a code formatting error you can run `nox -e format` to automatically
 update the code formatting to conform to the style.
 
 ### Building documentation
 
 Just like with tests building documentation is done via Nox. This will handle
 compiling rustworkx, installing the python dependencies, and then building the
-documentation in an isolated venv. You can run just the docs build with:
+documentation in an isolated venv. 
+
+Our documentation setup requires that the [uv](https://github.com/astral-sh/uv)
+backend for Nox is installed. That can be done with `pip install -U "nox[uv]"`.
+
+You can run just the docs build with:
 ```
 nox -e docs
 ```
 which will output the html rendered documentation in `docs/build/html` which
 you can view locally in a web browser.
+
+> [!TIP]
+> If you run `nox -e docs -- -j auto`, the documentation uses all CPUs and builds faster.
 
 #### rustworkx-core documentation
 
@@ -326,6 +334,16 @@ web browser by running:
 ```
 cargo doc -p rustworkx-core --open
 ```
+
+#### Updating documentation dependencies
+
+The documentation workflow is currently our step with the most dependencies. Even
+though `rustworkx` currently has very few Python dependencies, our documentation depends
+on `sphinx` and many others. Therefore, `uv.lock` file contains a frozen list of what
+can be used for the workflow.
+
+If you need to add or remove dependencies, update `pyproject.toml` (specifically the `docs`
+section in `dependency-groups`), and then run `uv sync --all-groups` to update `uv.lock`.
 
 ### Type Annotations
 

@@ -15,8 +15,8 @@ use petgraph::EdgeType;
 use rand::prelude::*;
 use rand_pcg::Pcg64;
 
-use crate::iterators::Pos2DMapping;
 use crate::StablePyGraph;
+use crate::iterators::Pos2DMapping;
 
 pub fn random_layout<Ty: EdgeType>(
     graph: &StablePyGraph<Ty>,
@@ -25,14 +25,14 @@ pub fn random_layout<Ty: EdgeType>(
 ) -> Pos2DMapping {
     let mut rng: Pcg64 = match seed {
         Some(seed) => Pcg64::seed_from_u64(seed),
-        None => Pcg64::from_entropy(),
+        None => Pcg64::from_os_rng(),
     };
 
     Pos2DMapping {
         pos_map: graph
             .node_indices()
             .map(|n| {
-                let random_tuple: [f64; 2] = rng.gen();
+                let random_tuple: [f64; 2] = rng.random();
                 match center {
                     Some(center) => (
                         n.index(),

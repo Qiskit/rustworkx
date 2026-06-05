@@ -1202,10 +1202,8 @@ class TestAllPairsPathLengthMapping(unittest.TestCase):
         # Since all_pairs_dijkstra_path_lengths() is parallel the order of the
         # output is non-deterministic
         valid_values = [
-            "AllPairsPathLengthMapping{1: PathLengthMapping{}, " "0: PathLengthMapping{1: 3.14}}",
-            "AllPairsPathLengthMapping{"
-            "0: PathLengthMapping{1: 3.14}, "
-            "1: PathLengthMapping{}}",
+            "AllPairsPathLengthMapping{1: PathLengthMapping{}, 0: PathLengthMapping{1: 3.14}}",
+            "AllPairsPathLengthMapping{0: PathLengthMapping{1: 3.14}, 1: PathLengthMapping{}}",
         ]
         self.assertIn(str(res), valid_values)
 

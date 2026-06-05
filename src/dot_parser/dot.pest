@@ -1,0 +1,43 @@
+WHITESPACE = _{ " " | "\t" | "\r" | "\n" }
+COMMENT = _{ "#" ~ (!NEWLINE ~ ANY)* | "//" ~ (!NEWLINE ~ ANY)* | "/*" ~ (!"*/" ~ ANY)* ~ "*/" }
+NEWLINE = _{ "\n" | "\r\n" }
+
+graph_file = { SOI ~ strict? ~ graph_type ~ id? ~ "{" ~ stmt_list? ~ "}" ~ EOI }
+
+strict = { "strict" }
+graph_type = { "graph" | "digraph" }
+
+id = _{ number | identifier | quoted_id | html_id }
+
+number = @{ ASCII_DIGIT+ }
+identifier = @{ (ASCII_ALPHANUMERIC | "_" | "." | "/" | "\\" | "-")+ }
+quoted_id = @{ "\"" ~ (("\\\"" | (!"\"" ~ ANY))*) ~ "\"" }
+html_id = @{ "<" ~ (!">" ~ ANY)* ~ ">" }
+
+stmt_list = { (stmt ~ (";" | NEWLINE)*)* }
+
+stmt = _{
+      edge_stmt
+    | node_stmt
+    | attr_stmt
+    | assignment
+    | subgraph
+}
+
+node_stmt = { node_id ~ attr_list* }
+edge_stmt = { edge_point ~ (edge_op ~ edge_point)+ ~ attr_list* }
+
+edge_op = { "->" | "--" }
+
+edge_point = { node_id | subgraph }
+
+attr_stmt = { ("graph" | "node" | "edge") ~ attr_list+ }
+
+attr_list = { "[" ~ a_list? ~ "]" }
+a_list = { (id ~ ("=" ~ id)? ~ ("," | ";")?)* }
+
+assignment = { id ~ "=" ~ id }
+
+subgraph = { "subgraph" ~ id? ~ "{" ~ stmt_list? ~ "}" }
+
+node_id = { id ~ (":" ~ id)? ~ (":" ~ id)? }

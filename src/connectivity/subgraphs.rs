@@ -12,8 +12,8 @@
 
 use crate::StablePyGraph;
 use hashbrown::HashSet;
-use petgraph::stable_graph::NodeIndex;
 use petgraph::EdgeType;
+use petgraph::stable_graph::NodeIndex;
 use std::cmp::max;
 
 // Implemented after ``Simple`` from

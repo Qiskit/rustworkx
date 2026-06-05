@@ -399,11 +399,7 @@ mod tests {
         assert_eq!(graph.edge_count(), expected_edges.len());
 
         let sorted_pair = |(a, b)| {
-            if a > b {
-                (b, a)
-            } else {
-                (a, b)
-            }
+            if a > b { (b, a) } else { (a, b) }
         };
 
         let edge_set: HashSet<(usize, usize)> = graph

@@ -1,0 +1,4 @@
+---
+features:
+  - |
+    Added a new condensation() function that works for both directed and undirected graphs. For directed graphs, it returns the condensation (quotient graph) where each node is a strongly connected component (SCC). For undirected graphs, each node is a connected component. The returned graph has a 'node_map' attribute mapping each original node index to the index of the condensed node it belongs to.

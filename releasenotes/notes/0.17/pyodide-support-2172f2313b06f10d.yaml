@@ -1,0 +1,8 @@
+---
+features:
+  - |
+    `rustworkx` now has experimental support for `Pyodide <https://pyodide.org/en/stable/>`__.
+    Pyodide is a Python distribution for WebAssembly that runs in the browser.
+    This is the first release that compiles with Pyodide and will allow users to run `rustworkx`
+    in web applications. Because Pyodide wheels are not available in PyPI,
+    we are working with the Pyodide team to publish them in the Pyodide package index.

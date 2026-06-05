@@ -10,17 +10,17 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
+use petgraph::Undirected;
 use petgraph::algo;
 use petgraph::prelude::*;
-use petgraph::Undirected;
 
+use pyo3::IntoPyObjectExt;
+use pyo3::Python;
 use pyo3::exceptions::{PyIndexError, PyOverflowError, PyValueError};
 use pyo3::prelude::*;
 use pyo3::wrap_pyfunction;
-use pyo3::IntoPyObjectExt;
-use pyo3::Python;
 
-use super::{digraph, graph, StablePyGraph};
+use super::{StablePyGraph, digraph, graph};
 use rustworkx_core::generators as core_generators;
 
 /// Generate an undirected cycle graph.
@@ -55,7 +55,7 @@ use rustworkx_core::generators as core_generators;
 pub fn cycle_graph(
     py: Python,
     num_nodes: Option<usize>,
-    weights: Option<Vec<PyObject>>,
+    weights: Option<Vec<Py<PyAny>>>,
     multigraph: bool,
 ) -> PyResult<graph::PyGraph> {
     let default_fn = || py.None();
@@ -65,7 +65,7 @@ pub fn cycle_graph(
             Err(_) => {
                 return Err(PyIndexError::new_err(
                     "num_nodes and weights list not specified",
-                ))
+                ));
             }
         };
     Ok(graph::PyGraph {
@@ -110,7 +110,7 @@ pub fn cycle_graph(
 pub fn directed_cycle_graph(
     py: Python,
     num_nodes: Option<usize>,
-    weights: Option<Vec<PyObject>>,
+    weights: Option<Vec<Py<PyAny>>>,
     bidirectional: bool,
     multigraph: bool,
 ) -> PyResult<digraph::PyDiGraph> {
@@ -126,7 +126,7 @@ pub fn directed_cycle_graph(
         Err(_) => {
             return Err(PyIndexError::new_err(
                 "num_nodes and weights list not specified",
-            ))
+            ));
         }
     };
     Ok(digraph::PyDiGraph {
@@ -171,7 +171,7 @@ pub fn directed_cycle_graph(
 pub fn path_graph(
     py: Python,
     num_nodes: Option<usize>,
-    weights: Option<Vec<PyObject>>,
+    weights: Option<Vec<Py<PyAny>>>,
     multigraph: bool,
 ) -> PyResult<graph::PyGraph> {
     let default_fn = || py.None();
@@ -181,7 +181,7 @@ pub fn path_graph(
             Err(_) => {
                 return Err(PyIndexError::new_err(
                     "num_nodes and weights list not specified",
-                ))
+                ));
             }
         };
     Ok(graph::PyGraph {
@@ -226,7 +226,7 @@ pub fn path_graph(
 pub fn directed_path_graph(
     py: Python,
     num_nodes: Option<usize>,
-    weights: Option<Vec<PyObject>>,
+    weights: Option<Vec<Py<PyAny>>>,
     bidirectional: bool,
     multigraph: bool,
 ) -> PyResult<digraph::PyDiGraph> {
@@ -242,7 +242,7 @@ pub fn directed_path_graph(
         Err(_) => {
             return Err(PyIndexError::new_err(
                 "num_nodes and weights list not specified",
-            ))
+            ));
         }
     };
     Ok(digraph::PyDiGraph {
@@ -288,7 +288,7 @@ pub fn directed_path_graph(
 pub fn star_graph(
     py: Python,
     num_nodes: Option<usize>,
-    weights: Option<Vec<PyObject>>,
+    weights: Option<Vec<Py<PyAny>>>,
     multigraph: bool,
 ) -> PyResult<graph::PyGraph> {
     let default_fn = || py.None();
@@ -299,7 +299,7 @@ pub fn star_graph(
             Err(_) => {
                 return Err(PyIndexError::new_err(
                     "num_nodes and weights list not specified",
-                ))
+                ));
             }
         };
     Ok(graph::PyGraph {
@@ -356,7 +356,7 @@ pub fn star_graph(
 pub fn directed_star_graph(
     py: Python,
     num_nodes: Option<usize>,
-    weights: Option<Vec<PyObject>>,
+    weights: Option<Vec<Py<PyAny>>>,
     inward: bool,
     bidirectional: bool,
     multigraph: bool,
@@ -374,7 +374,7 @@ pub fn directed_star_graph(
         Err(_) => {
             return Err(PyIndexError::new_err(
                 "num_nodes and weights list not specified",
-            ))
+            ));
         }
     };
     Ok(digraph::PyDiGraph {
@@ -419,7 +419,7 @@ pub fn directed_star_graph(
 pub fn mesh_graph(
     py: Python,
     num_nodes: Option<usize>,
-    weights: Option<Vec<PyObject>>,
+    weights: Option<Vec<Py<PyAny>>>,
     multigraph: bool,
 ) -> PyResult<graph::PyGraph> {
     complete_graph(py, num_nodes, weights, multigraph)
@@ -457,7 +457,7 @@ pub fn mesh_graph(
 pub fn directed_mesh_graph(
     py: Python,
     num_nodes: Option<usize>,
-    weights: Option<Vec<PyObject>>,
+    weights: Option<Vec<Py<PyAny>>>,
     multigraph: bool,
 ) -> PyResult<digraph::PyDiGraph> {
     directed_complete_graph(py, num_nodes, weights, multigraph)
@@ -504,7 +504,7 @@ pub fn grid_graph(
     py: Python,
     rows: Option<usize>,
     cols: Option<usize>,
-    weights: Option<Vec<PyObject>>,
+    weights: Option<Vec<Py<PyAny>>>,
     multigraph: bool,
 ) -> PyResult<graph::PyGraph> {
     let default_fn = || py.None();
@@ -566,7 +566,7 @@ pub fn directed_grid_graph(
     py: Python,
     rows: Option<usize>,
     cols: Option<usize>,
-    weights: Option<Vec<PyObject>>,
+    weights: Option<Vec<Py<PyAny>>>,
     bidirectional: bool,
     multigraph: bool,
 ) -> PyResult<digraph::PyDiGraph> {
@@ -950,13 +950,12 @@ const MAX_ORDER: u32 = 29;
 pub fn binomial_tree_graph(
     py: Python,
     order: u32,
-    weights: Option<Vec<PyObject>>,
+    weights: Option<Vec<Py<PyAny>>>,
     multigraph: bool,
 ) -> PyResult<graph::PyGraph> {
     if order >= MAX_ORDER {
         return Err(PyOverflowError::new_err(format!(
-            "An order of {} exceeds the max allowable size",
-            order
+            "An order of {order} exceeds the max allowable size"
         )));
     }
     let default_fn = || py.None();
@@ -966,7 +965,7 @@ pub fn binomial_tree_graph(
             Err(_) => {
                 return Err(PyIndexError::new_err(
                     "num_nodes and weights list not specified",
-                ))
+                ));
             }
         };
     Ok(graph::PyGraph {
@@ -1016,14 +1015,13 @@ pub fn binomial_tree_graph(
 pub fn directed_binomial_tree_graph(
     py: Python,
     order: u32,
-    weights: Option<Vec<PyObject>>,
+    weights: Option<Vec<Py<PyAny>>>,
     bidirectional: bool,
     multigraph: bool,
 ) -> PyResult<digraph::PyDiGraph> {
     if order >= MAX_ORDER {
         return Err(PyOverflowError::new_err(format!(
-            "An order of {} exceeds the max allowable size",
-            order
+            "An order of {order} exceeds the max allowable size"
         )));
     }
     let default_fn = || py.None();
@@ -1038,7 +1036,7 @@ pub fn directed_binomial_tree_graph(
         Err(_) => {
             return Err(PyIndexError::new_err(
                 "order and weights list not specified",
-            ))
+            ));
         }
     };
     Ok(digraph::PyDiGraph {
@@ -1086,7 +1084,7 @@ pub fn full_rary_tree(
     py: Python,
     branching_factor: usize,
     num_nodes: usize,
-    weights: Option<Vec<PyObject>>,
+    weights: Option<Vec<Py<PyAny>>>,
     multigraph: bool,
 ) -> PyResult<graph::PyGraph> {
     let default_fn = || py.None();
@@ -1101,7 +1099,7 @@ pub fn full_rary_tree(
         Err(_) => {
             return Err(PyIndexError::new_err(
                 "The number of weights cannot exceed num_nodes.",
-            ))
+            ));
         }
     };
     Ok(graph::PyGraph {
@@ -1324,8 +1322,8 @@ pub fn lollipop_graph(
     py: Python,
     num_mesh_nodes: Option<usize>,
     num_path_nodes: Option<usize>,
-    mesh_weights: Option<Vec<PyObject>>,
-    path_weights: Option<Vec<PyObject>>,
+    mesh_weights: Option<Vec<Py<PyAny>>>,
+    path_weights: Option<Vec<Py<PyAny>>>,
     multigraph: bool,
 ) -> PyResult<graph::PyGraph> {
     let default_fn = || py.None();
@@ -1341,7 +1339,7 @@ pub fn lollipop_graph(
         Err(_) => {
             return Err(PyIndexError::new_err(
                 "num_nodes and weights list not specified",
-            ))
+            ));
         }
     };
     Ok(graph::PyGraph {
@@ -1400,8 +1398,8 @@ pub fn barbell_graph(
     num_mesh_nodes: Option<usize>,
     num_path_nodes: Option<usize>,
     multigraph: bool,
-    mesh_weights: Option<Vec<PyObject>>,
-    path_weights: Option<Vec<PyObject>>,
+    mesh_weights: Option<Vec<Py<PyAny>>>,
+    path_weights: Option<Vec<Py<PyAny>>>,
 ) -> PyResult<graph::PyGraph> {
     let default_fn = || py.None();
     let graph: StablePyGraph<Undirected> = match core_generators::barbell_graph(
@@ -1416,7 +1414,7 @@ pub fn barbell_graph(
         Err(_) => {
             return Err(PyIndexError::new_err(
                 "num_nodes and weights list not specified",
-            ))
+            ));
         }
     };
     Ok(graph::PyGraph {
@@ -1487,7 +1485,7 @@ pub fn generalized_petersen_graph(
             Err(_) => {
                 return Err(PyIndexError::new_err(
                     "n > 2, k > 0, or 2 * k > n not satisfied.",
-                ))
+                ));
             }
         };
     Ok(graph::PyGraph {
@@ -1518,7 +1516,7 @@ pub fn generalized_petersen_graph(
     signature=(n, multigraph=true),
 )]
 pub fn empty_graph(py: Python, n: usize, multigraph: bool) -> PyResult<graph::PyGraph> {
-    let mut graph = StableUnGraph::<PyObject, PyObject>::default();
+    let mut graph = StableUnGraph::<Py<PyAny>, Py<PyAny>>::default();
     for _ in 0..n {
         graph.add_node(py.None());
     }
@@ -1554,7 +1552,7 @@ pub fn directed_empty_graph(
     n: usize,
     multigraph: bool,
 ) -> PyResult<digraph::PyDiGraph> {
-    let mut graph = StableDiGraph::<PyObject, PyObject>::default();
+    let mut graph = StableDiGraph::<Py<PyAny>, Py<PyAny>>::default();
     for _ in 0..n {
         graph.add_node(py.None());
     }
@@ -1606,7 +1604,7 @@ pub fn directed_empty_graph(
 pub fn complete_graph(
     py: Python,
     num_nodes: Option<usize>,
-    weights: Option<Vec<PyObject>>,
+    weights: Option<Vec<Py<PyAny>>>,
     multigraph: bool,
 ) -> PyResult<graph::PyGraph> {
     let default_fn = || py.None();
@@ -1616,7 +1614,7 @@ pub fn complete_graph(
             Err(_) => {
                 return Err(PyIndexError::new_err(
                     "num_nodes and weights list not specified",
-                ))
+                ));
             }
         };
     Ok(graph::PyGraph {
@@ -1665,7 +1663,7 @@ pub fn complete_graph(
 pub fn directed_complete_graph(
     py: Python,
     num_nodes: Option<usize>,
-    weights: Option<Vec<PyObject>>,
+    weights: Option<Vec<Py<PyAny>>>,
     multigraph: bool,
 ) -> PyResult<digraph::PyDiGraph> {
     let default_fn = || py.None();
@@ -1675,7 +1673,7 @@ pub fn directed_complete_graph(
             Err(_) => {
                 return Err(PyIndexError::new_err(
                     "num_nodes and weights list not specified",
-                ))
+                ));
             }
         };
     Ok(digraph::PyDiGraph {

@@ -11,6 +11,7 @@ Algorithm Functions
    connectivity_and_cycles
    dag_algorithms
    dominance
+   geometry
    graph_operations
    isomorphism
    link_analysis

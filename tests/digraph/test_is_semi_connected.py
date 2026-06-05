@@ -74,3 +74,14 @@ class TestSemiConnected(unittest.TestCase):
     def test_is_semi_connected_directed_grid_graph(self):
         graph = rustworkx.generators.directed_grid_graph(10, 10)
         self.assertEqual(rustworkx.is_semi_connected(graph), naive_semi_connected(graph))
+
+    def test_is_semi_connected_with_node_gaps(self):
+        graph = rustworkx.PyDiGraph()
+        graph.add_nodes_from(list(range(5)))
+        graph.remove_node(1)
+        # Remaining nodes 0, 2, 3, 4 form a path
+        graph.add_edge(0, 2, None)
+        graph.add_edge(2, 3, None)
+        graph.add_edge(3, 4, None)
+
+        self.assertEqual(rustworkx.is_semi_connected(graph), naive_semi_connected(graph))

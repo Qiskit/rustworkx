@@ -1,14 +1,104 @@
-[build-system]
-requires = ["setuptools", "wheel", "setuptools-rust"]
-build-backend = "setuptools.build_meta"
+[project]
+name = "rustworkx"
+version = "0.17.1"
+description = "A High-Performance Graph Library for Python"
+requires-python = ">=3.10"
+dependencies = [
+    "numpy>=1.16.0,<3"
+]
+readme = {file = "README.md", content-type = "text/markdown"}
+license-files = ["LICENSE"]
+classifiers=[
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "Programming Language :: Rust",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Operating System :: MacOS :: MacOS X",
+    "Operating System :: Microsoft :: Windows",
+    "Operating System :: POSIX :: Linux",
+]
+keywords = ["Networks", "Network", "Graph", "Graph Theory", "DAG"]
 
-[tool.black]
-line-length = 100
-target-version = ['py39', 'py310', 'py311', 'py312']
+[tool.maturin]
+features = ["pyo3/extension-module"]
+locked = true
+bindings = "pyo3"
+
+
+[project.optional-dependencies]
+mpl = ["matplotlib>=3.0"]
+graphviz = ["pillow>=5.4"]
+# TODO: use self-referential rustworkx[mpl] and rustworkx[graphivz]
+# once it is better suported.
+all = [
+    "matplotlib>=3.0",
+    "pillow>=5.4",
+]
+
+[project.urls]
+issues = "https://github.com/Qiskit/rustworkx/issues"
+source = "https://github.com/Qiskit/rustworkx"
+documentation ="https://www.rustworkx.org/"
+releasenotes = "https://www.rustworkx.org/release_notes.html"
+
+[[project.authors]]
+name = "Matthew Treinish"
+email = "mtreinish@kortar.org"
+
+[[project.maintainers]]
+name = "Ivan Carvalho"
+email = "ivancarvalho@gatech.edu"
+
+[build-system]
+requires = ["maturin>=1.9,<2.0"]
+build-backend = "maturin"
+
+[dependency-groups]
+testinfra = [
+    "nox==2025.10.16",
+    "uv==0.11.15",
+]
+test = [
+  "maturin>=1.9.0,<2.0",
+  "testtools>=2.5.0",
+  "networkx>=3.2",
+  "stestr>=4.1",
+]
+lint = [
+    "ruff==0.15.7",
+    "maturin>=1.9.0,<2.0",
+    "typos~=1.39",
+]
+stubs = [
+    "mypy==1.17.1",
+    "typing-extensions>=4.4",
+]
+docs = [
+    "m2r2",
+    "sphinx>=5.0",
+    "jupyter-sphinx",
+    "pydot",
+    "pillow>=4.2.1",
+    "reno>=3.4.0",
+    "qiskit-sphinx-theme==2.0.0",
+    "matplotlib>=3.4",
+    "sphinx-reredirects",
+    "sphinxemoji",
+    "ipykernel",
+    "lxml_html_clean",
+]
+releaseinfra = [
+    "cibuildwheel==3.3.0; python_version >= '3.11'",
+]
 
 [tool.ruff]
-line-length = 105 # more lenient than black due to long function signatures
-src = ["rustworkx", "setup.py", "retworkx", "tests"]
+line-length = 100
+src = ["rustworkx", "setup.py", "tests"]
 lint.select = [
     "E",   # pycodestyle
     "F",   # pyflakes
@@ -16,26 +106,35 @@ lint.select = [
     "PYI", # flake8-pyi
     "Q",   # flake8-quotes
 ]
-target-version = "py39"
+target-version = "py310"
 extend-exclude = ["doc"]
 
 [tool.ruff.lint.per-file-ignores]
 "rustworkx/__init__.py" = ["F405", "F403"]
 "*.pyi" = ["F403", "F405", "PYI001", "PYI002"]
 
+[tool.ruff.lint.pycodestyle]
+max-line-length = 105 #  lint has a larger limit than the formatter because of long signatures
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+docstring-code-format = true
+
 [tool.typos.default]
 extend-ignore-words-re = [
   "[Ss]toer",
+  "[Bb]rin",
 ]
 
 [tool.cibuildwheel]
 manylinux-x86_64-image = "manylinux2014"
 manylinux-i686-image = "manylinux2014"
-skip = "pp* cp36-* cp37-* cp38-* *win32 *musllinux*i686"
+skip = "pp* cp314t* *win32 *musllinux*i686"
 test-requires = "networkx"
 test-command = "python -m unittest discover {project}/tests"
-before-build = "pip install -U setuptools-rust"
-test-skip = "*linux_s390x *ppc64le *musllinux*aarch64"
+before-build = "pip install -U maturin>=1.9.0,<2.0"
+test-skip = "*linux_s390x *ppc64le *i686 *win32"
 
 [tool.cibuildwheel.linux]
 before-all = "yum install -y wget && {package}/tools/install_rust.sh"
@@ -45,10 +144,6 @@ repair-wheel-command = "auditwheel repair -w {dest_dir} {wheel} && pipx run abi3
 [[tool.cibuildwheel.overrides]]
 select = "*-musllinux*"
 before-all = "apk add --no-cache curl gcc && curl https://sh.rustup.rs -sSf | sh -s -- -y && source $HOME/.cargo/env && rustup install stable && rustup default stable"
-
-[[tool.cibuildwheel.overrides]]
-select = "*i686"
-before-test = 'python -m pip install numpy --config-settings=setup-args="-Dallow-noblas=true"'
 
 [tool.cibuildwheel.macos]
 environment = "MACOSX_DEPLOYMENT_TARGET=10.12"

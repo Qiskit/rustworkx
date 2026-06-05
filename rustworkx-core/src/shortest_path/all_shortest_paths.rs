@@ -13,9 +13,9 @@
 use std::collections::VecDeque;
 use std::hash::Hash;
 
+use petgraph::Direction::Incoming;
 use petgraph::algo::Measure;
 use petgraph::visit::{EdgeRef, IntoEdgesDirected, NodeIndexable, Visitable};
-use petgraph::Direction::Incoming;
 
 use super::dijkstra;
 use crate::dictmap::*;
@@ -38,7 +38,7 @@ use crate::dictmap::*;
 /// use rustworkx_core::dictmap::DictMap;
 /// use rustworkx_core::shortest_path::all_shortest_paths;
 /// use rustworkx_core::Result;
-/// use ahash::HashSet;
+/// use foldhash::HashSet;
 ///
 /// let mut graph : Graph<(), (), Directed>= Graph::new();
 /// let a = graph.add_node(()); // node with no weight
@@ -122,10 +122,10 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::shortest_path::all_shortest_paths;
     use crate::Result;
-    use petgraph::prelude::*;
+    use crate::shortest_path::all_shortest_paths;
     use petgraph::Graph;
+    use petgraph::prelude::*;
 
     #[test]
     fn test_all_shortest_paths() {

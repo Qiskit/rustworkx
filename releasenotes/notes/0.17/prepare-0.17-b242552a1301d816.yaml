@@ -1,0 +1,17 @@
+---
+prelude: >
+  This is a new Rustworkx release with bug fixes and new features to
+  the library. The highlights of this release are:
+
+    * Enhanced documentation and tests
+    * Support for writing GraphML files
+    * A new method for weighted closeness closeness
+
+  This release uses the `Python Stable ABI <https://docs.python.org/3.9/c-api/stable.html>`__,
+  and will be compatible with all versions from Python 3.9 onwards. The published
+  binaries have been tested with Python 3.9 to 3.13, although they will likely
+  work with future versions like 3.14.
+
+  A special shoutout goes to Miroslav Šedivý, Etienne Wodey, Krishn Parasar, and Barak Katzir
+  for their pull requests and GitHub issues! Although not documented in individual
+  entries, we appreciate your work helping us improve our documentation, type annotations, and tests.

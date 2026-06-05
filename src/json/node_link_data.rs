@@ -12,18 +12,21 @@
 
 use std::collections::BTreeMap;
 use std::fs::File;
+use std::io::BufWriter;
+use std::io::Write as _;
 
 use hashbrown::HashMap;
+use indexmap::IndexSet;
 
 use serde::{Deserialize, Serialize};
 
-use pyo3::prelude::*;
 use pyo3::IntoPyObjectExt;
 use pyo3::Python;
+use pyo3::prelude::*;
 
+use petgraph::EdgeType;
 use petgraph::visit::EdgeRef;
 use petgraph::visit::IntoEdgeReferences;
-use petgraph::EdgeType;
 
 use crate::JSONSerializationError;
 use crate::NodeIndex;
@@ -81,24 +84,73 @@ pub fn parse_node_link_data<Ty: EdgeType>(
     py: &Python,
     graph: GraphInput,
     out_graph: &mut StablePyGraph<Ty>,
-    node_attrs: Option<PyObject>,
-    edge_attrs: Option<PyObject>,
-) -> PyResult<()> {
+    node_attrs: Option<Py<PyAny>>,
+    edge_attrs: Option<Py<PyAny>>,
+) -> PyResult<bool> {
     let mut id_mapping: HashMap<usize, NodeIndex> = HashMap::with_capacity(graph.nodes.len());
-    for node in graph.nodes {
-        let payload = match node.data {
-            Some(data) => match node_attrs {
-                Some(ref callback) => callback.call1(*py, (data,))?,
-                None => data.into_py_any(*py)?,
-            },
-            None => py.None(),
-        };
-        let id = out_graph.add_node(payload);
-        match node.id {
-            Some(input_id) => id_mapping.insert(input_id, id),
-            None => id_mapping.insert(id.index(), id),
-        };
-    }
+
+    // Check if nodes have explicit IDs that need preservation
+    let preserve_ids = graph.nodes.iter().any(|n| n.id.is_some());
+
+    let node_removed = if !preserve_ids {
+        // No explicit IDs, just add nodes sequentially (legacy behavior)
+        for node in graph.nodes {
+            let payload = match node.data {
+                Some(data) => match node_attrs {
+                    Some(ref callback) => callback.call1(*py, (data,))?,
+                    None => data.into_py_any(*py)?,
+                },
+                None => py.None(),
+            };
+            let id = out_graph.add_node(payload);
+            id_mapping.insert(id.index(), id);
+        }
+        false
+    } else {
+        // Find the maximum node ID to determine how many placeholder nodes we need
+        let max_id = graph.nodes.iter().filter_map(|n| n.id).max().unwrap_or(0);
+
+        // Create placeholder nodes up to max_id
+        let mut tmp_nodes: IndexSet<NodeIndex> = (0..=max_id)
+            .map(|_| out_graph.add_node(py.None()))
+            .collect();
+
+        // Replace placeholder nodes with actual data and track which to keep
+        for node in graph.nodes {
+            let payload = match node.data {
+                Some(data) => match node_attrs {
+                    Some(ref callback) => callback.call1(*py, (data,))?,
+                    None => data.into_py_any(*py)?,
+                },
+                None => py.None(),
+            };
+            let node_id = node.id.ok_or_else(|| {
+                pyo3::exceptions::PyValueError::new_err(
+                    "All nodes must have explicit IDs when any node has an ID",
+                )
+            })?;
+            let idx = NodeIndex::new(node_id);
+
+            // Replace the placeholder with actual data
+            if let Some(weight) = out_graph.node_weight_mut(idx) {
+                *weight = payload;
+            }
+
+            id_mapping.insert(node_id, idx);
+            tmp_nodes.swap_remove(&idx);
+        }
+
+        // Track if we're removing any nodes (indicates gaps in indices)
+        let has_gaps = !tmp_nodes.is_empty();
+
+        // Remove remaining placeholder nodes
+        for tmp_node in tmp_nodes {
+            out_graph.remove_node(tmp_node);
+        }
+
+        has_gaps
+    };
+
     for edge in graph.links {
         let data = match edge.data {
             Some(data) => match edge_attrs {
@@ -109,7 +161,7 @@ pub fn parse_node_link_data<Ty: EdgeType>(
         };
         out_graph.add_edge(id_mapping[&edge.source], id_mapping[&edge.target], data);
     }
-    Ok(())
+    Ok(node_removed)
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -117,16 +169,17 @@ pub fn node_link_data<Ty: EdgeType>(
     py: Python,
     graph: &StablePyGraph<Ty>,
     multigraph: bool,
-    attrs: &PyObject,
+    attrs: &Py<PyAny>,
     path: Option<String>,
-    graph_attrs: Option<PyObject>,
-    node_attrs: Option<PyObject>,
-    edge_attrs: Option<PyObject>,
+    graph_attrs: Option<Py<PyAny>>,
+    node_attrs: Option<Py<PyAny>>,
+    edge_attrs: Option<Py<PyAny>>,
 ) -> PyResult<Option<String>> {
-    let attr_callable = |attrs: &PyObject, obj: &PyObject| -> PyResult<BTreeMap<String, String>> {
-        let res = attrs.call1(py, (obj,))?;
-        res.extract(py)
-    };
+    let attr_callable =
+        |attrs: &Py<PyAny>, obj: &Py<PyAny>| -> PyResult<BTreeMap<String, String>> {
+            let res = attrs.call1(py, (obj,))?;
+            res.extract(py)
+        };
     let mut nodes: Vec<Node> = Vec::with_capacity(graph.node_count());
     for n in graph.node_indices() {
         let data = match node_attrs {
@@ -167,20 +220,20 @@ pub fn node_link_data<Ty: EdgeType>(
     match path {
         None => match serde_json::to_string(&output_struct) {
             Ok(v) => Ok(Some(v)),
-            Err(e) => Err(JSONSerializationError::new_err(format!(
-                "JSON Error: {}",
-                e
-            ))),
+            Err(e) => Err(JSONSerializationError::new_err(format!("JSON Error: {e}"))),
         },
         Some(filename) => {
             let file = File::create(filename)?;
-            match serde_json::to_writer(file, &output_struct) {
-                Ok(_) => Ok(None),
-                Err(e) => Err(JSONSerializationError::new_err(format!(
-                    "JSON Error: {}",
-                    e
-                ))),
-            }
+            let mut buffer = BufWriter::new(file);
+            let res = match serde_json::to_writer(&mut buffer, &output_struct) {
+                Ok(_) => {
+                    buffer.flush()?;
+                    Ok(None)
+                }
+                Err(e) => Err(JSONSerializationError::new_err(format!("JSON Error: {e}"))),
+            }?;
+
+            Ok(res)
         }
     }
 }

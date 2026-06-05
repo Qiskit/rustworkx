@@ -63,6 +63,24 @@ class TestBiconnected(unittest.TestCase):
         self.assertEqual(rustworkx.bridges(graph), set())
         self.assertEqual(rustworkx.biconnected_components(graph), {})
 
+    def test_trivial_graph(self):
+        graph = rustworkx.PyGraph()
+        a = graph.add_node(0)
+        b = graph.add_node(1)
+        graph.add_edge(a, b, None)
+        self.assertEqual(rustworkx.articulation_points(graph), set())
+        self.assertEqual(rustworkx.bridges(graph), {(0, 1)})
+
+    def test_another_trivial_graph(self):
+        graph = rustworkx.PyGraph()
+        a = graph.add_node(0)
+        b = graph.add_node(1)
+        c = graph.add_node(2)
+        graph.add_edge(a, b, None)
+        graph.add_edge(b, c, None)
+        self.assertEqual(rustworkx.articulation_points(graph), {1})
+        self.assertEqual(sorted_edges(rustworkx.bridges(graph)), {(0, 1), (1, 2)})
+
     def test_graph(self):
         components = {
             (4, 8): 0,
@@ -145,3 +163,16 @@ class TestBiconnected(unittest.TestCase):
         bicomp = rustworkx.biconnected_components(graph)
         self.assertEqual(len(bicomp), num_edges)
         self.assertEqual(list(bicomp.values()), [0] * num_edges)
+
+    def test_cycle_no_bridges(self):
+        g = rustworkx.generators.cycle_graph(100)
+        self.assertEqual(rustworkx.articulation_points(g), set())
+        self.assertEqual(rustworkx.bridges(g), set())
+
+    def test_tree(self):
+        g = rustworkx.PyGraph()
+        g.extend_from_edge_list([(0, 1), (0, 2), (1, 3), (1, 4), (2, 5), (2, 6)])
+        self.assertEqual(
+            sorted_edges(rustworkx.bridges(g)),
+            {(0, 1), (0, 2), (1, 3), (1, 4), (2, 5), (2, 6)},
+        )

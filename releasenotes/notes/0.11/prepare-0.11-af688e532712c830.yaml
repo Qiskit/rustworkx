@@ -70,11 +70,11 @@ features:
 
 fixes:
   - |
-    Fixed an issue with the :func:`~retworkx.generators.heavy_hex_graph`,
-    :func:`~retworkx.generators.directed_heavy_hex_graph`,
-    :func:`~retworkx.generators.heavy_square_graph`,
-    and :func:`~retworkx.generators.directed_heavy_square_graph` generator
+    Fixed an issue with the :func:`~rustworkx.generators.heavy_hex_graph`,
+    :func:`~rustworkx.generators.directed_heavy_hex_graph`,
+    :func:`~rustworkx.generators.heavy_square_graph`,
+    and :func:`~rustworkx.generators.directed_heavy_square_graph` generator
     functions. When the input parameter ``d`` was set to 1 these functions
     would previously raise a ``pyo3_runtime.PanicException`` instead of
     returning the expected graph (a single node). 
-    Fixed `#452 <https://github.com/Qiskit/retworkx/issues/452>`__
+    Fixed `#452 <https://github.com/Qiskit/rustworkx/issues/452>`__

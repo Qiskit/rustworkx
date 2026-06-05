@@ -25,9 +25,10 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.10"
-      - run: pip install -U ruff==0.6.8 black~=24.8
-      - uses: dtolnay/rust-toolchain@stable
+          python-version: "3.12"
+      - run: |
+          pip install -U --group lint
+      - uses: dtolnay/rust-toolchain@1.96
         with:
           components: rustfmt, clippy
       - name: Test Build
@@ -36,10 +37,10 @@ jobs:
         run: cargo fmt --all -- --check
       - name: Clippy
         run: cargo clippy --workspace --all-targets -- -D warnings
-      - name: Black Codestyle Format
-        run: black --check --diff retworkx rustworkx retworkx tests
+      - name: Ruff Codestyle Format
+        run: ruff format --check --diff rustworkx tests
       - name: Python Lint
-        run: ruff check rustworkx retworkx setup.py tests
+        run: ruff check rustworkx setup.py tests
       - name: Check stray release notes
         run: python tools/find_stray_release_notes.py
       - name: rustworkx-core Rust Tests
@@ -60,28 +61,25 @@ jobs:
     strategy:
       matrix:
         rust: [stable]
-        python-version: [3.9, "3.10", "3.11", "3.12", "3.13"]
+        python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
         platform: [
-          { os: "macOS-13", python-architecture: "x64", rust-target: "x86_64-apple-darwin" },
+          { os: "macos-15-intel", python-architecture: "x64", rust-target: "x86_64-apple-darwin" },
           { os: "macOS-14", python-architecture: "arm64", rust-target: "aarch64-apple-darwin" },
           { os: "ubuntu-latest", python-architecture: "x64", rust-target: "x86_64-unknown-linux-gnu" },
+          { os: "ubuntu-24.04-arm", python-architecture: "arm64", rust-target: "aarch64-unknown-linux-gnu" },
           { os: "windows-latest", python-architecture: "x64", rust-target: "x86_64-pc-windows-msvc" },
         ]
         include:
           # Test minimal supported Rust version
-          - rust: 1.79.0
-            python-version: "3.10"
+          - rust: 1.85.1
+            python-version: "3.12"
             platform: { os: "ubuntu-latest", python-architecture: "x64", rust-target: "x86_64-unknown-linux-gnu" }
             msrv: "MSRV"
           # Test future versions of Rust and Python
           - rust: beta
-            python-version: "3.13" # upgrade to 3.14-dev when the release candidate is available
+            python-version: "3.14" # upgrade to 3.15-dev when the release candidate is available
             platform: { os: "ubuntu-latest", python-architecture: "x64", rust-target: "x86_64-unknown-linux-gnu" }
             msrv: "Beta"
-        # Exclude python 3.9 on arm64 until actions/setup-python#808 is resolved
-        exclude:
-          - platform: {os: "macOS-14", python-architecture: "arm64", rust-target: "aarch64-apple-darwin" }
-            python-version: 3.9
     steps:
       - uses: actions/checkout@v4
       - name: Set up Python ${{ matrix.python-version }}
@@ -96,7 +94,8 @@ jobs:
           toolchain: ${{ matrix.rust }}
           targets: ${{ matrix.platform.rust-target }}
       - name: 'Install dependencies'
-        run: python -m pip install --upgrade nox
+        run: |
+          python -m pip install -U --group testinfra
       - name: 'Install binary dependencies'
         run: sudo apt-get install -y graphviz
         if: runner.os == 'Linux'
@@ -109,7 +108,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [3.9, "3.10", "3.11", "3.12", "3.13"]
+        python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
     steps:
       - uses: actions/checkout@v4
       - name: Set up Python ${{ matrix.python-version }}
@@ -120,7 +119,8 @@ jobs:
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
       - name: 'Install dependencies'
-        run: python -m pip install --upgrade nox
+        run: |
+          python -m pip install -U --group testinfra
       - name: 'Run rustworkx stub tests'
         run: nox -estubs
   coverage:
@@ -133,7 +133,7 @@ jobs:
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
         with:
-          python-version: "3.10"
+          python-version: "3.12"
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
         with:
@@ -141,21 +141,23 @@ jobs:
       - name: Download grcov
         run: curl -L https://github.com/mozilla/grcov/releases/download/v0.8.7/grcov-x86_64-unknown-linux-gnu.tar.bz2 | tar jxf -
       - name: Install deps
-        run: pip install -U setuptools-rust networkx testtools fixtures stestr
-      - name: Build retworkx
-        run: python setup.py develop
+        run: |
+          pip install -U --group test
+      - name: Build rustworkx
+        run: pip install .
         env:
+          MATURIN_PEP517_ARGS: "--profile dev"
           CARGO_INCREMENTAL: 0
           RUSTFLAGS: "-Cinstrument-coverage"
-          LLVM_PROFILE_FILE: "retworkx-%p-%m.profraw"
+          LLVM_PROFILE_FILE: "rustworkx-%p-%m.profraw"
       - name: Run tests
         run: cd tests && stestr run && cd ..
         env:
-          LLVM_PROFILE_FILE: "retworkx-%p-%m.profraw"
+          LLVM_PROFILE_FILE: "rustworkx-%p-%m.profraw"
       - name: Run grcov
         run: |
           set -e
-          mv tests/retworkx*profraw .
+          mv tests/rustworkx*profraw .
           ./grcov . --binary-path ./target/debug/ -s . -t lcov --branch --ignore-not-existing --ignore "/*" -o ./coveralls.lcov
       - uses: actions/upload-artifact@v4
         with:
@@ -179,13 +181,14 @@ jobs:
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
         with:
-          python-version: "3.10"
+          python-version: "3.12"
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
       - name: Install binary deps
         run: sudo apt-get install -y graphviz
       - name: Install deps
-        run: pip install -U nox
+        run: |
+          pip install -U --group testinfra
       - name: Build Docs
         run: nox -e docs
       - uses: actions/upload-artifact@v4

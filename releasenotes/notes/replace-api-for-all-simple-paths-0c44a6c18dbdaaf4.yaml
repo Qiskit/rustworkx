@@ -1,0 +1,4 @@
+other:
+  - |
+    Avoid unnecessary hashing operations in `rustworkx.all_simple_paths` with
+    multiple targets, improving performance for the use case.

@@ -12,12 +12,12 @@
 from .visit import BFSVisitor, DFSVisitor, DijkstraVisitor
 from types import GenericAlias
 from typing import (
-    Callable,
     final,
     Any,
     Generic,
     overload,
 )
+from collections.abc import Callable
 from collections.abc import (
     Iterable,
     Iterator,
@@ -67,6 +67,30 @@ class ColoringStrategy:
     Degree: Any
     Saturation: Any
     IndependentSet: Any
+
+@final
+class GraphMLDomain:
+    Node: GraphMLDomain
+    Edge: GraphMLDomain
+    Graph: GraphMLDomain
+    All: GraphMLDomain
+
+@final
+class GraphMLType:
+    Boolean: GraphMLType
+    Int: GraphMLType
+    Float: GraphMLType
+    Double: GraphMLType
+    String: GraphMLType
+    Long: GraphMLType
+
+@final
+class GraphMLKey:
+    id: str
+    domain: GraphMLDomain
+    name: str
+    ty: GraphMLType
+    default: Any
 
 # Cartesian product
 
@@ -165,6 +189,40 @@ def graph_degree_centrality(
     graph: PyGraph[_S, _T],
     /,
 ) -> CentralityMapping: ...
+def graph_group_degree_centrality(
+    graph: PyGraph[_S, _T],
+    group: list[int],
+    /,
+) -> float: ...
+def digraph_group_degree_centrality(
+    graph: PyDiGraph[_S, _T],
+    group: list[int],
+    /,
+) -> float: ...
+def graph_group_closeness_centrality(
+    graph: PyGraph[_S, _T],
+    group: list[int],
+    /,
+) -> float: ...
+def digraph_group_closeness_centrality(
+    graph: PyDiGraph[_S, _T],
+    group: list[int],
+    /,
+) -> float: ...
+def graph_group_betweenness_centrality(
+    graph: PyGraph[_S, _T],
+    group: list[int],
+    /,
+    normalized: bool = ...,
+    parallel_threshold: int = ...,
+) -> float: ...
+def digraph_group_betweenness_centrality(
+    graph: PyDiGraph[_S, _T],
+    group: list[int],
+    /,
+    normalized: bool = ...,
+    parallel_threshold: int = ...,
+) -> float: ...
 def digraph_katz_centrality(
     graph: PyDiGraph[_S, _T],
     /,
@@ -219,6 +277,8 @@ def number_strongly_connected_components(graph: PyDiGraph, /) -> int: ...
 def number_weakly_connected_components(graph: PyDiGraph, /) -> int: ...
 def node_connected_component(graph: PyGraph, node: int, /) -> set[int]: ...
 def strongly_connected_components(graph: PyDiGraph, /) -> list[list[int]]: ...
+def digraph_condensation(graph: PyDiGraph, /, sccs: list[int] | None = ...) -> PyDiGraph: ...
+def graph_condensation(graph: PyDiGraph, /) -> PyGraph: ...
 def weakly_connected_components(graph: PyDiGraph, /) -> list[set[int]]: ...
 def digraph_adjacency_matrix(
     graph: PyDiGraph[_S, _T],
@@ -227,6 +287,7 @@ def digraph_adjacency_matrix(
     default_weight: float = ...,
     null_value: float = ...,
     parallel_edge: str = ...,
+    node_list: Sequence[int] | None = ...,
 ) -> npt.NDArray[np.float64]: ...
 def graph_adjacency_matrix(
     graph: PyGraph[_S, _T],
@@ -235,6 +296,7 @@ def graph_adjacency_matrix(
     default_weight: float = ...,
     null_value: float = ...,
     parallel_edge: str = ...,
+    node_list: Sequence[int] | None = ...,
 ) -> npt.NDArray[np.float64]: ...
 def cycle_basis(graph: PyGraph, /, root: int | None = ...) -> list[list[int]]: ...
 def cycle_basis_edges(graph: PyGraph, /, root: int | None = ...) -> list[list[int]]: ...
@@ -260,7 +322,7 @@ def local_complement(
 def digraph_all_simple_paths(
     graph: PyDiGraph,
     origin: int,
-    to: int,
+    to: int | Iterable[int],
     /,
     min_depth: int | None = ...,
     cutoff: int | None = ...,
@@ -268,7 +330,7 @@ def digraph_all_simple_paths(
 def graph_all_simple_paths(
     graph: PyGraph,
     origin: int,
-    to: int,
+    to: int | Iterable[int],
     /,
     min_depth: int | None = ...,
     cutoff: int | None = ...,
@@ -350,6 +412,7 @@ def layers(
     /,
     index_output: bool = ...,
 ) -> list[list[_S]] | list[list[int]]: ...
+
 @final
 class TopologicalSorter:
     def __init__(
@@ -537,6 +600,32 @@ def graph_spring_layout(
     seed: int | None = ...,
     /,
 ) -> Pos2DMapping: ...
+def digraph_kamada_kawai_layout(
+    graph: PyDiGraph[_S, _T],
+    pos: dict[int, tuple[float, float]] | None = ...,
+    fixed: set[int] | None = ...,
+    weight_fn: Callable[[_T], float] | None = ...,
+    default_weight: float = ...,
+    epsilon: float = ...,
+    max_outer: int = ...,
+    max_inner: int = ...,
+    scale: float = ...,
+    center: tuple[float, float] | None = ...,
+    /,
+) -> Pos2DMapping: ...
+def graph_kamada_kawai_layout(
+    graph: PyGraph[_S, _T],
+    pos: dict[int, tuple[float, float]] | None = ...,
+    fixed: set[int] | None = ...,
+    weight_fn: Callable[[_T], float] | None = ...,
+    default_weight: float = ...,
+    epsilon: float = ...,
+    max_outer: int = ...,
+    max_inner: int = ...,
+    scale: float = ...,
+    center: tuple[float, float] | None = ...,
+    /,
+) -> Pos2DMapping: ...
 
 # Line graph
 
@@ -596,6 +685,12 @@ def is_planar(graph: PyGraph, /) -> bool: ...
 
 # Random Graph
 
+def random_regular_graph(
+    num_nodes: int,
+    degree: int,
+    /,
+    seed: int | None = ...,
+) -> PyGraph: ...
 def directed_gnm_random_graph(
     num_nodes: int,
     num_edges: int,
@@ -684,6 +779,20 @@ def read_graphml(
     /,
     compression: str | None = ...,
 ) -> list[PyGraph | PyDiGraph]: ...
+def graph_write_graphml(
+    graph: PyGraph,
+    path: str,
+    /,
+    keys: list[GraphMLKey] | None = ...,
+    compression: str | None = ...,
+) -> None: ...
+def digraph_write_graphml(
+    graph: PyDiGraph,
+    path: str,
+    /,
+    keys: list[GraphMLKey] | None = ...,
+    compression: str | None = ...,
+) -> None: ...
 def digraph_node_link_json(
     graph: PyDiGraph[_S, _T],
     /,
@@ -712,6 +821,34 @@ def from_node_link_json_file(
     node_attrs: Callable[[dict[str, str]], _S] | None = ...,
     edge_attrs: Callable[[dict[str, str]], _T] | None = ...,
 ) -> PyDiGraph[_S, _T] | PyGraph[_S, _T]: ...
+def from_dot(
+    dot_str: str,
+) -> PyDiGraph[_S, _T] | PyGraph[_S, _T]: ...
+def read_matrix_market(contents: str) -> PyGraph | PyDiGraph: ...
+def read_matrix_market_file(path: str) -> PyGraph | PyDiGraph: ...
+def graph_write_matrix_market(
+    graph: PyGraph,
+    /,
+    path: str | None = ...,
+) -> str | None: ...
+def digraph_write_matrix_market(
+    graph: PyDiGraph,
+    /,
+    path: str | None = ...,
+) -> str | None: ...
+
+# Geometry
+
+def hyperbolic_greedy_routing(
+    graph: PyGraph[_S, _T],
+    pos: list[list[float]],
+    source: int,
+    destination: int,
+) -> tuple[list[int], float] | None: ...
+def hyperbolic_greedy_success_rate(
+    graph: PyGraph[_S, _T],
+    pos: list[list[float]],
+) -> float: ...
 
 # Shortest Path
 
@@ -969,6 +1106,21 @@ def graph_all_shortest_paths(
     weight_fn: Callable[[_T], float] | None = ...,
     default_weight: float = ...,
 ) -> list[list[int]]: ...
+def graph_single_source_all_shortest_paths(
+    graph: PyGraph[_S, _T],
+    source: int,
+    /,
+    weight_fn: Callable[[_T], float] | None = ...,
+    default_weight: float = 1.0,
+) -> dict[int, list[list[int]]]: ...
+def digraph_single_source_all_shortest_paths(
+    graph: PyDiGraph[_S, _T],
+    source: int,
+    /,
+    weight_fn: Callable[[_T], float] | None = ...,
+    default_weight: float = 1.0,
+    as_undirected: bool = False,
+) -> dict[int, list[list[int]]]: ...
 
 # Tensor Product
 
@@ -1005,6 +1157,18 @@ _BFSVisitor = TypeVar("_BFSVisitor", bound=BFSVisitor, default=BFSVisitor)
 _DFSVisitor = TypeVar("_DFSVisitor", bound=DFSVisitor, default=DFSVisitor)
 _DijkstraVisitor = TypeVar("_DijkstraVisitor", bound=DijkstraVisitor, default=DijkstraVisitor)
 
+def digraph_generate_random_path(
+    graph: PyDiGraph,
+    source: int,
+    length: int,
+    seed: int | None = None,
+) -> Sequence[int]: ...
+def graph_generate_random_path(
+    graph: PyGraph,
+    source: int,
+    length: int,
+    seed: int | None = None,
+) -> Sequence[int]: ...
 def digraph_bfs_search(
     graph: PyDiGraph,
     source: Sequence[int] | None = ...,
@@ -1025,6 +1189,14 @@ def graph_dfs_search(
     source: Sequence[int] | None = ...,
     visitor: _DFSVisitor | None = ...,
 ) -> None: ...
+def digraph_bfs_layers(
+    digraph: PyDiGraph,
+    sources: Sequence[int] | None = ...,
+) -> list[list[int]]: ...
+def graph_bfs_layers(
+    graph: PyGraph,
+    sources: Sequence[int] | None = ...,
+) -> list[list[int]]: ...
 def digraph_dijkstra_search(
     graph: PyDiGraph,
     source: Sequence[int] | None = ...,
@@ -1094,7 +1266,7 @@ def dominance_frontiers(graph: PyDiGraph[_S, _T], start_node: int, /) -> dict[in
 
 _T_co = TypeVar("_T_co", covariant=True, default=Any)
 
-class _RustworkxCustomVecIter(Generic[_T_co], Sequence[_T_co], ABC):
+class _RustworkxCustomVecIter(Sequence[_T_co], ABC, Generic[_T_co]):
     def __init__(self) -> None: ...
     def __eq__(self, other: object) -> bool: ...
     @overload
@@ -1112,7 +1284,7 @@ class _RustworkxCustomVecIter(Generic[_T_co], Sequence[_T_co], ABC):
     def __iter__(self) -> Iterator[_T_co]: ...
     def __reversed__(self) -> Iterator[_T_co]: ...
 
-class _RustworkxCustomHashMapIter(Generic[_S, _T_co], Mapping[_S, _T_co], ABC):
+class _RustworkxCustomHashMapIter(Mapping[_S, _T_co], ABC, Generic[_S, _T_co]):
     def __init__(self) -> None: ...
     def items(self) -> ItemsView[_S, _T_co]: ...
     def keys(self) -> KeysView[_S]: ...
@@ -1143,13 +1315,13 @@ class AllPairsPathLengthMapping(_RustworkxCustomHashMapIter[int, PathLengthMappi
 class AllPairsPathMapping(_RustworkxCustomHashMapIter[int, PathMapping]): ...
 
 @final
-class BFSSuccessors(Generic[_T_co], _RustworkxCustomVecIter[tuple[_T_co, list[_T_co]]]): ...
+class BFSSuccessors(_RustworkxCustomVecIter[tuple[_T_co, list[_T_co]]], Generic[_T_co]): ...
 
 @final
-class BFSPredecessors(Generic[_T_co], _RustworkxCustomVecIter[tuple[_T_co, list[_T_co]]]): ...
+class BFSPredecessors(_RustworkxCustomVecIter[tuple[_T_co, list[_T_co]]], Generic[_T_co]): ...
 
 @final
-class EdgeIndexMap(Generic[_T_co], _RustworkxCustomHashMapIter[int, tuple[int, int, _T_co]]): ...
+class EdgeIndexMap(_RustworkxCustomHashMapIter[int, tuple[int, int, _T_co]], Generic[_T_co]): ...
 
 @final
 class EdgeIndices(_RustworkxCustomVecIter[int]): ...
@@ -1176,7 +1348,7 @@ class NodesCountMapping(_RustworkxCustomHashMapIter[int, int]): ...
 class Pos2DMapping(_RustworkxCustomHashMapIter[int, tuple[float, float]]): ...
 
 @final
-class WeightedEdgeList(Generic[_T_co], _RustworkxCustomVecIter[tuple[int, int, _T_co]]): ...
+class WeightedEdgeList(_RustworkxCustomVecIter[tuple[int, int, _T_co]], Generic[_T_co]): ...
 
 @final
 class CentralityMapping(_RustworkxCustomHashMapIter[int, float]): ...
@@ -1239,7 +1411,7 @@ class PyGraph(Generic[_S, _T]):
         /,
         weight_combo_fn: Callable[[_T, _T], _T] | None = ...,
     ) -> int: ...
-    def copy(self) -> PyGraph[_S, _T]: ...
+    def copy(self) -> Self: ...
     def degree(self, node: int, /) -> int: ...
     def edge_index_map(self) -> EdgeIndexMap[_T]: ...
     def edge_indices(self) -> EdgeIndices: ...
@@ -1297,6 +1469,8 @@ class PyGraph(Generic[_S, _T]):
         comment: str | None = ...,
         deliminator: str | None = ...,
         labels: bool = ...,
+        multigraph: bool = ...,
+        allow_self_loops: bool = ...,
     ) -> PyGraph: ...
     def remove_edge(self, node_a: int, node_b: int, /) -> None: ...
     def remove_edge_from_index(self, edge: int, /) -> None: ...
@@ -1304,6 +1478,9 @@ class PyGraph(Generic[_S, _T]):
     def remove_node(self, node: int, /) -> None: ...
     def remove_nodes_from(self, index_list: Iterable[int], /) -> None: ...
     def subgraph(self, nodes: Sequence[int], /, preserve_attrs: bool = ...) -> PyGraph[_S, _T]: ...
+    def subgraph_with_nodemap(
+        self, nodes: Sequence[int], /, preserve_attrs: bool = ...
+    ) -> tuple[PyGraph[_S, _T], NodeMap]: ...
     def substitute_node_with_subgraph(
         self,
         node: int,
@@ -1313,14 +1490,24 @@ class PyGraph(Generic[_S, _T]):
         node_filter: Callable[[_S], bool] | None = ...,
         edge_weight_map: Callable[[_T], _T] | None = ...,
     ) -> NodeMap: ...
+    @overload
     def to_dot(
         self,
         /,
         node_attr: Callable[[_S], dict[str, str]] | None = ...,
         edge_attr: Callable[[_T], dict[str, str]] | None = ...,
         graph_attr: dict[str, str] | None = ...,
-        filename: str | None = None,
-    ) -> str | None: ...
+        filename: None = ...,
+    ) -> str: ...
+    @overload
+    def to_dot(
+        self,
+        /,
+        node_attr: Callable[[_S], dict[str, str]] | None = ...,
+        edge_attr: Callable[[_T], dict[str, str]] | None = ...,
+        graph_attr: dict[str, str] | None = ...,
+        filename: str = ...,
+    ) -> None: ...
     def to_directed(self) -> PyDiGraph[_S, _T]: ...
     def update_edge(
         self,
@@ -1397,7 +1584,8 @@ class PyDiGraph(Generic[_S, _T]):
         check_cycle: bool | None = ...,
         weight_combo_fn: Callable[[_T, _T], _T] | None = ...,
     ) -> int: ...
-    def copy(self) -> PyDiGraph[_S, _T]: ...
+    def can_contract_without_cycle(self, nodes: Sequence[int], /) -> bool: ...
+    def copy(self) -> Self: ...
     def edge_index_map(self) -> EdgeIndexMap[_T]: ...
     def edge_indices(self) -> EdgeIndices: ...
     def edge_indices_from_endpoints(self, node_a: int, node_b: int) -> EdgeIndices: ...
@@ -1477,6 +1665,8 @@ class PyDiGraph(Generic[_S, _T]):
         comment: str | None = ...,
         deliminator: str | None = ...,
         labels: bool = ...,
+        multigraph: bool = ...,
+        allow_self_loops: bool = ...,
     ) -> PyDiGraph: ...
     def remove_edge(self, parent: int, child: int, /) -> None: ...
     def remove_edge_from_index(self, edge: int, /) -> None: ...
@@ -1502,6 +1692,9 @@ class PyDiGraph(Generic[_S, _T]):
     def subgraph(
         self, nodes: Sequence[int], /, preserve_attrs: bool = ...
     ) -> PyDiGraph[_S, _T]: ...
+    def subgraph_with_nodemap(
+        self, nodes: Sequence[int], /, preserve_attrs: bool = ...
+    ) -> tuple[PyDiGraph[_S, _T], NodeMap]: ...
     def substitute_node_with_subgraph(
         self,
         node: int,
@@ -1513,14 +1706,24 @@ class PyDiGraph(Generic[_S, _T]):
     ) -> NodeMap: ...
     def successor_indices(self, node: int, /) -> NodeIndices: ...
     def successors(self, node: int, /) -> list[_S]: ...
+    @overload
     def to_dot(
         self,
         /,
         node_attr: Callable[[_S], dict[str, str]] | None = ...,
         edge_attr: Callable[[_T], dict[str, str]] | None = ...,
         graph_attr: dict[str, str] | None = ...,
-        filename: str | None = None,
-    ) -> str | None: ...
+        filename: None = ...,
+    ) -> str: ...
+    @overload
+    def to_dot(
+        self,
+        /,
+        node_attr: Callable[[_S], dict[str, str]] | None = ...,
+        edge_attr: Callable[[_T], dict[str, str]] | None = ...,
+        graph_attr: dict[str, str] | None = ...,
+        filename: str = ...,
+    ) -> None: ...
     def to_undirected(
         self,
         /,

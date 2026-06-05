@@ -1,0 +1,5 @@
+---
+fixes:
+  - |
+    Fixed a bug in `~rustworkx.bridges`  that missed all bridges connected to the root
+    node. The bug was introduced with the addition of the function in version 0.14.0.

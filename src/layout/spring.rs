@@ -17,16 +17,16 @@ use std::iter::Iterator;
 
 use hashbrown::{HashMap, HashSet};
 
-use pyo3::exceptions::PyValueError;
+use pyo3::exceptions::{PyRuntimeError, PyValueError};
 use pyo3::prelude::*;
 
+use petgraph::EdgeType;
 use petgraph::graph::NodeIndex;
 use petgraph::prelude::*;
 use petgraph::visit::{IntoEdgeReferences, NodeIndexable};
-use petgraph::EdgeType;
 
-use rand::distributions::{Distribution, Uniform};
 use rand::prelude::*;
+use rand_distr::{Distribution, Uniform};
 use rand_pcg::Pcg64;
 
 use crate::StablePyGraph;
@@ -307,7 +307,7 @@ pub fn spring_layout<Ty>(
     adaptive_cooling: Option<bool>,
     num_iter: Option<usize>,
     tol: Option<f64>,
-    weight_fn: Option<PyObject>,
+    weight_fn: Option<Py<PyAny>>,
     default_weight: f64,
     scale: Option<f64>,
     center: Option<Point>,
@@ -322,10 +322,11 @@ where
 
     let mut rng: Pcg64 = match seed {
         Some(seed) => Pcg64::seed_from_u64(seed),
-        None => Pcg64::from_entropy(),
+        None => Pcg64::from_os_rng(),
     };
 
-    let dist = Uniform::new(0.0, 1.0);
+    let dist = Uniform::new(0.0, 1.0)
+        .map_err(|_| PyRuntimeError::new_err("Error creating uniform distribution"))?;
 
     let pos = pos.unwrap_or_default();
     let mut vpos: Vec<Point> = (0..graph.node_bound())

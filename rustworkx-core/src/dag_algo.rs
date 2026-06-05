@@ -21,13 +21,13 @@ use hashbrown::{HashMap, HashSet};
 use std::fmt::Debug;
 use std::mem::swap;
 
+use petgraph::Directed;
 use petgraph::algo;
 use petgraph::data::DataMap;
 use petgraph::visit::{
     EdgeRef, GraphBase, GraphProp, IntoEdgesDirected, IntoNeighborsDirected, IntoNodeIdentifiers,
     NodeCount, NodeIndexable, Visitable,
 };
-use petgraph::Directed;
 
 use num_traits::{Num, Zero};
 
@@ -58,8 +58,8 @@ impl<E: Error> Display for TopologicalSortError<E> {
             TopologicalSortError::CycleOrBadInitialState => {
                 write!(f, "At least one initial node is reachable from another")
             }
-            TopologicalSortError::KeyError(ref e) => {
-                write!(f, "The key callback failed with: {:?}", e)
+            TopologicalSortError::KeyError(e) => {
+                write!(f, "The key callback failed with: {e:?}")
             }
         }
     }
@@ -420,12 +420,11 @@ where
             self.first_iter = false;
             for node in &self.cur_layer {
                 if self.graph.to_index(*node) >= self.graph.node_bound() {
-                    panic!("Node {:#?} is not present in the graph.", node);
+                    panic!("Node {node:#?} is not present in the graph.");
                 }
                 if self.cycle_check.contains(node) {
                     return Some(Err(LayersError(format!(
-                        "An invalid first layer was provided: {:#?} appears more than once.",
-                        node
+                        "An invalid first layer was provided: {node:#?} appears more than once."
                     ))));
                 }
                 self.cycle_check.insert(*node);
@@ -436,7 +435,7 @@ where
         } else {
             for node in &self.cur_layer {
                 if self.graph.to_index(*node) >= self.graph.node_bound() {
-                    panic!("Node {:#?} is not present in the graph.", node);
+                    panic!("Node {node:#?} is not present in the graph.");
                 }
                 let children = self
                     .graph
@@ -589,17 +588,15 @@ where
         };
     }
 
+    let mut colors = Vec::new();
     for node in nodes {
         if let Some(is_match) = filter_fn(node)? {
+            colors.clear();
             let raw_edges = graph.edges_directed(node, petgraph::Direction::Outgoing);
 
-            // Remove all edges that yield errors from color_fn
-            let colors = raw_edges
-                .map(|edge| color_fn(edge.id()))
-                .collect::<Result<Vec<Option<usize>>, _>>()?;
-
-            // Remove null edges from color_fn
-            let colors = colors.into_iter().flatten().collect::<Vec<usize>>();
+            for color in raw_edges.filter_map(|edge| color_fn(edge.id()).transpose()) {
+                colors.push(color?);
+            }
 
             match (colors.len(), is_match) {
                 (1, true) => {
@@ -639,13 +636,13 @@ where
                     }
                 }
                 _ => {
-                    for color in colors {
-                        ensure_vector_has_index!(pending_list, block_id, color);
-                        if let Some(color_block_id) = block_id[color] {
-                            block_list[color_block_id].append(&mut pending_list[color]);
+                    for color in &colors {
+                        ensure_vector_has_index!(pending_list, block_id, *color);
+                        if let Some(color_block_id) = block_id[*color] {
+                            block_list[color_block_id].append(&mut pending_list[*color]);
                         }
-                        block_id[color] = None;
-                        pending_list[color].clear();
+                        block_id[*color] = None;
+                        pending_list[*color].clear();
                     }
                 }
             }

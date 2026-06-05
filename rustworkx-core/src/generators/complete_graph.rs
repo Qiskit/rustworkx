@@ -13,8 +13,8 @@
 use petgraph::data::{Build, Create};
 use petgraph::visit::{Data, GraphProp, NodeIndexable};
 
-use super::utils::get_num_nodes;
 use super::InvalidInputError;
+use super::utils::get_num_nodes;
 
 /// Generate a complete graph
 ///
@@ -95,8 +95,8 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::generators::complete_graph;
     use crate::generators::InvalidInputError;
+    use crate::generators::complete_graph;
     use crate::petgraph::graph::{DiGraph, NodeIndex, UnGraph};
     use crate::petgraph::visit::EdgeRef;
 

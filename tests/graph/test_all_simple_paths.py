@@ -232,6 +232,54 @@ class TestGraphAllSimplePaths(unittest.TestCase):
         dag.add_node(1)
         self.assertRaises(TypeError, rustworkx.graph_all_simple_paths, (dag, 0, 1))
 
+    def test_all_simple_paths_multiple_targets(self):
+        graph = rustworkx.generators.path_graph(4)
+        graph.add_edge(1, 3, None)
+        paths = rustworkx.graph_all_simple_paths(graph, 0, [2, 3])
+        expected = [[0, 1, 2], [0, 1, 3], [0, 1, 2, 3], [0, 1, 3, 2]]
+        self.assertEqual(len(expected), len(paths))
+        for i in expected:
+            self.assertIn(i, paths)
+
+    def test_all_simple_paths_multiple_targets_iterables(self):
+        graph = rustworkx.generators.path_graph(4)
+        graph.add_edge(1, 3, None)
+        paths = rustworkx.graph_all_simple_paths(graph, 0, iter([2, 3]))
+        expected = [[0, 1, 2], [0, 1, 3], [0, 1, 2, 3], [0, 1, 3, 2]]
+        self.assertEqual(len(expected), len(paths))
+        for i in expected:
+            self.assertIn(i, paths)
+
+    def test_all_simple_paths_multiple_targets_invalid_type(self):
+        graph = rustworkx.generators.path_graph(4)
+        with self.assertRaises(TypeError):
+            rustworkx.graph_all_simple_paths(graph, 0, [2, "a"])
+
+    def test_all_simple_paths_multiple_targets_invalid_index(self):
+        graph = rustworkx.generators.path_graph(4)
+        paths = rustworkx.graph_all_simple_paths(graph, 0, [3, 100])
+        expected = [[0, 1, 2, 3]]
+        self.assertEqual(expected, paths)
+
+    def test_all_simple_paths_on_nontrivial_graph(self):
+        graph = rustworkx.PyGraph()
+        graph.add_nodes_from(range(6))
+        graph.add_edges_from_no_data([(0, 1), (0, 5), (1, 2), (1, 5), (2, 3), (3, 4), (4, 5)])
+        paths = rustworkx.graph_all_simple_paths(graph, 0, [2, 3])
+        expected = [
+            [0, 1, 2],
+            [0, 1, 2, 3],
+            [0, 1, 5, 4, 3],
+            [0, 1, 5, 4, 3, 2],
+            [0, 5, 1, 2],
+            [0, 5, 1, 2, 3],
+            [0, 5, 4, 3],
+            [0, 5, 4, 3, 2],
+        ]
+        self.assertEqual(len(expected), len(paths))
+        for i in expected:
+            self.assertIn(i, paths)
+
 
 class TestGraphAllSimplePathsAllPairs(unittest.TestCase):
     def setUp(self):

@@ -3,25 +3,11 @@ import nox
 nox.options.reuse_existing_virtualenvs = True
 nox.options.stop_on_first_error = True
 
-deps = [
-  "setuptools-rust",
-  "fixtures",
-  "testtools>=2.5.0",
-  "networkx>=2.5",
-  "stestr>=4.1",
-]
+pyproject = nox.project.load_toml("pyproject.toml")
 
-lint_deps = [
-    "black~=24.8",
-    "ruff~=0.6",
-    "setuptools-rust",
-    "typos~=1.28",
-]
-
-stubs_deps = [
-    "mypy==1.11.2",
-    "typing-extensions>=4.4",
-]
+deps = nox.project.dependency_groups(pyproject, "test")
+lint_deps = nox.project.dependency_groups(pyproject, "lint")
+stubs_deps = nox.project.dependency_groups(pyproject, "stubs")
 
 def install_rustworkx(session):
     session.install(*deps)
@@ -39,37 +25,60 @@ def base_test(session):
 def test(session):
     base_test(session)
 
-@nox.session(python=["3.9", "3.10", "3.11", "3.12"])
+@nox.session(python=["3.10", "3.11", "3.12", "3.13"])
 def test_with_version(session):
     base_test(session)
 
 @nox.session(python=["3"])
 def lint(session):
-    black(session)
+    format(session)
     typos(session)
     session.install(*lint_deps)
-    session.run("ruff", "check", "rustworkx", "retworkx", "setup.py")
+    session.run("ruff", "check", "rustworkx", "setup.py")
     session.run("cargo", "fmt", "--all", "--", "--check", external=True)
     session.run("python", "tools/find_stray_release_notes.py")
 
-@nox.session(python=["3"])
+# For uv environments, we keep the virtualenvs separate to avoid conflicts
+@nox.session(python=["3"], venv_backend="uv", reuse_venv=False, default=False)
 def docs(session):
-    install_rustworkx(session)
-    session.install("-r", "docs/source/requirements.txt", "-c", "constraints.txt")
-    session.run("python", "-m", "ipykernel", "install", "--user")
-    session.run("jupyter", "kernelspec", "list")
+    session.env["UV_PROJECT_ENVIRONMENT"] = session.virtualenv.location
+    session.env["UV_FROZEN"] = "1"
+    session.env["MATURIN_PEP517_ARGS"] = "--profile dev"
+    session.run("uv", "sync", "--only-group", "docs")
+    session.install(".")
+    session.run(
+        "uv", "run", "--", "python", "-m", "ipykernel", "install", "--user"
+    )
+    session.run("uv", "run", "jupyter", "kernelspec", "list")
     session.chdir("docs")
-    session.run("sphinx-build", "-W", "-d", "build/.doctrees", "-b", "html", "source", "build/html", *session.posargs)
+    session.run(
+        "uv",
+        "run",
+        "sphinx-build",
+        "-W",
+        "-d",
+        "build/.doctrees",
+        "-b",
+        "html",
+        "source",
+        "build/html",
+        *session.posargs,
+    )
 
-@nox.session(python=["3"])
+@nox.session(python=["3"], default=False)
 def docs_clean(session):
     session.chdir("docs")
     session.run("rm", "-rf", "build", "source/apiref", external=True)
 
 @nox.session(python=["3"])
+def format(session):
+    session.install(*[d for d in lint_deps if "ruff" in d])
+    session.run("ruff", "format", "rustworkx", "tests", *session.posargs)
+
+@nox.session(python=["3"])
 def black(session):
-    session.install(*[d for d in lint_deps if "black" in d])
-    session.run("black", "rustworkx", "tests", "retworkx", *session.posargs)
+    # Legacy black formatting session is aliased
+    format(session)
 
 @nox.session(python=["3"])
 def typos(session):
@@ -82,4 +91,4 @@ def stubs(session):
     install_rustworkx(session)
     session.install(*stubs_deps)
     session.chdir("tests")
-    session.run("python", "-m", "mypy.stubtest", "--concise", "rustworkx")
+    session.run("python", "-m", "mypy.stubtest", "--concise", "rustworkx", "--allowlist", "stubs_allowlist.txt")

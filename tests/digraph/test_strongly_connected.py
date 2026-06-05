@@ -100,3 +100,78 @@ class TestStronglyConnected(unittest.TestCase):
         graph = rustworkx.PyDiGraph()
         with self.assertRaises(rustworkx.NullGraph):
             rustworkx.is_strongly_connected(graph)
+
+
+class TestCondensation(unittest.TestCase):
+    def setUp(self):
+        # Set up the graph
+        self.graph = rustworkx.PyDiGraph()
+        self.node_a = self.graph.add_node("a")
+        self.node_b = self.graph.add_node("b")
+        self.node_c = self.graph.add_node("c")
+        self.node_d = self.graph.add_node("d")
+        self.node_e = self.graph.add_node("e")
+        self.node_f = self.graph.add_node("f")
+        self.node_g = self.graph.add_node("g")
+        self.node_h = self.graph.add_node("h")
+
+        # Add edges
+        self.graph.add_edge(self.node_a, self.node_b, "a->b")
+        self.graph.add_edge(self.node_b, self.node_c, "b->c")
+        self.graph.add_edge(self.node_c, self.node_d, "c->d")
+        self.graph.add_edge(self.node_d, self.node_a, "d->a")  # Cycle: a -> b -> c -> d -> a
+
+        self.graph.add_edge(self.node_b, self.node_e, "b->e")
+
+        self.graph.add_edge(self.node_e, self.node_f, "e->f")
+        self.graph.add_edge(self.node_f, self.node_g, "f->g")
+        self.graph.add_edge(self.node_g, self.node_h, "g->h")
+        self.graph.add_edge(self.node_h, self.node_e, "h->e")  # Cycle: e -> f -> g -> h -> e
+
+    def test_condensation(self):
+        # Call the condensation function
+        condensed_graph = rustworkx.condensation(self.graph)
+
+        # Check the number of nodes (two cycles should be condensed into one node each)
+        self.assertEqual(
+            len(condensed_graph.node_indices()), 2
+        )  # [SCC(a, b, c, d), SCC(e, f, g, h)]
+
+        # Check the number of edges
+        self.assertEqual(
+            len(condensed_graph.edge_indices()), 1
+        )  # Edge: [SCC(a, b, c, d)] -> [SCC(e, f, g, h)]
+
+        # Check the contents of the condensed nodes
+        nodes = list(condensed_graph.nodes())
+        scc1 = nodes[0]
+        scc2 = nodes[1]
+        self.assertTrue(set(scc1) == {"a", "b", "c", "d"} or set(scc2) == {"a", "b", "c", "d"})
+        self.assertTrue(set(scc1) == {"e", "f", "g", "h"} or set(scc2) == {"e", "f", "g", "h"})
+
+        # Check the contents of the edge
+        weight = condensed_graph.edges()[0]
+        self.assertIn("b->e", weight)  # Ensure the correct edge remains in the condensed graph
+
+    def test_condensation_with_sccs_argument(self):
+        # Compute SCCs manually
+        sccs = rustworkx.strongly_connected_components(self.graph)
+        # Call condensation with explicit sccs argument
+        condensed_graph = rustworkx.condensation(self.graph, sccs=sccs)
+        condensed_graph.attrs["node_map"]
+
+        # Check the number of nodes (should match SCC count)
+        self.assertEqual(len(condensed_graph.node_indices()), len(sccs))
+
+        # Check the number of edges
+        self.assertEqual(len(condensed_graph.edge_indices()), 1)
+
+        # Check the contents of the condensed nodes
+        nodes = list(condensed_graph.nodes())
+        scc_sets = [set(n) for n in nodes]
+        self.assertIn(set(["a", "b", "c", "d"]), scc_sets)
+        self.assertIn(set(["e", "f", "g", "h"]), scc_sets)
+
+        # Check the contents of the edge
+        weight = condensed_graph.edges()[0]
+        self.assertIn("b->e", weight)

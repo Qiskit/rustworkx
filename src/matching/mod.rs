@@ -15,8 +15,8 @@ use rustworkx_core::max_weight_matching as mwm;
 
 use hashbrown::HashSet;
 
-use pyo3::prelude::*;
 use pyo3::Python;
+use pyo3::prelude::*;
 
 use petgraph::graph::NodeIndex;
 use petgraph::prelude::*;
@@ -73,7 +73,7 @@ pub fn max_weight_matching(
     py: Python,
     graph: &graph::PyGraph,
     max_cardinality: bool,
-    weight_fn: Option<PyObject>,
+    weight_fn: Option<Py<PyAny>>,
     default_weight: i128,
     verify_optimum: bool,
 ) -> PyResult<HashSet<(usize, usize)>> {

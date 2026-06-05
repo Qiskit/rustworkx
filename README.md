@@ -6,7 +6,7 @@
 [![](https://img.shields.io/github/release/Qiskit/rustworkx.svg?style=popout-square)](https://github.com/Qiskit/rustworkx/releases)
 [![](https://img.shields.io/pypi/dm/rustworkx.svg?style=popout-square)](https://pypi.org/project/rustworkx/)
 [![Coverage Status](https://coveralls.io/repos/github/Qiskit/rustworkx/badge.svg?branch=main)](https://coveralls.io/github/Qiskit/rustworkx?branch=main)
-[![Minimum rustc 1.79](https://img.shields.io/badge/rustc-1.79+-blue.svg)](https://rust-lang.github.io/rfcs/2495-min-rust-version.html)
+[![Minimum rustc 1.85](https://img.shields.io/badge/rustc-1.85+-blue.svg)](https://rust-lang.github.io/rfcs/2495-min-rust-version.html)
 [![DOI](https://joss.theoj.org/papers/10.21105/joss.03968/status.svg)](https://doi.org/10.21105/joss.03968)
 [![arXiv](https://img.shields.io/badge/arXiv-2110.15221-b31b1b.svg)](https://arxiv.org/abs/2110.15221)
 [![Zenodo](https://img.shields.io/badge/Zenodo-10.5281%2Fzenodo.5879859-blue)](https://doi.org/10.5281/zenodo.5879859)
@@ -59,7 +59,7 @@ environment.
 
 If there are no precompiled binaries published for your system you'll have to
 build the package from source. However, to be able to build the package
-from the published source package you need to have Rust >= 1.70 installed (and
+from the published source package you need to have Rust >= 1.85 installed (and
 also [cargo](https://doc.rust-lang.org/cargo/) which is normally included with
 rust) You can use [rustup](https://rustup.rs/) (a cross platform installer for
 rust) to make this simpler, or rely on
@@ -77,10 +77,10 @@ it just as it would if there was a prebuilt binary available.
 > [!NOTE]  
 > To build from source you will need to ensure you have pip >=19.0.0
 installed, which supports PEP-517, or that you have manually installed
-`setuptools-rust` prior to running `pip install rustworkx`. If you receive an
-error about `setuptools-rust` not being found you should upgrade pip with
-`pip install -U pip` or manually install `setuptools-rust` with
-`pip install setuptools-rust` and try again.
+`maturin>=1.9` prior to running `pip install rustworkx`. If you receive an
+error about `maturin` not being found you should upgrade pip with
+`pip install -U pip` or manually install `maturin` with
+`pip install -U maturin>=1.9` and try again.
 
 ### Optional dependencies
 
@@ -93,12 +93,21 @@ installed with `pip install matplotlib` or when you're installing rustworkx with
 function `rustworkx.visualization.graphviz_drawer` first you will need to install
 graphviz, instructions for this can be found here:
 https://graphviz.org/download/#executable-packages. Then you
-will need to install the [pillow](https://python-pillow.org/) Python library.
+will need to install the [pillow](https://python-pillow.github.io/) Python library.
 This can be done either with `pip install pillow` or when installing rustworkx
 with `pip install 'rustworkx[graphviz]'`.
 
 If you would like to install all the optional Python dependencies when you
 install rustworkx you can use `pip install 'rustworkx[all]'` to do this.
+
+### Conda Ecosystem
+
+Community-supported binaries are published to [conda-forge](https://anaconda.org/conda-forge/rustworkx). Although
+unofficial, they can be helpful for users of the `conda` ecosystem (including `mamba`, `micromamba`, and `pixi`). To install, simply run:
+
+```
+conda install -c conda-forge rustworkx
+```
 
 ## Authors and Citation
 
@@ -125,7 +134,7 @@ git clone https://github.com/Qiskit/rustworkx.git
 ```
 
 rustworkx uses [PyO3](https://github.com/pyo3/pyo3) and
-[setuptools-rust](https://github.com/PyO3/setuptools-rust) to build the
+[maturin](https://github.com/PyO3/maturin) to build the
 python interface, which enables using standard python tooling to work. So,
 assuming you have rust installed, you can easily install rustworkx into your
 python environment using `pip`. Once you have a local clone of the repo, change
@@ -157,17 +166,14 @@ changes reflected in your python environment.
 ### Develop Mode
 
 If you'd like to build rustworkx in debug mode and use an interactive debugger
-while working on a change you can use `python setup.py develop` to build
-and install rustworkx in develop mode. This will build rustworkx without
-optimizations and include debuginfo which can be handy for debugging. Do note
-that installing rustworkx this way will be significantly slower then using
-`pip install` and should only be used for debugging/development.
+while working on a change you can run `maturin build --profile dev` to build rustworkx
+and then install the wheel with `pip`.
+This will build rustworkx without optimizations and include debuginfo
+when running `pip install`. That can be handy for debugging.
 
 > [!TIP]
 > It's worth noting that `pip install -e` does not work, as it will link the python
-packaging shim to your python environment but not build the rustworkx binary. If
-you want to build rustworkx in debug mode you have to use
-`python setup.py develop`.
+packaging shim to your python environment but not build the rustworkx binary.
 
 ## Project history
 

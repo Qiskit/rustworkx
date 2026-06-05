@@ -17,9 +17,9 @@ use std::{hash::Hash, ops::AddAssign};
 use priority_queue::PriorityQueue;
 
 use petgraph::{
+    Undirected,
     stable_graph::StableUnGraph,
     visit::{Bfs, EdgeCount, EdgeRef, GraphProp, IntoEdges, IntoNodeIdentifiers, NodeCount},
-    Undirected,
 };
 
 type StCut<K, T> = Option<((T, T), K)>;
@@ -39,7 +39,7 @@ where
     F: FnMut(G::EdgeRef) -> K,
     K: Copy + Ord + Zero + AddAssign,
 {
-    let mut pq = PriorityQueue::<G::NodeId, K, ahash::RandomState>::from(
+    let mut pq = PriorityQueue::<G::NodeId, K, foldhash::fast::RandomState>::from(
         graph
             .node_identifiers()
             .map(|nx| (nx, K::zero()))

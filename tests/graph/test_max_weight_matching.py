@@ -450,6 +450,51 @@ class TestMaxWeightMatching(unittest.TestCase):
             match_dict_to_set(expected),
         )
 
+    def test_determinism_five_node_max_cardinality(self):
+        graph = rustworkx.PyGraph()
+        graph.extend_from_weighted_edge_list(
+            [
+                (0, 1, 1),
+                (0, 4, 2),
+                (1, 4, 2),
+                (2, 4, 1),
+                (3, 4, 1),
+            ]
+        )
+
+        initial_result = rustworkx.max_weight_matching(
+            graph, max_cardinality=True, weight_fn=lambda x: x, verify_optimum=True
+        )
+        for i in range(1, 10):
+            with self.subTest(f"Nondeterminism check {i}"):
+                result = rustworkx.max_weight_matching(
+                    graph, max_cardinality=True, weight_fn=lambda x: x, verify_optimum=True
+                )
+                self.compare_match_sets(result, initial_result)
+
+    def test_determinism_six_node_no_max_cardinality(self):
+        graph = rustworkx.PyGraph()
+        graph.extend_from_weighted_edge_list(
+            [
+                (0, 1, 1),
+                (0, 2, 2),
+                (0, 5, 2),
+                (2, 5, 1),
+                (3, 5, 1),
+                (4, 5, 1),
+            ]
+        )
+
+        initial_result = rustworkx.max_weight_matching(
+            graph, weight_fn=lambda x: x, verify_optimum=True
+        )
+        for i in range(1, 10):
+            with self.subTest(f"Nondeterminism check {i}"):
+                result = rustworkx.max_weight_matching(
+                    graph, weight_fn=lambda x: x, verify_optimum=True
+                )
+                self.compare_match_sets(result, initial_result)
+
     def test_gnp_random_against_networkx(self):
         for i in range(1024):
             with self.subTest(i=i):

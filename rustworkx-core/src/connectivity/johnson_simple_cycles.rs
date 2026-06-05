@@ -10,11 +10,12 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-use ahash::RandomState;
+use foldhash::fast::RandomState;
 use hashbrown::{HashMap, HashSet};
 use indexmap::IndexSet;
 use std::hash::Hash;
 
+use petgraph::Directed;
 use petgraph::algo::kosaraju_scc;
 use petgraph::stable_graph::{NodeIndex, StableDiGraph};
 use petgraph::visit::{
@@ -22,7 +23,6 @@ use petgraph::visit::{
     IntoNeighborsDirected, IntoNodeReferences, NodeCount, NodeFiltered, NodeIndexable, NodeRef,
     Visitable,
 };
-use petgraph::Directed;
 
 use crate::graph_ext::EdgeFindable;
 
@@ -93,7 +93,7 @@ fn unblock(
 #[allow(clippy::too_many_arguments)]
 fn process_stack(
     start_node: NodeIndex,
-    stack: &mut Vec<(NodeIndex, IndexSet<NodeIndex, ahash::RandomState>)>,
+    stack: &mut Vec<(NodeIndex, IndexSet<NodeIndex, foldhash::fast::RandomState>)>,
     path: &mut Vec<NodeIndex>,
     closed: &mut HashSet<NodeIndex>,
     blocked: &mut HashSet<NodeIndex>,
@@ -117,7 +117,7 @@ fn process_stack(
                     next_node,
                     subgraph
                         .neighbors(next_node)
-                        .collect::<IndexSet<NodeIndex, ahash::RandomState>>(),
+                        .collect::<IndexSet<NodeIndex, foldhash::fast::RandomState>>(),
                 ));
                 closed.remove(&next_node);
                 blocked.insert(next_node);
@@ -188,8 +188,7 @@ impl SimpleCycleIter {
             + NodeIndexable,
         <G as GraphBase>::NodeId: Hash + Eq,
     {
-        if self.self_cycles.is_some() {
-            let self_cycles = self.self_cycles.as_mut().unwrap();
+        if let Some(self_cycles) = &mut self.self_cycles {
             let cycle_node = self_cycles.pop().unwrap();
             if self_cycles.is_empty() {
                 self.self_cycles = None;
@@ -197,7 +196,7 @@ impl SimpleCycleIter {
             return Some(vec![cycle_node]);
         }
         // Restore previous state if it exists
-        let mut stack: Vec<(NodeIndex, IndexSet<NodeIndex, ahash::RandomState>)> =
+        let mut stack: Vec<(NodeIndex, IndexSet<NodeIndex, foldhash::fast::RandomState>)> =
             std::mem::take(&mut self.stack);
         let mut path: Vec<NodeIndex> = std::mem::take(&mut self.path);
         let mut closed: HashSet<NodeIndex> = std::mem::take(&mut self.closed);
@@ -258,7 +257,7 @@ impl SimpleCycleIter {
                 self.start_node,
                 subgraph
                     .neighbors(self.start_node)
-                    .collect::<IndexSet<NodeIndex, ahash::RandomState>>(),
+                    .collect::<IndexSet<NodeIndex, foldhash::fast::RandomState>>(),
             )];
             if let Some(res) = process_stack(
                 self.start_node,

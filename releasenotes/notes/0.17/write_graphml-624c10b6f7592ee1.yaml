@@ -1,0 +1,9 @@
+---
+features:
+  - |
+    Added a new function :func:`~rustworkx.write_graphml` that writes
+    a list of rustworkx graph objects to a file in GraphML format.
+other:
+  - |
+    When graphs read with :func:`~rustworkx.read_graphml` include IDs,
+    these IDs are now stored in the graph attributes.

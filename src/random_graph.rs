@@ -12,13 +12,13 @@
 
 #![allow(clippy::float_cmp)]
 
-use crate::{digraph, graph, StablePyGraph};
+use crate::{StablePyGraph, digraph, graph};
 
-use pyo3::exceptions::PyValueError;
-use pyo3::prelude::*;
-use pyo3::types::PyDict;
 use pyo3::IntoPyObjectExt;
 use pyo3::Python;
+use pyo3::exceptions::{PyRuntimeError, PyValueError};
+use pyo3::prelude::*;
+use pyo3::types::PyDict;
 
 use petgraph::algo;
 use petgraph::graph::NodeIndex;
@@ -26,11 +26,58 @@ use petgraph::prelude::*;
 
 use numpy::PyReadonlyArray2;
 
-use rand::distributions::{Distribution, Uniform};
 use rand::prelude::*;
+use rand_distr::{Distribution, Uniform};
 use rand_pcg::Pcg64;
 
 use rustworkx_core::generators as core_generators;
+
+/// Return a random undirected :math:`d`-regular graph on :math:`n` nodes.
+///
+/// A regular graph is a graph where each node has the same number of neighbors,
+/// i.e., the same degree :math:`d`. The product :math:`n d` must be even.
+/// The resulting graph has no self-loops or parallel edges.
+///
+/// This implementation is based on the networkx function ``random_regular_graph`` [1]_.
+///
+/// :param int num_nodes: The number of nodes to create in the graph
+/// :param int degree: The degree that every node will have
+/// :param int seed: An optional seed to use for the random number generator
+///
+/// :return: A PyGraph object
+/// :rtype: PyGraph
+///
+/// .. [1] https://github.com/networkx/networkx/blob/networkx-2.4/networkx/generators/random_graphs.py#L495
+#[pyfunction]
+#[pyo3(text_signature = "(num_nodes, degree, /, seed=None)", signature = (num_nodes, degree, seed=None))]
+pub fn random_regular_graph(
+    py: Python,
+    num_nodes: usize,
+    degree: usize,
+    seed: Option<u64>,
+) -> PyResult<graph::PyGraph> {
+    let default_fn = || py.None();
+    let mut graph: StablePyGraph<Undirected> = match core_generators::random_regular_graph(
+        num_nodes, degree, seed, default_fn, default_fn,
+    ) {
+        Ok(graph) => graph,
+        Err(_) => {
+            return Err(PyValueError::new_err("num_nodes or degree invalid input"));
+        }
+    };
+    // Core function does not put index into node payload, so for backwards compat
+    // in the python interface, we do it here.
+    let nodes: Vec<NodeIndex> = graph.node_indices().collect();
+    for node in nodes.iter() {
+        graph[*node] = node.index().into_py_any(py)?;
+    }
+    Ok(graph::PyGraph {
+        graph,
+        node_removed: false,
+        multigraph: true,
+        attrs: py.None(),
+    })
+}
 
 /// Return a :math:`G_{np}` directed random graph, also known as an
 /// Erdős-Rényi graph or a binomial graph.
@@ -81,7 +128,7 @@ pub fn directed_gnp_random_graph(
         Err(_) => {
             return Err(PyValueError::new_err(
                 "num_nodes or probability invalid input",
-            ))
+            ));
         }
     };
     // Core function does not put index into node payload, so for backwards compat
@@ -149,7 +196,7 @@ pub fn undirected_gnp_random_graph(
         Err(_) => {
             return Err(PyValueError::new_err(
                 "num_nodes or probability invalid input",
-            ))
+            ));
         }
     };
     // Core function does not put index into node payload, so for backwards compat
@@ -203,7 +250,7 @@ pub fn directed_gnm_random_graph(
             Err(_) => {
                 return Err(PyValueError::new_err(
                     "num_nodes or num_edges invalid input",
-                ))
+                ));
             }
         };
     // Core function does not put index into node payload, so for backwards compat
@@ -259,7 +306,7 @@ pub fn undirected_gnm_random_graph(
             Err(_) => {
                 return Err(PyValueError::new_err(
                     "num_nodes or num_edges invalid input",
-                ))
+                ));
             }
         };
     // Core function does not put index into node payload, so for backwards compat
@@ -319,7 +366,7 @@ pub fn directed_sbm_random_graph<'p>(
         Err(_) => {
             return Err(PyValueError::new_err(
                 "invalid blocks or probabilities input",
-            ))
+            ));
         }
     };
     Ok(digraph::PyDiGraph {
@@ -375,7 +422,7 @@ pub fn undirected_sbm_random_graph<'p>(
         Err(_) => {
             return Err(PyValueError::new_err(
                 "invalid blocks or probabilities input",
-            ))
+            ));
         }
     };
     Ok(graph::PyGraph {
@@ -453,10 +500,11 @@ pub fn random_geometric_graph(
     let radius_p = pnorm(radius, p);
     let mut rng: Pcg64 = match seed {
         Some(seed) => Pcg64::seed_from_u64(seed),
-        None => Pcg64::from_entropy(),
+        None => Pcg64::from_os_rng(),
     };
 
-    let dist = Uniform::new(0.0, 1.0);
+    let dist = Uniform::new(0.0, 1.0)
+        .map_err(|_| PyRuntimeError::new_err("Error creating uniform distribution"))?;
     let pos = pos.unwrap_or_else(|| {
         (0..num_nodes)
             .map(|_| (0..dim).map(|_| dist.sample(&mut rng)).collect())
@@ -600,7 +648,7 @@ pub fn barabasi_albert_graph(
         Err(_) => {
             return Err(PyValueError::new_err(
                 "initial_graph has either less nodes than m, or more nodes than n",
-            ))
+            ));
         }
     };
     Ok(graph::PyGraph {
@@ -662,7 +710,7 @@ pub fn directed_barabasi_albert_graph(
         Err(_) => {
             return Err(PyValueError::new_err(
                 "initial_graph has either less nodes than m, or more nodes than n",
-            ))
+            ));
         }
     };
     Ok(digraph::PyDiGraph {
@@ -715,7 +763,7 @@ pub fn directed_random_bipartite_graph(
         Err(_) => {
             return Err(PyValueError::new_err(
                 "invalid number of nodes num_l_nodes + num_r_nodes or invalid probability",
-            ))
+            ));
         }
     };
     Ok(digraph::PyDiGraph {
@@ -768,7 +816,7 @@ pub fn undirected_random_bipartite_graph(
         Err(_) => {
             return Err(PyValueError::new_err(
                 "invalid number of nodes num_l_nodes + num_r_nodes or invalid probability",
-            ))
+            ));
         }
     };
     Ok(graph::PyGraph {

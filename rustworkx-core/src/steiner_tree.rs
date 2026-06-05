@@ -17,13 +17,13 @@ use std::hash::Hash;
 use hashbrown::{HashMap, HashSet};
 use rayon::prelude::*;
 
+use petgraph::Undirected;
 use petgraph::stable_graph::{EdgeIndex, NodeIndex, StableGraph};
 use petgraph::unionfind::UnionFind;
 use petgraph::visit::{
     EdgeCount, EdgeIndexable, EdgeRef, GraphProp, IntoEdgeReferences, IntoEdges,
     IntoNodeIdentifiers, IntoNodeReferences, NodeCount, NodeIndexable, NodeRef, Visitable,
 };
-use petgraph::Undirected;
 
 use crate::dictmap::*;
 use crate::shortest_path::dijkstra;

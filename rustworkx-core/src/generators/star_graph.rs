@@ -13,8 +13,8 @@
 use petgraph::data::{Build, Create};
 use petgraph::visit::{Data, NodeIndexable};
 
-use super::utils::get_num_nodes;
 use super::InvalidInputError;
+use super::utils::get_num_nodes;
 
 /// Generate a star graph
 ///
@@ -112,8 +112,8 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::generators::star_graph;
     use crate::generators::InvalidInputError;
+    use crate::generators::star_graph;
     use crate::petgraph;
     use crate::petgraph::visit::EdgeRef;
 
