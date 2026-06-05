@@ -54,11 +54,9 @@ fn inner_cycle_basis<G, T>(
 where
     G: NodeCount,
     G: IntoNeighbors,
-    G: IntoEdges,
     G: IntoNodeIdentifiers,
     T: Eq + Hash,
     G::NodeId: Eq + Hash,
-    G::EdgeId: Eq + Hash,
 {
     let mut root_node: Option<G::NodeId> = root;
     let mut graph_nodes: HashSet<G::NodeId> = graph.node_identifiers().collect();
@@ -152,10 +150,9 @@ where
 pub fn cycle_basis<G>(graph: G, root: Option<G::NodeId>) -> Vec<Vec<G::NodeId>>
 where
     G: NodeCount,
-    G: IntoEdges,
+    G: IntoNeighbors,
     G: IntoNodeIdentifiers,
     G::NodeId: Eq + Hash,
-    G::EdgeId: Eq + Hash,
 {
     // inner_cycle_basis(graph, root, false).unwrap_nodes()
     let self_cycle_filter = |_graph: G, node: G::NodeId| -> Vec<G::NodeId> { vec![node] };

@@ -54,8 +54,3 @@ features:
       display(cycles_edges)
       # Print the data retrieved from the graph.
       display(cycle_info)
-upgrade:
-  - |
-    The trait bounds of :func:`rustworkx_core::connectivity::cycle_basis` now 
-    requires graphs to be compatible with the trait ``IntoEdges`` and that the 
-    attribute ``EdgeId`` conforms to `Eq` and `Hash`.
