@@ -348,6 +348,15 @@ def adjacency_matrix(
     null_value: float = ...,
     node_list: Sequence[int] | None = ...,
 ) -> npt.NDArray[np.float64]: ...
+def biadjacency_matrix(
+    graph: PyGraph[_S, _T] | PyDiGraph[_S, _T],
+    row_order: Sequence[int],
+    column_order: Sequence[int],
+    weight_fn: Callable[[_T], float] | None = ...,
+    default_weight: float = ...,
+    format: str = ...,
+    parallel_edge: str = ...,
+) -> Any: ...
 def all_simple_paths(
     graph: PyGraph | PyDiGraph,
     from_: int,

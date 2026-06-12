@@ -15,6 +15,11 @@ import unittest
 import rustworkx
 import numpy as np
 
+try:
+    import scipy.sparse as sp
+except ModuleNotFoundError:
+    sp = None
+
 
 class TestDAGAdjacencyMatrix(unittest.TestCase):
     def test_single_neighbor(self):
@@ -379,49 +384,43 @@ class TestFromComplexAdjacencyMatrix(unittest.TestCase):
             )
 
 
+@unittest.skipIf(sp is None, "SciPy is not installed, skipping biadjacency matrix tests")
 class TestDiGraphBiadjacencyMatrix(unittest.TestCase):
     def test_from_biadjacency_matrix(self):
-        input_array = np.array(
+        matrix = sp.csr_array(
             [[1.0, 0.0, 2.0], [0.0, 3.0, 0.0]],
             dtype=np.float64,
         )
-        graph = rustworkx.PyDiGraph.from_biadjacency_matrix(input_array)
+        graph = rustworkx.PyDiGraph.from_biadjacency_matrix(matrix)
         self.assertEqual(5, graph.num_nodes())
         self.assertEqual(
             [(0, 2, 1.0), (0, 4, 2.0), (1, 3, 3.0)],
             graph.weighted_edge_list(),
         )
 
-    def test_from_biadjacency_matrix_non_zero_null(self):
-        input_array = np.array(
-            [[np.inf, -1.0], [2.0, np.inf], [np.inf, 4.0]],
-            dtype=np.float64,
-        )
-        graph = rustworkx.PyDiGraph.from_biadjacency_matrix(input_array, null_value=np.inf)
-        self.assertEqual(5, graph.num_nodes())
+    def test_from_biadjacency_matrix_integer_dtype(self):
+        matrix = sp.csr_array([[1, 0], [0, 2]], dtype=np.int64)
+        graph = rustworkx.PyDiGraph.from_biadjacency_matrix(matrix)
         self.assertEqual(
-            [(0, 4, -1.0), (1, 3, 2.0), (2, 4, 4.0)],
+            [(0, 2, 1.0), (1, 3, 2.0)],
             graph.weighted_edge_list(),
         )
 
-    def test_from_biadjacency_matrix_nan_null(self):
-        input_array = np.array(
-            [[np.nan, 1.0], [2.0, np.nan]],
-            dtype=np.float64,
-        )
-        graph = rustworkx.PyDiGraph.from_biadjacency_matrix(input_array, null_value=np.nan)
+    def test_from_biadjacency_matrix_stored_zero(self):
+        matrix = sp.coo_array(([0.0], ([0], [1])), shape=(1, 2))
+        graph = rustworkx.PyDiGraph.from_biadjacency_matrix(matrix)
         self.assertEqual(
-            [(0, 3, 1.0), (1, 2, 2.0)],
+            [(0, 2, 0.0)],
             graph.weighted_edge_list(),
         )
 
-    def test_from_biadjacency_matrix_different_dtype(self):
-        input_array = np.array([[1, 0], [0, 1]], dtype=np.int64)
+    def test_from_biadjacency_matrix_rejects_dense_input(self):
+        input_array = np.array([[1.0, 0.0], [0.0, 1.0]], dtype=np.float64)
         with self.assertRaises(TypeError):
             rustworkx.PyDiGraph.from_biadjacency_matrix(input_array)
 
     def test_from_biadjacency_matrix_empty_dimension(self):
-        graph = rustworkx.PyDiGraph.from_biadjacency_matrix(np.zeros((3, 0), dtype=np.float64))
+        graph = rustworkx.PyDiGraph.from_biadjacency_matrix(sp.csr_array((3, 0), dtype=np.float64))
         self.assertEqual(3, graph.num_nodes())
         self.assertEqual([], graph.weighted_edge_list())
 
@@ -434,7 +433,17 @@ class TestDiGraphBiadjacencyMatrix(unittest.TestCase):
             graph, [0, 1], [2, 3, 4], weight_fn=lambda x: x
         )
         expected = np.array([[1.0, 0.0, 2.0], [0.0, 3.0, 0.0]])
-        np.testing.assert_array_equal(expected, matrix)
+        self.assertTrue(sp.issparse(matrix))
+        self.assertEqual("csr", matrix.format)
+        np.testing.assert_array_equal(expected, matrix.toarray())
+
+    def test_universal_biadjacency_matrix(self):
+        graph = rustworkx.PyDiGraph()
+        graph.add_nodes_from(range(2))
+        graph.add_edge(0, 1, 5.0)
+
+        matrix = rustworkx.biadjacency_matrix(graph, [0], [1], weight_fn=float)
+        np.testing.assert_array_equal([[5.0]], matrix.toarray())
 
     def test_biadjacency_matrix_ignores_incoming_edges(self):
         graph = rustworkx.PyDiGraph()
@@ -442,7 +451,7 @@ class TestDiGraphBiadjacencyMatrix(unittest.TestCase):
         graph.add_edge(2, 0, 7.0)
 
         matrix = rustworkx.digraph_biadjacency_matrix(graph, [0], [2], weight_fn=float)
-        np.testing.assert_array_equal([[0.0]], matrix)
+        np.testing.assert_array_equal([[0.0]], matrix.toarray())
 
     def test_biadjacency_matrix_parallel_edges(self):
         graph = rustworkx.PyDiGraph()
@@ -452,12 +461,12 @@ class TestDiGraphBiadjacencyMatrix(unittest.TestCase):
         max_matrix = rustworkx.digraph_biadjacency_matrix(
             graph, [0], [1], weight_fn=float, parallel_edge="max"
         )
-        np.testing.assert_array_equal([[3.0]], max_matrix)
+        np.testing.assert_array_equal([[3.0]], max_matrix.toarray())
 
         min_matrix = rustworkx.digraph_biadjacency_matrix(
             graph, [0], [1], weight_fn=float, parallel_edge="min"
         )
-        np.testing.assert_array_equal([[1.0]], min_matrix)
+        np.testing.assert_array_equal([[1.0]], min_matrix.toarray())
 
     def test_biadjacency_matrix_default_weight(self):
         graph = rustworkx.PyDiGraph()
@@ -465,17 +474,18 @@ class TestDiGraphBiadjacencyMatrix(unittest.TestCase):
         graph.add_edge(0, 1, "edge")
 
         matrix = rustworkx.digraph_biadjacency_matrix(graph, [0], [1], default_weight=5.0)
-        np.testing.assert_array_equal([[5.0]], matrix)
+        np.testing.assert_array_equal([[5.0]], matrix.toarray())
 
-    def test_biadjacency_matrix_null_value(self):
+    def test_biadjacency_matrix_sparse_format(self):
         graph = rustworkx.PyDiGraph()
         graph.add_nodes_from(range(3))
         graph.add_edge(0, 1, 2.0)
 
         matrix = rustworkx.digraph_biadjacency_matrix(
-            graph, [0], [1, 2], weight_fn=float, null_value=-1.0
+            graph, [0], [1, 2], weight_fn=float, format="coo"
         )
-        np.testing.assert_array_equal([[2.0, -1.0]], matrix)
+        self.assertEqual("coo", matrix.format)
+        np.testing.assert_array_equal([[2.0, 0.0]], matrix.toarray())
 
     def test_biadjacency_matrix_invalid_parallel_edge(self):
         graph = rustworkx.PyDiGraph()
@@ -516,7 +526,7 @@ class TestDiGraphBiadjacencyMatrix(unittest.TestCase):
         graph.remove_node(1)
 
         matrix = rustworkx.digraph_biadjacency_matrix(graph, [0], [3], weight_fn=float)
-        np.testing.assert_array_equal([[7.0]], matrix)
+        np.testing.assert_array_equal([[7.0]], matrix.toarray())
 
         with self.assertRaises(ValueError):
             rustworkx.digraph_biadjacency_matrix(graph, [0], [1])
@@ -526,4 +536,5 @@ class TestDiGraphBiadjacencyMatrix(unittest.TestCase):
         graph.add_nodes_from(range(2))
 
         matrix = rustworkx.digraph_biadjacency_matrix(graph, [0], [])
+        self.assertTrue(sp.issparse(matrix))
         self.assertEqual((1, 0), matrix.shape)
