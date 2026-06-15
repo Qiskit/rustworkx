@@ -127,7 +127,7 @@ fn xml_attribute<'a>(element: &'a BytesStart<'a>, key: &[u8]) -> Result<String, 
         })
 }
 
-#[pyclass(eq, name = "GraphMLDomain")]
+#[pyclass(eq, name = "GraphMLDomain", from_py_object)]
 #[derive(Clone, Copy, PartialEq)]
 pub enum Domain {
     Node,
@@ -150,7 +150,7 @@ impl TryFrom<&[u8]> for Domain {
     }
 }
 
-#[pyclass(eq, name = "GraphMLType")]
+#[pyclass(eq, name = "GraphMLType", from_py_object)]
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum Type {
     Boolean,
@@ -250,8 +250,10 @@ impl Value {
     }
 }
 
-impl<'py> FromPyObject<'py> for Value {
-    fn extract_bound(ob: &Bound<'py, PyAny>) -> PyResult<Self> {
+impl<'py> FromPyObject<'_, 'py> for Value {
+    type Error = PyErr;
+
+    fn extract(ob: Borrowed<'_, 'py, PyAny>) -> PyResult<Self> {
         if let Ok(value) = ob.extract::<bool>() {
             return Ok(Value::Boolean(value));
         }
@@ -1265,7 +1267,7 @@ pub fn read_graphml<'py>(
 }
 
 /// Key definition: id, domain, name of the key, type, default value.
-#[pyclass(name = "GraphMLKey")]
+#[pyclass(name = "GraphMLKey", skip_from_py_object)]
 pub struct KeySpec {
     #[pyo3(get)]
     id: String,
