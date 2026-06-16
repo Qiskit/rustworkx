@@ -28,7 +28,6 @@ license = "Apache-2.0"
 foldhash = "0.1.5"
 fixedbitset = "0.5.7"
 indexmap = { version = ">=1.9, <3", features = ["rayon"] }
-ndarray = { version = "0.16.1", features = ["rayon"] }
 num-traits = "0.2"
 petgraph = "0.8"
 numpy = "0.29"
@@ -45,7 +44,7 @@ crate-type = ["cdylib"]
 foldhash.workspace = true
 fixedbitset.workspace = true
 indexmap.workspace = true
-ndarray.workspace = true
+ndarray = { version = "0.16.1", features = ["rayon"] }
 ndarray-stats = "0.6.0"
 num-bigint = "0.4"
 num-complex = "0.4"
