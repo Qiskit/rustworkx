@@ -9,5 +9,5 @@ features:
       import rustworkx
       from rustworkx.visualization import mpl_draw
 
-      graph = rustworkx.random_regular_graph(15, 5, 42)
+      graph = rustworkx.random_regular_graph(22, 7, 42)
       mpl_draw(graph)
