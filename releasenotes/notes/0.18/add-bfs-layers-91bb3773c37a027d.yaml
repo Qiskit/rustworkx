@@ -2,8 +2,8 @@
 ---
 features:
   - |
-    Added a new :func:`~rustworkx.bfs_layers` (and it's per type variants
-    :func:`~rustworkx.graph_bfs_layers` and :func:`~rustworkx.digraph_bfs_layers`)
+    Added a new :func:`.bfs_layers` (and it's per type variants
+    :func:`.graph_bfs_layers` and :func:`.digraph_bfs_layers`)
     that performs a breadth-first search traversal and returns the nodes organized
     by their BFS layers/levels. Each layer contains all nodes at the same distance
     from the source nodes. This is useful for analyzing graph structure and 
@@ -20,3 +20,10 @@ features:
       # Print the layers of the graph in BFS-order relative to 0 (source)
       layers = rustworkx.bfs_layers(graph, sources=[0])
       print('BFS layers:', layers)
+features_core:
+  - |
+    Added a new function ``bfs_laters`` to the ``rustworkx-core::traversal``
+    module that performs a a breadth-first search traversal and returns the nodes organized
+    by their BFS layers/levels. Each layer contains all nodes at the same distance
+    from the source nodes. This is useful for analyzing graph structure and
+    implementing algorithms that need to process nodes level by level.

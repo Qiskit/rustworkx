@@ -1,0 +1,15 @@
+---
+features:
+  - |
+    Added new functions for computing group centrality measures:
+    :func:`.group_degree_centrality`, :func:`.group_closeness_centrality`,
+    and :func:`.group_betweenness_centrality`. These functions compute the centrality
+    of a group of nodes as defined by
+    `Everett & Borgatti (1999) <https://doi.org/10.1016/S0378-8733(99)00019-2>`__.
+    Each function works with both :class:`.PyGraph` and :class:`.PyDiGraph` objects.
+features_core:
+  - |
+    Added new functions ``group_degree_centrality`` ``group_closeness_centrality``
+    and ``group_betweenness_centrality`` to the ``rustworkx_core::centrality``
+    module. These functions compute the centrality of a group of nodes as defined
+    by `Everett & Borgatti (1999) <https://doi.org/10.1016/S0378-8733(99)00019-2>`__.

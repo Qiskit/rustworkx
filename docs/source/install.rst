@@ -44,10 +44,10 @@ just as it would if there was a prebuilt binary available.
 
     To build from source you will need to ensure you have pip >=19.0.0
     installed, which supports PEP-517, or that you have manually installed
-    setuptools-rust prior to running pip install rustworkx. If you receive an
-    error about ``setuptools-rust`` not being found you should upgrade pip with
-    ``pip install -U pip`` or manually install ``setuptools-rust`` with:
-    ``pip install setuptools-rust`` and try again.
+    maturin prior to running pip install rustworkx. If you receive an
+    error about ``maturin`` not being found you should upgrade pip with
+    ``pip install -U pip`` or manually install ``maturin`` with:
+    ``pip install maturin`` and try again.
 
 .. _platform-support:
 
@@ -120,11 +120,6 @@ source.
 
 
 .. _manylinux 2014: https://peps.python.org/pep-0599/>
-
-.. [#f1] Due to CI environment limitations tests for macOS arm64 are only run with
-   Python >= 3.10. The published binaries are still built and tested for all supported
-   Python versions, but the tests run on proposed changes are only run with Python >=3.10
-
 
 .. _tier-1:
 

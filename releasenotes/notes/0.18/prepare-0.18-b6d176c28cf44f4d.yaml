@@ -1,0 +1,27 @@
+---
+prelude: >
+    Rustworkx 0.18.0 is a feature release that includes a number of bugfixes
+    and new features to the library. The highlights of this release are:
+
+      * Initial support for free-threaded Python builds
+      * Performance improvements to several functions
+      * Several new algorithm functions
+
+    An important reminder that this is the first release of rustworkx that does not
+    include the legacy ``retworkx`` package. Historically, we have release ``retworkx``
+    and ``rustworkx`` at the same time, with ``retworkx`` being an alias to the same
+    rustworkx package. The legacy name for the package was marked end of life with its
+    final release being 0.17.0.
+
+    This release uses the Python Stable ABI, and will be compatible with all
+    versions from Python 3.10 onwards. The published binaries have been tested
+    with Python 3.10 to 3.14, although they will likely work with future versions
+    like 3.15.
+
+    For users building Rustworkx from source that the Python build system has switched
+    to use `maturin <https://www.maturin.rs/>`__ instead of
+    `setuptools-rust <https://setuptools-rust.readthedocs.io/en/latest/>`__.
+    Maturin is also a PEP-517 compatible builder so if using modern standard Python
+    packaging tooling there should be no intervention needed. Additionally,
+    the minimum supported Rust version for building rustworkx and rustworkx-core
+    has been raised to 1.85.
