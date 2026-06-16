@@ -36,14 +36,14 @@ use std::hash::Hash;
 /// * `graph` - The graph in which to find the basis.
 /// * `root` - Optional node index for starting the basis search. If not
 ///   specified, an arbitrary node is chosen.
-/// * `self_cycle_filter` - Specifies the behavior when a single node cycle
+/// * `self_cycle_builder` - Specifies the behavior when a single node cycle
 ///   is found.
-/// * `cycle_filter` - Specifies the behavior when a cycle is found
+/// * `cycle_builder` - Specifies the behavior when a cycle is found
 fn inner_cycle_basis<G, T, F>(
     graph: G,
     root: Option<G::NodeId>,
-    self_cycle_filter: impl Fn(G, G::NodeId) -> Vec<T>,
-    cycle_filter: F,
+    self_cycle_builder: impl Fn(G, G::NodeId) -> Vec<T>,
+    cycle_builder: F,
 ) -> Vec<Vec<T>>
 where
     G: NodeCount,
@@ -90,11 +90,11 @@ where
                     used.insert(neighbor, temp_set);
                 // A self loop:
                 } else if z == neighbor {
-                    cycles.push(self_cycle_filter(graph, z))
+                    cycles.push(self_cycle_builder(graph, z))
                 // A cycle was found:
                 } else if !used.get(&z).unwrap().contains(&neighbor) {
                     let prev_n = used.get(&neighbor).unwrap();
-                    cycles.push(cycle_filter(graph, prev_n, &pred, z, neighbor));
+                    cycles.push(cycle_builder(graph, prev_n, &pred, z, neighbor));
                     let neighbor_set: &mut HashSet<G::NodeId> = used.get_mut(&neighbor).unwrap();
                     neighbor_set.insert(z);
                 }
@@ -148,12 +148,12 @@ where
     G: IntoNodeIdentifiers,
     G::NodeId: Eq + Hash,
 {
-    let self_cycle_filter = |_graph: G, node: G::NodeId| -> Vec<G::NodeId> { vec![node] };
-    let cycle_filter = |_graph: G,
-                        prev_n: &HashSet<G::NodeId>,
-                        pred_to_node: &HashMap<G::NodeId, G::NodeId>,
-                        origin: G::NodeId,
-                        neighbor: G::NodeId|
+    let self_cycle_builder = |_graph: G, node: G::NodeId| -> Vec<G::NodeId> { vec![node] };
+    let cycle_builder = |_graph: G,
+                         prev_n: &HashSet<G::NodeId>,
+                         pred_to_node: &HashMap<G::NodeId, G::NodeId>,
+                         origin: G::NodeId,
+                         neighbor: G::NodeId|
      -> Vec<G::NodeId> {
         let mut p = pred_to_node.get(&origin).unwrap();
         // Append neighbor and z to cycle.
@@ -165,7 +165,7 @@ where
         cycle.push(*p);
         cycle
     };
-    inner_cycle_basis(graph, root, self_cycle_filter, cycle_filter)
+    inner_cycle_basis(graph, root, self_cycle_builder, cycle_builder)
 }
 
 /// Returns lists of `EdgeIndex` representing cycles which form
@@ -219,13 +219,13 @@ where
             .expect("An edge should exist between origin and target node")
     }
 
-    let self_cycle_filter =
+    let self_cycle_builder =
         |graph: G, node: G::NodeId| -> Vec<G::EdgeId> { vec![get_edge_between(graph, node, node)] };
-    let cycle_filter = |graph: G,
-                        prev_n: &HashSet<G::NodeId>,
-                        pred_to_node: &HashMap<G::NodeId, G::NodeId>,
-                        origin: G::NodeId,
-                        neighbor: G::NodeId|
+    let cycle_builder = |graph: G,
+                         prev_n: &HashSet<G::NodeId>,
+                         pred_to_node: &HashMap<G::NodeId, G::NodeId>,
+                         origin: G::NodeId,
+                         neighbor: G::NodeId|
      -> Vec<G::EdgeId> {
         let mut p = pred_to_node.get(&origin).unwrap();
         let mut cycle: Vec<G::EdgeId> = Vec::new();
@@ -249,7 +249,7 @@ where
         cycle.push(get_edge_between(graph, *p, neighbor));
         cycle
     };
-    inner_cycle_basis(graph, root, self_cycle_filter, cycle_filter)
+    inner_cycle_basis(graph, root, self_cycle_builder, cycle_builder)
 }
 
 #[cfg(test)]
