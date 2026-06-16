@@ -462,7 +462,7 @@ create_exception!(
     "Graph is not bipartite"
 );
 
-#[pymodule(gil_used = false)]
+#[pymodule]
 fn rustworkx(py: Python<'_>, m: &Bound<PyModule>) -> PyResult<()> {
     m.add("__version__", env!("CARGO_PKG_VERSION"))?;
     m.add("InvalidNode", py.get_type::<InvalidNode>())?;
