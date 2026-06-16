@@ -39,17 +39,11 @@ use std::hash::Hash;
 /// * `self_cycle_filter` - Specifies the behavior when a single node cycle
 ///   is found.
 /// * `cycle_filter` - Specifies the behavior when a cycle is found
-fn inner_cycle_basis<G, T>(
+fn inner_cycle_basis<G, T, F>(
     graph: G,
     root: Option<G::NodeId>,
     self_cycle_filter: impl Fn(G, G::NodeId) -> Vec<T>,
-    cycle_filter: impl Fn(
-        G,
-        &HashSet<G::NodeId>,
-        &HashMap<G::NodeId, G::NodeId>,
-        G::NodeId,
-        G::NodeId,
-    ) -> Vec<T>,
+    cycle_filter: F,
 ) -> Vec<Vec<T>>
 where
     G: NodeCount,
@@ -57,6 +51,7 @@ where
     G: IntoNodeIdentifiers,
     T: Eq + Hash,
     G::NodeId: Eq + Hash,
+    F: Fn(G, &HashSet<G::NodeId>, &HashMap<G::NodeId, G::NodeId>, G::NodeId, G::NodeId) -> Vec<T>,
 {
     let mut root_node: Option<G::NodeId> = root;
     let mut graph_nodes: HashSet<G::NodeId> = graph.node_identifiers().collect();
@@ -131,7 +126,6 @@ where
 /// It may produce incorrect/unexpected results if the input graph has
 /// parallel edges.
 ///
-///
 /// Arguments:
 ///
 /// * `graph` - The graph in which to find the basis.
@@ -154,7 +148,6 @@ where
     G: IntoNodeIdentifiers,
     G::NodeId: Eq + Hash,
 {
-    // inner_cycle_basis(graph, root, false).unwrap_nodes()
     let self_cycle_filter = |_graph: G, node: G::NodeId| -> Vec<G::NodeId> { vec![node] };
     let cycle_filter = |_graph: G,
                         prev_n: &HashSet<G::NodeId>,
@@ -191,7 +184,6 @@ where
 /// It may produce incorrect/unexpected results if the input graph has
 /// parallel edges.
 ///
-///
 /// Arguments:
 ///
 /// * `graph` - The graph in which to find the basis.
@@ -227,7 +219,6 @@ where
             .expect("An edge should exist between origin and target node")
     }
 
-    // inner_cycle_basis(graph, root, false).unwrap_nodes()
     let self_cycle_filter =
         |graph: G, node: G::NodeId| -> Vec<G::EdgeId> { vec![get_edge_between(graph, node, node)] };
     let cycle_filter = |graph: G,
