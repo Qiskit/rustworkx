@@ -30,6 +30,7 @@ use hashbrown::HashSet;
 use indexmap::map::Entry;
 
 use quick_xml::Error as XmlError;
+use quick_xml::encoding::EncodingError;
 use quick_xml::events::{BytesDecl, BytesStart, BytesText, Event};
 use quick_xml::name::QName;
 use quick_xml::{Reader, Writer};
@@ -58,6 +59,13 @@ pub enum Error {
 impl From<XmlError> for Error {
     #[inline]
     fn from(e: XmlError) -> Error {
+        Error::Xml(format!("Xml document not well-formed: {e}"))
+    }
+}
+
+impl From<EncodingError> for Error {
+    #[inline]
+    fn from(e: EncodingError) -> Error {
         Error::Xml(format!("Xml document not well-formed: {e}"))
     }
 }
@@ -111,7 +119,7 @@ fn xml_attribute<'a>(element: &'a BytesStart<'a>, key: &[u8]) -> Result<String, 
             if let Ok(a) = a {
                 if a.key == QName(key) {
                     let decoded = a
-                        .unescape_value()
+                        .normalized_value(quick_xml::XmlVersion::Implicit1_0)
                         .map_err(Error::from)
                         .map(|cow_str| cow_str.into_owned());
                     return Some(decoded);
@@ -987,19 +995,23 @@ impl GraphML {
                 },
                 Event::Text(ref e) => match state {
                     State::DefaultForKey => {
-                        graphml
-                            .last_key_set_value((e.unescape()?).to_string(), domain_of_last_key)?;
+                        graphml.last_key_set_value(
+                            e.xml10_content()?.to_string(),
+                            domain_of_last_key,
+                        )?;
                     }
                     State::DataForNode => {
-                        graphml.last_node_set_data(&last_data_key, (e.unescape()?).to_string())?;
+                        graphml
+                            .last_node_set_data(&last_data_key, e.xml10_content()?.to_string())?;
                     }
                     State::DataForEdge => {
-                        graphml.last_edge_set_data(&last_data_key, (e.unescape()?).to_string())?;
+                        graphml
+                            .last_edge_set_data(&last_data_key, e.xml10_content()?.to_string())?;
                     }
                     State::DataForGraph => {
                         graphml.last_graph_set_attribute(
                             &last_data_key,
-                            (e.unescape()?).to_string(),
+                            (e.xml10_content()?).to_string(),
                         )?;
                     }
                     _ => {}
