@@ -103,7 +103,7 @@ source.
      -
    * - macOS (11 or newer)
      - arm64
-     - :ref:`tier-1` [#f1]_
+     - :ref:`tier-1`
      -
    * - Windows 64bit
      - x86_64
