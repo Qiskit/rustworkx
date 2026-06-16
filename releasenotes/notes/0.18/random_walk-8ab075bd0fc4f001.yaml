@@ -1,7 +1,7 @@
 features_core:
   - |
     Added a new function ``generate_random_path`` to the
-    ``rustworkx-core::traversal` module for returning the path
+    ``rustworkx-core::traversal`` module for returning the path
     of nodes visited during a random walk on a graph.
 features:
   - |
