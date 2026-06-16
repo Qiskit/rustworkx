@@ -262,7 +262,7 @@ fn weight_callable<'p, T>(
     default: T,
 ) -> PyResult<T>
 where
-    T: FromPyObject<'p>,
+    T: FromPyObjectOwned<'p, Error = PyErr>,
 {
     match weight_fn {
         Some(weight_fn) => {
@@ -280,7 +280,7 @@ pub fn edge_weights_from_callable<'p, T, Ty: EdgeType>(
     default_weight: T,
 ) -> PyResult<Vec<Option<T>>>
 where
-    T: FromPyObject<'p> + Copy,
+    T: FromPyObjectOwned<'p, Error = PyErr> + Copy,
 {
     let mut edge_weights: Vec<Option<T>> = Vec::with_capacity(graph.edge_bound());
     for index in 0..=graph.edge_bound() {

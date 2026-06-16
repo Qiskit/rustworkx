@@ -29,7 +29,7 @@ rayon-cond = "0.4"
 # The version here should allow a decent range, because it's used in the public API, meaning
 # downstream crates have to implicitly match us.  The range must at least be compatible with the
 # `rustworkx` Python component.
-version = ">=0.15,<0.17"
+version = ">=0.15, <0.18"
 features = ["rayon"]
 
 [dev-dependencies]

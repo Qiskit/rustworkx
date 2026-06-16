@@ -31,7 +31,7 @@ indexmap = { version = ">=1.9, <3", features = ["rayon"] }
 ndarray = { version = "0.16.1", features = ["rayon"] }
 num-traits = "0.2"
 petgraph = "0.8"
-numpy = "0.26"
+numpy = "0.29"
 rand = "0.9"
 rand_distr = "0.5"
 rand_pcg = "0.9"
@@ -71,7 +71,7 @@ version = "0.15"  # Implicitly required to match PyO3's and `petgraph`'s via cro
 features = ["rayon"]
 
 [dependencies.pyo3]
-version = "0.26"
+version = "0.29"
 features = ["abi3-py310", "extension-module", "hashbrown", "num-bigint", "num-complex", "indexmap", "py-clone"]
 
 [dependencies.sprs]
