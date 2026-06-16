@@ -44,8 +44,8 @@ crate-type = ["cdylib"]
 foldhash.workspace = true
 fixedbitset.workspace = true
 indexmap.workspace = true
-ndarray = { version = "0.16.1", features = ["rayon"] }
-ndarray-stats = "0.6.0"
+ndarray = { version = "0.17.2", features = ["rayon"] }
+ndarray-stats = "0.7.0"
 num-bigint = "0.4"
 num-complex = "0.4"
 num-traits.workspace = true
