@@ -285,7 +285,7 @@ where
 
 impl<T> PyEq<Bound<'_, PyAny>> for T
 where
-    for<'p> T: PyEq<T> + Clone + FromPyObject<'p>,
+    for<'a, 'p> T: PyEq<T> + Clone + FromPyObject<'a, 'p, Error = PyErr>,
 {
     #[inline]
     fn eq(&self, other: &Bound<PyAny>, py: Python) -> PyResult<bool> {
@@ -419,14 +419,15 @@ pub enum PySequenceIndex<'py> {
     Slice(Bound<'py, PySlice>),
 }
 
-impl<'py> FromPyObject<'py> for PySequenceIndex<'py> {
-    fn extract_bound(ob: &Bound<'py, PyAny>) -> PyResult<Self> {
+impl<'py> FromPyObject<'_, 'py> for PySequenceIndex<'py> {
+    type Error = PyErr;
+    fn extract(ob: Borrowed<'_, 'py, PyAny>) -> PyResult<Self> {
         // `slice` can't be subclassed in Python, so it's safe (and faster) to check for it exactly.
         // The `downcast_exact` check is just a pointer comparison, so while `slice` is the less
         // common input, doing that first has little-to-no impact on the speed of the `isize` path,
         // while the reverse makes `slice` inputs significantly slower.
-        if let Ok(slice) = ob.downcast_exact::<PySlice>() {
-            return Ok(Self::Slice(slice.clone()));
+        if let Ok(slice) = ob.cast_exact::<PySlice>() {
+            return Ok(Self::Slice(slice.to_owned()));
         }
         Ok(Self::Int(ob.extract()?))
     }
@@ -495,7 +496,7 @@ impl PyConvertToPyArray for Vec<(usize, usize, Py<PyAny>)> {
 macro_rules! custom_vec_iter_impl {
     ($name:ident, $iter:ident, $reversed:ident, $data:ident, $T:ty, $doc:literal) => {
         #[doc = $doc]
-        #[pyclass(module = "rustworkx", sequence)]
+        #[pyclass(module = "rustworkx", sequence, from_py_object)]
         #[derive(Clone)]
         pub struct $name {
             pub $data: Vec<$T>,
@@ -658,7 +659,7 @@ macro_rules! custom_vec_iter_impl {
         #[doc = concat!("Custom iterator class for :class:`.", stringify!($name), "`")]
         // No module because this isn't constructable from Python space, and is only exposed as an
         // implementation detail.
-        #[pyclass]
+        #[pyclass(skip_from_py_object)]
         pub struct $iter {
             inner: Option<Py<$name>>,
             index: usize,
@@ -708,7 +709,7 @@ macro_rules! custom_vec_iter_impl {
         #[doc = concat!("Custom reversed iterator class for :class:`.", stringify!($name), "`")]
         // No module because this isn't constructable from Python space, and is only exposed as an
         // implementation detail.
-        #[pyclass]
+        #[pyclass(skip_from_py_object)]
         pub struct $reversed {
             inner: Option<Py<$name>>,
             index: usize,
@@ -1171,7 +1172,7 @@ impl PyGCProtocol for RelationalCoarsestPartition {}
 
 macro_rules! py_iter_protocol_impl {
     ($name:ident, $data:ident, $T:ty) => {
-        #[pyclass(module = "rustworkx")]
+        #[pyclass(module = "rustworkx", skip_from_py_object)]
         pub struct $name {
             pub $data: Vec<$T>,
             iter_pos: usize,
@@ -1202,7 +1203,7 @@ macro_rules! custom_hash_map_iter_impl {
         $K:ty, $V:ty, $doc:literal
     ) => {
         #[doc = $doc]
-        #[pyclass(mapping, module = "rustworkx")]
+        #[pyclass(mapping, module = "rustworkx", from_py_object)]
         #[derive(Clone)]
         pub struct $name {
             pub $data: DictMap<$K, $V>,
@@ -1404,7 +1405,7 @@ impl PyGCProtocol for EdgeIndexMap {
 ///     second_target = next(edges_iter)
 ///     second_path = edges[second_target]
 ///
-#[pyclass(mapping, module = "rustworkx")]
+#[pyclass(mapping, module = "rustworkx", from_py_object)]
 #[derive(Clone)]
 pub struct PathMapping {
     pub paths: DictMap<usize, Vec<usize>>,
@@ -1550,7 +1551,7 @@ impl PyDisplay for PathMapping {
 /// return a mapping of target nodes and paths. It implements the Python
 /// mapping protocol. So you can treat the return as a read-only
 /// mapping/dict.
-#[pyclass(mapping, module = "rustworkx")]
+#[pyclass(mapping, module = "rustworkx", from_py_object)]
 #[derive(Clone)]
 pub struct MultiplePathMapping {
     pub paths: DictMap<usize, Vec<Vec<usize>>>,
