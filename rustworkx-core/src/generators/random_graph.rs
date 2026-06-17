@@ -25,6 +25,7 @@ use petgraph::visit::{
 use petgraph::{Incoming, Outgoing};
 
 use rand::prelude::*;
+use rand::rngs::SysRng;
 use rand_distr::{Distribution, Uniform};
 use rand_pcg::Pcg64;
 
@@ -97,7 +98,7 @@ where
     }
     let mut rng: Pcg64 = match seed {
         Some(seed) => Pcg64::seed_from_u64(seed),
-        None => Pcg64::from_os_rng(),
+        None => Pcg64::try_from_rng(&mut SysRng).unwrap(),
     };
 
     if (num_nodes * degree) % 2 != 0 {
@@ -262,7 +263,7 @@ where
     }
     let mut rng: Pcg64 = match seed {
         Some(seed) => Pcg64::seed_from_u64(seed),
-        None => Pcg64::from_os_rng(),
+        None => Pcg64::try_from_rng(&mut SysRng).unwrap(),
     };
     let mut graph = G::with_capacity(num_nodes, num_nodes);
     let directed = graph.is_directed();
@@ -432,7 +433,7 @@ where
 
     let mut rng: Pcg64 = match seed {
         Some(seed) => Pcg64::seed_from_u64(seed),
-        None => Pcg64::from_os_rng(),
+        None => Pcg64::try_from_rng(&mut SysRng).unwrap(),
     };
     let mut graph = G::with_capacity(num_nodes, num_edges);
     let directed = graph.is_directed();
@@ -549,7 +550,7 @@ where
     }
     let mut rng: Pcg64 = match seed {
         Some(seed) => Pcg64::seed_from_u64(seed),
-        None => Pcg64::from_os_rng(),
+        None => Pcg64::try_from_rng(&mut SysRng).unwrap(),
     };
     let mut blocks = Vec::new();
     {
@@ -681,7 +682,7 @@ where
     }
     let mut rng: Pcg64 = match seed {
         Some(seed) => Pcg64::seed_from_u64(seed),
-        None => Pcg64::from_os_rng(),
+        None => Pcg64::try_from_rng(&mut SysRng).unwrap(),
     };
     let mut graph = G::with_capacity(num_nodes, num_nodes);
 
@@ -784,7 +785,7 @@ where
     }
     let mut rng: Pcg64 = match seed {
         Some(seed) => Pcg64::seed_from_u64(seed),
-        None => Pcg64::from_os_rng(),
+        None => Pcg64::try_from_rng(&mut SysRng).unwrap(),
     };
     let mut graph = match initial_graph {
         Some(initial_graph) => initial_graph,
@@ -889,7 +890,7 @@ where
 
     let mut rng: Pcg64 = match seed {
         Some(seed) => Pcg64::seed_from_u64(seed),
-        None => Pcg64::from_os_rng(),
+        None => Pcg64::try_from_rng(&mut SysRng).unwrap(),
     };
     let mut graph = G::with_capacity(num_l_nodes + num_r_nodes, num_l_nodes + num_r_nodes);
 
@@ -991,7 +992,7 @@ where
 
     let mut rng: Pcg64 = match seed {
         Some(seed) => Pcg64::seed_from_u64(seed),
-        None => Pcg64::from_os_rng(),
+        None => Pcg64::try_from_rng(&mut SysRng).unwrap(),
     };
     let mut graph = G::with_capacity(num_nodes, num_nodes);
     if graph.is_directed() {

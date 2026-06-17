@@ -11,6 +11,7 @@
 // under the License.
 
 use rand::prelude::*;
+use rand::rngs::SysRng;
 use rand_distr::{StandardUniform, Uniform};
 use rand_pcg::Pcg64;
 use std::error::Error;
@@ -161,7 +162,7 @@ where
         // into a Vec based on the given seed
         let outer_rng: Pcg64 = match self.seed {
             Some(rng_seed) => Pcg64::seed_from_u64(rng_seed),
-            None => Pcg64::from_os_rng(),
+            None => Pcg64::try_from_rng(&mut SysRng).unwrap(),
         };
         let trial_seeds_vec: Vec<u64> = outer_rng
             .sample_iter(&StandardUniform)
