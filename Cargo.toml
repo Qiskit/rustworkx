@@ -25,7 +25,7 @@ repository = "https://github.com/Qiskit/rustworkx"
 license = "Apache-2.0"
 
 [workspace.dependencies]
-foldhash = "0.1.5"
+foldhash = "0.2.0"
 fixedbitset = "0.5.7"
 indexmap = { version = ">=1.9, <3", features = ["rayon"] }
 num-traits = "0.2"
