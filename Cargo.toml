@@ -28,13 +28,12 @@ license = "Apache-2.0"
 foldhash = "0.1.5"
 fixedbitset = "0.5.7"
 indexmap = { version = ">=1.9, <3", features = ["rayon"] }
-ndarray = { version = "0.16.1", features = ["rayon"] }
 num-traits = "0.2"
 petgraph = "0.8"
-numpy = "0.26"
-rand = "0.9"
-rand_distr = "0.5"
-rand_pcg = "0.9"
+numpy = "0.29"
+rand = "0.10"
+rand_distr = "0.6"
+rand_pcg = "0.10"
 rayon = "1.10"
 
 [lib]
@@ -45,8 +44,8 @@ crate-type = ["cdylib"]
 foldhash.workspace = true
 fixedbitset.workspace = true
 indexmap.workspace = true
-ndarray.workspace = true
-ndarray-stats = "0.6.0"
+ndarray = { version = "0.17.2", features = ["rayon"] }
+ndarray-stats = "0.7.0"
 num-bigint = "0.4"
 num-complex = "0.4"
 num-traits.workspace = true
@@ -71,7 +70,7 @@ version = "0.15"  # Implicitly required to match PyO3's and `petgraph`'s via cro
 features = ["rayon"]
 
 [dependencies.pyo3]
-version = "0.26"
+version = "0.29"
 features = ["abi3-py310", "extension-module", "hashbrown", "num-bigint", "num-complex", "indexmap", "py-clone"]
 
 [dependencies.sprs]

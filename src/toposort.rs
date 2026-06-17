@@ -222,7 +222,7 @@ impl TopologicalSorter {
     fn done(&mut self, nodes: &Bound<PyAny>) -> PyResult<()> {
         if let Ok(node) = nodes.extract::<usize>() {
             self.done_single(nodes.py(), NodeIndex::new(node))
-        } else if let Ok(nodes) = nodes.downcast::<PyList>() {
+        } else if let Ok(nodes) = nodes.cast::<PyList>() {
             for node in nodes {
                 self.done_single(nodes.py(), NodeIndex::new(node.extract()?))?
             }

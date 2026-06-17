@@ -18,6 +18,7 @@ use std::hash::Hash;
 use hashbrown::HashMap;
 
 use rand::prelude::*;
+use rand::rngs::SysRng;
 use rand_pcg::Pcg64;
 
 /// Return a random path (or random walk) on the graph.
@@ -63,7 +64,7 @@ where
 {
     let mut rng: Pcg64 = match seed {
         Some(seed) => Pcg64::seed_from_u64(seed),
-        None => Pcg64::from_os_rng(),
+        None => Pcg64::try_from_rng(&mut SysRng).unwrap(),
     };
 
     let mut degrees: HashMap<G::NodeId, usize> = HashMap::new();

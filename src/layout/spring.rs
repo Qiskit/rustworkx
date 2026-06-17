@@ -26,6 +26,7 @@ use petgraph::prelude::*;
 use petgraph::visit::{IntoEdgeReferences, NodeIndexable};
 
 use rand::prelude::*;
+use rand::rngs::SysRng;
 use rand_distr::{Distribution, Uniform};
 use rand_pcg::Pcg64;
 
@@ -322,7 +323,7 @@ where
 
     let mut rng: Pcg64 = match seed {
         Some(seed) => Pcg64::seed_from_u64(seed),
-        None => Pcg64::from_os_rng(),
+        None => Pcg64::try_from_rng(&mut SysRng).unwrap(),
     };
 
     let dist = Uniform::new(0.0, 1.0)

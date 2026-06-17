@@ -1025,8 +1025,9 @@ pub enum TargetNodes {
     Multiple(HashSet<NodeIndex>),
 }
 
-impl<'py> FromPyObject<'py> for TargetNodes {
-    fn extract_bound(ob: &Bound<'py, PyAny>) -> PyResult<Self> {
+impl<'py> FromPyObject<'_, 'py> for TargetNodes {
+    type Error = PyErr;
+    fn extract(ob: Borrowed<'_, 'py, PyAny>) -> PyResult<Self> {
         if let Ok(int) = ob.extract::<usize>() {
             Ok(Self::Single(NodeIndex::new(int)))
         } else {
