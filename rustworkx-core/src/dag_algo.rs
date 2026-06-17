@@ -353,7 +353,12 @@ where
 /// * `graph`: Reference to a directed graph.
 /// * `weight_fn` - An input callable that will be passed the `EdgeRef` for each edge in the graph.
 ///   The callable should return the weight of the edge as `Result<T, E>`. The weight must be a type that implements
-///   `Num`, `Zero`, `PartialOrd`, and `Copy`.
+///   `Num`, `Zero`, `PartialOrd`, and `Copy`. In the presence of floating point types or other
+///   `PartialOrd` types that are not `Ord` it is recommended for the callable to handle weights
+///   that are no comparable, because if the weights along the longest path are not comparable this
+///   will result in a None being returned. For example, if there is a f64::NaN weight this could
+///   be converted to something semantically equivalent for your use case to avoid having None
+///   returned because the path length can't be evaluated.
 ///
 /// # Type Parameters
 /// * `G`: Type of the graph. Must be a directed graph.
@@ -362,7 +367,8 @@ where
 /// * `E`: The type of the error that the weight function can return.
 ///
 /// # Returns
-/// * `None` if the graph contains a cycle.
+/// * `None` if the graph contains a cycle or a comparison between node weights can't be made (e.g.
+///   f64::NaN comparisons).
 /// * `Some(T)` representing the longest path as a sequence of nodes and its total weight.
 /// * `Err(E)` if there is an error computing the weight of any edge.
 ///
@@ -424,13 +430,23 @@ where
         // Store the maximum distance and the corresponding parent node for the current node
         dist[graph.to_index(node)] = Some(max_path);
     }
-    let (path_weight, _) = dist
-        .iter()
-        .filter_map(|x| x.as_ref())
-        .max_by(|a, b| a.partial_cmp(b).unwrap())
-        .unwrap();
-
-    Ok(Some(*path_weight))
+    let mut dist_iter = dist.into_iter();
+    let first = dist_iter
+        .next()
+        .flatten()
+        .map(|(a, b)| (a, graph.to_index(b)));
+    Ok(dist_iter
+        .filter_map(|x| x.map(|(a, b)| (a, graph.to_index(b))))
+        .fold(first, |a, b| {
+            let a = a?;
+            match a.partial_cmp(&b) {
+                Some(Ordering::Greater) => Some(a),
+                Some(Ordering::Equal) => Some(b),
+                Some(Ordering::Less) => Some(b),
+                None => None,
+            }
+        })
+        .map(|x| x.0))
 }
 
 /// Return an iterator of graph layers
