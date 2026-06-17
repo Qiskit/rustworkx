@@ -32,7 +32,7 @@ use smallvec::SmallVec;
 use pyo3::IntoPyObjectExt;
 use pyo3::PyTraverseError;
 use pyo3::Python;
-use pyo3::exceptions::PyIndexError;
+use pyo3::exceptions::{PyIndexError, PyUnicodeDecodeError};
 use pyo3::gc::PyVisit;
 use pyo3::prelude::*;
 use pyo3::types::{IntoPyDict, PyBool, PyDict, PyGenericAlias, PyList, PyString, PyTuple, PyType};
@@ -187,7 +187,7 @@ use super::dag_algo::is_directed_acyclic_graph;
 ///     many edges before needing to grow.  This does not prepopulate any edges with data, it is
 ///     only a potential performance optimization if the complete size of the graph is known in
 ///     advance.
-#[pyclass(mapping, module = "rustworkx", subclass)]
+#[pyclass(mapping, module = "rustworkx", subclass, from_py_object)]
 #[derive(Clone)]
 pub struct PyDiGraph {
     pub graph: StablePyGraph<Directed>,
@@ -367,17 +367,17 @@ impl PyDiGraph {
     }
 
     fn __setstate__(&mut self, py: Python, state: Py<PyAny>) -> PyResult<()> {
-        let dict_state = state.downcast_bound::<PyDict>(py)?;
+        let dict_state = state.bind(py).cast::<PyDict>()?;
         let binding = dict_state.get_item("nodes")?.unwrap();
-        let nodes_lst = binding.downcast::<PyList>()?;
+        let nodes_lst = binding.cast::<PyList>()?;
         let binding = dict_state.get_item("edges")?.unwrap();
-        let edges_lst = binding.downcast::<PyList>()?;
+        let edges_lst = binding.cast::<PyList>()?;
         self.graph = StablePyGraph::<Directed>::new();
-        let dict_state = state.downcast_bound::<PyDict>(py)?;
+        let dict_state = state.bind(py).cast::<PyDict>()?;
         self.node_removed = dict_state
             .get_item("nodes_removed")?
             .unwrap()
-            .downcast::<PyBool>()?
+            .cast::<PyBool>()?
             .extract()?;
 
         // graph is empty, stop early
@@ -388,7 +388,7 @@ impl PyDiGraph {
         if !self.node_removed {
             for item in nodes_lst.iter() {
                 let node_w = item
-                    .downcast::<PyTuple>()
+                    .cast::<PyTuple>()
                     .unwrap()
                     .get_item(1)
                     .unwrap()
@@ -399,7 +399,7 @@ impl PyDiGraph {
         } else if nodes_lst.len() == 1 {
             // graph has only one node, handle logic here to save one if in the loop later
             let binding = nodes_lst.get_item(0).unwrap();
-            let item = binding.downcast::<PyTuple>().unwrap();
+            let item = binding.cast::<PyTuple>().unwrap();
             let node_idx: usize = item.get_item(0).unwrap().extract().unwrap();
             let node_w = item.get_item(1).unwrap().extract().unwrap();
 
@@ -412,7 +412,7 @@ impl PyDiGraph {
             }
         } else {
             let binding = nodes_lst.get_item(nodes_lst.len() - 1).unwrap();
-            let last_item = binding.downcast::<PyTuple>().unwrap();
+            let last_item = binding.cast::<PyTuple>().unwrap();
 
             // list of temporary nodes that will be removed later to re-create holes
             let node_bound_1: usize = last_item.get_item(0).unwrap().extract().unwrap();
@@ -420,7 +420,7 @@ impl PyDiGraph {
                 Vec::with_capacity(node_bound_1 + 1 - nodes_lst.len());
 
             for item in nodes_lst {
-                let item = item.downcast::<PyTuple>().unwrap();
+                let item = item.cast::<PyTuple>().unwrap();
                 let next_index: usize = item.get_item(0).unwrap().extract().unwrap();
                 let weight: Py<PyAny> = item.get_item(1).unwrap().extract().unwrap();
                 while next_index > self.graph.node_bound() {
@@ -445,7 +445,7 @@ impl PyDiGraph {
                 // add a temporary edge that will be deleted later to re-create the hole
                 self.graph.add_edge(tmp_node, tmp_node, py.None());
             } else {
-                let triple = item.downcast::<PyTuple>().unwrap();
+                let triple = item.cast::<PyTuple>().unwrap();
                 let edge_p: usize = triple.get_item(0).unwrap().extract().unwrap();
                 let edge_c: usize = triple.get_item(1).unwrap().extract().unwrap();
                 let edge_w = triple.get_item(2).unwrap().extract().unwrap();
@@ -1275,7 +1275,7 @@ impl PyDiGraph {
                     edge.weight().clone_ref(py)
                 };
                 if let Some(edge_data) = in_edges.get_item(key_value.bind(py))? {
-                    let edge_data = edge_data.downcast::<RemoveNodeEdgeValue>()?;
+                    let edge_data = edge_data.cast::<RemoveNodeEdgeValue>()?;
                     edge_data.borrow_mut().nodes.push(edge.source());
                 } else {
                     in_edges.set_item(
@@ -1302,7 +1302,7 @@ impl PyDiGraph {
                     edge.weight().clone_ref(py)
                 };
                 if let Some(edge_data) = out_edges.get_item(key_value.bind(py))? {
-                    let edge_data = edge_data.downcast::<RemoveNodeEdgeValue>()?;
+                    let edge_data = edge_data.cast::<RemoveNodeEdgeValue>()?;
                     edge_data.borrow_mut().nodes.push(edge.target());
                 } else {
                     out_edges.set_item(
@@ -1319,9 +1319,9 @@ impl PyDiGraph {
         };
 
         for (in_key, in_edge_data) in in_edges {
-            let in_edge_data = in_edge_data.downcast::<RemoveNodeEdgeValue>()?.borrow();
+            let in_edge_data = in_edge_data.cast::<RemoveNodeEdgeValue>()?.borrow();
             let out_edge_data = match out_edges.get_item(in_key)? {
-                Some(out_edge_data) => out_edge_data.downcast::<RemoveNodeEdgeValue>()?.borrow(),
+                Some(out_edge_data) => out_edge_data.cast::<RemoveNodeEdgeValue>()?.borrow(),
                 None => continue,
             };
             for source in in_edge_data.nodes.iter() {
@@ -2447,7 +2447,11 @@ impl PyDiGraph {
             None => {
                 let mut file = Vec::<u8>::new();
                 build_dot(py, &self.graph, &mut file, graph_attr, node_attr, edge_attr)?;
-                Ok(Some(PyString::new(py, str::from_utf8(&file)?)))
+                Ok(Some(PyString::new(
+                    py,
+                    str::from_utf8(&file)
+                        .map_err(|e| PyUnicodeDecodeError::new_err_from_utf8(py, &file, e))?,
+                )))
             }
         }
     }
