@@ -1,0 +1,6 @@
+---
+features:
+  - |
+    Added Python 3.14 free-threaded wheels for Linux and macOS. See
+    `#1251 <https://github.com/Qiskit/rustworkx/issues/1251>`__ for more
+    details.
