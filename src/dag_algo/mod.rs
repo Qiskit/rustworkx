@@ -23,6 +23,7 @@ use rustworkx_core::dag_algo::collect_bicolor_runs as core_collect_bicolor_runs;
 use rustworkx_core::dag_algo::collect_runs as core_collect_runs;
 use rustworkx_core::dag_algo::lexicographical_topological_sort as core_lexico_topo_sort;
 use rustworkx_core::dag_algo::longest_path as core_longest_path;
+use rustworkx_core::dag_algo::longest_path_length as core_longest_path_length;
 use rustworkx_core::traversal::dfs_edges;
 
 use pyo3::IntoPyObjectExt;
@@ -79,6 +80,30 @@ where
     };
 
     Ok((path, path_weight))
+}
+
+fn longest_path_length<F, T>(graph: &digraph::PyDiGraph, mut weight_fn: F) -> PyResult<T>
+where
+    F: FnMut(usize, usize, &Py<PyAny>) -> PyResult<T>,
+    T: Num + Zero + PartialOrd + Copy,
+{
+    let dag = &graph.graph;
+
+    // Create a new weight function that matches the required signature
+    let edge_cost = |edge_ref: EdgeReference<'_, Py<PyAny>>| -> Result<T, PyErr> {
+        let source = edge_ref.source().index();
+        let target = edge_ref.target().index();
+        let weight = edge_ref.weight();
+        weight_fn(source, target, weight)
+    };
+
+    let path_weight = match core_longest_path_length(dag, edge_cost) {
+        Ok(Some(path_weight)) => path_weight,
+        Ok(None) => return Err(DAGHasCycle::new_err("The graph contains a cycle")),
+        Err(e) => return Err(e),
+    };
+
+    Ok(path_weight)
 }
 
 /// Return a pair of [`petgraph::Direction`] values corresponding to the "forwards" and "backwards"
@@ -168,7 +193,7 @@ pub fn dag_longest_path_length(
                 None => Ok(1),
             }
         };
-    let (_, path_weight) = longest_path(graph, edge_weight_callable)?;
+    let path_weight = longest_path_length(graph, edge_weight_callable)?;
     Ok(path_weight)
 }
 
@@ -253,7 +278,7 @@ pub fn dag_weighted_longest_path_length(
             }
             Ok(float_res)
         };
-    let (_, path_weight) = longest_path(graph, edge_weight_callable)?;
+    let path_weight = longest_path_length(graph, edge_weight_callable)?;
     Ok(path_weight)
 }
 
