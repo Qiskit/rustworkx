@@ -14,3 +14,4 @@ Serialization
    rustworkx.write_matrix_market
    rustworkx.read_matrix_market
    rustworkx.read_matrix_market_file
+   rustworkx.from_dot

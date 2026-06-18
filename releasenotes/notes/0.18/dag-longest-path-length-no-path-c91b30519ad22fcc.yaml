@@ -1,5 +1,5 @@
 ---
-features:
+features_core:
   - |
     Added a new rustworkx-core function ``longest_path_length`` to the module ``dag_algo``. This
     function computes the length of the longest path in a directed acyclic graph without storing

@@ -1015,8 +1015,9 @@ def kamada_kawai_layout(
     where :math:`d_{ij}` is the graph-theoretic shortest path between
     nodes :math:`i` and :math:`j`, :math:`l_{ij} \\propto d_{ij}` is the
     desired display distance, and :math:`k_{ij} = 1 / d_{ij}^2` is the
-    spring constant.  Minimisation follows the original Kamada and Kawai
-    (1989) scheme: at each outer step the node with the largest
+    spring constant.  Minimisation follows the original
+    `Kamada and Kawai (1989) <https://doi.org/10.1016/0020-0190(89)90102-6>`__
+    scheme: at each outer step the node with the largest
     partial-gradient norm is selected and updated by a 2D Newton step
     against the local 2x2 Hessian.
 
