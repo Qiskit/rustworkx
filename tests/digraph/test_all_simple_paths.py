@@ -118,6 +118,39 @@ class TestDAGAllSimplePaths(unittest.TestCase):
         dag.add_node(1)
         self.assertEqual([], rustworkx.digraph_all_simple_paths(dag, 0, 1))
 
+    def test_all_simple_paths_self_loop(self):
+        graph = rustworkx.PyDiGraph()
+        node = graph.add_node("A")
+        graph.add_edge(node, node, {"label": "self"})
+
+        self.assertEqual([[node, node]], rustworkx.digraph_all_simple_paths(graph, node, node))
+
+    def test_all_simple_paths_self_loop_is_not_revisited(self):
+        graph = rustworkx.PyDiGraph()
+        source = graph.add_node("A")
+        target = graph.add_node("B")
+        graph.add_edges_from_no_data([(source, target), (target, target)])
+
+        self.assertEqual(
+            [[source, target]], rustworkx.digraph_all_simple_paths(graph, source, target)
+        )
+
+    def test_all_simple_paths_self_loop_respects_min_depth(self):
+        graph = rustworkx.PyDiGraph()
+        node = graph.add_node("A")
+        graph.add_edge(node, node, {"label": "self"})
+
+        self.assertEqual([], rustworkx.digraph_all_simple_paths(graph, node, node, min_depth=3))
+
+    def test_all_simple_paths_multiple_targets_includes_self_loop(self):
+        graph = rustworkx.PyDiGraph()
+        source = graph.add_node("A")
+        target = graph.add_node("B")
+        graph.add_edges_from_no_data([(source, source), (source, target)])
+
+        paths = rustworkx.digraph_all_simple_paths(graph, source, [source, target])
+        self.assertCountEqual([[source, source], [source, target]], paths)
+
     def test_all_simple_path_invalid_node_index(self):
         dag = rustworkx.PyDAG()
         dag.add_node(0)
