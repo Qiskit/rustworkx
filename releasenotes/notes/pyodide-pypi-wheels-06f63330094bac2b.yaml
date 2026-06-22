@@ -1,0 +1,7 @@
+---
+features:
+  - |
+    Experimental Pyodide wheels are now published to PyPI. These wheels use the
+    ``pyemscripten`` platform tag defined by `PEP 783 <https://peps.python.org/pep-0783/>`__,
+    allowing compatible Pyodide environments to install ``rustworkx`` from PyPI.
+    Pyodide support remains best effort.
