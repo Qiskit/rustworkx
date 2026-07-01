@@ -31,7 +31,7 @@ jobs:
         with:
           python-version: '3.12'
       - name: Install deps
-        run: pip install -U maturin>=1.9.0,<2.0 build
+        run: pip install -U "maturin>=1.9.0,<2.0" build
       - name: Build sdist
         run: python -m build --sdist
       - uses: actions/upload-artifact@v4
@@ -107,7 +107,7 @@ jobs:
           source .venv/bin/activate
           python -m cibuildwheel --output-dir wheelhouse
         env:
-          CIBW_SKIP: pp* cp314t* *win32 *musl*
+          CIBW_SKIP: pp* cp314t-*ppc64le *win32 *musl*
           CIBW_ARCHS_LINUX: ppc64le
       - uses: actions/upload-artifact@v4
         with:
@@ -154,7 +154,7 @@ jobs:
           source .venv/bin/activate
           python -m cibuildwheel --output-dir wheelhouse
         env:
-          CIBW_SKIP: pp* cp314t* *win32 *musl*
+          CIBW_SKIP: pp* cp314t-*s390x *win32 *musl*
           CIBW_ARCHS_LINUX: s390x
       - uses: actions/upload-artifact@v4
         with:
@@ -199,7 +199,7 @@ jobs:
         run: |
           python -m cibuildwheel --output-dir wheelhouse
         env:
-          CIBW_SKIP: pp* cp314t* *amd64 *musl*
+          CIBW_SKIP: pp* cp314t-win* *amd64 *musl*
       - uses: actions/upload-artifact@v4
         with:
           path: ./wheelhouse/*.whl

@@ -13,6 +13,7 @@
 use petgraph::EdgeType;
 
 use rand::prelude::*;
+use rand::rngs::SysRng;
 use rand_pcg::Pcg64;
 
 use crate::StablePyGraph;
@@ -25,7 +26,7 @@ pub fn random_layout<Ty: EdgeType>(
 ) -> Pos2DMapping {
     let mut rng: Pcg64 = match seed {
         Some(seed) => Pcg64::seed_from_u64(seed),
-        None => Pcg64::from_os_rng(),
+        None => Pcg64::try_from_rng(&mut SysRng).unwrap(),
     };
 
     Pos2DMapping {
