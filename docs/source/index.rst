@@ -45,7 +45,7 @@ https://crates.io/crates/rustworkx-core
 
 and the documentation for the library is hosted here:
 
-https://docs.rs/rustworkx-core/0.13.0/rustworkx_core/
+https://docs.rs/rustworkx-core/
 
 
 Project history
@@ -54,7 +54,7 @@ Project history
 .. note::
 
     The project has been renamed to **rustworkx**. You can still use the legacy
-    retworkx name for now but starting in the 1.0.0 release the retworkx name
+    retworkx name for now but starting in the 0.18.0 release the retworkx name
     will no longer be supported.
 
 rustworkx was originally called retworkx and was created to be a high

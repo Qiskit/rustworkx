@@ -2,3 +2,16 @@
 encoding: utf8
 default_branch: main
 earliest_version: 0.8.0
+unreleased_version_title: Unreleased Notes Preview
+sections:
+  - [features, New Features]
+  - [features_core, rustworkx-core Features]
+  - [upgrade, Upgrade Notes]
+  - [upgrade_core, rustworkx-core Upgrade Notes]
+  - [deprecations, Deprecation Notes]
+  - [deprecations_core, rustworkx-core Deprecation Notes]
+  - [issues, Known Issues]
+  - [critical, Critical Issues]
+  - [security, Security Issues]
+  - [fixes, Bug Fixes]
+  - [other, Other Notes]

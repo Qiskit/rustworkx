@@ -1,0 +1,13 @@
+---
+features:
+  - |
+    Added a new function, :func:`.random_regular_graph` for generating random
+    undirected regular graphs. For example:
+
+    .. jupyter-execute::
+
+      import rustworkx
+      from rustworkx.visualization import mpl_draw
+
+      graph = rustworkx.random_regular_graph(22, 7, 42)
+      mpl_draw(graph)

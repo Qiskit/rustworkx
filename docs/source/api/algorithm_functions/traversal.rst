@@ -7,6 +7,7 @@ Traversal
    :toctree: ../../apiref
 
    rustworkx.dfs_edges
+   rustworkx.bfs_layers
    rustworkx.dfs_search
    rustworkx.bfs_successors
    rustworkx.bfs_predecessors

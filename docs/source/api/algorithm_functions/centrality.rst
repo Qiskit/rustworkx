@@ -10,6 +10,9 @@ Centrality
    rustworkx.degree_centrality
    rustworkx.edge_betweenness_centrality
    rustworkx.eigenvector_centrality
+   rustworkx.group_degree_centrality
+   rustworkx.group_closeness_centrality
+   rustworkx.group_betweenness_centrality
    rustworkx.katz_centrality
    rustworkx.closeness_centrality
    rustworkx.newman_weighted_closeness_centrality
