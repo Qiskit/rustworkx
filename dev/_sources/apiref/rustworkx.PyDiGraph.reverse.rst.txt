@@ -1,0 +1,6 @@
+rustworkx.PyDiGraph.reverse
+===========================
+
+.. currentmodule:: rustworkx
+
+.. automethod:: PyDiGraph.reverse

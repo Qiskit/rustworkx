@@ -1,0 +1,6 @@
+﻿rustworkx.is\_bipartite
+=======================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: is_bipartite

@@ -1,0 +1,6 @@
+﻿rustworkx.negative\_edge\_cycle
+===============================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: negative_edge_cycle

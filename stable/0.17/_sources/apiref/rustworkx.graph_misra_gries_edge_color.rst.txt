@@ -1,0 +1,6 @@
+﻿rustworkx.graph\_misra\_gries\_edge\_color
+==========================================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: graph_misra_gries_edge_color

@@ -1,0 +1,6 @@
+﻿rustworkx.eigenvector\_centrality
+=================================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: eigenvector_centrality

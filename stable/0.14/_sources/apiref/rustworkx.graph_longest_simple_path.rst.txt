@@ -1,0 +1,6 @@
+﻿rustworkx.graph\_longest\_simple\_path
+======================================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: graph_longest_simple_path

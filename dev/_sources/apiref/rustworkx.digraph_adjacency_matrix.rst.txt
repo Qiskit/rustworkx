@@ -1,0 +1,6 @@
+﻿rustworkx.digraph\_adjacency\_matrix
+====================================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: digraph_adjacency_matrix

@@ -1,0 +1,6 @@
+﻿rustworkx.is\_isomorphic
+========================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: is_isomorphic

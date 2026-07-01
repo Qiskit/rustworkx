@@ -1,0 +1,6 @@
+﻿rustworkx.graph\_cartesian\_product
+===================================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: graph_cartesian_product

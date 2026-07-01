@@ -1,0 +1,6 @@
+﻿rustworkx.dfs\_search
+=====================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: dfs_search

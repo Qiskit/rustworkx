@@ -1,0 +1,6 @@
+﻿rustworkx.dijkstra\_search
+==========================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: dijkstra_search

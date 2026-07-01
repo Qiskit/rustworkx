@@ -1,0 +1,6 @@
+﻿rustworkx.hyperbolic\_random\_graph
+===================================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: hyperbolic_random_graph

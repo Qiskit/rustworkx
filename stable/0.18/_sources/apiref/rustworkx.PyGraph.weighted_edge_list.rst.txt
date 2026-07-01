@@ -1,0 +1,6 @@
+rustworkx.PyGraph.weighted\_edge\_list
+======================================
+
+.. currentmodule:: rustworkx
+
+.. automethod:: PyGraph.weighted_edge_list

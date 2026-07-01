@@ -1,0 +1,6 @@
+rustworkx.PyDAG.to\_undirected
+==============================
+
+.. currentmodule:: rustworkx
+
+.. automethod:: PyDAG.to_undirected

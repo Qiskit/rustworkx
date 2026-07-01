@@ -1,0 +1,6 @@
+﻿rustworkx.visualization.mpl\_draw
+=================================
+
+.. currentmodule:: rustworkx.visualization
+
+.. autofunction:: mpl_draw

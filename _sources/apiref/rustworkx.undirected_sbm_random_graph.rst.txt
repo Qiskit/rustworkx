@@ -1,0 +1,6 @@
+﻿rustworkx.undirected\_sbm\_random\_graph
+========================================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: undirected_sbm_random_graph
