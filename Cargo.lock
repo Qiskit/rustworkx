@@ -247,6 +247,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d9c4f5dac5e15c24eb999c26181a6ca40b39fe946cbe4c263c7209467bc83af2"
 
 [[package]]
+name = "foldhash"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "77ce24cb58228fbb8aa041425bb1050850ac19177686ea6e0f41a70416f56fdb"
+
+[[package]]
 name = "generic-array"
 version = "0.14.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -301,7 +307,7 @@ checksum = "9229cfe53dfd69f0609a49f65461bd93001ea1ef889cd5529dd176593f5338a1"
 dependencies = [
  "allocator-api2",
  "equivalent",
- "foldhash",
+ "foldhash 0.1.5",
  "rayon",
 ]
 
@@ -310,6 +316,12 @@ name = "hashbrown"
 version = "0.17.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ed5909b6e89a2db4456e54cd5f673791d7eca6732202bbf2a9cc504fe2f9b84a"
+dependencies = [
+ "allocator-api2",
+ "equivalent",
+ "foldhash 0.2.0",
+ "rayon",
+]
 
 [[package]]
 name = "heck"
@@ -517,9 +529,19 @@ dependencies = [
 
 [[package]]
 name = "num-bigint"
-version = "0.4.6"
+version = "0.4.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a5e44f723f1133c9deac646763579fdb3ac745e418f2a7af9cd0c431da1f20b9"
+checksum = "c89e69e7e0f03bea5ef08013795c25018e101932225a656383bd384495ecc367"
+dependencies = [
+ "num-integer",
+ "num-traits",
+]
+
+[[package]]
+name = "num-bigint"
+version = "0.5.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "93e7820bc0a80a0238e650327316f929ba18d5be054b647490a3a6a339f3e7c0"
 dependencies = [
  "num-integer",
  "num-traits",
@@ -549,7 +571,7 @@ version = "0.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f83d14da390562dca69fc84082e73e548e1ad308d24accdedd2720017cb37824"
 dependencies = [
- "num-bigint",
+ "num-bigint 0.4.8",
  "num-integer",
  "num-traits",
 ]
@@ -717,10 +739,10 @@ version = "0.29.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cd274650b21d4bfc26a0a47587962c1edb425f69287324355cd040c3ea66071c"
 dependencies = [
- "hashbrown 0.15.5",
+ "hashbrown 0.17.1",
  "indexmap",
  "libc",
- "num-bigint",
+ "num-bigint 0.4.8",
  "num-complex",
  "num-traits",
  "once_cell",
@@ -969,13 +991,13 @@ version = "0.18.0"
 dependencies = [
  "fixedbitset",
  "flate2",
- "foldhash",
+ "foldhash 0.1.5",
  "hashbrown 0.15.5",
  "indexmap",
  "nalgebra-sparse",
  "ndarray",
  "ndarray-stats",
- "num-bigint",
+ "num-bigint 0.5.1",
  "num-complex",
  "num-traits",
  "numpy",
@@ -1000,8 +1022,8 @@ name = "rustworkx-core"
 version = "0.18.0"
 dependencies = [
  "fixedbitset",
- "foldhash",
- "hashbrown 0.15.5",
+ "foldhash 0.1.5",
+ "hashbrown 0.17.1",
  "indexmap",
  "ndarray",
  "num-traits",
