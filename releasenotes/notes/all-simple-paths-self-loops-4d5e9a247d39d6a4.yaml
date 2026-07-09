@@ -1,0 +1,7 @@
+fixes:
+  - |
+    Fixed :func:`~rustworkx.all_simple_paths` so a self-loop is returned as a
+    two-node path when its source is also the requested target. This restores
+    the behavior from 0.17.1 for both :class:`~rustworkx.PyGraph` and
+    :class:`~rustworkx.PyDiGraph`. Refer to
+    `#1617 <https://github.com/Qiskit/rustworkx/issues/1617>`__ for more details.

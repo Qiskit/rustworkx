@@ -1086,6 +1086,16 @@ pub fn graph_all_simple_paths(
                 ));
             }
 
+            // Preserve the legacy behavior of emitting a self-loop as a
+            // two-node path. petgraph's iterator filters the target because
+            // it is already visited before it can yield this path.
+            if from_index == to_index && min_intermediate_nodes == 0 {
+                let self_loop_count = graph.graph.edges_connecting(from_index, to_index).count();
+                if self_loop_count > 0 {
+                    return Ok(vec![vec![origin, origin]; self_loop_count]);
+                }
+            }
+
             let result: Vec<Vec<usize>> =
                 algo::all_simple_paths::<Vec<_>, _, foldhash::fast::RandomState>(
                     &graph.graph,
@@ -1099,7 +1109,7 @@ pub fn graph_all_simple_paths(
             Ok(result)
         }
         TargetNodes::Multiple(target_set) => {
-            let result: Vec<Vec<usize>> =
+            let mut result: Vec<Vec<usize>> =
                 algo::all_simple_paths_multi::<Vec<_>, _, foldhash::fast::RandomState>(
                     &graph.graph,
                     from_index,
@@ -1109,6 +1119,10 @@ pub fn graph_all_simple_paths(
                 )
                 .map(|v: Vec<NodeIndex>| v.into_iter().map(|i| i.index()).collect())
                 .collect();
+            if min_intermediate_nodes == 0 && target_set.contains(&from_index) {
+                let self_loop_count = graph.graph.edges_connecting(from_index, from_index).count();
+                result.extend(vec![vec![origin, origin]; self_loop_count]);
+            }
             Ok(result)
         }
     }
@@ -1159,6 +1173,16 @@ pub fn digraph_all_simple_paths(
                 ));
             }
 
+            // Preserve the legacy behavior of emitting a self-loop as a
+            // two-node path. petgraph's iterator filters the target because
+            // it is already visited before it can yield this path.
+            if from_index == to_index && min_intermediate_nodes == 0 {
+                let self_loop_count = graph.graph.edges_connecting(from_index, to_index).count();
+                if self_loop_count > 0 {
+                    return Ok(vec![vec![origin, origin]; self_loop_count]);
+                }
+            }
+
             let result: Vec<Vec<usize>> =
                 algo::all_simple_paths::<Vec<_>, _, foldhash::fast::RandomState>(
                     &graph.graph,
@@ -1172,7 +1196,7 @@ pub fn digraph_all_simple_paths(
             Ok(result)
         }
         TargetNodes::Multiple(target_set) => {
-            let result: Vec<Vec<usize>> =
+            let mut result: Vec<Vec<usize>> =
                 algo::all_simple_paths_multi::<Vec<_>, _, foldhash::fast::RandomState>(
                     &graph.graph,
                     from_index,
@@ -1182,6 +1206,10 @@ pub fn digraph_all_simple_paths(
                 )
                 .map(|v: Vec<NodeIndex>| v.into_iter().map(|i| i.index()).collect())
                 .collect();
+            if min_intermediate_nodes == 0 && target_set.contains(&from_index) {
+                let self_loop_count = graph.graph.edges_connecting(from_index, from_index).count();
+                result.extend(vec![vec![origin, origin]; self_loop_count]);
+            }
             Ok(result)
         }
     }
