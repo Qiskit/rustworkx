@@ -219,6 +219,13 @@ class TestGraphAllSimplePaths(unittest.TestCase):
         dag.add_node(1)
         self.assertEqual([], rustworkx.graph_all_simple_paths(dag, 0, 1))
 
+    def test_all_simple_paths_self_loop(self):
+        graph = rustworkx.PyGraph()
+        node = graph.add_node("A")
+        graph.add_edge(node, node, {"label": "self"})
+
+        self.assertEqual([[node, node]], rustworkx.graph_all_simple_paths(graph, node, node))
+
     def test_all_simple_path_invalid_node_index(self):
         dag = rustworkx.PyGraph()
         dag.add_node(0)
