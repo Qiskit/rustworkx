@@ -64,6 +64,19 @@ def directed_grid_graph(
     bidirectional: bool = ...,
     multigraph: bool = ...,
 ) -> PyDiGraph: ...
+def nd_grid_graph(
+    dim: Sequence[int],
+    periodic: bool = ...,
+    with_positions: bool = ...,
+    multigraph: bool = ...,
+) -> PyGraph: ...
+def directed_nd_grid_graph(
+    dim: Sequence[int],
+    periodic: bool = ...,
+    with_positions: bool = ...,
+    bidirectional: bool = ...,
+    multigraph: bool = ...,
+) -> PyDiGraph: ...
 def heavy_square_graph(d: int, multigraph: bool = ...) -> PyGraph: ...
 def directed_heavy_square_graph(
     d: int,
