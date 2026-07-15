@@ -81,7 +81,8 @@ class TestAdj(unittest.TestCase):
             self.assertEqual(sorted(undirected_neighbors), sorted(expected_neighbors))
 
     def test_neighbors_deterministic_order(self):
-        # Regression test for gh-1501: deterministic, stable ordering.
+        # Regression test for https://github.com/Qiskit/rustworkx/issues/1501:
+        # neighbors must be returned in a deterministic order.
         dag = rustworkx.PyDiGraph()
         dag.add_nodes_from(range(6))
         dag.add_edges_from_no_data([(0, 1), (0, 2), (0, 3)])

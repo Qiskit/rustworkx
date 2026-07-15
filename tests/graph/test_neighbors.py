@@ -43,9 +43,8 @@ class TestNeighbors(unittest.TestCase):
         self.assertEqual([], graph.neighbors(node_a))
 
     def test_neighbors_deterministic_order(self):
-        # Regression test for gh-1501: neighbors must be returned in a stable,
-        # deterministic order (graph edge iteration order) rather than a
-        # randomized HashSet order.
+        # Regression test for https://github.com/Qiskit/rustworkx/issues/1501:
+        # neighbors must be returned in a deterministic order.
         graph = rustworkx.PyGraph()
         graph.add_nodes_from(range(6))
         graph.add_edges_from_no_data([(0, 1), (0, 2), (0, 3), (0, 4), (0, 5)])
