@@ -92,3 +92,6 @@ def stubs(session):
     session.install(*stubs_deps)
     session.chdir("tests")
     session.run("python", "-m", "mypy.stubtest", "--concise", "rustworkx", "--allowlist", "stubs_allowlist.txt")
+    # Static typing regression tests (validate call-site type inference of the
+    # public stubs, e.g. graphviz_draw's return type, see issue #1357).
+    session.run("python", "-m", "mypy", "visualization/test_graphviz_typing.py")

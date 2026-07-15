@@ -1,0 +1,10 @@
+---
+fixes:
+  - |
+    Fixed the return type annotation and docstring of
+    :func:`~rustworkx.visualization.graphviz_draw`. It was incorrectly
+    documented as returning a ``PIL.Image`` (the module) instead of a
+    ``PIL.Image.Image`` (the class), which caused static type checkers such as
+    ``pyright`` to infer the wrong return type. Refer to
+    `#1357 <https://github.com/Qiskit/rustworkx/issues/1357>`__ for more
+    details.
