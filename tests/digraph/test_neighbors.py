@@ -79,3 +79,26 @@ class TestAdj(unittest.TestCase):
             undirected_neighbors = dag.neighbors_undirected(node)
             expected_neighbors = undirected_dag.neighbors(node)
             self.assertEqual(sorted(undirected_neighbors), sorted(expected_neighbors))
+
+    def test_neighbors_deterministic_order(self):
+        # Regression test for gh-1501: deterministic, stable ordering.
+        dag = rustworkx.PyDiGraph()
+        dag.add_nodes_from(range(6))
+        dag.add_edges_from_no_data([(0, 1), (0, 2), (0, 3)])
+        dag.add_edges_from_no_data([(4, 0), (5, 0)])
+        for _ in range(20):
+            self.assertEqual([3, 2, 1], list(dag.neighbors(0)))
+            self.assertEqual([3, 2, 1, 5, 4], list(dag.neighbors_undirected(0)))
+
+    def test_neighbors_dedup_deterministic_order(self):
+        # Parallel edges are deduplicated with a stable order.
+        dag = rustworkx.PyDiGraph()
+        dag.add_nodes_from(["a", "b", "c"])
+        dag.add_edge(0, 1, None)
+        dag.add_edge(0, 1, None)
+        dag.add_edge(0, 2, None)
+        first = list(dag.neighbors(0))
+        self.assertCountEqual([1, 2], first)
+        self.assertEqual(2, len(first))
+        for _ in range(20):
+            self.assertEqual(first, list(dag.neighbors(0)))

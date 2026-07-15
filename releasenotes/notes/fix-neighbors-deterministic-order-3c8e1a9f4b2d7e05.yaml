@@ -1,0 +1,12 @@
+---
+fixes:
+  - |
+    Fixed :meth:`.PyGraph.neighbors`, :meth:`.PyDiGraph.neighbors` and
+    :meth:`.PyDiGraph.neighbors_undirected` to return the neighboring node
+    indices in a stable, deterministic order. Previously the results were
+    deduplicated through a ``HashSet`` whose iteration order was randomized,
+    so the order of the returned indices could change between runs (and even
+    between calls). The methods now preserve the graph's edge iteration order
+    while still removing duplicate neighbors in multigraphs. Refer to
+    `#1501 <https://github.com/Qiskit/rustworkx/issues/1501>`__ for more
+    details.

@@ -1844,13 +1844,13 @@ impl PyDiGraph {
     /// :rtype: NodeIndices
     #[pyo3(text_signature = "(self, node, /)")]
     pub fn neighbors(&self, node: usize) -> NodeIndices {
+        let mut seen = HashSet::new();
         NodeIndices {
             nodes: self
                 .graph
                 .neighbors(NodeIndex::new(node))
                 .map(|node| node.index())
-                .collect::<HashSet<usize>>()
-                .drain()
+                .filter(|node| seen.insert(*node))
                 .collect(),
         }
     }
@@ -1866,7 +1866,7 @@ impl PyDiGraph {
     ///     >>> G.neighbors_undirected(node)
     ///     NodeIndices[3, 1]
     ///     >>> G.to_undirected().neighbors(node)
-    ///     NodeIndices[1, 3]
+    ///     NodeIndices[3, 1]
     ///
     /// For direction-aware neighbors, see :func:`~predecessors` and :func:`~successors`.
     ///
@@ -1876,13 +1876,13 @@ impl PyDiGraph {
     /// :rtype: NodeIndices
     #[pyo3(text_signature = "(self, node, /)")]
     pub fn neighbors_undirected(&self, node: usize) -> NodeIndices {
+        let mut seen = HashSet::new();
         NodeIndices {
             nodes: self
                 .graph
                 .neighbors_undirected(NodeIndex::new(node))
                 .map(|node| node.index())
-                .collect::<HashSet<usize>>()
-                .drain()
+                .filter(|node| seen.insert(*node))
                 .collect(),
         }
     }

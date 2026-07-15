@@ -1181,13 +1181,13 @@ impl PyGraph {
     /// :rtype: NodeIndices
     #[pyo3(text_signature = "(self, node, /)")]
     pub fn neighbors(&self, node: usize) -> NodeIndices {
+        let mut seen = HashSet::new();
         NodeIndices {
             nodes: self
                 .graph
                 .neighbors(NodeIndex::new(node))
                 .map(|node| node.index())
-                .collect::<HashSet<usize>>()
-                .drain()
+                .filter(|node| seen.insert(*node))
                 .collect(),
         }
     }
