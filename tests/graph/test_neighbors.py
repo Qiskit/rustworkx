@@ -41,3 +41,26 @@ class TestNeighbors(unittest.TestCase):
         graph = rustworkx.PyGraph()
         node_a = graph.add_node("a")
         self.assertEqual([], graph.neighbors(node_a))
+
+    def test_neighbors_deterministic_order(self):
+        # Regression test for https://github.com/Qiskit/rustworkx/issues/1501:
+        # neighbors must be returned in a deterministic order.
+        graph = rustworkx.PyGraph()
+        graph.add_nodes_from(range(6))
+        graph.add_edges_from_no_data([(0, 1), (0, 2), (0, 3), (0, 4), (0, 5)])
+        expected = [5, 4, 3, 2, 1]
+        for _ in range(20):
+            self.assertEqual(expected, list(graph.neighbors(0)))
+
+    def test_neighbors_dedup_deterministic_order(self):
+        # Parallel edges are deduplicated, and the surviving order is stable.
+        graph = rustworkx.PyGraph()
+        graph.add_nodes_from(["a", "b", "c"])
+        graph.add_edge(0, 1, None)
+        graph.add_edge(0, 1, None)
+        graph.add_edge(0, 2, None)
+        first = list(graph.neighbors(0))
+        self.assertCountEqual([1, 2], first)
+        self.assertEqual(2, len(first))
+        for _ in range(20):
+            self.assertEqual(first, list(graph.neighbors(0)))

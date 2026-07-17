@@ -1,0 +1,8 @@
+---
+fixes:
+  - |
+    Fixed :meth:`.PyGraph.neighbors`, :meth:`.PyDiGraph.neighbors`, and
+    :meth:`.PyDiGraph.neighbors_undirected` to return neighbors in a
+    deterministic order. Previously, calls to the functions could return
+    nodes in an arbitrary order. See
+    `#1501 <https://github.com/Qiskit/rustworkx/issues/1501>`__.
