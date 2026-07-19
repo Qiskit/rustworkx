@@ -20,8 +20,8 @@ use std::hash::Hash;
 use ndarray::ArrayView2;
 use petgraph::data::{Build, Create};
 use petgraph::visit::{
-    Data, GraphBase, GraphProp, IntoEdgeReferences, IntoEdgesDirected,
-    IntoNodeIdentifiers, NodeCount, NodeIndexable,
+    Data, GraphBase, GraphProp, IntoEdgeReferences, IntoEdgesDirected, IntoNodeIdentifiers,
+    NodeCount, NodeIndexable,
 };
 use petgraph::{Incoming, Outgoing};
 
@@ -451,7 +451,7 @@ where
             let u = between.sample(&mut rng);
             let v = between.sample(&mut rng);
             let key = if directed || u <= v { (u, v) } else { (v, u) };
-            // avoid self-loops and parallel edges
+            // avoid self-loops and multi-graphs
             if u != v && existing_edges.insert(key) {
                 let u_index = graph.from_index(u);
                 let v_index = graph.from_index(v);
@@ -1114,8 +1114,9 @@ mod tests {
     #[test]
     fn test_gnm_random_graph_undirected_has_no_parallel_edges() {
         let n = 20;
-        let m = 150;  // m < n(n-1)/2 so we get random edges
-        for seed in 0..20 {  // sweep multiple random seeds to reduce the odds of lucky draws
+        let m = 150; // m < n(n-1)/2 so we get random edges
+        for seed in 0..20 {
+            // sweep multiple random seeds to reduce the odds of lucky draws
             let g: petgraph::graph::UnGraph<(), ()> =
                 gnm_random_graph(n, m, Some(seed), || (), || ()).unwrap();
             assert_eq!(g.edge_count(), m);

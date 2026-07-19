@@ -1,0 +1,13 @@
+---
+fixes:
+  - |
+    Fixed :func:`~rustworkx.undirected_gnm_random_graph` (and the corresponding
+    ``gnm_random_graph`` generator in ``rustworkx-core``) so that it no longer
+    returns a graph containing parallel edges. Previously a randomly drawn edge
+    ``(v, u)`` was not recognized as a duplicate of an already-added edge
+    ``(u, v)``, so undirected graphs could be returned with more than one edge
+    between the same pair of nodes, contradicting the documented behavior that
+    the generator does not produce a multigraph. This is also a performance
+    improvement - O(m) scan of edges replaced with O(1) set membership lookup.
+    See `#1640 <https://github.com/Qiskit/rustworkx/issues/1640>`__.
+
