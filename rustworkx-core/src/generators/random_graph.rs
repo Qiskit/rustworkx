@@ -13,13 +13,14 @@
 #![allow(clippy::float_cmp)]
 
 use crate::dictmap::DictMap;
+use hashbrown::HashSet;
 use indexmap::IndexSet;
 use std::hash::Hash;
 
 use ndarray::ArrayView2;
 use petgraph::data::{Build, Create};
 use petgraph::visit::{
-    Data, EdgeRef, GraphBase, GraphProp, IntoEdgeReferences, IntoEdgesDirected,
+    Data, GraphBase, GraphProp, IntoEdgeReferences, IntoEdgesDirected,
     IntoNodeIdentifiers, NodeCount, NodeIndexable,
 };
 use petgraph::{Incoming, Outgoing};
@@ -416,21 +417,6 @@ where
         return Err(InvalidInputError {});
     }
 
-    fn find_edge<G>(graph: &G, source: usize, target: usize) -> bool
-    where
-        G: GraphBase + NodeIndexable,
-        for<'b> &'b G: GraphBase<NodeId = G::NodeId> + IntoEdgeReferences,
-    {
-        let mut found = false;
-        for edge in graph.edge_references() {
-            if graph.to_index(edge.source()) == source && graph.to_index(edge.target()) == target {
-                found = true;
-                break;
-            }
-        }
-        found
-    }
-
     let mut rng: Pcg64 = match seed {
         Some(seed) => Pcg64::seed_from_u64(seed),
         None => Pcg64::try_from_rng(&mut SysRng).unwrap(),
@@ -458,14 +444,17 @@ where
         }
     } else {
         let mut created_edges: usize = 0;
+        // edge set keyed by smaller node first (if undirected)
+        let mut existing_edges: HashSet<(usize, usize)> = HashSet::with_capacity(num_edges);
         let between = Uniform::new(0, num_nodes).unwrap();
         while created_edges < num_edges {
             let u = between.sample(&mut rng);
             let v = between.sample(&mut rng);
-            let u_index = graph.from_index(u);
-            let v_index = graph.from_index(v);
-            // avoid self-loops and multi-graphs
-            if u != v && !find_edge(&graph, u, v) {
+            let key = if directed || u <= v { (u, v) } else { (v, u) };
+            // avoid self-loops and parallel edges
+            if u != v && existing_edges.insert(key) {
+                let u_index = graph.from_index(u);
+                let v_index = graph.from_index(v);
                 graph.add_edge(u_index, v_index, default_edge_weight());
                 created_edges += 1;
             }
@@ -1036,6 +1025,7 @@ mod tests {
         sbm_random_graph,
     };
     use crate::petgraph;
+    use std::collections::HashSet;
 
     // Test gnp_random_graph
     #[test]
@@ -1119,6 +1109,30 @@ mod tests {
             gnm_random_graph(20, 100, None, || (), || ()).unwrap();
         assert_eq!(g.node_count(), 20);
         assert_eq!(g.edge_count(), 100);
+    }
+
+    #[test]
+    fn test_gnm_random_graph_undirected_has_no_parallel_edges() {
+        let n = 20;
+        let m = 150;  // m < n(n-1)/2 so we get random edges
+        for seed in 0..20 {  // sweep multiple random seeds to reduce the odds of lucky draws
+            let g: petgraph::graph::UnGraph<(), ()> =
+                gnm_random_graph(n, m, Some(seed), || (), || ()).unwrap();
+            assert_eq!(g.edge_count(), m);
+            let distinct_edges: HashSet<(usize, usize)> = g
+                .edge_indices()
+                .map(|e| {
+                    let (a, b) = g.edge_endpoints(e).unwrap();
+                    let (a, b) = (a.index(), b.index());
+                    (a.min(b), a.max(b))
+                })
+                .collect();
+            assert_eq!(
+                distinct_edges.len(),
+                m,
+                "undirected gnm produced parallel edges for seed {seed}"
+            );
+        }
     }
 
     #[test]
