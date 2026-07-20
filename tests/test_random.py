@@ -185,6 +185,16 @@ class TestGNMRandomGraph(unittest.TestCase):
         graph_s2 = rustworkx.undirected_gnm_random_graph(20, 100, seed=10)
         self.assertEqual(graph_s1.edge_list(), graph_s2.edge_list())
 
+    def test_random_gnm_undirected_has_no_parallel_edges(self):
+        n = 20
+        m = 150
+        # sweep many seeds to reduce the odds of a lucky draw
+        for seed in range(20):
+            graph = rustworkx.undirected_gnm_random_graph(n, m, seed=seed)
+            self.assertEqual(len(graph.edges()), m)
+            distinct = {tuple(sorted(edge)) for edge in graph.edge_list()}
+            self.assertEqual(len(distinct), m, f"parallel edges for seed {seed}")
+
     def test_random_gnm_undirected_empty_graph(self):
         graph = rustworkx.undirected_gnm_random_graph(20, 0)
         self.assertEqual(len(graph), 20)
