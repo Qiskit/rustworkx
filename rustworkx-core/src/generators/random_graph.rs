@@ -15,7 +15,7 @@
 use crate::dictmap::DictMap;
 use hashbrown::HashSet;
 use indexmap::IndexSet;
-use std::hash::Hash;
+use std::{cmp::min, hash::Hash};
 
 use ndarray::ArrayView2;
 use petgraph::data::{Build, Create};
@@ -450,7 +450,11 @@ where
         while created_edges < num_edges {
             let u = between.sample(&mut rng);
             let v = between.sample(&mut rng);
-            let key = if directed || u <= v { (u, v) } else { (v, u) };
+            let key = if directed {
+                (u, v)
+            } else {
+                min((u, v), (v, u))
+            };
             // avoid self-loops and multi-graphs
             if u != v && existing_edges.insert(key) {
                 let u_index = graph.from_index(u);
@@ -1025,7 +1029,7 @@ mod tests {
         sbm_random_graph,
     };
     use crate::petgraph;
-    use std::collections::HashSet;
+    use hashbrown::HashSet;
 
     // Test gnp_random_graph
     #[test]
