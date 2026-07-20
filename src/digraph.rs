@@ -1849,8 +1849,8 @@ impl PyDiGraph {
                 .graph
                 .neighbors(NodeIndex::new(node))
                 .map(|node| node.index())
-                .collect::<HashSet<usize>>()
-                .drain()
+                .collect::<IndexSet<usize>>()
+                .drain(..)
                 .collect(),
         }
     }
@@ -1866,7 +1866,7 @@ impl PyDiGraph {
     ///     >>> G.neighbors_undirected(node)
     ///     NodeIndices[3, 1]
     ///     >>> G.to_undirected().neighbors(node)
-    ///     NodeIndices[1, 3]
+    ///     NodeIndices[3, 1]
     ///
     /// For direction-aware neighbors, see :func:`~predecessors` and :func:`~successors`.
     ///
@@ -1881,8 +1881,8 @@ impl PyDiGraph {
                 .graph
                 .neighbors_undirected(NodeIndex::new(node))
                 .map(|node| node.index())
-                .collect::<HashSet<usize>>()
-                .drain()
+                .collect::<IndexSet<usize>>()
+                .drain(..)
                 .collect(),
         }
     }

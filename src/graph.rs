@@ -1186,8 +1186,8 @@ impl PyGraph {
                 .graph
                 .neighbors(NodeIndex::new(node))
                 .map(|node| node.index())
-                .collect::<HashSet<usize>>()
-                .drain()
+                .collect::<indexmap::IndexSet<usize>>()
+                .drain(..)
                 .collect(),
         }
     }
