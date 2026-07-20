@@ -82,7 +82,7 @@ def graphviz_draw(
     filename: str | None = None,
     image_type: str | None = None,
     method: str | None = None,
-) -> Image | None:
+) -> Image.Image | None:
     """Draw a :class:`~rustworkx.PyGraph` or :class:`~rustworkx.PyDiGraph` object
     using graphviz
 
@@ -133,11 +133,11 @@ def graphviz_draw(
         more details on the different layout methods. By default ``'dot'`` is
         used.
 
-    :returns: A ``PIL.Image`` object of the generated visualization, if
+    :returns: A ``PIL.Image.Image`` object of the generated visualization, if
         ``filename`` is not specified. If ``filename`` is specified then
         ``None`` will be returned as the visualization was written to the
         path specified in ``filename``
-    :rtype: PIL.Image
+    :rtype: PIL.Image.Image
 
     .. jupyter-execute::
 
