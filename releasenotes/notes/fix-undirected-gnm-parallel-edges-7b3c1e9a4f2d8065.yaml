@@ -1,0 +1,9 @@
+---
+fixes:
+  - |
+    Fixed :func:`~rustworkx.undirected_gnm_random_graph` generating parallel
+    edges. In some cases, the random graph could contain two parallel
+    edges between a pair of nodes. It now contains at most one
+    edge per pair of nodes.
+    See `#1640 <https://github.com/Qiskit/rustworkx/issues/1640>`__ for
+    further details.
