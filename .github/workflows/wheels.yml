@@ -95,7 +95,7 @@ jobs:
           source .venv/bin/activate
           python -m cibuildwheel --output-dir wheelhouse
         env:
-          CIBW_SKIP: pp* cp314t-*ppc64le *win32 *musl*
+          CIBW_SKIP: pp* *win32 *musl*
           CIBW_ARCHS_LINUX: ppc64le
       - uses: actions/upload-artifact@v4
         with:

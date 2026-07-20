@@ -131,7 +131,7 @@ extend-ignore-words-re = [
 [tool.cibuildwheel]
 manylinux-x86_64-image = "manylinux2014"
 manylinux-i686-image = "manylinux2014"
-skip = "pp* cp314t-win* cp314t-*i686 cp314t-*s390x cp314t-*ppc64le *win32 *musllinux*i686"
+skip = "pp* cp314t-win* cp314t-*i686 cp314t-*s390x *win32 *musllinux*i686"
 test-requires = "networkx"
 test-command = "python -m unittest discover {project}/tests"
 before-build = 'pip install -U "maturin>=1.9.0,<2.0"'
