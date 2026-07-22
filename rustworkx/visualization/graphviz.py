@@ -9,12 +9,12 @@
 from __future__ import annotations
 
 import subprocess
-import tempfile
 import io
 from typing import TypeVar, cast, TYPE_CHECKING
 from collections.abc import Callable
 
 from rustworkx import PyDiGraph, PyGraph
+from rustworkx.visualization.utils import has_graphviz
 
 
 try:
@@ -161,14 +161,7 @@ def graphviz_draw(
             "Pillow is necessary to use graphviz_draw() "
             "it can be installed with 'pip install pydot pillow'"
         )
-    try:
-        subprocess.run(
-            ["dot", "-V"],
-            cwd=tempfile.gettempdir(),
-            check=True,
-            capture_output=True,
-        )
-    except Exception:
+    if not has_graphviz():
         raise RuntimeError(
             "Graphviz could not be found or run. This function requires that "
             "Graphviz is installed. If you need to install Graphviz you can "
