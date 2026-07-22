@@ -117,6 +117,10 @@ source.
      - WASM (Emscripten)
      - :ref:`tier-experimental`
      -
+   * - Pyodide 
+     - WASM (Emscripten)
+     - :ref:`tier-experimental`
+     -
 
 
 .. _manylinux 2014: https://peps.python.org/pep-0599/>
