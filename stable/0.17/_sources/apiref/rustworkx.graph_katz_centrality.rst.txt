@@ -1,0 +1,6 @@
+﻿rustworkx.graph\_katz\_centrality
+=================================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: graph_katz_centrality

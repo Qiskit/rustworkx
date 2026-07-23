@@ -1,0 +1,6 @@
+rustworkx.PyDAG.substitute\_node\_with\_subgraph
+================================================
+
+.. currentmodule:: rustworkx
+
+.. automethod:: PyDAG.substitute_node_with_subgraph

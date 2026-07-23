@@ -1,0 +1,6 @@
+rustworkx.PyDAG.adj
+===================
+
+.. currentmodule:: rustworkx
+
+.. automethod:: PyDAG.adj

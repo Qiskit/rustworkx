@@ -1,0 +1,6 @@
+﻿rustworkx.graph\_distance\_matrix
+=================================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: graph_distance_matrix

@@ -1,0 +1,10 @@
+﻿NodeIndices
+===========
+
+.. currentmodule:: rustworkx
+
+.. autoclass:: NodeIndices
+   :no-members:
+   :show-inheritance:
+
+

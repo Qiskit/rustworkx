@@ -1,0 +1,6 @@
+rustworkx.PyDAG.contract\_nodes
+===============================
+
+.. currentmodule:: rustworkx
+
+.. automethod:: PyDAG.contract_nodes

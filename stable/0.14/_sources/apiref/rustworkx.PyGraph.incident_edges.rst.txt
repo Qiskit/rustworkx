@@ -1,0 +1,6 @@
+rustworkx.PyGraph.incident\_edges
+=================================
+
+.. currentmodule:: rustworkx
+
+.. automethod:: PyGraph.incident_edges

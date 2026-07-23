@@ -1,0 +1,6 @@
+﻿rustworkx.write\_graphml
+========================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: write_graphml

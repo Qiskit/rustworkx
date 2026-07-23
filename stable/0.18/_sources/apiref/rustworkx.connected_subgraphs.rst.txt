@@ -1,0 +1,6 @@
+﻿rustworkx.connected\_subgraphs
+==============================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: connected_subgraphs

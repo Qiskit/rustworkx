@@ -1,0 +1,10 @@
+﻿WeightedEdgeList
+================
+
+.. currentmodule:: rustworkx
+
+.. autoclass:: WeightedEdgeList
+   :no-members:
+   :show-inheritance:
+
+

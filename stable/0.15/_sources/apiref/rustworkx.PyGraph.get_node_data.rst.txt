@@ -1,0 +1,6 @@
+rustworkx.PyGraph.get\_node\_data
+=================================
+
+.. currentmodule:: rustworkx
+
+.. automethod:: PyGraph.get_node_data

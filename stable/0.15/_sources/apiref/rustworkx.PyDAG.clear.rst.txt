@@ -1,0 +1,6 @@
+rustworkx.PyDAG.clear
+=====================
+
+.. currentmodule:: rustworkx
+
+.. automethod:: PyDAG.clear

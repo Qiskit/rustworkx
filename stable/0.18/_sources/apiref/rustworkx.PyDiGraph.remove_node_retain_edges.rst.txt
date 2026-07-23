@@ -1,0 +1,6 @@
+rustworkx.PyDiGraph.remove\_node\_retain\_edges
+===============================================
+
+.. currentmodule:: rustworkx
+
+.. automethod:: PyDiGraph.remove_node_retain_edges
