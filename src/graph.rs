@@ -1578,6 +1578,33 @@ impl PyGraph {
         _from_adjacency_matrix(py, matrix, null_value)
     }
 
+    /// Create a new :class:`~rustworkx.PyGraph` object from a SciPy sparse
+    /// biadjacency matrix with matrix elements that can be converted to
+    /// ``float``.
+    ///
+    /// This method can be used to construct a new bipartite
+    /// :class:`~rustworkx.PyGraph` object from an input biadjacency matrix.
+    /// For an input matrix with shape ``(m, n)``, the first ``m`` nodes are
+    /// generated from the rows and the next ``n`` nodes are generated from the
+    /// columns. Each stored sparse matrix entry creates an edge between row
+    /// node ``i`` and column node ``m + j``.
+    ///
+    /// :param matrix: The input SciPy sparse biadjacency matrix or sparse
+    ///     array to create a new :class:`~rustworkx.PyGraph` object from.
+    ///
+    /// :returns: A new graph object generated from the biadjacency matrix
+    /// :rtype: PyGraph
+    ///
+    /// :raises ImportError: If SciPy is not installed.
+    #[staticmethod]
+    #[pyo3(signature=(matrix), text_signature = "(matrix, /)")]
+    pub fn from_biadjacency_matrix<'p>(
+        py: Python<'p>,
+        matrix: &Bound<'p, PyAny>,
+    ) -> PyResult<PyGraph> {
+        crate::connectivity::biadjacency::graph_from_biadjacency_matrix(py, matrix)
+    }
+
     /// Create a new :class:`~rustworkx.PyGraph` object from an adjacency matrix
     /// with matrix elements of type ``complex``
     ///
