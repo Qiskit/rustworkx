@@ -171,7 +171,7 @@ Tier Experimental
 -----------------
 
 Tier Experimental platforms are not tested upstream as part of the development process.
-Pre-compiled binaries are built by the external community in separate repositories. Not all of rustworkx might compile for
+Pre-compiled binaries are built and published to PyPI as part of the release process. Not all of rustworkx might compile for
 platforms of this tier and features can be removed. Often, platforms in this tier use unstable features
 from the Rust compiler and might break at any time. Support for these platforms are best effort only.
 
