@@ -1,0 +1,4 @@
+---
+prelude: |
+  Rustworkx 0.18.1 is a bugfix patch release that fixes several issues
+  identified since the 0.18.0 release.
