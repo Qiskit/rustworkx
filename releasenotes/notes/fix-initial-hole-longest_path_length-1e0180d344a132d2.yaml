@@ -1,0 +1,5 @@
+---
+fixes:
+  - |
+    Fixed ``rustwork_core::dag_algo::longest_path_length`` falsely returning ``Ok(None)`` when given 
+    a DAG with a defined path, but whose node at index zero was absent.
