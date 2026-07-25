@@ -430,21 +430,18 @@ where
         // Store the maximum distance and the corresponding parent node for the current node
         dist[graph.to_index(node)] = Some(max_path);
     }
-    let mut dist_iter = dist.into_iter();
-    let first = dist_iter
-        .next()
-        .flatten()
-        .map(|(a, b)| (a, graph.to_index(b)));
+    let mut dist_iter = dist
+        .into_iter()
+        .filter_map(|x| x.map(|(a, b)| (a, graph.to_index(b))));
+    let Some(first) = dist_iter.next() else {
+        return Ok(None);
+    };
     Ok(dist_iter
-        .filter_map(|x| x.map(|(a, b)| (a, graph.to_index(b))))
-        .fold(first, |a, b| {
-            let a = a?;
-            match a.partial_cmp(&b) {
-                Some(Ordering::Greater) => Some(a),
-                Some(Ordering::Equal) => Some(b),
-                Some(Ordering::Less) => Some(b),
-                None => None,
-            }
+        .try_fold(first, |a, b| match a.partial_cmp(&b) {
+            Some(Ordering::Greater) => Some(a),
+            Some(Ordering::Equal) => Some(b),
+            Some(Ordering::Less) => Some(b),
+            None => None,
         })
         .map(|x| x.0))
 }
@@ -1126,6 +1123,25 @@ mod test_longest_path_length {
         graph.add_edge(n0, n4, 3);
         graph.add_edge(n3, n4, 1);
         graph.remove_node(n1);
+        graph.remove_node(n2);
+        let weight_fn =
+            |edge: petgraph::stable_graph::EdgeReference<'_, i32>| Ok::<i32, &str>(*edge.weight());
+        let result = longest_path_length(&graph, weight_fn);
+        assert_eq!(result, Ok(Some(3)));
+    }
+
+    #[test]
+    fn test_longest_path_in_stable_digraph_with_initial_hole() {
+        let mut graph: StableDiGraph<(), i32> = StableDiGraph::new();
+        let n0 = graph.add_node(());
+        let n1 = graph.add_node(());
+        let n2 = graph.add_node(());
+        let n3 = graph.add_node(());
+        let n4 = graph.add_node(());
+        graph.add_edge(n1, n3, 1);
+        graph.add_edge(n1, n4, 3);
+        graph.add_edge(n3, n4, 1);
+        graph.remove_node(n0);
         graph.remove_node(n2);
         let weight_fn =
             |edge: petgraph::stable_graph::EdgeReference<'_, i32>| Ok::<i32, &str>(*edge.weight());
