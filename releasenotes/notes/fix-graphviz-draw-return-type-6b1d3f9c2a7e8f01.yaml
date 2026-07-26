@@ -1,0 +1,6 @@
+---
+fixes:
+  - |
+    Fixed the return type annotation of
+    :func:`~rustworkx.visualization.graphviz_draw` to use ``PIL.Image.Image``
+    instead of ``PIL.Image``.
