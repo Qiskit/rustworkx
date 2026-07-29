@@ -1,0 +1,15 @@
+---
+upgrade:
+  - |
+    The pre-compiled wheel package files for rustworkx published on pypi.org has
+    changed the manylinux tag used from manylinux 2014 to manylinux 2_28. This
+    means that the published rustworkx packages for Linux are compatible with
+    Linux distributions using glibc 2.28 or later. This includes:
+
+      * Debian 10+
+      * Ubuntu 18.10+
+      * Fedora 29+
+      * CentOS/RHEL 8+
+
+    This change was necessary because newer releases of NumPy already require
+    manylinux 2_28.
