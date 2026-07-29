@@ -1,37 +1,12 @@
 ---
 name: Wheel Builds
 on:
-  push:
-    tags:
-      - '*'
+  pull_request:
+    branches: ['main']
 jobs:
-  sdist:
-    name: Build sdist
-    runs-on: ubuntu-latest
-    environment: release
-    permissions:
-      id-token: write
-    needs: ["upload_shared_wheels"]
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        name: Install Python
-        with:
-          python-version: '3.12'
-      - name: Install deps
-        run: pip install -U "maturin>=1.9.0,<2.0" build
-      - name: Build sdist
-        run: python -m build --sdist
-      - uses: actions/upload-artifact@v4
-        with:
-          path: ./dist/*
-          name: sdist-rustworkx
-      - name: Publish package distributions to PyPI
-        uses: pypa/gh-action-pypi-publish@release/v1
   build_wheels:
     name: Build wheels on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
-    environment: release
     strategy:
       fail-fast: false
       matrix:
@@ -53,27 +28,9 @@ jobs:
         with:
           path: ./wheelhouse/*.whl
           name: shared-wheel-builds-${{ matrix.os }}
-  upload_shared_wheels:
-    name: Upload shared build wheels
-    runs-on: ubuntu-latest
-    environment: release
-    permissions:
-      id-token: write
-    needs: ["build_wheels", "build-win32-wheels"]
-    steps:
-      - uses: actions/download-artifact@v4
-        with:
-          pattern: shared-wheel-builds-*
-          merge-multiple: true
-          path: deploy
-      - name: Publish package distributions to PyPI
-        uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          packages-dir: deploy
   build_wheels_ppc64le:
     name: Build wheels on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
-    environment: release
     strategy:
       fail-fast: false
       matrix:
@@ -101,26 +58,9 @@ jobs:
         with:
           path: ./wheelhouse/*.whl
           name: wheel-builds-ppc64le
-  upload_wheels_ppc64le:
-    name: Upload wheels for ppc64le
-    runs-on: ubuntu-latest
-    environment: release
-    permissions:
-      id-token: write
-    needs: ["build_wheels_ppc64le", "upload_shared_wheels"]
-    steps:
-      - uses: actions/download-artifact@v4
-        with:
-          name: wheel-builds-ppc64le
-          path: wheelhouse
-      - name: Publish package distributions to PyPI
-        uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          packages-dir: wheelhouse/
   build_wheels_s390x:
     name: Build wheels on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
-    environment: release
     strategy:
       fail-fast: false
       matrix:
@@ -148,26 +88,9 @@ jobs:
         with:
           path: ./wheelhouse/*.whl
           name: wheel-builds-s390x
-  upload_wheels_s390x:
-    name: Upload wheels for s390x
-    runs-on: ubuntu-latest
-    environment: release
-    permissions:
-      id-token: write
-    needs: ["build_wheels_s390x", "upload_shared_wheels"]
-    steps:
-      - uses: actions/download-artifact@v4
-        with:
-          name: wheel-builds-s390x
-          path: wheelhouse
-      - name: Publish package distributions to PyPI
-        uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          packages-dir: wheelhouse/
   build-win32-wheels:
     name: Build wheels on win32
     runs-on: windows-latest
-    environment: release
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
