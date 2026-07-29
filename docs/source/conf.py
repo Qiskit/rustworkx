@@ -14,8 +14,10 @@
 # rustworkx documentation build configuration file
 #
 
-import sys, os
+import os
 import subprocess
+import tomllib
+from pathlib import Path
 
 # General configuration:
 
@@ -23,10 +25,11 @@ project = 'rustworkx'
 copyright = '2021, rustworkx Contributors'
 docs_url_prefix = ""
 
+with (Path(__file__).resolve().parents[2] / "pyproject.toml").open("rb") as project_file:
+    release = tomllib.load(project_file)["project"]["version"]
+
 # The short X.Y version.
-version = '0.17'
-# The full version, including alpha/beta/rc tags.
-release = '0.17.1'
+version = ".".join(release.split(".")[:2])
 
 extensions = ['sphinx.ext.autodoc',
               'sphinx.ext.autosummary',
