@@ -105,6 +105,10 @@ source.
      - x86_64
      - :ref:`tier-1`
      -
+   * - Windows 64bit
+     - ARM64 (aarch64)
+     - :ref:`tier-4`
+     - Wheels are cross-compiled on AMD64 and are not tested
    * - Pyodide 
      - WASM (Emscripten)
      - :ref:`tier-experimental`
