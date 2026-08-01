@@ -15,6 +15,7 @@ from typing import (
     final,
     Any,
     Generic,
+    Self,
     overload,
 )
 from collections.abc import Callable
@@ -39,11 +40,6 @@ if sys.version_info >= (3, 13):
     from typing import TypeVar
 else:
     from typing_extensions import TypeVar
-
-if sys.version_info >= (3, 11):
-    from typing import Self
-else:
-    from typing_extensions import Self
 
 _S = TypeVar("_S", default=Any)
 _T = TypeVar("_T", default=Any)

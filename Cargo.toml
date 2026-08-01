@@ -71,7 +71,7 @@ features = ["rayon"]
 
 [dependencies.pyo3]
 version = "0.29"
-features = ["abi3-py310", "extension-module", "hashbrown", "num-bigint", "num-complex", "indexmap", "py-clone"]
+features = ["abi3-py311", "extension-module", "hashbrown", "num-bigint", "num-complex", "indexmap", "py-clone"]
 
 [dependencies.sprs]
 version = "^0.11"
