@@ -373,26 +373,26 @@ where
                     self.remove_back_edges(u);
 
                     // side of ``e = (u, v)` is side of a highest return edge
-                    if self.lowpt[&e] < self.height[&u] {
-                        if let Some(top) = self.stack.last() {
-                            let e_high = match (top.left.high(), top.right.high()) {
-                                (Some(hl), Some(hr)) => {
-                                    if self.lowpt[hl] > self.lowpt[hr] {
-                                        hl
-                                    } else {
-                                        hr
-                                    }
+                    if self.lowpt[&e] < self.height[&u]
+                        && let Some(top) = self.stack.last()
+                    {
+                        let e_high = match (top.left.high(), top.right.high()) {
+                            (Some(hl), Some(hr)) => {
+                                if self.lowpt[hl] > self.lowpt[hr] {
+                                    hl
+                                } else {
+                                    hr
                                 }
-                                (Some(hl), None) => hl,
-                                (None, Some(hr)) => hr,
-                                _ => {
-                                    // Otherwise ``top`` would be empty, but we don't push
-                                    // empty conflict pairs in stack.
-                                    unreachable!()
-                                }
-                            };
-                            self.eref.insert(e, *e_high);
-                        }
+                            }
+                            (Some(hl), None) => hl,
+                            (None, Some(hr)) => hr,
+                            _ => {
+                                // Otherwise ``top`` would be empty, but we don't push
+                                // empty conflict pairs in stack.
+                                unreachable!()
+                            }
+                        };
+                        self.eref.insert(e, *e_high);
                     }
                 }
             }
@@ -402,20 +402,20 @@ where
     }
 
     fn until_top_of_stack_hits_emarker(&mut self, ei: Edge<G>) -> Option<ConflictPair<Edge<G>>> {
-        if let Some(&c_pair) = self.stack.last() {
-            if self.stack_emarker[&ei] != c_pair {
-                return self.stack.pop();
-            }
+        if let Some(&c_pair) = self.stack.last()
+            && self.stack_emarker[&ei] != c_pair
+        {
+            return self.stack.pop();
         }
 
         None
     }
 
     fn until_top_of_stack_is_conflicting(&mut self, ei: Edge<G>) -> Option<ConflictPair<Edge<G>>> {
-        if let Some(c_pair) = self.stack.last() {
-            if c_pair.left.conflict(self, ei) || c_pair.right.conflict(self, ei) {
-                return self.stack.pop();
-            }
+        if let Some(c_pair) = self.stack.last()
+            && (c_pair.left.conflict(self, ei) || c_pair.right.conflict(self, ei))
+        {
+            return self.stack.pop();
         }
 
         None
@@ -476,11 +476,11 @@ where
             }
 
             // merge interval below lowpt(ei) into ``c_pair.right``.
-            if let Some((qr_low, qr_high)) = q_pair.right.as_ref() {
-                if let Some(pr_low) = c_pair.right.as_mut_low() {
-                    self.eref.insert(*pr_low, *qr_high);
-                    *pr_low = *qr_low;
-                }
+            if let Some((qr_low, qr_high)) = q_pair.right.as_ref()
+                && let Some(pr_low) = c_pair.right.as_mut_low()
+            {
+                self.eref.insert(*pr_low, *qr_high);
+                *pr_low = *qr_low;
             };
             self.union_intervals(&mut c_pair.left, q_pair.left);
         }
@@ -496,10 +496,10 @@ where
         &mut self,
         v: G::NodeId,
     ) -> Option<ConflictPair<Edge<G>>> {
-        if let Some(c_pair) = self.stack.last() {
-            if c_pair.lowest(self) == self.height[&v] {
-                return self.stack.pop();
-            }
+        if let Some(c_pair) = self.stack.last()
+            && c_pair.lowest(self) == self.height[&v]
+        {
+            return self.stack.pop();
         }
 
         None

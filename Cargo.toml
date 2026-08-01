@@ -19,7 +19,7 @@ members = [
 [workspace.package]
 version = "0.18.0"
 edition = "2024"
-rust-version = "1.85"
+rust-version = "1.93"
 authors = ["Matthew Treinish <mtreinish@kortar.org>"]
 repository = "https://github.com/Qiskit/rustworkx"
 license = "Apache-2.0"

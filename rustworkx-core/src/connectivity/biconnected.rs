@@ -116,14 +116,13 @@ where
                     points.insert(pu_id);
                     // now find a biconnected component that the
                     // current articulation point belongs.
-                    if need_components {
-                        if let Some(at) = edge_stack.iter().rposition(|&x| x == (pu_id, u_id)) {
-                            tmp_components.extend(
-                                edge_stack[at..].iter().map(|edge| (*edge, num_components)),
-                            );
-                            edge_stack.truncate(at);
-                            num_components += 1;
-                        }
+                    if need_components
+                        && let Some(at) = edge_stack.iter().rposition(|&x| x == (pu_id, u_id))
+                    {
+                        tmp_components
+                            .extend(edge_stack[at..].iter().map(|edge| (*edge, num_components)));
+                        edge_stack.truncate(at);
+                        num_components += 1;
                     }
                 }
 
@@ -131,13 +130,14 @@ where
                     tmp_bridges.insert((pu_id, u_id));
                 }
 
-                if is_root(&parent, pu) && need_components {
-                    if let Some(at) = edge_stack.iter().position(|&x| x == (pu_id, u_id)) {
-                        tmp_components
-                            .extend(edge_stack[at..].iter().map(|edge| (*edge, num_components)));
-                        edge_stack.truncate(at);
-                        num_components += 1;
-                    }
+                if is_root(&parent, pu)
+                    && need_components
+                    && let Some(at) = edge_stack.iter().position(|&x| x == (pu_id, u_id))
+                {
+                    tmp_components
+                        .extend(edge_stack[at..].iter().map(|edge| (*edge, num_components)));
+                    edge_stack.truncate(at);
+                    num_components += 1;
                 }
             }
         }
