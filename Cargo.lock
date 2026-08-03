@@ -232,6 +232,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "hashbrown"
+version = "0.17.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ed5909b6e89a2db4456e54cd5f673791d7eca6732202bbf2a9cc504fe2f9b84a"
+
+[[package]]
 name = "heck"
 version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -245,12 +251,12 @@ checksum = "fc0fef456e4baa96da950455cd02c081ca953b141298e41db3fc7e36b1da849c"
 
 [[package]]
 name = "indexmap"
-version = "2.10.0"
+version = "2.14.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fe4cd85333e22411419a0bcae1297d25e58c9443848b11dc6a86fefe8c78a661"
+checksum = "d466e9454f08e4a911e14806c24e16fba1b4c121d1ea474396f396069cf949d9"
 dependencies = [
  "equivalent",
- "hashbrown",
+ "hashbrown 0.17.1",
  "rayon",
 ]
 
@@ -557,7 +563,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8701b58ea97060d5e5b155d383a69952a60943f0e6dfe30b04c287beb0b27455"
 dependencies = [
  "fixedbitset",
- "hashbrown",
+ "hashbrown 0.15.5",
  "indexmap",
  "serde",
 ]
@@ -612,7 +618,7 @@ version = "0.29.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cd274650b21d4bfc26a0a47587962c1edb425f69287324355cd040c3ea66071c"
 dependencies = [
- "hashbrown",
+ "hashbrown 0.15.5",
  "indexmap",
  "libc",
  "num-bigint",
@@ -859,7 +865,7 @@ dependencies = [
  "fixedbitset",
  "flate2",
  "foldhash",
- "hashbrown",
+ "hashbrown 0.15.5",
  "indexmap",
  "nalgebra-sparse",
  "ndarray",
@@ -890,7 +896,7 @@ version = "0.18.0"
 dependencies = [
  "fixedbitset",
  "foldhash",
- "hashbrown",
+ "hashbrown 0.15.5",
  "indexmap",
  "ndarray",
  "num-traits",
