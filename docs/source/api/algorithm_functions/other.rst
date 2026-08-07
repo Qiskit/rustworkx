@@ -7,6 +7,7 @@ Other Algorithm Functions
    :toctree: ../../apiref
 
    rustworkx.adjacency_matrix
+   rustworkx.biadjacency_matrix
    rustworkx.transitivity
    rustworkx.core_number
    rustworkx.graph_line_graph

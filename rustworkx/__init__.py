@@ -261,6 +261,42 @@ def adjacency_matrix(graph, weight_fn=None, default_weight=1.0, null_value=0.0, 
 
 
 @_rustworkx_dispatch
+def biadjacency_matrix(
+    graph,
+    row_order,
+    column_order,
+    weight_fn=None,
+    default_weight=1.0,
+    format="csr",
+    parallel_edge="sum",
+):
+    """Return the biadjacency matrix for a graph object as a SciPy sparse array.
+
+    :param graph: The graph used to generate the biadjacency matrix from. Can
+        be either a :class:`~rustworkx.PyGraph` or :class:`~rustworkx.PyDiGraph`.
+    :param list row_order: The node indices to use for the rows of the output
+        matrix.
+    :param list column_order: The node indices to use for the columns of the
+        output matrix.
+    :param callable weight_fn: A callable object which will be passed the edge
+        object and expected to return a ``float``.
+    :param float default_weight: If ``weight_fn`` is not used this can be
+        optionally used to specify a default weight to use for all edges.
+    :param str format: The SciPy sparse array format to return. Defaults to
+        ``"csr"``.
+    :param str parallel_edge: Optional argument that determines how the function
+        handles parallel edges. ``"min"``, ``"max"``, ``"avg"``, and ``"sum"``
+        are supported. The default is ``"sum"``.
+
+    :returns: The biadjacency matrix.
+    :rtype: scipy.sparse.sparray
+
+    :raises ImportError: If SciPy is not installed.
+    """
+    raise TypeError(f"Invalid Input Type {type(graph)} for graph")
+
+
+@_rustworkx_dispatch
 def all_simple_paths(graph, from_, to, min_depth=None, cutoff=None):
     """Return all simple paths between 2 nodes in a PyGraph object
 

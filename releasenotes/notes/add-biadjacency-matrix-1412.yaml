@@ -1,0 +1,7 @@
+---
+features:
+  - |
+    Added :meth:`~rustworkx.PyGraph.from_biadjacency_matrix`,
+    :meth:`~rustworkx.PyDiGraph.from_biadjacency_matrix`, and
+    :func:`~rustworkx.biadjacency_matrix` for SciPy sparse biadjacency matrix
+    conversion.

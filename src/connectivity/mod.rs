@@ -13,6 +13,7 @@
 #![allow(clippy::float_cmp)]
 
 mod all_pairs_all_simple_paths;
+pub(crate) mod biadjacency;
 mod johnson_simple_cycles;
 mod subgraphs;
 
@@ -786,6 +787,68 @@ pub fn digraph_adjacency_matrix<'py>(
     Ok(matrix.into_pyarray(py))
 }
 
+/// Return the biadjacency matrix for a PyDiGraph class
+///
+/// This function returns a SciPy sparse array with rows and columns ordered
+/// according to the explicit node index lists passed in. Only directed edges
+/// from ``row_order`` nodes to ``column_order`` nodes are included. The row
+/// and column orders must contain unique node indices and must be disjoint.
+/// SciPy is required at runtime to use this function.
+///
+/// In the case where there are multiple edges between nodes the value in the
+/// output matrix will be assigned based on a given parameter. Currently, the minimum, maximum, average, and default sum are supported.
+///
+/// :param PyDiGraph graph: The DiGraph used to generate the biadjacency matrix
+///     from
+/// :param list row_order: The node indices to use for the rows of the output
+///     matrix.
+/// :param list column_order: The node indices to use for the columns of the
+///     output matrix.
+/// :param callable weight_fn: A callable object (function, lambda, etc) which
+///     will be passed the edge object and expected to return a ``float``.
+/// :param float default_weight: If ``weight_fn`` is not used this can be
+///     optionally used to specify a default weight to use for all edges.
+/// :param str format: The SciPy sparse array format to return. Defaults to
+///     ``"csr"``.
+/// :param String parallel_edge: Optional argument that determines how the function handles parallel edges.
+///     ``"min"`` causes the value in the output matrix to be the minimum of the edges' weights, and similar behavior can be expected for ``"max"`` and ``"avg"``.
+///     The function defaults to ``"sum"`` behavior, where the value in the output matrix is the sum of all parallel edge weights.
+///
+/// :return: The biadjacency matrix for the input directed graph as a SciPy
+///     sparse array.
+/// :rtype: scipy.sparse.sparray
+///
+/// :raises ImportError: If SciPy is not installed.
+#[pyfunction]
+#[pyo3(
+    signature=(graph, row_order, column_order, weight_fn=None, default_weight=1.0, format="csr", parallel_edge="sum"),
+    text_signature = "(graph, row_order, column_order, /, weight_fn=None, default_weight=1.0, format=\"csr\", parallel_edge=\"sum\")"
+)]
+#[allow(clippy::too_many_arguments)]
+pub fn digraph_biadjacency_matrix<'py>(
+    py: Python<'py>,
+    graph: &digraph::PyDiGraph,
+    row_order: Vec<usize>,
+    column_order: Vec<usize>,
+    weight_fn: Option<Py<PyAny>>,
+    default_weight: f64,
+    format: &str,
+    parallel_edge: &str,
+) -> PyResult<Bound<'py, PyAny>> {
+    biadjacency::digraph_to_biadjacency_matrix(
+        py,
+        &graph.graph,
+        biadjacency::BiadjacencyMatrixOptions {
+            row_order,
+            column_order,
+            weight_fn,
+            default_weight,
+            format,
+            parallel_edge,
+        },
+    )
+}
+
 /// Return the adjacency matrix for a PyGraph class
 ///
 /// In the case where there are multiple edges between nodes the value in the
@@ -889,6 +952,66 @@ pub fn graph_adjacency_matrix<'py>(
         }
     }
     Ok(matrix.into_pyarray(py))
+}
+
+/// Return the biadjacency matrix for a PyGraph class
+///
+/// This function returns a SciPy sparse array with rows and columns ordered
+/// according to the explicit node index lists passed in. Edges between
+/// ``row_order`` nodes and ``column_order`` nodes are included. The row and
+/// column orders must contain unique node indices and must be disjoint.
+/// SciPy is required at runtime to use this function.
+///
+/// In the case where there are multiple edges between nodes the value in the
+/// output matrix will be assigned based on a given parameter. Currently, the minimum, maximum, average, and default sum are supported.
+///
+/// :param PyGraph graph: The graph used to generate the biadjacency matrix from
+/// :param list row_order: The node indices to use for the rows of the output
+///     matrix.
+/// :param list column_order: The node indices to use for the columns of the
+///     output matrix.
+/// :param callable weight_fn: A callable object (function, lambda, etc) which
+///     will be passed the edge object and expected to return a ``float``.
+/// :param float default_weight: If ``weight_fn`` is not used this can be
+///     optionally used to specify a default weight to use for all edges.
+/// :param str format: The SciPy sparse array format to return. Defaults to
+///     ``"csr"``.
+/// :param String parallel_edge: Optional argument that determines how the function handles parallel edges.
+///     ``"min"`` causes the value in the output matrix to be the minimum of the edges' weights, and similar behavior can be expected for ``"max"`` and ``"avg"``.
+///     The function defaults to ``"sum"`` behavior, where the value in the output matrix is the sum of all parallel edge weights.
+///
+/// :return: The biadjacency matrix for the input graph as a SciPy sparse array.
+/// :rtype: scipy.sparse.sparray
+///
+/// :raises ImportError: If SciPy is not installed.
+#[pyfunction]
+#[pyo3(
+    signature=(graph, row_order, column_order, weight_fn=None, default_weight=1.0, format="csr", parallel_edge="sum"),
+    text_signature = "(graph, row_order, column_order, /, weight_fn=None, default_weight=1.0, format=\"csr\", parallel_edge=\"sum\")"
+)]
+#[allow(clippy::too_many_arguments)]
+pub fn graph_biadjacency_matrix<'py>(
+    py: Python<'py>,
+    graph: &graph::PyGraph,
+    row_order: Vec<usize>,
+    column_order: Vec<usize>,
+    weight_fn: Option<Py<PyAny>>,
+    default_weight: f64,
+    format: &str,
+    parallel_edge: &str,
+) -> PyResult<Bound<'py, PyAny>> {
+    biadjacency::graph_to_biadjacency_matrix(
+        py,
+        &graph.graph,
+        biadjacency::BiadjacencyMatrixOptions {
+            row_order,
+            column_order,
+            weight_fn,
+            default_weight,
+            format,
+            parallel_edge,
+        },
+    )
 }
 
 /// Compute the complement of an undirected graph.
