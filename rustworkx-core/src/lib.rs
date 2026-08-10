@@ -47,6 +47,7 @@
 //! The crate provides the following graph algorithm modules
 //!
 //! * [`centrality`](./centrality/index.html)
+//! * [`community`](./community/index.html)
 //! * [`connectivity`](./connectivity/index.html)
 //! * [`max_weight_matching`](./max_weight_matching/index.html)
 //! * [`shortest_path`](./shortest_path/index.html)
@@ -97,6 +98,8 @@ pub mod bipartite_coloring;
 pub mod centrality;
 /// Module for coloring algorithms.
 pub mod coloring;
+/// Module for community detection algorithms.
+pub mod community;
 pub mod connectivity;
 /// Module for algorithms that work on DAGs.
 pub mod dag_algo;
