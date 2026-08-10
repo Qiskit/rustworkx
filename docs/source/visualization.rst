@@ -11,3 +11,4 @@ Visualization API
 
    rustworkx.visualization.mpl_draw
    rustworkx.visualization.graphviz_draw
+   rustworkx.visualization.plotly_draw
