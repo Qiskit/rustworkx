@@ -592,6 +592,198 @@ pub fn directed_grid_graph(
     })
 }
 
+/// Generate an undirected n-dimensional grid graph.
+///
+/// The n-dimensional grid graph has nodes at each point `(i_0, i_1, ..., i_{n-1})`
+/// where `0 <= i_k < dim[k]` for each dimension k. Two nodes are connected by an
+/// edge if they differ by exactly 1 in exactly one coordinate.
+///
+/// :param list dim: A sequence of integers representing the size of each dimension.
+///     For example, ``[2, 3, 4]`` creates a 3D grid of size 2×3×4 with 24 nodes.
+/// :param bool periodic: When set to ``True``, all dimensions will be periodic
+///     (wrapping), creating a torus-like structure. Defaults to ``False``.
+/// :param bool with_positions: When set to ``True``, each node will be assigned
+///     a tuple containing its coordinates in the grid as its weight. Defaults to ``False``.
+/// :param bool multigraph: When set to ``False``, the output
+///     :class:`~rustworkx.PyGraph` object will not be a multigraph and
+///     won't allow parallel edges to be added. Instead,
+///     calls which would create a parallel edge will update the existing edge.
+///
+/// :returns: The generated n-dimensional grid graph
+/// :rtype: PyGraph
+/// :raises IndexError: If ``dim`` is empty or contains zeros
+/// :raises ValueError: If periodic is enabled for a dimension with size < 2
+///
+/// .. jupyter-execute::
+///
+///   import rustworkx.generators
+///   from rustworkx.visualization import mpl_draw
+///
+///   # Create a 3x3x3 cube
+///   graph = rustworkx.generators.nd_grid_graph([3, 3, 3])
+///   len(graph)  # 27 nodes
+///
+#[pyfunction]
+#[pyo3(
+    signature=(dim, periodic=false, with_positions=false, multigraph=true),
+)]
+pub fn nd_grid_graph(
+    py: Python,
+    dim: Vec<usize>,
+    periodic: bool,
+    with_positions: bool,
+    multigraph: bool,
+) -> PyResult<graph::PyGraph> {
+    let periodic_vec: Option<Vec<bool>> = if periodic {
+        Some(vec![true; dim.len()])
+    } else {
+        None
+    };
+
+    let graph: StablePyGraph<Undirected> = if with_positions {
+        let node_weight_fn = |coords: &[usize]| {
+            let tuple: Vec<usize> = coords.to_vec();
+            tuple.into_py_any(py).unwrap()
+        };
+        match core_generators::nd_grid_graph_weighted(
+            &dim,
+            node_weight_fn,
+            || py.None(),
+            false,
+            periodic_vec.as_deref(),
+        ) {
+            Ok(graph) => graph,
+            Err(_) => {
+                return Err(PyIndexError::new_err(
+                    "Invalid dimensions: dim must be non-empty and contain no zeros",
+                ))
+            }
+        }
+    } else {
+        match core_generators::nd_grid_graph(
+            &dim,
+            || py.None(),
+            || py.None(),
+            false,
+            periodic_vec.as_deref(),
+        ) {
+            Ok(graph) => graph,
+            Err(_) => {
+                return Err(PyIndexError::new_err(
+                    "Invalid dimensions: dim must be non-empty and contain no zeros",
+                ))
+            }
+        }
+    };
+
+    Ok(graph::PyGraph {
+        graph,
+        node_removed: false,
+        multigraph,
+        attrs: py.None(),
+    })
+}
+
+/// Generate a directed n-dimensional grid graph.
+///
+/// The n-dimensional grid graph has nodes at each point `(i_0, i_1, ..., i_{n-1})`
+/// where `0 <= i_k < dim[k]` for each dimension k. Two nodes are connected by an
+/// edge if they differ by exactly 1 in exactly one coordinate.
+///
+/// The edges propagate in the positive direction along each axis if ``bidirectional``
+/// is ``False``.
+///
+/// :param list dim: A sequence of integers representing the size of each dimension.
+///     For example, ``[2, 3, 4]`` creates a 3D grid of size 2×3×4 with 24 nodes.
+/// :param bool periodic: When set to ``True``, all dimensions will be periodic
+///     (wrapping), creating a torus-like structure. Defaults to ``False``.
+/// :param bool with_positions: When set to ``True``, each node will be assigned
+///     a tuple containing its coordinates in the grid as its weight. Defaults to ``False``.
+/// :param bool bidirectional: A parameter to indicate if edges should exist in
+///     both directions between nodes. Defaults to ``False``.
+/// :param bool multigraph: When set to ``False``, the output
+///     :class:`~rustworkx.PyDiGraph` object will not be a multigraph and
+///     won't allow parallel edges to be added. Instead,
+///     calls which would create a parallel edge will update the existing edge.
+///
+/// :returns: The generated directed n-dimensional grid graph
+/// :rtype: PyDiGraph
+/// :raises IndexError: If ``dim`` is empty or contains zeros
+/// :raises ValueError: If periodic is enabled for a dimension with size < 2
+///
+/// .. jupyter-execute::
+///
+///   import rustworkx.generators
+///   from rustworkx.visualization import mpl_draw
+///
+///   # Create a directed 2x2x2 cube
+///   graph = rustworkx.generators.directed_nd_grid_graph([2, 2, 2])
+///   len(graph)  # 8 nodes
+///
+#[pyfunction]
+#[pyo3(
+    signature=(dim, periodic=false, with_positions=false, bidirectional=false, multigraph=true),
+)]
+pub fn directed_nd_grid_graph(
+    py: Python,
+    dim: Vec<usize>,
+    periodic: bool,
+    with_positions: bool,
+    bidirectional: bool,
+    multigraph: bool,
+) -> PyResult<digraph::PyDiGraph> {
+    let periodic_vec: Option<Vec<bool>> = if periodic {
+        Some(vec![true; dim.len()])
+    } else {
+        None
+    };
+
+    let graph: StablePyGraph<Directed> = if with_positions {
+        let node_weight_fn = |coords: &[usize]| {
+            let tuple: Vec<usize> = coords.to_vec();
+            tuple.into_py_any(py).unwrap()
+        };
+        match core_generators::nd_grid_graph_weighted(
+            &dim,
+            node_weight_fn,
+            || py.None(),
+            bidirectional,
+            periodic_vec.as_deref(),
+        ) {
+            Ok(graph) => graph,
+            Err(_) => {
+                return Err(PyIndexError::new_err(
+                    "Invalid dimensions: dim must be non-empty and contain no zeros",
+                ))
+            }
+        }
+    } else {
+        match core_generators::nd_grid_graph(
+            &dim,
+            || py.None(),
+            || py.None(),
+            bidirectional,
+            periodic_vec.as_deref(),
+        ) {
+            Ok(graph) => graph,
+            Err(_) => {
+                return Err(PyIndexError::new_err(
+                    "Invalid dimensions: dim must be non-empty and contain no zeros",
+                ))
+            }
+        }
+    };
+
+    Ok(digraph::PyDiGraph {
+        graph,
+        node_removed: false,
+        check_cycle: false,
+        cycle_state: algo::DfsSpace::default(),
+        multigraph,
+        attrs: py.None(),
+    })
+}
+
 /// Generate an undirected heavy square graph.
 ///
 /// Fig. 6 of https://arxiv.org/abs/1907.09528.
@@ -1790,6 +1982,8 @@ pub fn generators(_py: Python, m: &Bound<PyModule>) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(directed_mesh_graph))?;
     m.add_wrapped(wrap_pyfunction!(grid_graph))?;
     m.add_wrapped(wrap_pyfunction!(directed_grid_graph))?;
+    m.add_wrapped(wrap_pyfunction!(nd_grid_graph))?;
+    m.add_wrapped(wrap_pyfunction!(directed_nd_grid_graph))?;
     m.add_wrapped(wrap_pyfunction!(heavy_square_graph))?;
     m.add_wrapped(wrap_pyfunction!(directed_heavy_square_graph))?;
     m.add_wrapped(wrap_pyfunction!(heavy_hex_graph))?;
