@@ -103,6 +103,52 @@ class TestDfsSearch(unittest.TestCase):
             pass
         self.assertEqual(vis.reconstruct_path(), [0, 2, 5, 3])
 
+    def test_digraph_prune_finish_vertex(self):
+        class PruneFinishVertex(rustworkx.visit.DFSVisitor):
+            def finish_vertex(self, v, t):
+                raise rustworkx.visit.PruneSearch
+
+        vis = PruneFinishVertex()
+        with self.assertRaisesRegex(RuntimeError, "finish_vertex"):
+            rustworkx.digraph_dfs_search(self.graph, [0], vis)
+
+    def test_digraph_prune_finish_vertex_mid_traversal(self):
+        class PruneSecondFinish(rustworkx.visit.DFSVisitor):
+            def __init__(self):
+                self.finished = []
+
+            def finish_vertex(self, v, t):
+                self.finished.append(v)
+                if len(self.finished) == 2:
+                    raise rustworkx.visit.PruneSearch
+
+        vis = PruneSecondFinish()
+        with self.assertRaisesRegex(RuntimeError, "finish_vertex"):
+            rustworkx.digraph_dfs_search(self.graph, [0], vis)
+        self.assertEqual(vis.finished, [6, 3])
+
+    def test_digraph_prune_finish_vertex_no_starting_point(self):
+        class PruneFinishVertex(rustworkx.visit.DFSVisitor):
+            def finish_vertex(self, v, t):
+                raise rustworkx.visit.PruneSearch
+
+        with self.assertRaisesRegex(RuntimeError, "finish_vertex"):
+            rustworkx.digraph_dfs_search(self.graph, None, PruneFinishVertex())
+
+    def test_digraph_stop_search_finish_vertex(self):
+        class StopFinishVertex(rustworkx.visit.DFSVisitor):
+            def __init__(self):
+                self.finished = []
+
+            def finish_vertex(self, v, t):
+                self.finished.append(v)
+                raise rustworkx.visit.StopSearch
+
+        vis = StopFinishVertex()
+        with self.assertRaises(rustworkx.visit.StopSearch):
+            rustworkx.digraph_dfs_search(self.graph, [0], vis)
+        self.assertEqual(vis.finished, [6])
+
     def test_invalid_source(self):
         graph = rustworkx.PyDiGraph()
         with self.assertRaises(IndexError):
