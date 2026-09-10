@@ -91,10 +91,8 @@ pub fn floyd_warshall<Ty: EdgeType>(
         if let Some(row_i) = mat.get_mut(i) {
             insert_or_minimize!(row_i, j, edge_weight);
         }
-        if as_undirected {
-            if let Some(row_j) = mat.get_mut(j) {
-                insert_or_minimize!(row_j, i, edge_weight);
-            }
+        if as_undirected && let Some(row_j) = mat.get_mut(j) {
+            insert_or_minimize!(row_j, i, edge_weight);
         }
     }
 

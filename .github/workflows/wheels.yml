@@ -95,7 +95,7 @@ jobs:
           source .venv/bin/activate
           python -m cibuildwheel --output-dir wheelhouse
         env:
-          CIBW_SKIP: pp* *win32 *musl*
+          CIBW_SKIP: pp* cp310-* *win32 *musl*
           CIBW_ARCHS_LINUX: ppc64le
       - uses: actions/upload-artifact@v4
         with:
@@ -142,7 +142,7 @@ jobs:
           source .venv/bin/activate
           python -m cibuildwheel --output-dir wheelhouse
         env:
-          CIBW_SKIP: pp* cp314t-*s390x *win32 *musl*
+          CIBW_SKIP: pp* cp310-* cp314t-*s390x *win32 *musl*
           CIBW_ARCHS_LINUX: s390x
       - uses: actions/upload-artifact@v4
         with:
@@ -230,7 +230,7 @@ jobs:
         run: |
           python -m cibuildwheel --output-dir wheelhouse
         env:
-          CIBW_SKIP: pp* c*t-win* *amd64 *musl*
+          CIBW_SKIP: pp* cp310-* c*t-win* *amd64 *musl*
       - uses: actions/upload-artifact@v4
         with:
           path: ./wheelhouse/*.whl

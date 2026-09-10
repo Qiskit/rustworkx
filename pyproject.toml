@@ -2,7 +2,7 @@
 name = "rustworkx"
 version = "0.18.0"
 description = "A High-Performance Graph Library for Python"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 dependencies = [
     "numpy>=1.16.0,<3"
 ]
@@ -14,7 +14,6 @@ classifiers=[
     "Intended Audience :: Science/Research",
     "Programming Language :: Rust",
     "Programming Language :: Python :: 3 :: Only",
-    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
@@ -94,7 +93,7 @@ docs = [
     "lxml_html_clean",
 ]
 releaseinfra = [
-    "cibuildwheel==3.3.0; python_version >= '3.11'",
+    "cibuildwheel==3.3.0",
 ]
 
 [tool.ruff]
@@ -107,7 +106,7 @@ lint.select = [
     "PYI", # flake8-pyi
     "Q",   # flake8-quotes
 ]
-target-version = "py310"
+target-version = "py311"
 extend-exclude = ["doc"]
 
 [tool.ruff.lint.per-file-ignores]
@@ -134,7 +133,7 @@ manylinux-i686-image = "manylinux_2_28"
 manylinux-aarch64-image = "manylinux_2_28"
 manylinux-ppc64le-image = "manylinux_2_28"
 manylinux-s390x-image = "manylinux_2_28"
-skip = "pp* cp314t-win* c*t-*i686 cp314t-*s390x *win32 *musllinux*i686"
+skip = "pp* cp310-* cp314t-win* c*t-*i686 cp314t-*s390x *win32 *musllinux*i686"
 test-requires = "networkx"
 test-command = "python -m unittest discover {project}/tests"
 before-build = 'pip install -U "maturin>=1.9.0,<2.0"'

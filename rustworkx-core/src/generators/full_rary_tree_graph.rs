@@ -79,10 +79,10 @@ where
     H: FnMut() -> M,
     G::NodeId: Eq + Hash,
 {
-    if let Some(wt) = weights.as_ref() {
-        if wt.len() > num_nodes {
-            return Err(InvalidInputError {});
-        }
+    if let Some(wt) = weights.as_ref()
+        && wt.len() > num_nodes
+    {
+        return Err(InvalidInputError {});
     }
     let mut graph = G::with_capacity(num_nodes, num_nodes * branching_factor);
 
