@@ -1,0 +1,6 @@
+rustworkx.visit.BFSVisitor.black\_target\_edge
+==============================================
+
+.. currentmodule:: rustworkx.visit
+
+.. automethod:: BFSVisitor.black_target_edge

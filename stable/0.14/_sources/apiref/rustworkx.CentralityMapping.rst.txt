@@ -1,0 +1,20 @@
+﻿CentralityMapping
+=================
+
+.. currentmodule:: rustworkx
+
+.. autoclass:: CentralityMapping
+   :no-members:
+   :show-inheritance:
+
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+      :toctree: ../apiref/
+
+      ~CentralityMapping.items
+      ~CentralityMapping.keys
+      ~CentralityMapping.values
+
+

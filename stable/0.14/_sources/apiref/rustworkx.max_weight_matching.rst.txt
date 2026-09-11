@@ -1,0 +1,6 @@
+﻿rustworkx.max\_weight\_matching
+===============================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: max_weight_matching

@@ -1,0 +1,6 @@
+rustworkx.visit.DijkstraVisitor.discover\_vertex
+================================================
+
+.. currentmodule:: rustworkx.visit
+
+.. automethod:: DijkstraVisitor.discover_vertex

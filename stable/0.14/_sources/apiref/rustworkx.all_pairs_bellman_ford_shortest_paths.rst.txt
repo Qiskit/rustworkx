@@ -1,0 +1,6 @@
+﻿rustworkx.all\_pairs\_bellman\_ford\_shortest\_paths
+====================================================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: all_pairs_bellman_ford_shortest_paths

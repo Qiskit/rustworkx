@@ -1,0 +1,6 @@
+﻿rustworkx.graph\_dfs\_search
+============================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: graph_dfs_search

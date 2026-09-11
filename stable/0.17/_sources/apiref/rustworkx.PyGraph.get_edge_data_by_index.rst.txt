@@ -1,0 +1,6 @@
+rustworkx.PyGraph.get\_edge\_data\_by\_index
+============================================
+
+.. currentmodule:: rustworkx
+
+.. automethod:: PyGraph.get_edge_data_by_index

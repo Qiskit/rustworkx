@@ -1,0 +1,20 @@
+﻿AllPairsPathMapping
+===================
+
+.. currentmodule:: rustworkx
+
+.. autoclass:: AllPairsPathMapping
+   :no-members:
+   :show-inheritance:
+
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+      :toctree: ../apiref/
+
+      ~AllPairsPathMapping.items
+      ~AllPairsPathMapping.keys
+      ~AllPairsPathMapping.values
+
+

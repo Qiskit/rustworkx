@@ -1,0 +1,790 @@
+
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Release Notes &mdash; rustworkx 0.12.1 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!-- <link rel="stylesheet" href="_static/pygments.css" type="text/css" /> -->
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/jupyter-sphinx.css" type="text/css" />
+  <link rel="stylesheet" href="_static/thebelab.css" type="text/css" />
+  <link rel="stylesheet" href="_static/style.css" type="text/css" />
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Contributing" href="CONTRIBUTING.html" />
+    <link rel="prev" title="rustworkx.visualization.graphviz_draw" href="apiref/rustworkx.visualization.graphviz_draw.html" /> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="pytorch-body">
+
+   
+
+    
+
+    <div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    <span class="rst-current-version-label">0.12</span>
+    <span class="rst-versions-dropdown-icon"></span>
+  </span>
+  <div class="rst-other-versions">
+    <dl>
+      <dt>Versions</dt>
+          <dd><a class="version" href="/documentation/retworkx/index.html">Current Release</a></dd>
+          <dd><a class="version" href="/documentation/retworkx/dev/index.html">Development</a></dd>
+      <dt>Previous Releases</dt>
+        
+            <dd><a class="version" href="/documentation/retworkx/stable/0.12/index.html">0.12</a></dd>
+        
+    </dl>
+  </div>
+  <script>
+    jQuery('.version').click((evt) => {
+      const hash = window.location.hash
+      const complete_url = evt.target.href + hash
+      window.location = complete_url
+      evt.preventDefault()
+    })
+  </script>
+</div>
+
+    <div class="table-of-contents-link-wrapper">
+      <span>Table of Contents</span>
+      <a href="#" class="toggle-table-of-contents" data-behavior="toggle-table-of-contents"></a>
+    </div>
+
+    <nav data-toggle="wy-nav-shift" class="pytorch-left-menu" id="pytorch-left-menu">
+      <div class="pytorch-side-scroll">
+        <div class="pytorch-menu pytorch-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          <div class="pytorch-left-menu-search">
+            
+
+            
+              
+              
+                <div class="version">
+                  0.12.1
+                </div>
+              
+            
+
+            
+
+
+  
+
+
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search Docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+            
+          </div>
+
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="install.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="install.html#installing-rustworkx">Installing Rustworkx</a></li>
+<li class="toctree-l1"><a class="reference internal" href="install.html#platform-support">Platform Support</a></li>
+<li class="toctree-l1"><a class="reference internal" href="install.html#using-rustworkx">Using rustworkx</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorial/index.html">Rustworkx Tutorials and Guides</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">Rustworkx API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="visualization.html">Visualization</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="CONTRIBUTING.html">Contributing Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="networkx.html">rustworkx for NetworkX users</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <div class="pytorch-container">
+      <div class="pytorch-page-level-bar" id="pytorch-page-level-bar">
+        <div class="pytorch-breadcrumbs-wrapper">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="pytorch-breadcrumbs">
+    
+      <li>
+        <a href="index.html">
+          
+            Docs
+          
+        </a> &gt;
+      </li>
+
+        
+      <li>Release Notes</li>
+    
+    
+      <li class="pytorch-breadcrumbs-aside">
+        
+            
+            <a href="_sources/release_notes.rst.txt" rel="nofollow"><img src="_static/images/view-page-source-icon.svg"></a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+</div>
+        </div>
+
+        <div class="pytorch-shortcuts-wrapper" id="pytorch-shortcuts-wrapper">
+          Shortcuts
+        </div>
+      </div>
+
+      <section data-toggle="wy-nav-shift" id="pytorch-content-wrap" class="pytorch-content-wrap">
+        <div class="pytorch-content-left">
+          
+          <div class="rst-content style-external-links">
+          
+            <div role="main" class="main-content" itemscope="itemscope" itemtype="http://schema.org/Article">
+             <article itemprop="articleBody" id="pytorch-article" class="pytorch-article">
+              
+  <br><br><br><section id="release-notes">
+<h1>Release Notes<a class="headerlink" href="#release-notes" title="Permalink to this heading">¶</a></h1>
+<section id="relnotes-0-12-1">
+<span id="id1"></span><h2>0.12.1<a class="headerlink" href="#relnotes-0-12-1" title="Permalink to this heading">¶</a></h2>
+<section id="prelude">
+<span id="relnotes-0-12-1-prelude"></span><h3>Prelude<a class="headerlink" href="#prelude" title="Permalink to this heading">¶</a></h3>
+<p>This release is a bugfix release that fixes bugs identified since the
+0.12.0 release.</p>
+</section>
+<section id="bug-fixes">
+<span id="relnotes-0-12-1-bug-fixes"></span><h3>Bug Fixes<a class="headerlink" href="#bug-fixes" title="Permalink to this heading">¶</a></h3>
+<ul class="simple">
+<li><p>Fixed a compatibility issue when building <code class="docutils literal notranslate"><span class="pre">rustworkx-core</span></code> with
+priority-queue 1.3.0.
+Fixed <a class="reference external" href="https://github.com/Qiskit/rustworkx/issues/744">#744</a></p></li>
+</ul>
+<ul class="simple">
+<li><p>Fixed an issue with the custom sequence return types,
+<a class="reference internal" href="apiref/rustworkx.BFSSuccessors.html#rustworkx.BFSSuccessors" title="rustworkx.BFSSuccessors"><code class="xref py py-class docutils literal notranslate"><span class="pre">BFSSuccessors</span></code></a>, <a class="reference internal" href="apiref/rustworkx.NodeIndices.html#rustworkx.NodeIndices" title="rustworkx.NodeIndices"><code class="xref py py-class docutils literal notranslate"><span class="pre">NodeIndices</span></code></a>, <a class="reference internal" href="apiref/rustworkx.EdgeList.html#rustworkx.EdgeList" title="rustworkx.EdgeList"><code class="xref py py-class docutils literal notranslate"><span class="pre">EdgeList</span></code></a>,
+<a class="reference internal" href="apiref/rustworkx.WeightedEdgeList.html#rustworkx.WeightedEdgeList" title="rustworkx.WeightedEdgeList"><code class="xref py py-class docutils literal notranslate"><span class="pre">WeightedEdgeList</span></code></a>, <a class="reference internal" href="apiref/rustworkx.EdgeIndices.html#rustworkx.EdgeIndices" title="rustworkx.EdgeIndices"><code class="xref py py-class docutils literal notranslate"><span class="pre">EdgeIndices</span></code></a>, and <a class="reference internal" href="apiref/rustworkx.Chains.html#rustworkx.Chains" title="rustworkx.Chains"><code class="xref py py-class docutils literal notranslate"><span class="pre">Chains</span></code></a>
+where they previosuly were missing certain attributes that prevented them
+being used as a sequence for certain built-in functions such as
+<code class="docutils literal notranslate"><span class="pre">reversed()</span></code>.
+Fixed <a class="reference external" href="https://github.com/Qiskit/rustworkx/issues/696">#696</a>.</p></li>
+</ul>
+</section>
+</section>
+<section id="id2">
+<h2>0.7.1<a class="headerlink" href="#id2" title="Permalink to this heading">¶</a></h2>
+<p>This release includes a fix for an oversight in the previous 0.7.0 and
+0.6.0 releases. Those releases both added custom return types
+<a class="reference internal" href="apiref/rustworkx.BFSSuccessors.html#rustworkx.BFSSuccessors" title="rustworkx.BFSSuccessors"><code class="xref py py-class docutils literal notranslate"><span class="pre">BFSSuccessors</span></code></a>, <a class="reference internal" href="apiref/rustworkx.NodeIndices.html#rustworkx.NodeIndices" title="rustworkx.NodeIndices"><code class="xref py py-class docutils literal notranslate"><span class="pre">NodeIndices</span></code></a>,
+<a class="reference internal" href="apiref/rustworkx.EdgeList.html#rustworkx.EdgeList" title="rustworkx.EdgeList"><code class="xref py py-class docutils literal notranslate"><span class="pre">EdgeList</span></code></a>, and <a class="reference internal" href="apiref/rustworkx.WeightedEdgeList.html#rustworkx.WeightedEdgeList" title="rustworkx.WeightedEdgeList"><code class="xref py py-class docutils literal notranslate"><span class="pre">WeightedEdgeList</span></code></a> that
+implemented the Python sequence protocol which were used in place of
+lists for certain functions and methods. However, none of those classes
+had support for being pickled, which was causing compatibility issues
+for users that were using the return in a context where it would be
+pickled (for example as an argument to or return of a function called
+with multiprocessing). This release has a single change over 0.7.0 which
+is to add the missing support for pickling <a class="reference internal" href="apiref/rustworkx.BFSSuccessors.html#rustworkx.BFSSuccessors" title="rustworkx.BFSSuccessors"><code class="xref py py-class docutils literal notranslate"><span class="pre">BFSSuccessors</span></code></a>,
+<a class="reference internal" href="apiref/rustworkx.NodeIndices.html#rustworkx.NodeIndices" title="rustworkx.NodeIndices"><code class="xref py py-class docutils literal notranslate"><span class="pre">NodeIndices</span></code></a>, <a class="reference internal" href="apiref/rustworkx.EdgeList.html#rustworkx.EdgeList" title="rustworkx.EdgeList"><code class="xref py py-class docutils literal notranslate"><span class="pre">EdgeList</span></code></a>, and
+<a class="reference internal" href="apiref/rustworkx.WeightedEdgeList.html#rustworkx.WeightedEdgeList" title="rustworkx.WeightedEdgeList"><code class="xref py py-class docutils literal notranslate"><span class="pre">WeightedEdgeList</span></code></a> which fixes that issue.</p>
+</section>
+<section id="id3">
+<h2>0.7.0<a class="headerlink" href="#id3" title="Permalink to this heading">¶</a></h2>
+<p>This release includes several new features and bug fixes.</p>
+<p>This release also dropped support for Python 3.5. If you want to use
+rustworkx with Python 3.5 that last version which supports Python 3.5
+is 0.6.0.</p>
+<section id="new-features">
+<h3>New Features<a class="headerlink" href="#new-features" title="Permalink to this heading">¶</a></h3>
+<ul class="simple">
+<li><p>New generator functions for two new generator types, mesh and grid
+were added to <code class="xref py py-mod docutils literal notranslate"><span class="pre">rustworkx.generators</span></code> for generating all to all and grid
+graphs respectively.  These functions are:
+<a class="reference internal" href="apiref/rustworkx.generators.mesh_graph.html#rustworkx.generators.mesh_graph" title="rustworkx.generators.mesh_graph"><code class="xref py py-func docutils literal notranslate"><span class="pre">mesh_graph()</span></code></a>,
+<a class="reference internal" href="apiref/rustworkx.generators.directed_mesh_graph.html#rustworkx.generators.directed_mesh_graph" title="rustworkx.generators.directed_mesh_graph"><code class="xref py py-func docutils literal notranslate"><span class="pre">directed_mesh_graph()</span></code></a>,
+<a class="reference internal" href="apiref/rustworkx.generators.grid_graph.html#rustworkx.generators.grid_graph" title="rustworkx.generators.grid_graph"><code class="xref py py-func docutils literal notranslate"><span class="pre">grid_graph()</span></code></a>, and
+<a class="reference internal" href="apiref/rustworkx.generators.directed_grid_graph.html#rustworkx.generators.directed_grid_graph" title="rustworkx.generators.directed_grid_graph"><code class="xref py py-func docutils literal notranslate"><span class="pre">directed_grid_graph()</span></code></a></p></li>
+<li><p>A new function, <a class="reference internal" href="apiref/rustworkx.digraph_union.html#rustworkx.digraph_union" title="rustworkx.digraph_union"><code class="xref py py-func docutils literal notranslate"><span class="pre">rustworkx.digraph_union()</span></code></a>, for taking the union between
+two <a class="reference internal" href="apiref/rustworkx.PyDiGraph.html#rustworkx.PyDiGraph" title="rustworkx.PyDiGraph"><code class="xref py py-class docutils literal notranslate"><span class="pre">PyDiGraph</span></code></a> objects has been added.</p></li>
+<li><p>A new <a class="reference internal" href="apiref/rustworkx.PyDiGraph.html#rustworkx.PyDiGraph" title="rustworkx.PyDiGraph"><code class="xref py py-class docutils literal notranslate"><span class="pre">PyDiGraph</span></code></a> method
+<a class="reference internal" href="apiref/rustworkx.PyDiGraph.merge_nodes.html#rustworkx.PyDiGraph.merge_nodes" title="rustworkx.PyDiGraph.merge_nodes"><code class="xref py py-meth docutils literal notranslate"><span class="pre">merge_nodes()</span></code></a> has been added. This method can be
+used to merge 2 nodes in a graph if they have the same weight/data payload.</p></li>
+<li><p>A new <a class="reference internal" href="apiref/rustworkx.PyDiGraph.html#rustworkx.PyDiGraph" title="rustworkx.PyDiGraph"><code class="xref py py-class docutils literal notranslate"><span class="pre">PyDiGraph</span></code></a> method
+<a class="reference internal" href="apiref/rustworkx.PyDiGraph.find_node_by_weight.html#rustworkx.PyDiGraph.find_node_by_weight" title="rustworkx.PyDiGraph.find_node_by_weight"><code class="xref py py-meth docutils literal notranslate"><span class="pre">find_node_by_weight()</span></code></a> which can be used to lookup
+a node index by a given weight/data payload.</p></li>
+<li><p>A new return type <a class="reference internal" href="apiref/rustworkx.NodeIndices.html#rustworkx.NodeIndices" title="rustworkx.NodeIndices"><code class="xref py py-class docutils literal notranslate"><span class="pre">NodeIndices</span></code></a> has been added. This class
+is returned by functions and methods that return a list of node indices. It
+implements the Python sequence protocol and can be used as list.</p></li>
+<li><p>Two new return types <a class="reference internal" href="apiref/rustworkx.EdgeList.html#rustworkx.EdgeList" title="rustworkx.EdgeList"><code class="xref py py-class docutils literal notranslate"><span class="pre">EdgeList</span></code></a> and
+<a class="reference internal" href="apiref/rustworkx.WeightedEdgeList.html#rustworkx.WeightedEdgeList" title="rustworkx.WeightedEdgeList"><code class="xref py py-class docutils literal notranslate"><span class="pre">WeightedEdgeList</span></code></a>. These classes are returned from functions
+and methods that return a list of edge tuples and a list of edge tuples with
+weights. They both implement the Python sequence protocol and can be used as
+a list</p></li>
+<li><p>A new function <a class="reference internal" href="apiref/rustworkx.collect_runs.html#rustworkx.collect_runs" title="rustworkx.collect_runs"><code class="xref py py-func docutils literal notranslate"><span class="pre">collect_runs()</span></code></a> has been added. This function is
+used to find linear paths of nodes that match a given condition.</p></li>
+</ul>
+</section>
+<section id="upgrade-notes">
+<h3>Upgrade Notes<a class="headerlink" href="#upgrade-notes" title="Permalink to this heading">¶</a></h3>
+<ul class="simple">
+<li><p>Support for running rustworkx on Python 3.5 has been dropped. The last
+release with support for Python 3.5 is 0.6.0.</p></li>
+<li><p>The <a class="reference internal" href="apiref/rustworkx.PyDiGraph.node_indexes.html#rustworkx.PyDiGraph.node_indexes" title="rustworkx.PyDiGraph.node_indexes"><code class="xref py py-meth docutils literal notranslate"><span class="pre">rustworkx.PyDiGraph.node_indexes()</span></code></a>,
+<a class="reference internal" href="apiref/rustworkx.PyDiGraph.neighbors.html#rustworkx.PyDiGraph.neighbors" title="rustworkx.PyDiGraph.neighbors"><code class="xref py py-meth docutils literal notranslate"><span class="pre">rustworkx.PyDiGraph.neighbors()</span></code></a>,
+<a class="reference internal" href="apiref/rustworkx.PyDiGraph.successor_indices.html#rustworkx.PyDiGraph.successor_indices" title="rustworkx.PyDiGraph.successor_indices"><code class="xref py py-meth docutils literal notranslate"><span class="pre">rustworkx.PyDiGraph.successor_indices()</span></code></a>,
+<a class="reference internal" href="apiref/rustworkx.PyDiGraph.predecessor_indices.html#rustworkx.PyDiGraph.predecessor_indices" title="rustworkx.PyDiGraph.predecessor_indices"><code class="xref py py-meth docutils literal notranslate"><span class="pre">rustworkx.PyDiGraph.predecessor_indices()</span></code></a>,
+<a class="reference internal" href="apiref/rustworkx.PyDiGraph.add_nodes_from.html#rustworkx.PyDiGraph.add_nodes_from" title="rustworkx.PyDiGraph.add_nodes_from"><code class="xref py py-meth docutils literal notranslate"><span class="pre">rustworkx.PyDiGraph.add_nodes_from()</span></code></a>,
+<a class="reference internal" href="apiref/rustworkx.PyGraph.node_indexes.html#rustworkx.PyGraph.node_indexes" title="rustworkx.PyGraph.node_indexes"><code class="xref py py-meth docutils literal notranslate"><span class="pre">rustworkx.PyGraph.node_indexes()</span></code></a>,
+<a class="reference internal" href="apiref/rustworkx.PyGraph.add_nodes_from.html#rustworkx.PyGraph.add_nodes_from" title="rustworkx.PyGraph.add_nodes_from"><code class="xref py py-meth docutils literal notranslate"><span class="pre">rustworkx.PyGraph.add_nodes_from()</span></code></a>, and
+<a class="reference internal" href="apiref/rustworkx.PyGraph.neighbors.html#rustworkx.PyGraph.neighbors" title="rustworkx.PyGraph.neighbors"><code class="xref py py-meth docutils literal notranslate"><span class="pre">rustworkx.PyGraph.neighbors()</span></code></a> methods and the
+<a class="reference internal" href="apiref/rustworkx.dag_longest_path.html#rustworkx.dag_longest_path" title="rustworkx.dag_longest_path"><code class="xref py py-func docutils literal notranslate"><span class="pre">dag_longest_path()</span></code></a>, <a class="reference internal" href="apiref/rustworkx.topological_sort.html#rustworkx.topological_sort" title="rustworkx.topological_sort"><code class="xref py py-func docutils literal notranslate"><span class="pre">topological_sort()</span></code></a>,
+<a class="reference internal" href="apiref/rustworkx.graph_astar_shortest_path.html#rustworkx.graph_astar_shortest_path" title="rustworkx.graph_astar_shortest_path"><code class="xref py py-func docutils literal notranslate"><span class="pre">graph_astar_shortest_path()</span></code></a>, and
+<a class="reference internal" href="apiref/rustworkx.digraph_astar_shortest_path.html#rustworkx.digraph_astar_shortest_path" title="rustworkx.digraph_astar_shortest_path"><code class="xref py py-func docutils literal notranslate"><span class="pre">digraph_astar_shortest_path()</span></code></a>  functions now return a
+<a class="reference internal" href="apiref/rustworkx.NodeIndices.html#rustworkx.NodeIndices" title="rustworkx.NodeIndices"><code class="xref py py-class docutils literal notranslate"><span class="pre">NodeIndices</span></code></a> object instead of a list of integers. This
+should not require any changes unless explicit type checking for a list was
+used.</p></li>
+<li><p>The <a class="reference internal" href="apiref/rustworkx.PyDiGraph.edge_list.html#rustworkx.PyDiGraph.edge_list" title="rustworkx.PyDiGraph.edge_list"><code class="xref py py-meth docutils literal notranslate"><span class="pre">rustworkx.PyDiGraph.edge_list()</span></code></a>, and
+<a class="reference internal" href="apiref/rustworkx.PyGraph.edge_list.html#rustworkx.PyGraph.edge_list" title="rustworkx.PyGraph.edge_list"><code class="xref py py-meth docutils literal notranslate"><span class="pre">rustworkx.PyGraph.edge_list()</span></code></a> methods and
+<a class="reference internal" href="apiref/rustworkx.digraph_dfs_edges.html#rustworkx.digraph_dfs_edges" title="rustworkx.digraph_dfs_edges"><code class="xref py py-func docutils literal notranslate"><span class="pre">digraph_dfs_edges()</span></code></a>, <a class="reference internal" href="apiref/rustworkx.graph_dfs_edges.html#rustworkx.graph_dfs_edges" title="rustworkx.graph_dfs_edges"><code class="xref py py-func docutils literal notranslate"><span class="pre">graph_dfs_edges()</span></code></a>,
+and <a class="reference internal" href="apiref/rustworkx.digraph_find_cycle.html#rustworkx.digraph_find_cycle" title="rustworkx.digraph_find_cycle"><code class="xref py py-func docutils literal notranslate"><span class="pre">digraph_find_cycle()</span></code></a> functions now return an
+<a class="reference internal" href="apiref/rustworkx.EdgeList.html#rustworkx.EdgeList" title="rustworkx.EdgeList"><code class="xref py py-class docutils literal notranslate"><span class="pre">EdgeList</span></code></a> object instead of a list of integers. This should
+not require any changes unless explicit type checking for a list was used.</p></li>
+<li><p>The <a class="reference internal" href="apiref/rustworkx.PyDiGraph.weighted_edge_list.html#rustworkx.PyDiGraph.weighted_edge_list" title="rustworkx.PyDiGraph.weighted_edge_list"><code class="xref py py-meth docutils literal notranslate"><span class="pre">rustworkx.PyDiGraph.weighted_edge_list()</span></code></a>,
+<a class="reference internal" href="apiref/rustworkx.PyDiGraph.in_edges.html#rustworkx.PyDiGraph.in_edges" title="rustworkx.PyDiGraph.in_edges"><code class="xref py py-meth docutils literal notranslate"><span class="pre">rustworkx.PyDiGraph.in_edges()</span></code></a>, <a class="reference internal" href="apiref/rustworkx.PyDiGraph.out_edges.html#rustworkx.PyDiGraph.out_edges" title="rustworkx.PyDiGraph.out_edges"><code class="xref py py-meth docutils literal notranslate"><span class="pre">rustworkx.PyDiGraph.out_edges()</span></code></a>,
+and <cite>rustworkx.PyGraph.weighted_edge_list</cite> methods now return a
+<a class="reference internal" href="apiref/rustworkx.WeightedEdgeList.html#rustworkx.WeightedEdgeList" title="rustworkx.WeightedEdgeList"><code class="xref py py-class docutils literal notranslate"><span class="pre">WeightedEdgeList</span></code></a> object instead of a list of integers.
+This should not require any changes unless explicit type checking for a list
+was used.</p></li>
+</ul>
+</section>
+<section id="fixes">
+<h3>Fixes<a class="headerlink" href="#fixes" title="Permalink to this heading">¶</a></h3>
+<ul class="simple">
+<li><p><a class="reference internal" href="apiref/rustworkx.BFSSuccessors.html#rustworkx.BFSSuccessors" title="rustworkx.BFSSuccessors"><code class="xref py py-class docutils literal notranslate"><span class="pre">BFSSuccessors</span></code></a> objects now can be compared with <code class="docutils literal notranslate"><span class="pre">==</span></code> and
+<code class="docutils literal notranslate"><span class="pre">!=</span></code> to any other Python sequence type.</p></li>
+<li><p>The built and published sdist packages for rustworkx were previously
+not including the Cargo.lock file. This meant that the reproducible
+build versions of the rust dependencies were not passed through to
+source. This has been fixed so building from sdist will always use
+known working versions that we use for testing in CI.</p></li>
+</ul>
+</section>
+</section>
+<section id="id4">
+<h2>0.6.0<a class="headerlink" href="#id4" title="Permalink to this heading">¶</a></h2>
+<p>This release includes a number of new features and bug fixes. The main focus of
+this release was to expand the rustworkx API functionality to include some
+commonly needed functions that were missing.</p>
+<p>This release is also the first release to provide full support for running with
+Python 3.9. On previous releases Python 3.9 would likely work, but it would
+require building rustworkx from source. Also this will likely be the final
+release that supports Python 3.5.</p>
+<section id="id5">
+<h3>New Features<a class="headerlink" href="#id5" title="Permalink to this heading">¶</a></h3>
+<ul class="simple">
+<li><p>Two new functions, <a class="reference internal" href="apiref/rustworkx.digraph_k_shortest_path_lengths.html#rustworkx.digraph_k_shortest_path_lengths" title="rustworkx.digraph_k_shortest_path_lengths"><code class="xref py py-func docutils literal notranslate"><span class="pre">digraph_k_shortest_path_lengths()</span></code></a> and
+<a class="reference internal" href="apiref/rustworkx.graph_k_shortest_path_lengths.html#rustworkx.graph_k_shortest_path_lengths" title="rustworkx.graph_k_shortest_path_lengths"><code class="xref py py-func docutils literal notranslate"><span class="pre">graph_k_shortest_path_lengths()</span></code></a>, for finding the k shortest
+path lengths from a node in a <a class="reference internal" href="apiref/rustworkx.PyDiGraph.html#rustworkx.PyDiGraph" title="rustworkx.PyDiGraph"><code class="xref py py-class docutils literal notranslate"><span class="pre">PyDiGraph</span></code></a> and
+<a class="reference internal" href="apiref/rustworkx.PyGraph.html#rustworkx.PyGraph" title="rustworkx.PyGraph"><code class="xref py py-class docutils literal notranslate"><span class="pre">PyGraph</span></code></a>.</p></li>
+<li><p>A new method, <a class="reference internal" href="apiref/rustworkx.PyDiGraph.is_symmetric.html#rustworkx.PyDiGraph.is_symmetric" title="rustworkx.PyDiGraph.is_symmetric"><code class="xref py py-meth docutils literal notranslate"><span class="pre">is_symmetric()</span></code></a>, to the
+<a class="reference internal" href="apiref/rustworkx.PyDiGraph.html#rustworkx.PyDiGraph" title="rustworkx.PyDiGraph"><code class="xref py py-class docutils literal notranslate"><span class="pre">PyDiGraph</span></code></a> class. This method will check whether the graph
+is symmetric or not</p></li>
+<li><p>A new kwarg, <code class="docutils literal notranslate"><span class="pre">as_undirected</span></code>, was added to the
+<a class="reference internal" href="apiref/rustworkx.digraph_floyd_warshall_numpy.html#rustworkx.digraph_floyd_warshall_numpy" title="rustworkx.digraph_floyd_warshall_numpy"><code class="xref py py-func docutils literal notranslate"><span class="pre">digraph_floyd_warshall_numpy()</span></code></a> function. This can be used
+to treat the input <a class="reference internal" href="apiref/rustworkx.PyDiGraph.html#rustworkx.PyDiGraph" title="rustworkx.PyDiGraph"><code class="xref py py-class docutils literal notranslate"><span class="pre">PyDiGraph</span></code></a> object as if it was
+undirected for the generated output matrix.</p></li>
+<li><p>A new function, <a class="reference internal" href="apiref/rustworkx.digraph_find_cycle.html#rustworkx.digraph_find_cycle" title="rustworkx.digraph_find_cycle"><code class="xref py py-func docutils literal notranslate"><span class="pre">digraph_find_cycle()</span></code></a>, which will return the
+first cycle during a depth first search of a <a class="reference internal" href="apiref/rustworkx.PyDiGraph.html#rustworkx.PyDiGraph" title="rustworkx.PyDiGraph"><code class="xref py py-class docutils literal notranslate"><span class="pre">PyDiGraph</span></code></a>
+object.</p></li>
+<li><p>Two new functions, <a class="reference internal" href="apiref/rustworkx.directed_gnm_random_graph.html#rustworkx.directed_gnm_random_graph" title="rustworkx.directed_gnm_random_graph"><code class="xref py py-func docutils literal notranslate"><span class="pre">directed_gnm_random_graph()</span></code></a> and
+<a class="reference internal" href="apiref/rustworkx.undirected_gnm_random_graph.html#rustworkx.undirected_gnm_random_graph" title="rustworkx.undirected_gnm_random_graph"><code class="xref py py-func docutils literal notranslate"><span class="pre">undirected_gnm_random_graph()</span></code></a>, for generating random
+<span class="math notranslate nohighlight">\(G(n, m)\)</span> graphs.</p></li>
+<li><p>A new method, <a class="reference internal" href="apiref/rustworkx.PyDiGraph.remove_edges_from.html#rustworkx.PyDiGraph.remove_edges_from" title="rustworkx.PyDiGraph.remove_edges_from"><code class="xref py py-meth docutils literal notranslate"><span class="pre">remove_edges_from()</span></code></a>, was added to
+<a class="reference internal" href="apiref/rustworkx.PyDiGraph.html#rustworkx.PyDiGraph" title="rustworkx.PyDiGraph"><code class="xref py py-class docutils literal notranslate"><span class="pre">PyDiGraph</span></code></a> and <a class="reference internal" href="apiref/rustworkx.PyGraph.html#rustworkx.PyGraph" title="rustworkx.PyGraph"><code class="xref py py-class docutils literal notranslate"><span class="pre">PyGraph</span></code></a>
+(<code class="xref py py-meth docutils literal notranslate"><span class="pre">removed_edges_from()</span></code>). This can be used to remove
+multiple edges from a graph object in a single call.</p></li>
+<li><p>A new method, <a class="reference internal" href="apiref/rustworkx.PyDiGraph.subgraph.html#rustworkx.PyDiGraph.subgraph" title="rustworkx.PyDiGraph.subgraph"><code class="xref py py-meth docutils literal notranslate"><span class="pre">subgraph()</span></code></a>, was added to
+<a class="reference internal" href="apiref/rustworkx.PyDiGraph.html#rustworkx.PyDiGraph" title="rustworkx.PyDiGraph"><code class="xref py py-class docutils literal notranslate"><span class="pre">PyDiGraph</span></code></a> and <a class="reference internal" href="apiref/rustworkx.PyGraph.html#rustworkx.PyGraph" title="rustworkx.PyGraph"><code class="xref py py-class docutils literal notranslate"><span class="pre">PyGraph</span></code></a>
+(<a class="reference internal" href="apiref/rustworkx.PyGraph.subgraph.html#rustworkx.PyGraph.subgraph" title="rustworkx.PyGraph.subgraph"><code class="xref py py-meth docutils literal notranslate"><span class="pre">subgraph()</span></code></a>) which takes in a list of node indices
+and will return a new object of the same type representing a subgraph
+containing the node indices in that list.</p></li>
+<li><p>Support for running with Python 3.9</p></li>
+<li><p>A new method, <a class="reference internal" href="apiref/rustworkx.PyDiGraph.to_undirected.html#rustworkx.PyDiGraph.to_undirected" title="rustworkx.PyDiGraph.to_undirected"><code class="xref py py-meth docutils literal notranslate"><span class="pre">to_undirected()</span></code></a>, was added to
+<a class="reference internal" href="apiref/rustworkx.PyDiGraph.html#rustworkx.PyDiGraph" title="rustworkx.PyDiGraph"><code class="xref py py-class docutils literal notranslate"><span class="pre">PyDiGraph</span></code></a>. This method will generate an undirected
+<a class="reference internal" href="apiref/rustworkx.PyGraph.html#rustworkx.PyGraph" title="rustworkx.PyGraph"><code class="xref py py-class docutils literal notranslate"><span class="pre">PyGraph</span></code></a> object from the <a class="reference internal" href="apiref/rustworkx.PyDiGraph.html#rustworkx.PyDiGraph" title="rustworkx.PyDiGraph"><code class="xref py py-class docutils literal notranslate"><span class="pre">PyDiGraph</span></code></a>
+object.</p></li>
+<li><p>A new kwarg, <code class="docutils literal notranslate"><span class="pre">bidirectional</span></code>, was added to the directed generator functions
+<a class="reference internal" href="apiref/rustworkx.generators.directed_cycle_graph.html#rustworkx.generators.directed_cycle_graph" title="rustworkx.generators.directed_cycle_graph"><code class="xref py py-func docutils literal notranslate"><span class="pre">directed_cycle_graph()</span></code></a>,
+<a class="reference internal" href="apiref/rustworkx.generators.directed_path_graph.html#rustworkx.generators.directed_path_graph" title="rustworkx.generators.directed_path_graph"><code class="xref py py-func docutils literal notranslate"><span class="pre">directed_path_graph()</span></code></a>, and
+<a class="reference internal" href="apiref/rustworkx.generators.directed_star_graph.html#rustworkx.generators.directed_star_graph" title="rustworkx.generators.directed_star_graph"><code class="xref py py-func docutils literal notranslate"><span class="pre">directed_star_graph()</span></code></a>. When set to <code class="docutils literal notranslate"><span class="pre">True</span></code> the
+directed graphs generated by these functions will add edges in both directions.</p></li>
+<li><p>Added two new functions, <a class="reference internal" href="apiref/rustworkx.is_weakly_connected.html#rustworkx.is_weakly_connected" title="rustworkx.is_weakly_connected"><code class="xref py py-func docutils literal notranslate"><span class="pre">is_weakly_connected()</span></code></a> and
+<a class="reference internal" href="apiref/rustworkx.weakly_connected_components.html#rustworkx.weakly_connected_components" title="rustworkx.weakly_connected_components"><code class="xref py py-func docutils literal notranslate"><span class="pre">weakly_connected_components()</span></code></a>, which will either check if a
+<a class="reference internal" href="apiref/rustworkx.PyDiGraph.html#rustworkx.PyDiGraph" title="rustworkx.PyDiGraph"><code class="xref py py-class docutils literal notranslate"><span class="pre">PyDiGraph</span></code></a> object is weakly connected or return the list of
+the weakly connected components of an input <a class="reference internal" href="apiref/rustworkx.PyDiGraph.html#rustworkx.PyDiGraph" title="rustworkx.PyDiGraph"><code class="xref py py-class docutils literal notranslate"><span class="pre">PyDiGraph</span></code></a>.</p></li>
+<li><p>The <code class="docutils literal notranslate"><span class="pre">weight_fn</span></code> kwarg for <a class="reference internal" href="apiref/rustworkx.graph_adjacency_matrix.html#rustworkx.graph_adjacency_matrix" title="rustworkx.graph_adjacency_matrix"><code class="xref py py-func docutils literal notranslate"><span class="pre">graph_adjacency_matrix()</span></code></a>,
+<a class="reference internal" href="apiref/rustworkx.digraph_adjacency_matrix.html#rustworkx.digraph_adjacency_matrix" title="rustworkx.digraph_adjacency_matrix"><code class="xref py py-func docutils literal notranslate"><span class="pre">digraph_adjacency_matrix()</span></code></a>,
+<a class="reference internal" href="apiref/rustworkx.graph_floyd_warshall_numpy.html#rustworkx.graph_floyd_warshall_numpy" title="rustworkx.graph_floyd_warshall_numpy"><code class="xref py py-func docutils literal notranslate"><span class="pre">graph_floyd_warshall_numpy()</span></code></a>, and
+<a class="reference internal" href="apiref/rustworkx.digraph_floyd_warshall_numpy.html#rustworkx.digraph_floyd_warshall_numpy" title="rustworkx.digraph_floyd_warshall_numpy"><code class="xref py py-func docutils literal notranslate"><span class="pre">digraph_floyd_warshall_numpy()</span></code></a> is now optional. Previously,
+it always had to be specified when calling these function. But, instead you
+can now rely on a default weight float (which defaults to <code class="docutils literal notranslate"><span class="pre">1.0</span></code>) to be used
+for all the edges in the graph.</p></li>
+<li><p>Add a <a class="reference internal" href="apiref/rustworkx.PyGraph.neighbors.html#rustworkx.PyGraph.neighbors" title="rustworkx.PyGraph.neighbors"><code class="xref py py-meth docutils literal notranslate"><span class="pre">neighbors()</span></code></a> method to
+<a class="reference internal" href="apiref/rustworkx.PyGraph.html#rustworkx.PyGraph" title="rustworkx.PyGraph"><code class="xref py py-class docutils literal notranslate"><span class="pre">PyGraph</span></code></a> and <a class="reference internal" href="apiref/rustworkx.PyDiGraph.html#rustworkx.PyDiGraph" title="rustworkx.PyDiGraph"><code class="xref py py-class docutils literal notranslate"><span class="pre">PyDiGraph</span></code></a>
+(<a class="reference internal" href="apiref/rustworkx.PyDiGraph.neighbors.html#rustworkx.PyDiGraph.neighbors" title="rustworkx.PyDiGraph.neighbors"><code class="xref py py-meth docutils literal notranslate"><span class="pre">neighbors()</span></code></a>). This function will return the node
+indices of the neighbor nodes for a given input node.</p></li>
+<li><p>Two new methods, <a class="reference internal" href="apiref/rustworkx.PyDiGraph.successor_indices.html#rustworkx.PyDiGraph.successor_indices" title="rustworkx.PyDiGraph.successor_indices"><code class="xref py py-meth docutils literal notranslate"><span class="pre">successor_indices()</span></code></a> and
+<a class="reference internal" href="apiref/rustworkx.PyDiGraph.predecessor_indices.html#rustworkx.PyDiGraph.predecessor_indices" title="rustworkx.PyDiGraph.predecessor_indices"><code class="xref py py-meth docutils literal notranslate"><span class="pre">predecessor_indices()</span></code></a>, were added to
+<a class="reference internal" href="apiref/rustworkx.PyDiGraph.html#rustworkx.PyDiGraph" title="rustworkx.PyDiGraph"><code class="xref py py-class docutils literal notranslate"><span class="pre">PyDiGraph</span></code></a>. These methods will return the node indices for
+the successor and predecessor nodes of a given input node.</p></li>
+<li><p>Two new functions, <a class="reference internal" href="apiref/rustworkx.graph_distance_matrix.html#rustworkx.graph_distance_matrix" title="rustworkx.graph_distance_matrix"><code class="xref py py-func docutils literal notranslate"><span class="pre">graph_distance_matrix()</span></code></a> and
+<a class="reference internal" href="apiref/rustworkx.digraph_distance_matrix.html#rustworkx.digraph_distance_matrix" title="rustworkx.digraph_distance_matrix"><code class="xref py py-func docutils literal notranslate"><span class="pre">digraph_distance_matrix()</span></code></a>, were added for generating a
+distance matrix from an input <a class="reference internal" href="apiref/rustworkx.PyGraph.html#rustworkx.PyGraph" title="rustworkx.PyGraph"><code class="xref py py-class docutils literal notranslate"><span class="pre">PyGraph</span></code></a> and
+<a class="reference internal" href="apiref/rustworkx.PyDiGraph.html#rustworkx.PyDiGraph" title="rustworkx.PyDiGraph"><code class="xref py py-class docutils literal notranslate"><span class="pre">PyDiGraph</span></code></a>.</p></li>
+<li><p>Two new functions, <a class="reference internal" href="apiref/rustworkx.digraph_dijkstra_shortest_paths.html#rustworkx.digraph_dijkstra_shortest_paths" title="rustworkx.digraph_dijkstra_shortest_paths"><code class="xref py py-func docutils literal notranslate"><span class="pre">digraph_dijkstra_shortest_paths()</span></code></a> and
+<code class="xref py py-func docutils literal notranslate"><span class="pre">graph_dijkstra_shortest_path()</span></code>, were added for returning the
+shortest paths from a node in a <a class="reference internal" href="apiref/rustworkx.PyDiGraph.html#rustworkx.PyDiGraph" title="rustworkx.PyDiGraph"><code class="xref py py-class docutils literal notranslate"><span class="pre">PyDiGraph</span></code></a> and a
+<a class="reference internal" href="apiref/rustworkx.PyGraph.html#rustworkx.PyGraph" title="rustworkx.PyGraph"><code class="xref py py-class docutils literal notranslate"><span class="pre">PyGraph</span></code></a> object.</p></li>
+<li><p>Four new methods, <a class="reference internal" href="apiref/rustworkx.PyDiGraph.insert_node_on_in_edges.html#rustworkx.PyDiGraph.insert_node_on_in_edges" title="rustworkx.PyDiGraph.insert_node_on_in_edges"><code class="xref py py-meth docutils literal notranslate"><span class="pre">insert_node_on_in_edges()</span></code></a>,
+<a class="reference internal" href="apiref/rustworkx.PyDiGraph.insert_node_on_out_edges.html#rustworkx.PyDiGraph.insert_node_on_out_edges" title="rustworkx.PyDiGraph.insert_node_on_out_edges"><code class="xref py py-meth docutils literal notranslate"><span class="pre">insert_node_on_out_edges()</span></code></a>,
+<a class="reference internal" href="apiref/rustworkx.PyDiGraph.insert_node_on_in_edges_multiple.html#rustworkx.PyDiGraph.insert_node_on_in_edges_multiple" title="rustworkx.PyDiGraph.insert_node_on_in_edges_multiple"><code class="xref py py-meth docutils literal notranslate"><span class="pre">insert_node_on_in_edges_multiple()</span></code></a>, and
+<a class="reference internal" href="apiref/rustworkx.PyDiGraph.insert_node_on_out_edges_multiple.html#rustworkx.PyDiGraph.insert_node_on_out_edges_multiple" title="rustworkx.PyDiGraph.insert_node_on_out_edges_multiple"><code class="xref py py-meth docutils literal notranslate"><span class="pre">insert_node_on_out_edges_multiple()</span></code></a> were added to
+<a class="reference internal" href="apiref/rustworkx.PyDiGraph.html#rustworkx.PyDiGraph" title="rustworkx.PyDiGraph"><code class="xref py py-class docutils literal notranslate"><span class="pre">PyDiGraph</span></code></a>. These functions are used to insert an existing
+node in between an reference node(s) and all it’s predecessors or successors.</p></li>
+<li><p>Two new functions, <a class="reference internal" href="apiref/rustworkx.graph_dfs_edges.html#rustworkx.graph_dfs_edges" title="rustworkx.graph_dfs_edges"><code class="xref py py-func docutils literal notranslate"><span class="pre">graph_dfs_edges()</span></code></a> and
+<a class="reference internal" href="apiref/rustworkx.digraph_dfs_edges.html#rustworkx.digraph_dfs_edges" title="rustworkx.digraph_dfs_edges"><code class="xref py py-func docutils literal notranslate"><span class="pre">digraph_dfs_edges()</span></code></a>, were added to get an edge list in depth
+first order from a <a class="reference internal" href="apiref/rustworkx.PyGraph.html#rustworkx.PyGraph" title="rustworkx.PyGraph"><code class="xref py py-class docutils literal notranslate"><span class="pre">PyGraph</span></code></a> and
+<a class="reference internal" href="apiref/rustworkx.PyDiGraph.html#rustworkx.PyDiGraph" title="rustworkx.PyDiGraph"><code class="xref py py-class docutils literal notranslate"><span class="pre">PyDiGraph</span></code></a>.</p></li>
+</ul>
+</section>
+<section id="id6">
+<h3>Upgrade Notes<a class="headerlink" href="#id6" title="Permalink to this heading">¶</a></h3>
+<ul class="simple">
+<li><p>The numpy arrays returned by <a class="reference internal" href="apiref/rustworkx.graph_floyd_warshall_numpy.html#rustworkx.graph_floyd_warshall_numpy" title="rustworkx.graph_floyd_warshall_numpy"><code class="xref py py-func docutils literal notranslate"><span class="pre">graph_floyd_warshall_numpy()</span></code></a>,
+<a class="reference internal" href="apiref/rustworkx.digraph_floyd_warshall_numpy.html#rustworkx.digraph_floyd_warshall_numpy" title="rustworkx.digraph_floyd_warshall_numpy"><code class="xref py py-func docutils literal notranslate"><span class="pre">digraph_floyd_warshall_numpy()</span></code></a>,
+<a class="reference internal" href="apiref/rustworkx.digraph_adjacency_matrix.html#rustworkx.digraph_adjacency_matrix" title="rustworkx.digraph_adjacency_matrix"><code class="xref py py-func docutils literal notranslate"><span class="pre">digraph_adjacency_matrix()</span></code></a>, and
+<a class="reference internal" href="apiref/rustworkx.graph_adjacency_matrix.html#rustworkx.graph_adjacency_matrix" title="rustworkx.graph_adjacency_matrix"><code class="xref py py-func docutils literal notranslate"><span class="pre">graph_adjacency_matrix()</span></code></a> will now be in a contiguous C array
+memory layout. Previously, they would return arrays in a column-major fortran
+layout. This was change was made to make it easier to interface the arrays
+returned by these functions with other C Python extensions. There should be
+no change when interacting with the numpy arrays via numpy’s API.</p></li>
+<li><p>The <a class="reference internal" href="apiref/rustworkx.bfs_successors.html#rustworkx.bfs_successors" title="rustworkx.bfs_successors"><code class="xref py py-func docutils literal notranslate"><span class="pre">bfs_successors()</span></code></a> method now returns an object of a custom
+type <a class="reference internal" href="apiref/rustworkx.BFSSuccessors.html#rustworkx.BFSSuccessors" title="rustworkx.BFSSuccessors"><code class="xref py py-class docutils literal notranslate"><span class="pre">BFSSuccessors</span></code></a> instead of a list. The
+<a class="reference internal" href="apiref/rustworkx.BFSSuccessors.html#rustworkx.BFSSuccessors" title="rustworkx.BFSSuccessors"><code class="xref py py-class docutils literal notranslate"><span class="pre">BFSSuccessors</span></code></a> type implements the Python sequence protocol
+so it can be used in place like a list (except for where explicit type checking
+is used). This was done to defer the type conversion between Rust and Python
+since doing it all at once can be a performance bottleneck especially for
+large graphs. The <a class="reference internal" href="apiref/rustworkx.BFSSuccessors.html#rustworkx.BFSSuccessors" title="rustworkx.BFSSuccessors"><code class="xref py py-class docutils literal notranslate"><span class="pre">BFSSuccessors</span></code></a> class will only do the type
+conversion when an element is accessed.</p></li>
+</ul>
+</section>
+<section id="id7">
+<h3>Fixes<a class="headerlink" href="#id7" title="Permalink to this heading">¶</a></h3>
+<ul class="simple">
+<li><p>When pickling <a class="reference internal" href="apiref/rustworkx.PyDiGraph.html#rustworkx.PyDiGraph" title="rustworkx.PyDiGraph"><code class="xref py py-class docutils literal notranslate"><span class="pre">PyDiGraph</span></code></a> objects the original node indices
+will be preserved across the pickle.</p></li>
+<li><p>The random <span class="math notranslate nohighlight">\(G(n, p)\)</span> functions,
+<a class="reference internal" href="apiref/rustworkx.directed_gnp_random_graph.html#rustworkx.directed_gnp_random_graph" title="rustworkx.directed_gnp_random_graph"><code class="xref py py-func docutils literal notranslate"><span class="pre">directed_gnp_random_graph()</span></code></a> and
+<a class="reference internal" href="apiref/rustworkx.undirected_gnp_random_graph.html#rustworkx.undirected_gnp_random_graph" title="rustworkx.undirected_gnp_random_graph"><code class="xref py py-func docutils literal notranslate"><span class="pre">undirected_gnp_random_graph()</span></code></a>, will now also handle exact 0 or
+1 probabilities. Previously it would fail in these cases. Fixes
+<a class="reference external" href="https://github.com/Qiskit/rustworkx/issues/172">#172</a></p></li>
+</ul>
+</section>
+</section>
+<section id="id8">
+<h2>0.5.0<a class="headerlink" href="#id8" title="Permalink to this heading">¶</a></h2>
+<p>This release include a number of new features and bug fixes. The main
+focus of the improvements of this release was to increase the ease of
+interacting with graph objects. This includes adding support for generating dot
+output which can be used with graphviz (or similar tools) for visualizing
+graphs adding more methods to query the state of graph, adding a generator
+module for easily creating graphs of certain shape, and implementing the
+mapping protocol so you can directly interact with graph objects.</p>
+<section id="id9">
+<h3>New Features<a class="headerlink" href="#id9" title="Permalink to this heading">¶</a></h3>
+<ul class="simple">
+<li><p>A new method, <a class="reference internal" href="apiref/rustworkx.PyGraph.to_dot.html#rustworkx.PyGraph.to_dot" title="rustworkx.PyGraph.to_dot"><code class="xref py py-meth docutils literal notranslate"><span class="pre">to_dot()</span></code></a>, was added to
+<a class="reference internal" href="apiref/rustworkx.PyGraph.html#rustworkx.PyGraph" title="rustworkx.PyGraph"><code class="xref py py-class docutils literal notranslate"><span class="pre">PyGraph</span></code></a> and <a class="reference internal" href="apiref/rustworkx.PyDiGraph.html#rustworkx.PyDiGraph" title="rustworkx.PyDiGraph"><code class="xref py py-class docutils literal notranslate"><span class="pre">PyDiGraph</span></code></a>
+(<a class="reference internal" href="apiref/rustworkx.PyDiGraph.to_dot.html#rustworkx.PyDiGraph.to_dot" title="rustworkx.PyDiGraph.to_dot"><code class="xref py py-meth docutils literal notranslate"><span class="pre">to_dot()</span></code></a>). It will generate a
+<a class="reference external" href="https://graphviz.org/doc/info/lang.html">dot format</a> representation of
+the object which can be used with <a class="reference external" href="https://graphviz.org/">Graphivz</a> (or
+similar tooling) to generate visualizations of graphs.</p></li>
+<li><p>Added a new function, <a class="reference internal" href="apiref/rustworkx.strongly_connected_components.html#rustworkx.strongly_connected_components" title="rustworkx.strongly_connected_components"><code class="xref py py-func docutils literal notranslate"><span class="pre">strongly_connected_components()</span></code></a>, to get
+the list of strongly connected components of a <a class="reference internal" href="apiref/rustworkx.PyDiGraph.html#rustworkx.PyDiGraph" title="rustworkx.PyDiGraph"><code class="xref py py-class docutils literal notranslate"><span class="pre">PyDiGraph</span></code></a>
+object.</p></li>
+<li><p>A new method, <a class="reference internal" href="apiref/rustworkx.PyGraph.compose.html#rustworkx.PyGraph.compose" title="rustworkx.PyGraph.compose"><code class="xref py py-meth docutils literal notranslate"><span class="pre">compose()</span></code></a>, for composing another graph
+object of the same type into a graph was added to <a class="reference internal" href="apiref/rustworkx.PyGraph.html#rustworkx.PyGraph" title="rustworkx.PyGraph"><code class="xref py py-class docutils literal notranslate"><span class="pre">PyGraph</span></code></a>
+and <a class="reference internal" href="apiref/rustworkx.PyDiGraph.html#rustworkx.PyDiGraph" title="rustworkx.PyDiGraph"><code class="xref py py-class docutils literal notranslate"><span class="pre">PyDiGraph</span></code></a> (<a class="reference internal" href="apiref/rustworkx.PyDiGraph.compose.html#rustworkx.PyDiGraph.compose" title="rustworkx.PyDiGraph.compose"><code class="xref py py-meth docutils literal notranslate"><span class="pre">compose()</span></code></a>).</p></li>
+<li><p>The <a class="reference internal" href="apiref/rustworkx.PyGraph.html#rustworkx.PyGraph" title="rustworkx.PyGraph"><code class="xref py py-class docutils literal notranslate"><span class="pre">PyGraph</span></code></a> and <code class="xref py py-class docutils literal notranslate"><span class="pre">PyDigraph</span></code> classes now
+implement the Python mapping protocol for interacting with graph nodes. You
+can now access and interact with node data directly by using standard map
+access patterns in Python. For example, accessing a graph like <code class="docutils literal notranslate"><span class="pre">graph[1]</span></code>
+will return the weight/data payload for the node at index 1.</p></li>
+<li><p>A new module, <code class="xref py py-mod docutils literal notranslate"><span class="pre">rustworkx.generators</span></code>, has been added. Functions in this
+module can be used for quickly generating graphs of certain shape. To start
+it includes:</p>
+<ul>
+<li><p><a class="reference internal" href="apiref/rustworkx.generators.cycle_graph.html#rustworkx.generators.cycle_graph" title="rustworkx.generators.cycle_graph"><code class="xref py py-func docutils literal notranslate"><span class="pre">rustworkx.generators.cycle_graph()</span></code></a></p></li>
+<li><p><a class="reference internal" href="apiref/rustworkx.generators.directed_cycle_graph.html#rustworkx.generators.directed_cycle_graph" title="rustworkx.generators.directed_cycle_graph"><code class="xref py py-func docutils literal notranslate"><span class="pre">rustworkx.generators.directed_cycle_graph()</span></code></a></p></li>
+<li><p><a class="reference internal" href="apiref/rustworkx.generators.path_graph.html#rustworkx.generators.path_graph" title="rustworkx.generators.path_graph"><code class="xref py py-func docutils literal notranslate"><span class="pre">rustworkx.generators.path_graph()</span></code></a></p></li>
+<li><p><a class="reference internal" href="apiref/rustworkx.generators.directed_path_graph.html#rustworkx.generators.directed_path_graph" title="rustworkx.generators.directed_path_graph"><code class="xref py py-func docutils literal notranslate"><span class="pre">rustworkx.generators.directed_path_graph()</span></code></a></p></li>
+<li><p><a class="reference internal" href="apiref/rustworkx.generators.star_graph.html#rustworkx.generators.star_graph" title="rustworkx.generators.star_graph"><code class="xref py py-func docutils literal notranslate"><span class="pre">rustworkx.generators.star_graph()</span></code></a></p></li>
+<li><p><a class="reference internal" href="apiref/rustworkx.generators.directed_star_graph.html#rustworkx.generators.directed_star_graph" title="rustworkx.generators.directed_star_graph"><code class="xref py py-func docutils literal notranslate"><span class="pre">rustworkx.generators.directed_star_graph()</span></code></a></p></li>
+</ul>
+</li>
+<li><p>A new method, <a class="reference internal" href="apiref/rustworkx.PyDiGraph.remove_node_retain_edges.html#rustworkx.PyDiGraph.remove_node_retain_edges" title="rustworkx.PyDiGraph.remove_node_retain_edges"><code class="xref py py-meth docutils literal notranslate"><span class="pre">remove_node_retain_edges()</span></code></a>, has been
+added to the <a class="reference internal" href="apiref/rustworkx.PyDiGraph.html#rustworkx.PyDiGraph" title="rustworkx.PyDiGraph"><code class="xref py py-class docutils literal notranslate"><span class="pre">PyDiGraph</span></code></a> class. This method can be used to
+remove a node and add edges from its predecesors to its successors.</p></li>
+<li><p>Two new methods, <a class="reference internal" href="apiref/rustworkx.PyGraph.edge_list.html#rustworkx.PyGraph.edge_list" title="rustworkx.PyGraph.edge_list"><code class="xref py py-meth docutils literal notranslate"><span class="pre">edge_list()</span></code></a> and
+<a class="reference internal" href="apiref/rustworkx.PyGraph.weighted_edge_list.html#rustworkx.PyGraph.weighted_edge_list" title="rustworkx.PyGraph.weighted_edge_list"><code class="xref py py-meth docutils literal notranslate"><span class="pre">weighted_edge_list()</span></code></a>, for getting a list of tuples
+with the edge source and target (with or without edge weights) have been
+added to <a class="reference internal" href="apiref/rustworkx.PyGraph.html#rustworkx.PyGraph" title="rustworkx.PyGraph"><code class="xref py py-class docutils literal notranslate"><span class="pre">PyGraph</span></code></a> and <a class="reference internal" href="apiref/rustworkx.PyDiGraph.html#rustworkx.PyDiGraph" title="rustworkx.PyDiGraph"><code class="xref py py-class docutils literal notranslate"><span class="pre">PyDiGraph</span></code></a>
+(<a class="reference internal" href="apiref/rustworkx.PyDiGraph.edge_list.html#rustworkx.PyDiGraph.edge_list" title="rustworkx.PyDiGraph.edge_list"><code class="xref py py-meth docutils literal notranslate"><span class="pre">edge_list()</span></code></a> and
+<a class="reference internal" href="apiref/rustworkx.PyDiGraph.weighted_edge_list.html#rustworkx.PyDiGraph.weighted_edge_list" title="rustworkx.PyDiGraph.weighted_edge_list"><code class="xref py py-meth docutils literal notranslate"><span class="pre">weighted_edge_list()</span></code></a>)</p></li>
+<li><p>A new function, <a class="reference internal" href="apiref/rustworkx.cycle_basis.html#rustworkx.cycle_basis" title="rustworkx.cycle_basis"><code class="xref py py-func docutils literal notranslate"><span class="pre">cycle_basis()</span></code></a>, for getting a list of cycles
+which form a basis for cycles of a <a class="reference internal" href="apiref/rustworkx.PyGraph.html#rustworkx.PyGraph" title="rustworkx.PyGraph"><code class="xref py py-class docutils literal notranslate"><span class="pre">PyGraph</span></code></a> object.</p></li>
+<li><p>Two new functions, <a class="reference internal" href="apiref/rustworkx.graph_floyd_warshall_numpy.html#rustworkx.graph_floyd_warshall_numpy" title="rustworkx.graph_floyd_warshall_numpy"><code class="xref py py-func docutils literal notranslate"><span class="pre">graph_floyd_warshall_numpy()</span></code></a> and
+<a class="reference internal" href="apiref/rustworkx.digraph_floyd_warshall_numpy.html#rustworkx.digraph_floyd_warshall_numpy" title="rustworkx.digraph_floyd_warshall_numpy"><code class="xref py py-func docutils literal notranslate"><span class="pre">digraph_floyd_warshall_numpy()</span></code></a>, were added for running the
+Floyd Warshall algorithm and returning all the shortest path lengths as a
+distance matrix.</p></li>
+<li><p>A new constructor method, <a class="reference internal" href="apiref/rustworkx.PyGraph.read_edge_list.html#rustworkx.PyGraph.read_edge_list" title="rustworkx.PyGraph.read_edge_list"><code class="xref py py-meth docutils literal notranslate"><span class="pre">read_edge_list()</span></code></a>, has been
+added to <a class="reference internal" href="apiref/rustworkx.PyGraph.html#rustworkx.PyGraph" title="rustworkx.PyGraph"><code class="xref py py-class docutils literal notranslate"><span class="pre">PyGraph</span></code></a> and <code class="xref py py-class docutils literal notranslate"><span class="pre">PyDigraph</span></code>
+(<code class="xref py py-meth docutils literal notranslate"><span class="pre">read_edge_list()</span></code>). This method will take in a path to an
+edge list file and will read that file and generate a new object from the
+contents.</p></li>
+<li><p>Two new methods, <a class="reference internal" href="apiref/rustworkx.PyGraph.extend_from_edge_list.html#rustworkx.PyGraph.extend_from_edge_list" title="rustworkx.PyGraph.extend_from_edge_list"><code class="xref py py-meth docutils literal notranslate"><span class="pre">extend_from_edge_list()</span></code></a> and
+<code class="xref py py-meth docutils literal notranslate"><span class="pre">extend_from_weighted_edge_list()</span></code> has been added
+to <a class="reference internal" href="apiref/rustworkx.PyGraph.html#rustworkx.PyGraph" title="rustworkx.PyGraph"><code class="xref py py-class docutils literal notranslate"><span class="pre">PyGraph</span></code></a> and <a class="reference internal" href="apiref/rustworkx.PyDiGraph.html#rustworkx.PyDiGraph" title="rustworkx.PyDiGraph"><code class="xref py py-class docutils literal notranslate"><span class="pre">PyDiGraph</span></code></a>
+(<a class="reference internal" href="apiref/rustworkx.PyDiGraph.extend_from_edge_list.html#rustworkx.PyDiGraph.extend_from_edge_list" title="rustworkx.PyDiGraph.extend_from_edge_list"><code class="xref py py-meth docutils literal notranslate"><span class="pre">extend_from_edge_list()</span></code></a> and
+<a class="reference internal" href="apiref/rustworkx.PyDiGraph.extend_from_weighted_edge_list.html#rustworkx.PyDiGraph.extend_from_weighted_edge_list" title="rustworkx.PyDiGraph.extend_from_weighted_edge_list"><code class="xref py py-meth docutils literal notranslate"><span class="pre">extend_from_weighted_edge_list()</span></code></a>). This method
+takes in an edge list and will add both the edges and nodes (if a node index
+used doesn’t exist yet) in the list to the graph.</p></li>
+</ul>
+</section>
+<section id="id10">
+<h3>Fixes<a class="headerlink" href="#id10" title="Permalink to this heading">¶</a></h3>
+<ul class="simple">
+<li><p>The limitation with the <a class="reference internal" href="apiref/rustworkx.is_isomorphic.html#rustworkx.is_isomorphic" title="rustworkx.is_isomorphic"><code class="xref py py-func docutils literal notranslate"><span class="pre">is_isomorphic()</span></code></a> and
+<a class="reference internal" href="apiref/rustworkx.is_isomorphic_node_match.html#rustworkx.is_isomorphic_node_match" title="rustworkx.is_isomorphic_node_match"><code class="xref py py-func docutils literal notranslate"><span class="pre">is_isomorphic_node_match()</span></code></a> functions that would cause
+segfaults when comparing graphs with node removals has been fixed. You can
+now run either function with any
+<a class="reference internal" href="apiref/rustworkx.PyDiGraph.html#rustworkx.PyDiGraph" title="rustworkx.PyDiGraph"><code class="xref py py-class docutils literal notranslate"><span class="pre">PyDiGraph</span></code></a>/<a class="reference internal" href="apiref/rustworkx.PyDAG.html#rustworkx.PyDAG" title="rustworkx.PyDAG"><code class="xref py py-class docutils literal notranslate"><span class="pre">PyDAG</span></code></a> objects, even if there
+are node removals. Fixes
+<a class="reference external" href="https://github.com/Qiskit/rustworkx/issues/27">#27</a></p></li>
+<li><p>If an invalid node index was passed as part of the <code class="docutils literal notranslate"><span class="pre">first_layer</span></code>
+argument to the <a class="reference internal" href="apiref/rustworkx.layers.html#rustworkx.layers" title="rustworkx.layers"><code class="xref py py-func docutils literal notranslate"><span class="pre">layers()</span></code></a> function it would previously raise
+a <code class="docutils literal notranslate"><span class="pre">PanicException</span></code> that included a Rust backtrace and no other user
+actionable details which was caused by an unhandled error. This has been
+fixed so that an <code class="docutils literal notranslate"><span class="pre">IndexError</span></code> is raised and the problematic node index
+is included in the exception message.</p></li>
+</ul>
+</section>
+</section>
+<section id="id11">
+<h2>0.4.0<a class="headerlink" href="#id11" title="Permalink to this heading">¶</a></h2>
+<p>This release includes many new features and fixes, including improved
+performance and better documentation. But, the biggest change for this
+release is that this is the first release of rustworkx that supports
+compilation with a stable released version of rust. This was made
+possible thanks to all the hard work of the PyO3 maintainers and
+contributors in the PyO3 0.11.0 release.</p>
+<section id="id12">
+<h3>New Features<a class="headerlink" href="#id12" title="Permalink to this heading">¶</a></h3>
+<ul class="simple">
+<li><p>A new class for undirected graphs, <a class="reference internal" href="apiref/rustworkx.PyGraph.html#rustworkx.PyGraph" title="rustworkx.PyGraph"><code class="xref py py-class docutils literal notranslate"><span class="pre">PyGraph</span></code></a>, was added.</p></li>
+<li><p>2 new functions <a class="reference internal" href="apiref/rustworkx.graph_adjacency_matrix.html#rustworkx.graph_adjacency_matrix" title="rustworkx.graph_adjacency_matrix"><code class="xref py py-func docutils literal notranslate"><span class="pre">graph_adjacency_matrix()</span></code></a> and
+<a class="reference internal" href="apiref/rustworkx.digraph_adjacency_matrix.html#rustworkx.digraph_adjacency_matrix" title="rustworkx.digraph_adjacency_matrix"><code class="xref py py-func docutils literal notranslate"><span class="pre">digraph_adjacency_matrix()</span></code></a> to get the adjacency matrix of a
+<a class="reference internal" href="apiref/rustworkx.PyGraph.html#rustworkx.PyGraph" title="rustworkx.PyGraph"><code class="xref py py-class docutils literal notranslate"><span class="pre">PyGraph</span></code></a> and <a class="reference internal" href="apiref/rustworkx.PyDiGraph.html#rustworkx.PyDiGraph" title="rustworkx.PyDiGraph"><code class="xref py py-class docutils literal notranslate"><span class="pre">PyDiGraph</span></code></a> object.</p></li>
+<li><p>A new <a class="reference internal" href="apiref/rustworkx.PyDiGraph.html#rustworkx.PyDiGraph" title="rustworkx.PyDiGraph"><code class="xref py py-class docutils literal notranslate"><span class="pre">PyDiGraph</span></code></a> method,
+<a class="reference internal" href="apiref/rustworkx.PyDiGraph.find_adjacent_node_by_edge.html#rustworkx.PyDiGraph.find_adjacent_node_by_edge" title="rustworkx.PyDiGraph.find_adjacent_node_by_edge"><code class="xref py py-meth docutils literal notranslate"><span class="pre">find_adjacent_node_by_edge()</span></code></a>, was added. This is
+used to locate an adjacent node given a condition based on the edge between them.</p></li>
+<li><p>New methods, <a class="reference internal" href="apiref/rustworkx.PyDiGraph.add_nodes_from.html#rustworkx.PyDiGraph.add_nodes_from" title="rustworkx.PyDiGraph.add_nodes_from"><code class="xref py py-meth docutils literal notranslate"><span class="pre">add_nodes_from()</span></code></a>,
+<a class="reference internal" href="apiref/rustworkx.PyDiGraph.add_edges_from.html#rustworkx.PyDiGraph.add_edges_from" title="rustworkx.PyDiGraph.add_edges_from"><code class="xref py py-meth docutils literal notranslate"><span class="pre">add_edges_from()</span></code></a>,
+<a class="reference internal" href="apiref/rustworkx.PyDiGraph.add_edges_from_no_data.html#rustworkx.PyDiGraph.add_edges_from_no_data" title="rustworkx.PyDiGraph.add_edges_from_no_data"><code class="xref py py-meth docutils literal notranslate"><span class="pre">add_edges_from_no_data()</span></code></a>, and
+<a class="reference internal" href="apiref/rustworkx.PyDiGraph.remove_nodes_from.html#rustworkx.PyDiGraph.remove_nodes_from" title="rustworkx.PyDiGraph.remove_nodes_from"><code class="xref py py-meth docutils literal notranslate"><span class="pre">remove_nodes_from()</span></code></a> were added to
+<a class="reference internal" href="apiref/rustworkx.PyDiGraph.html#rustworkx.PyDiGraph" title="rustworkx.PyDiGraph"><code class="xref py py-class docutils literal notranslate"><span class="pre">PyDiGraph</span></code></a>. These methods allow for the addition (and
+removal) of multiple nodes or edges from a graph in a single call.</p></li>
+<li><p>A new function, <a class="reference internal" href="apiref/rustworkx.graph_greedy_color.html#rustworkx.graph_greedy_color" title="rustworkx.graph_greedy_color"><code class="xref py py-func docutils literal notranslate"><span class="pre">graph_greedy_color()</span></code></a>, which is used to
+return a coloring map from a <a class="reference internal" href="apiref/rustworkx.PyGraph.html#rustworkx.PyGraph" title="rustworkx.PyGraph"><code class="xref py py-class docutils literal notranslate"><span class="pre">PyGraph</span></code></a> object.</p></li>
+<li><p>2 new functions, <a class="reference internal" href="apiref/rustworkx.graph_astar_shortest_path.html#rustworkx.graph_astar_shortest_path" title="rustworkx.graph_astar_shortest_path"><code class="xref py py-func docutils literal notranslate"><span class="pre">graph_astar_shortest_path()</span></code></a> and
+<a class="reference internal" href="apiref/rustworkx.digraph_astar_shortest_path.html#rustworkx.digraph_astar_shortest_path" title="rustworkx.digraph_astar_shortest_path"><code class="xref py py-func docutils literal notranslate"><span class="pre">digraph_astar_shortest_path()</span></code></a>, to find the shortest path
+from a node to a specified goal using the A* search algorithm.</p></li>
+<li><p>2 new functions, <a class="reference internal" href="apiref/rustworkx.graph_all_simple_paths.html#rustworkx.graph_all_simple_paths" title="rustworkx.graph_all_simple_paths"><code class="xref py py-func docutils literal notranslate"><span class="pre">graph_all_simple_paths()</span></code></a> and
+<a class="reference internal" href="apiref/rustworkx.digraph_all_simple_paths.html#rustworkx.digraph_all_simple_paths" title="rustworkx.digraph_all_simple_paths"><code class="xref py py-func docutils literal notranslate"><span class="pre">digraph_all_simple_paths()</span></code></a>, to return a list of all the
+simple paths between 2 nodes in a <a class="reference internal" href="apiref/rustworkx.PyGraph.html#rustworkx.PyGraph" title="rustworkx.PyGraph"><code class="xref py py-class docutils literal notranslate"><span class="pre">PyGraph</span></code></a> or a
+<a class="reference internal" href="apiref/rustworkx.PyDiGraph.html#rustworkx.PyDiGraph" title="rustworkx.PyDiGraph"><code class="xref py py-class docutils literal notranslate"><span class="pre">PyDiGraph</span></code></a> object.</p></li>
+<li><p>2 new functions, <a class="reference internal" href="apiref/rustworkx.directed_gnp_random_graph.html#rustworkx.directed_gnp_random_graph" title="rustworkx.directed_gnp_random_graph"><code class="xref py py-func docutils literal notranslate"><span class="pre">directed_gnp_random_graph()</span></code></a> and
+<a class="reference internal" href="apiref/rustworkx.undirected_gnp_random_graph.html#rustworkx.undirected_gnp_random_graph" title="rustworkx.undirected_gnp_random_graph"><code class="xref py py-func docutils literal notranslate"><span class="pre">undirected_gnp_random_graph()</span></code></a>, to generate <span class="math notranslate nohighlight">\(G_{np}\)</span>
+random <a class="reference internal" href="apiref/rustworkx.PyDiGraph.html#rustworkx.PyDiGraph" title="rustworkx.PyDiGraph"><code class="xref py py-class docutils literal notranslate"><span class="pre">PyDiGraph</span></code></a> and <a class="reference internal" href="apiref/rustworkx.PyGraph.html#rustworkx.PyGraph" title="rustworkx.PyGraph"><code class="xref py py-class docutils literal notranslate"><span class="pre">PyGraph</span></code></a> objects.</p></li>
+<li><p>2 new functions, <a class="reference internal" href="apiref/rustworkx.graph_dijkstra_shortest_path_lengths.html#rustworkx.graph_dijkstra_shortest_path_lengths" title="rustworkx.graph_dijkstra_shortest_path_lengths"><code class="xref py py-func docutils literal notranslate"><span class="pre">graph_dijkstra_shortest_path_lengths()</span></code></a> and
+<a class="reference internal" href="apiref/rustworkx.digraph_dijkstra_shortest_path_lengths.html#rustworkx.digraph_dijkstra_shortest_path_lengths" title="rustworkx.digraph_dijkstra_shortest_path_lengths"><code class="xref py py-func docutils literal notranslate"><span class="pre">digraph_dijkstra_shortest_path_lengths()</span></code></a>, were added for find
+the shortest path length between nodes in <a class="reference internal" href="apiref/rustworkx.PyGraph.html#rustworkx.PyGraph" title="rustworkx.PyGraph"><code class="xref py py-class docutils literal notranslate"><span class="pre">PyGraph</span></code></a> or
+<a class="reference internal" href="apiref/rustworkx.PyDiGraph.html#rustworkx.PyDiGraph" title="rustworkx.PyDiGraph"><code class="xref py py-class docutils literal notranslate"><span class="pre">PyDiGraph</span></code></a> object using Dijkstra’s algorithm.</p></li>
+</ul>
+</section>
+<section id="id13">
+<h3>Upgrade Notes<a class="headerlink" href="#id13" title="Permalink to this heading">¶</a></h3>
+<ul class="simple">
+<li><p>The <a class="reference internal" href="apiref/rustworkx.PyDAG.html#rustworkx.PyDAG" title="rustworkx.PyDAG"><code class="xref py py-class docutils literal notranslate"><span class="pre">PyDAG</span></code></a> class was renamed <a class="reference internal" href="apiref/rustworkx.PyDiGraph.html#rustworkx.PyDiGraph" title="rustworkx.PyDiGraph"><code class="xref py py-class docutils literal notranslate"><span class="pre">PyDiGraph</span></code></a>
+to better reflect it’s functionality. For backwards compatibility
+<a class="reference internal" href="apiref/rustworkx.PyDAG.html#rustworkx.PyDAG" title="rustworkx.PyDAG"><code class="xref py py-class docutils literal notranslate"><span class="pre">PyDAG</span></code></a> still exists as a Python subclass of
+<a class="reference internal" href="apiref/rustworkx.PyDiGraph.html#rustworkx.PyDiGraph" title="rustworkx.PyDiGraph"><code class="xref py py-class docutils literal notranslate"><span class="pre">PyDiGraph</span></code></a>. No changes should be required for existing
+users.</p></li>
+<li><p><a class="reference external" href="https://numpy.org/">numpy</a> is now a dependency of rustworkx. This is used
+for the adjacency matrix functions to return numpy arrays. The minimum
+version of numpy supported is 1.16.0.</p></li>
+</ul>
+</section>
+<section id="id14">
+<h3>Fixes<a class="headerlink" href="#id14" title="Permalink to this heading">¶</a></h3>
+<ul class="simple">
+<li><p>The rustworkx exception classes are now properly exported from the
+rustworkx module. In prior releases it was not possible to import the
+exception classes (normally to catch one being raised) requiring users
+to catch the base Exception class. This has been fixed so a
+specialized rustworkx exception class can be used.</p></li>
+</ul>
+</section>
+</section>
+</section>
+
+
+             </article>
+             
+            </div>
+            <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="CONTRIBUTING.html" class="btn btn-neutral float-right" title="Contributing" accesskey="n" rel="next">Next <img src="_static/images/chevron-right-orange.svg" class="next-page"></a>
+      
+      
+        <a href="apiref/rustworkx.visualization.graphviz_draw.html" class="btn btn-neutral" title="rustworkx.visualization.graphviz_draw" accesskey="p" rel="prev"><img src="_static/images/chevron-right-orange.svg" class="previous-page"> Previous</a>
+      
+    </div>
+  
+
+  
+
+    <hr>
+
+  
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2021, rustworkx Contributors.
+
+    </p>
+  </div>
+    
+      <div>
+        Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+      </div>
+     
+
+</footer>
+
+          </div>
+        </div>
+
+        <div class="pytorch-content-right" id="pytorch-content-right">
+          <div class="pytorch-right-menu" id="pytorch-right-menu">
+            <div class="pytorch-side-scroll" id="pytorch-side-scroll-right">
+              <ul>
+<li><a class="reference internal" href="#">Release Notes</a><ul>
+<li><a class="reference internal" href="#relnotes-0-12-1">0.12.1</a><ul>
+<li><a class="reference internal" href="#prelude">Prelude</a></li>
+<li><a class="reference internal" href="#bug-fixes">Bug Fixes</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#id2">0.7.1</a></li>
+<li><a class="reference internal" href="#id3">0.7.0</a><ul>
+<li><a class="reference internal" href="#new-features">New Features</a></li>
+<li><a class="reference internal" href="#upgrade-notes">Upgrade Notes</a></li>
+<li><a class="reference internal" href="#fixes">Fixes</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#id4">0.6.0</a><ul>
+<li><a class="reference internal" href="#id5">New Features</a></li>
+<li><a class="reference internal" href="#id6">Upgrade Notes</a></li>
+<li><a class="reference internal" href="#id7">Fixes</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#id8">0.5.0</a><ul>
+<li><a class="reference internal" href="#id9">New Features</a></li>
+<li><a class="reference internal" href="#id10">Fixes</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#id11">0.4.0</a><ul>
+<li><a class="reference internal" href="#id12">New Features</a></li>
+<li><a class="reference internal" href="#id13">Upgrade Notes</a></li>
+<li><a class="reference internal" href="#id14">Fixes</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+  
+
+     
+       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+         <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+         <script src="_static/jquery.js"></script>
+         <script src="_static/underscore.js"></script>
+         <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+         <script src="_static/doctools.js"></script>
+         <script src="_static/sphinx_highlight.js"></script>
+         <script src="_static/thebelab-helper.js"></script>
+         <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+         <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
+         <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+     
+
+  
+
+  <script type="text/javascript" src="_static/js/vendor/popper.min.js"></script>
+  <script type="text/javascript" src="_static/js/vendor/bootstrap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/list.js/1.5.0/list.min.js"></script>
+  <script type="text/javascript" src="_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+ <script type="text/javascript">
+    $(document).ready(function() {
+        $(".toggle > *").hide();
+        $(".toggle .header").show();
+        $(".toggle .header").click(function() {
+            $(this).parent().children().not(".header").toggle(400);
+            $(this).parent().children(".header").toggleClass("open");
+        })
+    });
+</script>
+
+
+  <div>
+    <br>
+  </div>
+
+  <!-- Begin Mobile Menu -->
+
+  <div class="mobile-main-menu">
+    <div class="container-fluid">
+      <div class="container">
+        <div class="mobile-main-menu-header-container">
+          <a class="header-logo" href="https://qiskit.org/" aria-label="PyTorch"></a>
+          <a class="main-menu-close-button" href="#" data-behavior="close-mobile-menu"></a>
+        </div>
+      </div>
+    </div>
+
+    <div class="mobile-main-menu-links-container">
+      <div class="main-menu">
+        <ul>
+          <li>
+            <a href="https://retworkx.readthedocs.io/en/stable/">Qiskit Documentation</a>
+          </li>
+
+          <li>
+            <a href="https://qiskit.org/learn" target="_blank">Learning Resources</a>
+          </li>
+
+          <li>
+            <a href="https://qiskit.slack.com" target="_blank">Slack Support</a>
+          </li>
+
+          <li>
+            <a href="https://github.com/Qiskit/retworkx" target="_blank">Github</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- End Mobile Menu -->
+
+  <script type="text/javascript" src="_static/js/vendor/anchor.min.js"></script>
+
+  <script type="text/javascript">
+    $(document).ready(function() {
+      mobileMenu.bind();
+      mobileTOC.bind();
+      pytorchAnchors.bind();
+      sideMenus.bind();
+      scrollToAnchor.bind();
+      highlightNavigation.bind();
+      mainMenuDropdown.bind();
+      filterTags.bind();
+
+      // Add class to links that have code blocks, since we cannot create links in code blocks
+      $("article.pytorch-article a span.pre").each(function(e) {
+        $(this).closest("a").addClass("has-code");
+      });
+    })
+  </script>
+</body>
+</html>

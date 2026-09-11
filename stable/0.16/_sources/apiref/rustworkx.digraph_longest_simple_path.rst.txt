@@ -1,0 +1,6 @@
+﻿rustworkx.digraph\_longest\_simple\_path
+========================================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: digraph_longest_simple_path

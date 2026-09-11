@@ -1,0 +1,6 @@
+rustworkx.PyGraph.edge\_list
+============================
+
+.. currentmodule:: rustworkx
+
+.. automethod:: PyGraph.edge_list

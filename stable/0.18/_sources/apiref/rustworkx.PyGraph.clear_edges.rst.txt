@@ -1,0 +1,6 @@
+rustworkx.PyGraph.clear\_edges
+==============================
+
+.. currentmodule:: rustworkx
+
+.. automethod:: PyGraph.clear_edges

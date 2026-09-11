@@ -1,0 +1,6 @@
+rustworkx.PyDAG.insert\_node\_on\_out\_edges\_multiple
+======================================================
+
+.. currentmodule:: rustworkx
+
+.. automethod:: PyDAG.insert_node_on_out_edges_multiple

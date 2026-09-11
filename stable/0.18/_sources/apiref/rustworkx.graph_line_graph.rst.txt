@@ -1,0 +1,6 @@
+﻿rustworkx.graph\_line\_graph
+============================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: graph_line_graph

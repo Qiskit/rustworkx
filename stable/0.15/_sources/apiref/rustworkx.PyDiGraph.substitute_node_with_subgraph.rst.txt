@@ -1,0 +1,6 @@
+rustworkx.PyDiGraph.substitute\_node\_with\_subgraph
+====================================================
+
+.. currentmodule:: rustworkx
+
+.. automethod:: PyDiGraph.substitute_node_with_subgraph

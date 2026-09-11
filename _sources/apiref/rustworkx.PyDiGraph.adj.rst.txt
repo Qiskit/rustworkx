@@ -1,0 +1,6 @@
+rustworkx.PyDiGraph.adj
+=======================
+
+.. currentmodule:: rustworkx
+
+.. automethod:: PyDiGraph.adj

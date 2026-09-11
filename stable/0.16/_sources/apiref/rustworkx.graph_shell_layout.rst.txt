@@ -1,0 +1,6 @@
+﻿rustworkx.graph\_shell\_layout
+==============================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: graph_shell_layout

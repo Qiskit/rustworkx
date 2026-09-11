@@ -1,0 +1,6 @@
+rustworkx.PyDAG.remove\_nodes\_from
+===================================
+
+.. currentmodule:: rustworkx
+
+.. automethod:: PyDAG.remove_nodes_from

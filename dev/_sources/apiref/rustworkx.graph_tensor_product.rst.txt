@@ -1,0 +1,6 @@
+﻿rustworkx.graph\_tensor\_product
+================================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: graph_tensor_product

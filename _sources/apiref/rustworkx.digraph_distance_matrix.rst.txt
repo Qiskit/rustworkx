@@ -1,0 +1,6 @@
+﻿rustworkx.digraph\_distance\_matrix
+===================================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: digraph_distance_matrix

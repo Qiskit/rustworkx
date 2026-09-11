@@ -1,0 +1,6 @@
+﻿rustworkx.digraph\_generate\_random\_path
+=========================================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: digraph_generate_random_path

@@ -1,0 +1,6 @@
+﻿rustworkx.directed\_barabasi\_albert\_graph
+===========================================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: directed_barabasi_albert_graph

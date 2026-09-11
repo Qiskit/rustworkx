@@ -1,0 +1,6 @@
+﻿rustworkx.lexicographical\_topological\_sort
+============================================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: lexicographical_topological_sort

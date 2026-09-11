@@ -1,0 +1,6 @@
+rustworkx.PyDAG.compose
+=======================
+
+.. currentmodule:: rustworkx
+
+.. automethod:: PyDAG.compose

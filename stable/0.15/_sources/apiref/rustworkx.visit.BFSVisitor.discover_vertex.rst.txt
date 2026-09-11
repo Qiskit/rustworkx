@@ -1,0 +1,6 @@
+rustworkx.visit.BFSVisitor.discover\_vertex
+===========================================
+
+.. currentmodule:: rustworkx.visit
+
+.. automethod:: BFSVisitor.discover_vertex

@@ -1,0 +1,6 @@
+﻿rustworkx.generators.path\_graph
+================================
+
+.. currentmodule:: rustworkx.generators
+
+.. autofunction:: path_graph

@@ -1,0 +1,6 @@
+rustworkx.PyDiGraph.compose
+===========================
+
+.. currentmodule:: rustworkx
+
+.. automethod:: PyDiGraph.compose

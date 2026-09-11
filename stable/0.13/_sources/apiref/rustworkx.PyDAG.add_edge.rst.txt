@@ -1,0 +1,6 @@
+rustworkx.PyDAG.add\_edge
+=========================
+
+.. currentmodule:: rustworkx
+
+.. automethod:: PyDAG.add_edge

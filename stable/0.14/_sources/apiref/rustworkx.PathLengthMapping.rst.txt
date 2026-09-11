@@ -1,0 +1,20 @@
+﻿PathLengthMapping
+=================
+
+.. currentmodule:: rustworkx
+
+.. autoclass:: PathLengthMapping
+   :no-members:
+   :show-inheritance:
+
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+      :toctree: ../apiref/
+
+      ~PathLengthMapping.items
+      ~PathLengthMapping.keys
+      ~PathLengthMapping.values
+
+

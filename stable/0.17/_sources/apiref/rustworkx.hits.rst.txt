@@ -1,0 +1,6 @@
+﻿rustworkx.hits
+==============
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: hits

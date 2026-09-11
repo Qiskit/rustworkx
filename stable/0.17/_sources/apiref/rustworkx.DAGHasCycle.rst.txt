@@ -1,0 +1,6 @@
+﻿rustworkx.DAGHasCycle
+=====================
+
+.. currentmodule:: rustworkx
+
+.. autoexception:: DAGHasCycle

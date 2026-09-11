@@ -1,0 +1,6 @@
+rustworkx.visit.BFSVisitor.tree\_edge
+=====================================
+
+.. currentmodule:: rustworkx.visit
+
+.. automethod:: BFSVisitor.tree_edge

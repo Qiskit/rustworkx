@@ -1,0 +1,6 @@
+rustworkx.TopologicalSorter.is\_active
+======================================
+
+.. currentmodule:: rustworkx
+
+.. automethod:: TopologicalSorter.is_active

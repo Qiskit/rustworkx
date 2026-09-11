@@ -1,0 +1,1473 @@
+
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>rustworkx.visualization.matplotlib &mdash; rustworkx 0.12.1 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <!-- <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" /> -->
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/jupyter-sphinx.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/thebelab.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/style.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+
+  
+  <script src="../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="pytorch-body">
+
+   
+
+    
+
+    <div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    <span class="rst-current-version-label">0.12</span>
+    <span class="rst-versions-dropdown-icon"></span>
+  </span>
+  <div class="rst-other-versions">
+    <dl>
+      <dt>Versions</dt>
+          <dd><a class="version" href="/documentation/retworkx/index.html">Current Release</a></dd>
+          <dd><a class="version" href="/documentation/retworkx/dev/index.html">Development</a></dd>
+      <dt>Previous Releases</dt>
+        
+            <dd><a class="version" href="/documentation/retworkx/stable/0.12/index.html">0.12</a></dd>
+        
+    </dl>
+  </div>
+  <script>
+    jQuery('.version').click((evt) => {
+      const hash = window.location.hash
+      const complete_url = evt.target.href + hash
+      window.location = complete_url
+      evt.preventDefault()
+    })
+  </script>
+</div>
+
+    <div class="table-of-contents-link-wrapper">
+      <span>Table of Contents</span>
+      <a href="#" class="toggle-table-of-contents" data-behavior="toggle-table-of-contents"></a>
+    </div>
+
+    <nav data-toggle="wy-nav-shift" class="pytorch-left-menu" id="pytorch-left-menu">
+      <div class="pytorch-side-scroll">
+        <div class="pytorch-menu pytorch-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          <div class="pytorch-left-menu-search">
+            
+
+            
+              
+              
+                <div class="version">
+                  0.12.1
+                </div>
+              
+            
+
+            
+
+
+  
+
+
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search Docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+            
+          </div>
+
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html#installing-rustworkx">Installing Rustworkx</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html#platform-support">Platform Support</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html#using-rustworkx">Using rustworkx</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorial/index.html">Rustworkx Tutorials and Guides</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api.html">Rustworkx API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../visualization.html">Visualization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../CONTRIBUTING.html">Contributing Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../networkx.html">rustworkx for NetworkX users</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <div class="pytorch-container">
+      <div class="pytorch-page-level-bar" id="pytorch-page-level-bar">
+        <div class="pytorch-breadcrumbs-wrapper">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="pytorch-breadcrumbs">
+    
+      <li>
+        <a href="../../../index.html">
+          
+            Docs
+          
+        </a> &gt;
+      </li>
+
+        
+          <li><a href="../../index.html">Module code</a> &gt;</li>
+        
+          <li><a href="../../rustworkx.html">rustworkx</a> &gt;</li>
+        
+      <li>rustworkx.visualization.matplotlib</li>
+    
+    
+      <li class="pytorch-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+</div>
+        </div>
+
+        <div class="pytorch-shortcuts-wrapper" id="pytorch-shortcuts-wrapper">
+          Shortcuts
+        </div>
+      </div>
+
+      <section data-toggle="wy-nav-shift" id="pytorch-content-wrap" class="pytorch-content-wrap">
+        <div class="pytorch-content-left">
+          
+          <div class="rst-content style-external-links">
+          
+            <div role="main" class="main-content" itemscope="itemscope" itemtype="http://schema.org/Article">
+             <article itemprop="articleBody" id="pytorch-article" class="pytorch-article">
+              
+  <h1>Source code for rustworkx.visualization.matplotlib</h1><div class="highlight"><pre>
+<span></span><span class="c1"># This code is licensed under the Apache License, Version 2.0. You may</span>
+<span class="c1"># obtain a copy of this license in the LICENSE.txt file in the root directory</span>
+<span class="c1"># of this source tree or at http://www.apache.org/licenses/LICENSE-2.0.</span>
+<span class="c1">#</span>
+<span class="c1"># Any modifications or derivative works of this code must retain this</span>
+<span class="c1"># copyright notice, and modified files need to carry a notice indicating</span>
+<span class="c1"># that they have been altered from the originals.</span>
+<span class="c1">#</span>
+<span class="c1"># NetworkX is distributed with the 3-clause BSD license.</span>
+<span class="c1">#</span>
+<span class="c1">#   Copyright (C) 2004-2020, NetworkX Developers</span>
+<span class="c1">#   Aric Hagberg &lt;hagberg@lanl.gov&gt;</span>
+<span class="c1">#   Dan Schult &lt;dschult@colgate.edu&gt;</span>
+<span class="c1">#   Pieter Swart &lt;swart@lanl.gov&gt;</span>
+<span class="c1">#   All rights reserved.</span>
+<span class="c1">#</span>
+<span class="c1">#   Redistribution and use in source and binary forms, with or without</span>
+<span class="c1">#   modification, are permitted provided that the following conditions are</span>
+<span class="c1">#   met:</span>
+<span class="c1">#</span>
+<span class="c1">#     * Redistributions of source code must retain the above copyright</span>
+<span class="c1">#       notice, this list of conditions and the following disclaimer.</span>
+<span class="c1">#</span>
+<span class="c1">#     * Redistributions in binary form must reproduce the above</span>
+<span class="c1">#       copyright notice, this list of conditions and the following</span>
+<span class="c1">#       disclaimer in the documentation and/or other materials provided</span>
+<span class="c1">#       with the distribution.</span>
+<span class="c1">#</span>
+<span class="c1">#     * Neither the name of the NetworkX Developers nor the names of its</span>
+<span class="c1">#       contributors may be used to endorse or promote products derived</span>
+<span class="c1">#       from this software without specific prior written permission.</span>
+<span class="c1">#</span>
+<span class="c1">#   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS</span>
+<span class="c1">#   &quot;AS IS&quot; AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT</span>
+<span class="c1">#   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR</span>
+<span class="c1">#   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT</span>
+<span class="c1">#   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,</span>
+<span class="c1">#   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT</span>
+<span class="c1">#   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,</span>
+<span class="c1">#   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY</span>
+<span class="c1">#   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT</span>
+<span class="c1">#   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE</span>
+<span class="c1">#   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.</span>
+<span class="c1">#</span>
+<span class="c1"># This code is forked from networkx&#39;s networkx_pylab.py module and adapted to</span>
+<span class="c1"># work with rustworkx instead. The original source can be found at:</span>
+<span class="c1">#</span>
+<span class="c1"># https://github.com/rustworkx/rustworkx/blob/80b1afa2ae50314a8312998c214a8c1a356adcf1/rustworkx/drawing/rustworkx_pylab.py</span>
+
+<span class="sd">&quot;&quot;&quot;Draw a rustworkx graph with matplotlib.&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">collections.abc</span> <span class="kn">import</span> <span class="n">Iterable</span>
+<span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">islice</span><span class="p">,</span> <span class="n">cycle</span>
+<span class="kn">from</span> <span class="nn">numbers</span> <span class="kn">import</span> <span class="n">Number</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">import</span> <span class="nn">rustworkx</span>
+
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">&quot;mpl_draw&quot;</span><span class="p">,</span>
+<span class="p">]</span>
+
+
+<div class="viewcode-block" id="mpl_draw"><a class="viewcode-back" href="../../../apiref/rustworkx.visualization.mpl_draw.html#rustworkx.visualization.mpl_draw">[docs]</a><span class="k">def</span> <span class="nf">mpl_draw</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">pos</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">arrows</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">with_labels</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwds</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Draw a graph with Matplotlib.</span>
+
+<span class="sd">    .. note::</span>
+
+<span class="sd">        Matplotlib is an optional dependency and will not be installed with</span>
+<span class="sd">        rustworkx by default. If you intend to use this function make sure that</span>
+<span class="sd">        you install matplotlib with either ``pip install matplotlib`` or</span>
+<span class="sd">        ``pip install &#39;rustworkx[mpl]&#39;``</span>
+
+<span class="sd">    :param graph: A rustworkx graph, either a :class:`~rustworkx.PyGraph` or a</span>
+<span class="sd">        :class:`~rustworkx.PyDiGraph`.</span>
+<span class="sd">    :param dict pos: An optional dictionary (or</span>
+<span class="sd">        a :class:`~rustworkx.Pos2DMapping` object) with nodes as keys and</span>
+<span class="sd">        positions as values. If not specified a spring layout positioning will</span>
+<span class="sd">        be computed. See `layout_functions` for functions that compute</span>
+<span class="sd">        node positions.</span>
+<span class="sd">    :param matplotlib.Axes ax: An optional Matplotlib Axes object to draw the</span>
+<span class="sd">        graph in.</span>
+<span class="sd">    :param bool arrows: For :class:`~rustworkx.PyDiGraph` objects if ``True``</span>
+<span class="sd">        draw arrowheads. (defaults to ``True``) Note, that the Arrows will</span>
+<span class="sd">        be the same color as edges.</span>
+<span class="sd">    :param str arrowstyle: An optional string for directed graphs to choose</span>
+<span class="sd">        the style of the arrowsheads. See</span>
+<span class="sd">        :class:`matplotlib.patches.ArrowStyle` for more options. By default the</span>
+<span class="sd">        value is set to ``&#39;-\|&gt;&#39;``.</span>
+<span class="sd">    :param int arrow_size: For directed graphs, choose the size of the arrow</span>
+<span class="sd">        head&#39;s length and width. See</span>
+<span class="sd">        :class:`matplotlib.patches.FancyArrowPatch` attribute and constructor</span>
+<span class="sd">        kwarg ``mutation_scale`` for more info. Defaults to 10.</span>
+<span class="sd">    :param bool with_labels: Set to ``True`` to draw labels on the nodes. Edge</span>
+<span class="sd">        labels will only be drawn if the ``edge_labels`` parameter is set to a</span>
+<span class="sd">        function. Defaults to ``False``.</span>
+<span class="sd">    :param list node_list: An optional list of node indices in the graph to</span>
+<span class="sd">        draw. If not specified all nodes will be drawn.</span>
+<span class="sd">    :param list edge_list: An option list of edges in the graph to draw. If not</span>
+<span class="sd">        specified all edges will be drawn</span>
+<span class="sd">    :param int|list node_size: Optional size of nodes. If an array is</span>
+<span class="sd">        specified it must be the same length as node_list. Defaults to 300</span>
+<span class="sd">    :param node_color: Optional node color. Can be a single color or</span>
+<span class="sd">        a sequence of colors with the same length as node_list. Color can be</span>
+<span class="sd">        string or rgb (or rgba) tuple of floats from 0-1. If numeric values</span>
+<span class="sd">        are specified they will be mapped to colors using the ``cmap`` and</span>
+<span class="sd">        ``vmin``,``vmax`` parameters. See :func:`matplotlib.scatter` for more</span>
+<span class="sd">        details. Defaults to ``&#39;#1f78b4&#39;``)</span>
+<span class="sd">    :param str node_shape: The optional shape node. The specification is the</span>
+<span class="sd">        same as the :func:`matplotlib.pyplot.scatter` function&#39;s ``marker``</span>
+<span class="sd">        kwarg, valid options are one of</span>
+<span class="sd">        ``[&#39;s&#39;, &#39;o&#39;, &#39;^&#39;, &#39;&gt;&#39;, &#39;v&#39;, &#39;&lt;&#39;, &#39;d&#39;, &#39;p&#39;, &#39;h&#39;, &#39;8&#39;]``. Defaults to</span>
+<span class="sd">        ``&#39;o&#39;``</span>
+<span class="sd">    :param float alpha: Optional value for node and edge transparency</span>
+<span class="sd">    :param matplotlib.colors.Colormap cmap: An optional Matplotlib colormap</span>
+<span class="sd">        object for mapping intensities of nodes</span>
+<span class="sd">    :param float vmin: Optional minimum value for node colormap scaling</span>
+<span class="sd">    :param float vmax: Optional minimum value for node colormap scaling</span>
+<span class="sd">    :param float|sequence linewidths: An optional line width for symbol</span>
+<span class="sd">        borders. If a sequence is specified it must be the same length as</span>
+<span class="sd">        node_list. Defaults to 1.0</span>
+<span class="sd">    :param float|sequence width: An optional width to use for edges. Can</span>
+<span class="sd">        either be a float or sequence  of floats. If a sequence is specified</span>
+<span class="sd">        it must be the same length as node_list. Defaults to 1.0</span>
+<span class="sd">    :param str|sequence edge_color: color or array of colors (default=&#39;k&#39;)</span>
+<span class="sd">        Edge color. Can be a single color or a sequence of colors with the same</span>
+<span class="sd">        length as edge_list. Color can be string or rgb (or rgba) tuple of</span>
+<span class="sd">        floats from 0-1. If numeric values are specified they will be</span>
+<span class="sd">        mapped to colors using the ``edge_cmap`` and ``edge_vmin``,</span>
+<span class="sd">        ``edge_vmax`` parameters.</span>
+<span class="sd">    :param matplotlib.colors.Colormap edge_cmap: An optional Matplotlib</span>
+<span class="sd">        colormap for mapping intensities of edges.</span>
+<span class="sd">    :param float edge_vmin: Optional minimum value for edge colormap scaling</span>
+<span class="sd">    :param float edge_vmax: Optional maximum value for node colormap scaling</span>
+<span class="sd">    :param str style: An optional string to specify the edge line style.</span>
+<span class="sd">        For example, ``&#39;-&#39;``, ``&#39;--&#39;``, ``&#39;-.&#39;``, ``&#39;:&#39;`` or words like</span>
+<span class="sd">        ``&#39;solid&#39;`` or ``&#39;dashed&#39;``. See the</span>
+<span class="sd">        :class:`matplotlib.patches.FancyArrowPatch` attribute and kwarg</span>
+<span class="sd">        ``linestyle`` for more details. Defaults to ``&#39;solid&#39;``.</span>
+<span class="sd">    :param func labels: An optional callback function that will be passed a</span>
+<span class="sd">        node payload and return a string label for the node. For example::</span>
+
+<span class="sd">            labels=str</span>
+
+<span class="sd">        could be used to just return a string cast of the node&#39;s data payload.</span>
+<span class="sd">        Or something like::</span>
+
+<span class="sd">            labels=lambda node: node[&#39;label&#39;]</span>
+
+<span class="sd">        could be used if the node payloads are dictionaries.</span>
+<span class="sd">    :param func edge_labels: An optional callback function that will be passed</span>
+<span class="sd">        an edge payload and return a string label for the edge. For example::</span>
+
+<span class="sd">            edge_labels=str</span>
+
+<span class="sd">        could be used to just return a string cast of the edge&#39;s data payload.</span>
+<span class="sd">        Or something like::</span>
+
+<span class="sd">            edge_labels=lambda edge: edge[&#39;label&#39;]</span>
+
+<span class="sd">        could be used if the edge payloads are dictionaries. If this is set</span>
+<span class="sd">        edge labels will be drawn in the visualization.</span>
+<span class="sd">    :param int font_size: An optional fontsize to use for text labels, By</span>
+<span class="sd">        default a value of 12 is used for nodes and 10 for edges.</span>
+<span class="sd">    :param str font_color: An optional font color for strings. By default</span>
+<span class="sd">        ``&#39;k&#39;`` (ie black) is set.</span>
+<span class="sd">    :param str font_weight: An optional string used to specify the font weight.</span>
+<span class="sd">        By default a value of ``&#39;normal&#39;`` is used.</span>
+<span class="sd">    :param str font_family: An optional font family to use for strings. By</span>
+<span class="sd">        default ``&#39;sans-serif&#39;`` is used.</span>
+<span class="sd">    :param str label: An optional string label to use for the graph legend.</span>
+<span class="sd">    :param str connectionstyle: An optional value used to create a curved arc</span>
+<span class="sd">        of rounding radius rad. For example,</span>
+<span class="sd">        ``connectionstyle=&#39;arc3,rad=0.2&#39;``. See</span>
+<span class="sd">        :class:`matplotlib.patches.ConnectionStyle` and</span>
+<span class="sd">        :class:`matplotlib.patches.FancyArrowPatch` for more info. By default</span>
+<span class="sd">        this is set to ``&quot;arc3&quot;``.</span>
+
+<span class="sd">    :returns: A matplotlib figure for the visualization if not running with an</span>
+<span class="sd">        interactive backend (like in jupyter) or if ``ax`` is not set.</span>
+<span class="sd">    :rtype: matplotlib.figure.Figure</span>
+
+<span class="sd">    For Example:</span>
+
+<span class="sd">    .. jupyter-execute::</span>
+
+<span class="sd">        import matplotlib.pyplot as plt</span>
+
+<span class="sd">        import rustworkx as rx</span>
+<span class="sd">        from rustworkx.visualization import mpl_draw</span>
+
+<span class="sd">        G = rx.generators.directed_path_graph(25)</span>
+<span class="sd">        mpl_draw(G)</span>
+<span class="sd">        plt.draw()</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+    <span class="k">except</span> <span class="ne">ImportError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span>
+            <span class="s2">&quot;matplotlib needs to be installed prior to running &quot;</span>
+            <span class="s2">&quot;rustworkx.visualization.mpl_draw(). You can install &quot;</span>
+            <span class="s2">&quot;matplotlib with:</span><span class="se">\n</span><span class="s2">&#39;pip install matplotlib&#39;&quot;</span>
+        <span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span>
+    <span class="k">if</span> <span class="n">ax</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">cf</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">gcf</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">cf</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">get_figure</span><span class="p">()</span>
+    <span class="n">cf</span><span class="o">.</span><span class="n">set_facecolor</span><span class="p">(</span><span class="s2">&quot;w&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">ax</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">cf</span><span class="o">.</span><span class="n">axes</span><span class="p">:</span>
+            <span class="n">ax</span> <span class="o">=</span> <span class="n">cf</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">ax</span> <span class="o">=</span> <span class="n">cf</span><span class="o">.</span><span class="n">add_axes</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+
+    <span class="n">draw_graph</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">pos</span><span class="o">=</span><span class="n">pos</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span> <span class="n">arrows</span><span class="o">=</span><span class="n">arrows</span><span class="p">,</span> <span class="n">with_labels</span><span class="o">=</span><span class="n">with_labels</span><span class="p">,</span> <span class="o">**</span><span class="n">kwds</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_axis_off</span><span class="p">()</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">draw_if_interactive</span><span class="p">()</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">plt</span><span class="o">.</span><span class="n">isinteractive</span><span class="p">()</span> <span class="ow">or</span> <span class="n">ax</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">cf</span></div>
+
+
+<span class="k">def</span> <span class="nf">draw_graph</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">pos</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">arrows</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">with_labels</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwds</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Draw the graph using Matplotlib.</span>
+
+<span class="sd">    Draw the graph with Matplotlib with options for node positions,</span>
+<span class="sd">    labeling, titles, and many other drawing features.</span>
+<span class="sd">    See draw() for simple drawing without labels or axes.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    graph: A rustworkx :class:`~rustworkx.PyDiGraph` or</span>
+<span class="sd">        :class:`~rustworkx.PyGraph`</span>
+
+<span class="sd">    pos : dictionary, optional</span>
+<span class="sd">        A dictionary with nodes as keys and positions as values.</span>
+<span class="sd">        If not specified a spring layout positioning will be computed.</span>
+<span class="sd">        See :mod:`rustworkx.drawing.layout` for functions that</span>
+<span class="sd">        compute node positions.</span>
+
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    For directed graphs, arrows  are drawn at the head end.  Arrows can be</span>
+<span class="sd">    turned off with keyword arrows=False.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+    <span class="k">except</span> <span class="ne">ImportError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span>
+            <span class="s2">&quot;matplotlib needs to be installed prior to running &quot;</span>
+            <span class="s2">&quot;rustworkx.visualization.mpl_draw(). You can install &quot;</span>
+            <span class="s2">&quot;matplotlib with:</span><span class="se">\n</span><span class="s2">&#39;pip install matplotlib&#39;&quot;</span>
+        <span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span>
+
+    <span class="n">valid_node_kwds</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;node_list&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;node_size&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;node_color&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;node_shape&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;alpha&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;cmap&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;vmin&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;vmax&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;ax&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;linewidths&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;edgecolors&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;label&quot;</span><span class="p">,</span>
+    <span class="p">}</span>
+
+    <span class="n">valid_edge_kwds</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;edge_list&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;width&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;edge_color&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;style&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;alpha&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;arrowstyle&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;arrow_size&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;edge_cmap&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;edge_vmin&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;edge_vmax&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;ax&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;label&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;node_size&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;node_list&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;node_shape&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;connectionstyle&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;min_source_margin&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;min_target_margin&quot;</span><span class="p">,</span>
+    <span class="p">}</span>
+
+    <span class="n">valid_label_kwds</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;labels&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;font_size&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;font_color&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;font_family&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;font_weight&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;alpha&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;bbox&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;ax&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;horizontalalignment&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;verticalalignment&quot;</span><span class="p">,</span>
+    <span class="p">}</span>
+
+    <span class="n">valid_edge_label_kwds</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;edge_labels&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;font_size&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;font_color&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;font_family&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;font_weight&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;alpha&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;bbox&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;ax&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;rotate&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;horizontalalignment&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;verticalalignment&quot;</span><span class="p">,</span>
+    <span class="p">}</span>
+
+    <span class="n">valid_kwds</span> <span class="o">=</span> <span class="n">valid_node_kwds</span> <span class="o">|</span> <span class="n">valid_edge_kwds</span> <span class="o">|</span> <span class="n">valid_label_kwds</span> <span class="o">|</span> <span class="n">valid_edge_label_kwds</span>
+
+    <span class="k">if</span> <span class="nb">any</span><span class="p">([</span><span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">valid_kwds</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">kwds</span><span class="p">]):</span>
+        <span class="n">invalid_args</span> <span class="o">=</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">k</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">kwds</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">valid_kwds</span><span class="p">])</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Received invalid argument(s): </span><span class="si">{</span><span class="n">invalid_args</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="n">label_fn</span> <span class="o">=</span> <span class="n">kwds</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;labels&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">label_fn</span><span class="p">:</span>
+        <span class="n">kwds</span><span class="p">[</span><span class="s2">&quot;labels&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="n">x</span><span class="p">:</span> <span class="n">label_fn</span><span class="p">(</span><span class="n">graph</span><span class="p">[</span><span class="n">x</span><span class="p">])</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">graph</span><span class="o">.</span><span class="n">node_indices</span><span class="p">()}</span>
+    <span class="n">edge_label_fn</span> <span class="o">=</span> <span class="n">kwds</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;edge_labels&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">edge_label_fn</span><span class="p">:</span>
+        <span class="n">kwds</span><span class="p">[</span><span class="s2">&quot;edge_labels&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span> <span class="n">edge_label_fn</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">graph</span><span class="o">.</span><span class="n">weighted_edge_list</span><span class="p">()</span>
+        <span class="p">}</span>
+
+    <span class="n">node_kwds</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">kwds</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">valid_node_kwds</span><span class="p">}</span>
+    <span class="n">edge_kwds</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">kwds</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">valid_edge_kwds</span><span class="p">}</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">edge_kwds</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;alpha&quot;</span><span class="p">),</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="k">del</span> <span class="n">edge_kwds</span><span class="p">[</span><span class="s2">&quot;alpha&quot;</span><span class="p">]</span>
+    <span class="n">label_kwds</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">kwds</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">valid_label_kwds</span><span class="p">}</span>
+    <span class="n">edge_label_kwds</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">kwds</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">valid_edge_label_kwds</span><span class="p">}</span>
+
+    <span class="k">if</span> <span class="n">pos</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">pos</span> <span class="o">=</span> <span class="n">rustworkx</span><span class="o">.</span><span class="n">spring_layout</span><span class="p">(</span><span class="n">graph</span><span class="p">)</span>  <span class="c1"># default to spring layout</span>
+
+    <span class="n">draw_nodes</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">pos</span><span class="p">,</span> <span class="o">**</span><span class="n">node_kwds</span><span class="p">)</span>
+    <span class="n">draw_edges</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">pos</span><span class="p">,</span> <span class="n">arrows</span><span class="o">=</span><span class="n">arrows</span><span class="p">,</span> <span class="o">**</span><span class="n">edge_kwds</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">with_labels</span><span class="p">:</span>
+        <span class="n">draw_labels</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">pos</span><span class="p">,</span> <span class="o">**</span><span class="n">label_kwds</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">edge_label_fn</span><span class="p">:</span>
+        <span class="n">draw_edge_labels</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">pos</span><span class="p">,</span> <span class="o">**</span><span class="n">edge_label_kwds</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">draw_if_interactive</span><span class="p">()</span>
+
+
+<span class="k">def</span> <span class="nf">draw_nodes</span><span class="p">(</span>
+    <span class="n">graph</span><span class="p">,</span>
+    <span class="n">pos</span><span class="p">,</span>
+    <span class="n">node_list</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">node_size</span><span class="o">=</span><span class="mi">300</span><span class="p">,</span>
+    <span class="n">node_color</span><span class="o">=</span><span class="s2">&quot;#1f78b4&quot;</span><span class="p">,</span>
+    <span class="n">node_shape</span><span class="o">=</span><span class="s2">&quot;o&quot;</span><span class="p">,</span>
+    <span class="n">alpha</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">cmap</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">vmin</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">vmax</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">ax</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">linewidths</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">edgecolors</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">label</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Draw the nodes of the graph.</span>
+
+<span class="sd">    This draws only the nodes of the graph.</span>
+
+<span class="sd">    :param graph: A rustworkx graph, either a :class:`~rustworkx.PyGraph` or a</span>
+<span class="sd">        :class:`~rustworkx.PyDiGraph`.</span>
+
+<span class="sd">    :param dict pos: A dictionary with nodes as keys and positions as values.</span>
+<span class="sd">        Positions should be sequences of length 2.</span>
+
+<span class="sd">    :param Axes ax: An optional Matplotlib Axes object, if specified it will</span>
+<span class="sd">        draw the graph in the specified Matplotlib axes.</span>
+
+<span class="sd">    :param list node_list: If specified only draw the specified node indices.</span>
+<span class="sd">        If not specified all nodes in the graph will be drawn.</span>
+
+<span class="sd">    :param float|array node_size: Size of nodes. If an array it must be the</span>
+<span class="sd">        same length as node_list. Defaults to 300</span>
+
+<span class="sd">    node_color : color or array of colors (default=&#39;#1f78b4&#39;)</span>
+<span class="sd">        Node color. Can be a single color or a sequence of colors with the same</span>
+<span class="sd">        length as node_list. Color can be string or rgb (or rgba) tuple of</span>
+<span class="sd">        floats from 0-1. If numeric values are specified they will be</span>
+<span class="sd">        mapped to colors using the cmap and vmin,vmax parameters. See</span>
+<span class="sd">        matplotlib.scatter for more details.</span>
+
+<span class="sd">    node_shape :  string (default=&#39;o&#39;)</span>
+<span class="sd">        The shape of the node.  Specification is as matplotlib.scatter</span>
+<span class="sd">        marker, one of &#39;so^&gt;v&lt;dph8&#39;.</span>
+
+<span class="sd">    alpha : float or array of floats (default=None)</span>
+<span class="sd">        The node transparency.  This can be a single alpha value,</span>
+<span class="sd">        in which case it will be applied to all the nodes of color. Otherwise,</span>
+<span class="sd">        if it is an array, the elements of alpha will be applied to the colors</span>
+<span class="sd">        in order (cycling through alpha multiple times if necessary).</span>
+
+<span class="sd">    cmap : Matplotlib colormap (default=None)</span>
+<span class="sd">        Colormap for mapping intensities of nodes</span>
+
+<span class="sd">    vmin,vmax : floats or None (default=None)</span>
+<span class="sd">        Minimum and maximum for node colormap scaling</span>
+
+<span class="sd">    linewidths : [None | scalar | sequence] (default=1.0)</span>
+<span class="sd">        Line width of symbol border</span>
+
+<span class="sd">    edgecolors : [None | scalar | sequence] (default = node_color)</span>
+<span class="sd">        Colors of node borders</span>
+
+<span class="sd">    label : [None | string]</span>
+<span class="sd">        Label for legend</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    matplotlib.collections.PathCollection</span>
+<span class="sd">        `PathCollection` of the nodes.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">import</span> <span class="nn">matplotlib</span> <span class="k">as</span> <span class="nn">mpl</span>
+        <span class="kn">import</span> <span class="nn">matplotlib.collections</span>  <span class="c1"># call as mpl.collections</span>
+        <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+    <span class="k">except</span> <span class="ne">ImportError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span>
+            <span class="s2">&quot;matplotlib needs to be installed prior to running &quot;</span>
+            <span class="s2">&quot;rustworkx.visualization.mpl_draw(). You can install &quot;</span>
+            <span class="s2">&quot;matplotlib with:</span><span class="se">\n</span><span class="s2">&#39;pip install matplotlib&#39;&quot;</span>
+        <span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span>
+
+    <span class="k">if</span> <span class="n">ax</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">node_list</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">node_list</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">node_indices</span><span class="p">()</span>
+
+    <span class="c1"># empty node_list, no drawing</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">node_list</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">mpl</span><span class="o">.</span><span class="n">collections</span><span class="o">.</span><span class="n">PathCollection</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">xy</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="n">pos</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">node_list</span><span class="p">])</span>
+    <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">IndexError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Node </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2"> has no position.&quot;</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">alpha</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">):</span>
+        <span class="n">node_color</span> <span class="o">=</span> <span class="n">apply_alpha</span><span class="p">(</span><span class="n">node_color</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">node_list</span><span class="p">,</span> <span class="n">cmap</span><span class="p">,</span> <span class="n">vmin</span><span class="p">,</span> <span class="n">vmax</span><span class="p">)</span>
+        <span class="n">alpha</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="n">node_collection</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span>
+        <span class="n">xy</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span>
+        <span class="n">xy</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">],</span>
+        <span class="n">s</span><span class="o">=</span><span class="n">node_size</span><span class="p">,</span>
+        <span class="n">c</span><span class="o">=</span><span class="n">node_color</span><span class="p">,</span>
+        <span class="n">marker</span><span class="o">=</span><span class="n">node_shape</span><span class="p">,</span>
+        <span class="n">cmap</span><span class="o">=</span><span class="n">cmap</span><span class="p">,</span>
+        <span class="n">vmin</span><span class="o">=</span><span class="n">vmin</span><span class="p">,</span>
+        <span class="n">vmax</span><span class="o">=</span><span class="n">vmax</span><span class="p">,</span>
+        <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">,</span>
+        <span class="n">linewidths</span><span class="o">=</span><span class="n">linewidths</span><span class="p">,</span>
+        <span class="n">edgecolors</span><span class="o">=</span><span class="n">edgecolors</span><span class="p">,</span>
+        <span class="n">label</span><span class="o">=</span><span class="n">label</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">tick_params</span><span class="p">(</span>
+        <span class="n">axis</span><span class="o">=</span><span class="s2">&quot;both&quot;</span><span class="p">,</span>
+        <span class="n">which</span><span class="o">=</span><span class="s2">&quot;both&quot;</span><span class="p">,</span>
+        <span class="n">bottom</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">left</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">labelbottom</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">labelleft</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">node_collection</span><span class="o">.</span><span class="n">set_zorder</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">node_collection</span>
+
+
+<span class="k">def</span> <span class="nf">draw_edges</span><span class="p">(</span>
+    <span class="n">graph</span><span class="p">,</span>
+    <span class="n">pos</span><span class="p">,</span>
+    <span class="n">edge_list</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">width</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+    <span class="n">edge_color</span><span class="o">=</span><span class="s2">&quot;k&quot;</span><span class="p">,</span>
+    <span class="n">style</span><span class="o">=</span><span class="s2">&quot;solid&quot;</span><span class="p">,</span>
+    <span class="n">alpha</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">arrowstyle</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">arrow_size</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+    <span class="n">edge_cmap</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">edge_vmin</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">edge_vmax</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">ax</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">arrows</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">label</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">node_size</span><span class="o">=</span><span class="mi">300</span><span class="p">,</span>
+    <span class="n">node_list</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">node_shape</span><span class="o">=</span><span class="s2">&quot;o&quot;</span><span class="p">,</span>
+    <span class="n">connectionstyle</span><span class="o">=</span><span class="s2">&quot;arc3&quot;</span><span class="p">,</span>
+    <span class="n">min_source_margin</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+    <span class="n">min_target_margin</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Draw the edges of the graph.</span>
+
+<span class="sd">    This draws only the edges of the graph.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    graph: A rustworkx graph</span>
+
+<span class="sd">    pos : dictionary</span>
+<span class="sd">        A dictionary with nodes as keys and positions as values.</span>
+<span class="sd">        Positions should be sequences of length 2.</span>
+
+<span class="sd">    edge_list : collection of edge tuples (default=graph.edge_list())</span>
+<span class="sd">        Draw only specified edges</span>
+
+<span class="sd">    width : float or array of floats (default=1.0)</span>
+<span class="sd">        Line width of edges</span>
+
+<span class="sd">    edge_color : color or array of colors (default=&#39;k&#39;)</span>
+<span class="sd">        Edge color. Can be a single color or a sequence of colors with the same</span>
+<span class="sd">        length as edge_list. Color can be string or rgb (or rgba) tuple of</span>
+<span class="sd">        floats from 0-1. If numeric values are specified they will be</span>
+<span class="sd">        mapped to colors using the edge_cmap and edge_vmin,edge_vmax</span>
+<span class="sd">        parameters.</span>
+
+<span class="sd">    style : string (default=solid line)</span>
+<span class="sd">        Edge line style e.g.: &#39;-&#39;, &#39;--&#39;, &#39;-.&#39;, &#39;:&#39;</span>
+<span class="sd">        or words like &#39;solid&#39; or &#39;dashed&#39;.</span>
+<span class="sd">        (See `matplotlib.patches.FancyArrowPatch`: `linestyle`)</span>
+
+<span class="sd">    alpha : float or None (default=None)</span>
+<span class="sd">        The edge transparency</span>
+
+<span class="sd">    edge_cmap : Matplotlib colormap, optional</span>
+<span class="sd">        Colormap for mapping intensities of edges</span>
+
+<span class="sd">    edge_vmin,edge_vmax : floats, optional</span>
+<span class="sd">        Minimum and maximum for edge colormap scaling</span>
+
+<span class="sd">    ax : Matplotlib Axes object, optional</span>
+<span class="sd">        Draw the graph in the specified Matplotlib axes.</span>
+
+<span class="sd">    arrows : bool, optional (default=True)</span>
+<span class="sd">        For directed graphs, if True set default to drawing arrowheads.</span>
+<span class="sd">        Otherwise set default to no arrowheads. Ignored if `arrowstyle` is set.</span>
+
+<span class="sd">        Note: Arrows will be the same color as edges.</span>
+
+<span class="sd">    arrowstyle : str (default=&#39;-\|&gt;&#39; if directed else &#39;-&#39;)</span>
+<span class="sd">        For directed graphs and `arrows==True` defaults to &#39;-\|&gt;&#39;,</span>
+<span class="sd">        otherwise defaults to &#39;-&#39;.</span>
+
+<span class="sd">        See `matplotlib.patches.ArrowStyle` for more options.</span>
+
+<span class="sd">    arrow_size : int (default=10)</span>
+<span class="sd">        For directed graphs, choose the size of the arrow head&#39;s length and</span>
+<span class="sd">        width. See `matplotlib.patches.FancyArrowPatch` for attribute</span>
+<span class="sd">        ``mutation_scale`` for more info.</span>
+
+<span class="sd">    node_size : scalar or array (default=300)</span>
+<span class="sd">        Size of nodes. Though the nodes are not drawn with this function, the</span>
+<span class="sd">        node size is used in determining edge positioning.</span>
+
+<span class="sd">    node_list : list, optional (default=graph.node_indices())</span>
+<span class="sd">       This provides the node order for the `node_size` array (if it is an</span>
+<span class="sd">       array).</span>
+
+<span class="sd">    node_shape :  string (default=&#39;o&#39;)</span>
+<span class="sd">        The marker used for nodes, used in determining edge positioning.</span>
+<span class="sd">        Specification is as a `matplotlib.markers` marker, e.g. one of</span>
+<span class="sd">        &#39;so^&gt;v&lt;dph8&#39;.</span>
+
+<span class="sd">    label : None or string</span>
+<span class="sd">        Label for legend</span>
+
+<span class="sd">    min_source_margin : int (default=0)</span>
+<span class="sd">        The minimum margin (gap) at the begining of the edge at the source.</span>
+
+<span class="sd">    min_target_margin : int (default=0)</span>
+<span class="sd">        The minimum margin (gap) at the end of the edge at the target.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    list of matplotlib.patches.FancyArrowPatch</span>
+<span class="sd">        `FancyArrowPatch` instances of the directed edges</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    For directed graphs, arrows are drawn at the head end.  Arrows can be</span>
+<span class="sd">    turned off with keyword arrows=False or by passing an arrowstyle without</span>
+<span class="sd">    an arrow on the end.</span>
+
+<span class="sd">    Be sure to include `node_size` as a keyword argument; arrows are</span>
+<span class="sd">    drawn considering the size of nodes.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">import</span> <span class="nn">matplotlib</span> <span class="k">as</span> <span class="nn">mpl</span>
+        <span class="kn">import</span> <span class="nn">matplotlib.colors</span>  <span class="c1"># call as mpl.colors</span>
+        <span class="kn">import</span> <span class="nn">matplotlib.patches</span>  <span class="c1"># call as mpl.patches</span>
+        <span class="kn">import</span> <span class="nn">matplotlib.path</span>  <span class="c1"># call as mpl.path</span>
+        <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+    <span class="k">except</span> <span class="ne">ImportError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span>
+            <span class="s2">&quot;matplotlib needs to be installed prior to running &quot;</span>
+            <span class="s2">&quot;rustworkx.visualization.mpl_draw(). You can install &quot;</span>
+            <span class="s2">&quot;matplotlib with:</span><span class="se">\n</span><span class="s2">&#39;pip install matplotlib&#39;&quot;</span>
+        <span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span>
+
+    <span class="k">if</span> <span class="n">arrowstyle</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">rustworkx</span><span class="o">.</span><span class="n">PyDiGraph</span><span class="p">)</span> <span class="ow">and</span> <span class="n">arrows</span><span class="p">:</span>
+            <span class="n">arrowstyle</span> <span class="o">=</span> <span class="s2">&quot;-|&gt;&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">arrowstyle</span> <span class="o">=</span> <span class="s2">&quot;-&quot;</span>
+
+    <span class="k">if</span> <span class="n">ax</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">edge_list</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">edge_list</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">edge_list</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">edge_list</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>  <span class="c1"># no edges!</span>
+        <span class="k">return</span> <span class="p">[]</span>
+
+    <span class="k">if</span> <span class="n">node_list</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">node_list</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">node_indices</span><span class="p">())</span>
+
+    <span class="c1"># FancyArrowPatch handles color=None different from LineCollection</span>
+    <span class="k">if</span> <span class="n">edge_color</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">edge_color</span> <span class="o">=</span> <span class="s2">&quot;k&quot;</span>
+
+    <span class="c1"># set edge positions</span>
+    <span class="n">edge_pos</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([(</span><span class="n">pos</span><span class="p">[</span><span class="n">e</span><span class="p">[</span><span class="mi">0</span><span class="p">]],</span> <span class="n">pos</span><span class="p">[</span><span class="n">e</span><span class="p">[</span><span class="mi">1</span><span class="p">]])</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">edge_list</span><span class="p">])</span>
+
+    <span class="c1"># Check if edge_color is an array of floats and map to edge_cmap.</span>
+    <span class="c1"># This is the only case handled differently from matplotlib</span>
+    <span class="k">if</span> <span class="p">(</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">iterable</span><span class="p">(</span><span class="n">edge_color</span><span class="p">)</span>
+        <span class="ow">and</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">edge_color</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">edge_pos</span><span class="p">))</span>
+        <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">alltrue</span><span class="p">([</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">Number</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">edge_color</span><span class="p">])</span>
+    <span class="p">):</span>
+        <span class="k">if</span> <span class="n">edge_cmap</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">edge_cmap</span><span class="p">,</span> <span class="n">mpl</span><span class="o">.</span><span class="n">colors</span><span class="o">.</span><span class="n">Colormap</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">edge_cmap</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">get_cmap</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">edge_vmin</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">edge_vmin</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">edge_color</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">edge_vmax</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">edge_vmax</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">edge_color</span><span class="p">)</span>
+        <span class="n">color_normal</span> <span class="o">=</span> <span class="n">mpl</span><span class="o">.</span><span class="n">colors</span><span class="o">.</span><span class="n">Normalize</span><span class="p">(</span><span class="n">vmin</span><span class="o">=</span><span class="n">edge_vmin</span><span class="p">,</span> <span class="n">vmax</span><span class="o">=</span><span class="n">edge_vmax</span><span class="p">)</span>
+        <span class="n">edge_color</span> <span class="o">=</span> <span class="p">[</span><span class="n">edge_cmap</span><span class="p">(</span><span class="n">color_normal</span><span class="p">(</span><span class="n">e</span><span class="p">))</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">edge_color</span><span class="p">]</span>
+
+    <span class="c1"># Note: Waiting for someone to implement arrow to intersection with</span>
+    <span class="c1"># marker.  Meanwhile, this works well for polygons with more than 4</span>
+    <span class="c1"># sides and circle.</span>
+
+    <span class="k">def</span> <span class="nf">to_marker_edge</span><span class="p">(</span><span class="n">marker_size</span><span class="p">,</span> <span class="n">marker</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">marker</span> <span class="ow">in</span> <span class="s2">&quot;s^&gt;v&lt;d&quot;</span><span class="p">:</span>  <span class="c1"># `large` markers need extra space</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">marker_size</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">marker_size</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span>
+
+    <span class="c1"># Draw arrows with `matplotlib.patches.FancyarrowPatch`</span>
+    <span class="n">arrow_collection</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">mutation_scale</span> <span class="o">=</span> <span class="n">arrow_size</span>  <span class="c1"># scale factor of arrow head</span>
+
+    <span class="c1"># compute view</span>
+    <span class="n">mirustworkx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">amin</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="n">edge_pos</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">]))</span>
+    <span class="n">maxx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">amax</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="n">edge_pos</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">]))</span>
+    <span class="n">miny</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">amin</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="n">edge_pos</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">1</span><span class="p">]))</span>
+    <span class="n">maxy</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">amax</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="n">edge_pos</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">1</span><span class="p">]))</span>
+    <span class="n">w</span> <span class="o">=</span> <span class="n">maxx</span> <span class="o">-</span> <span class="n">mirustworkx</span>
+    <span class="n">h</span> <span class="o">=</span> <span class="n">maxy</span> <span class="o">-</span> <span class="n">miny</span>
+
+    <span class="n">base_connectionstyle</span> <span class="o">=</span> <span class="n">mpl</span><span class="o">.</span><span class="n">patches</span><span class="o">.</span><span class="n">ConnectionStyle</span><span class="p">(</span><span class="n">connectionstyle</span><span class="p">)</span>
+
+    <span class="c1"># Fallback for self-loop scale. Left outside of _connectionstyle so it is</span>
+    <span class="c1"># only computed once</span>
+    <span class="n">max_nodesize</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">node_size</span><span class="p">)</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_connectionstyle</span><span class="p">(</span><span class="n">posA</span><span class="p">,</span> <span class="n">posB</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="c1"># check if we need to do a self-loop</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">posA</span> <span class="o">==</span> <span class="n">posB</span><span class="p">):</span>
+            <span class="c1"># Self-loops are scaled by view extent, except in cases the extent</span>
+            <span class="c1"># is 0, e.g. for a single node. In this case, fall back to scaling</span>
+            <span class="c1"># by the maximum node size</span>
+            <span class="n">selfloop_ht</span> <span class="o">=</span> <span class="mf">0.005</span> <span class="o">*</span> <span class="n">max_nodesize</span> <span class="k">if</span> <span class="n">h</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">else</span> <span class="n">h</span>
+            <span class="c1"># this is called with _screen space_ values so covert back</span>
+            <span class="c1"># to data space</span>
+            <span class="n">data_loc</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">transData</span><span class="o">.</span><span class="n">inverted</span><span class="p">()</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">posA</span><span class="p">)</span>
+            <span class="n">v_shift</span> <span class="o">=</span> <span class="mf">0.1</span> <span class="o">*</span> <span class="n">selfloop_ht</span>
+            <span class="n">h_shift</span> <span class="o">=</span> <span class="n">v_shift</span> <span class="o">*</span> <span class="mf">0.5</span>
+            <span class="c1"># put the top of the loop first so arrow is not hidden by node</span>
+            <span class="n">path</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="c1"># 1</span>
+                <span class="n">data_loc</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="n">v_shift</span><span class="p">]),</span>
+                <span class="c1"># 4 4 4</span>
+                <span class="n">data_loc</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="n">h_shift</span><span class="p">,</span> <span class="n">v_shift</span><span class="p">]),</span>
+                <span class="n">data_loc</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="n">h_shift</span><span class="p">,</span> <span class="mi">0</span><span class="p">]),</span>
+                <span class="n">data_loc</span><span class="p">,</span>
+                <span class="c1"># 4 4 4</span>
+                <span class="n">data_loc</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="o">-</span><span class="n">h_shift</span><span class="p">,</span> <span class="mi">0</span><span class="p">]),</span>
+                <span class="n">data_loc</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="o">-</span><span class="n">h_shift</span><span class="p">,</span> <span class="n">v_shift</span><span class="p">]),</span>
+                <span class="n">data_loc</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="n">v_shift</span><span class="p">]),</span>
+            <span class="p">]</span>
+
+            <span class="n">ret</span> <span class="o">=</span> <span class="n">mpl</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="n">ax</span><span class="o">.</span><span class="n">transData</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">path</span><span class="p">),</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">])</span>
+        <span class="c1"># if not, fall back to the user specified behavior</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">ret</span> <span class="o">=</span> <span class="n">base_connectionstyle</span><span class="p">(</span><span class="n">posA</span><span class="p">,</span> <span class="n">posB</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">ret</span>
+
+    <span class="c1"># FancyArrowPatch doesn&#39;t handle color strings</span>
+    <span class="n">arrow_colors</span> <span class="o">=</span> <span class="n">mpl</span><span class="o">.</span><span class="n">colors</span><span class="o">.</span><span class="n">colorConverter</span><span class="o">.</span><span class="n">to_rgba_array</span><span class="p">(</span><span class="n">edge_color</span><span class="p">,</span> <span class="n">alpha</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">src</span><span class="p">,</span> <span class="n">dst</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">edge_pos</span><span class="p">):</span>
+        <span class="n">x1</span><span class="p">,</span> <span class="n">y1</span> <span class="o">=</span> <span class="n">src</span>
+        <span class="n">x2</span><span class="p">,</span> <span class="n">y2</span> <span class="o">=</span> <span class="n">dst</span>
+        <span class="n">shrink_source</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c1"># space from source to tail</span>
+        <span class="n">shrink_target</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c1"># space from  head to target</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">iterable</span><span class="p">(</span><span class="n">node_size</span><span class="p">):</span>  <span class="c1"># many node sizes</span>
+            <span class="n">source</span><span class="p">,</span> <span class="n">target</span> <span class="o">=</span> <span class="n">edge_list</span><span class="p">[</span><span class="n">i</span><span class="p">][:</span><span class="mi">2</span><span class="p">]</span>
+            <span class="n">source_node_size</span> <span class="o">=</span> <span class="n">node_size</span><span class="p">[</span><span class="n">node_list</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">source</span><span class="p">)]</span>
+            <span class="n">target_node_size</span> <span class="o">=</span> <span class="n">node_size</span><span class="p">[</span><span class="n">node_list</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">target</span><span class="p">)]</span>
+            <span class="n">shrink_source</span> <span class="o">=</span> <span class="n">to_marker_edge</span><span class="p">(</span><span class="n">source_node_size</span><span class="p">,</span> <span class="n">node_shape</span><span class="p">)</span>
+            <span class="n">shrink_target</span> <span class="o">=</span> <span class="n">to_marker_edge</span><span class="p">(</span><span class="n">target_node_size</span><span class="p">,</span> <span class="n">node_shape</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">shrink_source</span> <span class="o">=</span> <span class="n">shrink_target</span> <span class="o">=</span> <span class="n">to_marker_edge</span><span class="p">(</span><span class="n">node_size</span><span class="p">,</span> <span class="n">node_shape</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">shrink_source</span> <span class="o">&lt;</span> <span class="n">min_source_margin</span><span class="p">:</span>
+            <span class="n">shrink_source</span> <span class="o">=</span> <span class="n">min_source_margin</span>
+
+        <span class="k">if</span> <span class="n">shrink_target</span> <span class="o">&lt;</span> <span class="n">min_target_margin</span><span class="p">:</span>
+            <span class="n">shrink_target</span> <span class="o">=</span> <span class="n">min_target_margin</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">arrow_colors</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">edge_pos</span><span class="p">):</span>
+            <span class="n">arrow_color</span> <span class="o">=</span> <span class="n">arrow_colors</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">arrow_colors</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">arrow_color</span> <span class="o">=</span> <span class="n">arrow_colors</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>  <span class="c1"># Cycle through colors</span>
+            <span class="n">arrow_color</span> <span class="o">=</span> <span class="n">arrow_colors</span><span class="p">[</span><span class="n">i</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="n">arrow_colors</span><span class="p">)]</span>
+
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">iterable</span><span class="p">(</span><span class="n">width</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">width</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">edge_pos</span><span class="p">):</span>
+                <span class="n">line_width</span> <span class="o">=</span> <span class="n">width</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">line_width</span> <span class="o">=</span> <span class="n">width</span><span class="p">[</span><span class="n">i</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="n">width</span><span class="p">)]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">line_width</span> <span class="o">=</span> <span class="n">width</span>
+
+        <span class="n">arrow</span> <span class="o">=</span> <span class="n">mpl</span><span class="o">.</span><span class="n">patches</span><span class="o">.</span><span class="n">FancyArrowPatch</span><span class="p">(</span>
+            <span class="p">(</span><span class="n">x1</span><span class="p">,</span> <span class="n">y1</span><span class="p">),</span>
+            <span class="p">(</span><span class="n">x2</span><span class="p">,</span> <span class="n">y2</span><span class="p">),</span>
+            <span class="n">arrowstyle</span><span class="o">=</span><span class="n">arrowstyle</span><span class="p">,</span>
+            <span class="n">shrinkA</span><span class="o">=</span><span class="n">shrink_source</span><span class="p">,</span>
+            <span class="n">shrinkB</span><span class="o">=</span><span class="n">shrink_target</span><span class="p">,</span>
+            <span class="n">mutation_scale</span><span class="o">=</span><span class="n">mutation_scale</span><span class="p">,</span>
+            <span class="n">color</span><span class="o">=</span><span class="n">arrow_color</span><span class="p">,</span>
+            <span class="n">linewidth</span><span class="o">=</span><span class="n">line_width</span><span class="p">,</span>
+            <span class="n">connectionstyle</span><span class="o">=</span><span class="n">_connectionstyle</span><span class="p">,</span>
+            <span class="n">linestyle</span><span class="o">=</span><span class="n">style</span><span class="p">,</span>
+            <span class="n">zorder</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="p">)</span>  <span class="c1"># arrows go behind nodes</span>
+
+        <span class="n">arrow_collection</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">arrow</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">add_patch</span><span class="p">(</span><span class="n">arrow</span><span class="p">)</span>
+
+    <span class="c1"># update view</span>
+    <span class="n">padx</span><span class="p">,</span> <span class="n">pady</span> <span class="o">=</span> <span class="mf">0.05</span> <span class="o">*</span> <span class="n">w</span><span class="p">,</span> <span class="mf">0.05</span> <span class="o">*</span> <span class="n">h</span>
+    <span class="n">corners</span> <span class="o">=</span> <span class="p">(</span><span class="n">mirustworkx</span> <span class="o">-</span> <span class="n">padx</span><span class="p">,</span> <span class="n">miny</span> <span class="o">-</span> <span class="n">pady</span><span class="p">),</span> <span class="p">(</span><span class="n">maxx</span> <span class="o">+</span> <span class="n">padx</span><span class="p">,</span> <span class="n">maxy</span> <span class="o">+</span> <span class="n">pady</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">update_datalim</span><span class="p">(</span><span class="n">corners</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">autoscale_view</span><span class="p">()</span>
+
+    <span class="n">ax</span><span class="o">.</span><span class="n">tick_params</span><span class="p">(</span>
+        <span class="n">axis</span><span class="o">=</span><span class="s2">&quot;both&quot;</span><span class="p">,</span>
+        <span class="n">which</span><span class="o">=</span><span class="s2">&quot;both&quot;</span><span class="p">,</span>
+        <span class="n">bottom</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">left</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">labelbottom</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">labelleft</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">arrow_collection</span>
+
+
+<span class="k">def</span> <span class="nf">draw_labels</span><span class="p">(</span>
+    <span class="n">graph</span><span class="p">,</span>
+    <span class="n">pos</span><span class="p">,</span>
+    <span class="n">labels</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">font_size</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span>
+    <span class="n">font_color</span><span class="o">=</span><span class="s2">&quot;k&quot;</span><span class="p">,</span>
+    <span class="n">font_family</span><span class="o">=</span><span class="s2">&quot;sans-serif&quot;</span><span class="p">,</span>
+    <span class="n">font_weight</span><span class="o">=</span><span class="s2">&quot;normal&quot;</span><span class="p">,</span>
+    <span class="n">alpha</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">bbox</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">horizontalalignment</span><span class="o">=</span><span class="s2">&quot;center&quot;</span><span class="p">,</span>
+    <span class="n">verticalalignment</span><span class="o">=</span><span class="s2">&quot;center&quot;</span><span class="p">,</span>
+    <span class="n">ax</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">clip_on</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Draw node labels on the graph.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    graph: A rustworkx graph</span>
+
+<span class="sd">    pos : dictionary</span>
+<span class="sd">        A dictionary with nodes as keys and positions as values.</span>
+<span class="sd">        Positions should be sequences of length 2.</span>
+
+<span class="sd">    labels : dictionary (default={n: n for n in graph})</span>
+<span class="sd">        Node labels in a dictionary of text labels keyed by node.</span>
+<span class="sd">        Node-keys in labels should appear as keys in `pos`.</span>
+<span class="sd">        If needed use: `{n:lab for n,lab in labels.items() if n in pos}`</span>
+
+<span class="sd">    font_size : int (default=12)</span>
+<span class="sd">        Font size for text labels</span>
+
+<span class="sd">    font_color : string (default=&#39;k&#39; black)</span>
+<span class="sd">        Font color string</span>
+
+<span class="sd">    font_weight : string (default=&#39;normal&#39;)</span>
+<span class="sd">        Font weight</span>
+
+<span class="sd">    font_family : string (default=&#39;sans-serif&#39;)</span>
+<span class="sd">        Font family</span>
+
+<span class="sd">    alpha : float or None (default=None)</span>
+<span class="sd">        The text transparency</span>
+
+<span class="sd">    bbox : Matplotlib bbox, (default is Matplotlib&#39;s ax.text default)</span>
+<span class="sd">        Specify text box properties (e.g. shape, color etc.) for node labels.</span>
+
+<span class="sd">    horizontalalignment : string (default=&#39;center&#39;)</span>
+<span class="sd">        Horizontal alignment {&#39;center&#39;, &#39;right&#39;, &#39;left&#39;}</span>
+
+<span class="sd">    verticalalignment : string (default=&#39;center&#39;)</span>
+<span class="sd">        Vertical alignment {&#39;center&#39;, &#39;top&#39;, &#39;bottom&#39;, &#39;baseline&#39;,</span>
+<span class="sd">                            &#39;center_baseline&#39;}</span>
+
+<span class="sd">    ax : Matplotlib Axes object, optional</span>
+<span class="sd">        Draw the graph in the specified Matplotlib axes.</span>
+
+<span class="sd">    clip_on : bool (default=True)</span>
+<span class="sd">        Turn on clipping of node labels at axis boundaries</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict</span>
+<span class="sd">        `dict` of labels keyed on the nodes</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+    <span class="k">except</span> <span class="ne">ImportError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span>
+            <span class="s2">&quot;matplotlib needs to be installed prior to running &quot;</span>
+            <span class="s2">&quot;rustworkx.visualization.mpl_draw(). You can install &quot;</span>
+            <span class="s2">&quot;matplotlib with:</span><span class="se">\n</span><span class="s2">&#39;pip install matplotlib&#39;&quot;</span>
+        <span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span>
+
+    <span class="k">if</span> <span class="n">ax</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">labels</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">labels</span> <span class="o">=</span> <span class="p">{</span><span class="n">n</span><span class="p">:</span> <span class="n">n</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">graph</span><span class="o">.</span><span class="n">node_indices</span><span class="p">()}</span>
+
+    <span class="n">text_items</span> <span class="o">=</span> <span class="p">{}</span>  <span class="c1"># there is no text collection so we&#39;ll fake one</span>
+    <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">labels</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span> <span class="o">=</span> <span class="n">pos</span><span class="p">[</span><span class="n">n</span><span class="p">]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">label</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">label</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">label</span><span class="p">)</span>  <span class="c1"># this makes &quot;1&quot; and 1 labeled the same</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">text</span><span class="p">(</span>
+            <span class="n">x</span><span class="p">,</span>
+            <span class="n">y</span><span class="p">,</span>
+            <span class="n">label</span><span class="p">,</span>
+            <span class="n">size</span><span class="o">=</span><span class="n">font_size</span><span class="p">,</span>
+            <span class="n">color</span><span class="o">=</span><span class="n">font_color</span><span class="p">,</span>
+            <span class="n">family</span><span class="o">=</span><span class="n">font_family</span><span class="p">,</span>
+            <span class="n">weight</span><span class="o">=</span><span class="n">font_weight</span><span class="p">,</span>
+            <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">,</span>
+            <span class="n">horizontalalignment</span><span class="o">=</span><span class="n">horizontalalignment</span><span class="p">,</span>
+            <span class="n">verticalalignment</span><span class="o">=</span><span class="n">verticalalignment</span><span class="p">,</span>
+            <span class="n">transform</span><span class="o">=</span><span class="n">ax</span><span class="o">.</span><span class="n">transData</span><span class="p">,</span>
+            <span class="n">bbox</span><span class="o">=</span><span class="n">bbox</span><span class="p">,</span>
+            <span class="n">clip_on</span><span class="o">=</span><span class="n">clip_on</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">text_items</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="n">t</span>
+
+    <span class="n">ax</span><span class="o">.</span><span class="n">tick_params</span><span class="p">(</span>
+        <span class="n">axis</span><span class="o">=</span><span class="s2">&quot;both&quot;</span><span class="p">,</span>
+        <span class="n">which</span><span class="o">=</span><span class="s2">&quot;both&quot;</span><span class="p">,</span>
+        <span class="n">bottom</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">left</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">labelbottom</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">labelleft</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">text_items</span>
+
+
+<span class="k">def</span> <span class="nf">draw_edge_labels</span><span class="p">(</span>
+    <span class="n">graph</span><span class="p">,</span>
+    <span class="n">pos</span><span class="p">,</span>
+    <span class="n">edge_labels</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">label_pos</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+    <span class="n">font_size</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+    <span class="n">font_color</span><span class="o">=</span><span class="s2">&quot;k&quot;</span><span class="p">,</span>
+    <span class="n">font_family</span><span class="o">=</span><span class="s2">&quot;sans-serif&quot;</span><span class="p">,</span>
+    <span class="n">font_weight</span><span class="o">=</span><span class="s2">&quot;normal&quot;</span><span class="p">,</span>
+    <span class="n">alpha</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">bbox</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">horizontalalignment</span><span class="o">=</span><span class="s2">&quot;center&quot;</span><span class="p">,</span>
+    <span class="n">verticalalignment</span><span class="o">=</span><span class="s2">&quot;center&quot;</span><span class="p">,</span>
+    <span class="n">ax</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">rotate</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">clip_on</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Draw edge labels.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    graph: A rustworkx graph</span>
+
+<span class="sd">    pos : dictionary</span>
+<span class="sd">        A dictionary with nodes as keys and positions as values.</span>
+<span class="sd">        Positions should be sequences of length 2.</span>
+
+<span class="sd">    edge_labels : dictionary (default={})</span>
+<span class="sd">        Edge labels in a dictionary of labels keyed by edge two-tuple.</span>
+<span class="sd">        Only labels for the keys in the dictionary are drawn.</span>
+
+<span class="sd">    label_pos : float (default=0.5)</span>
+<span class="sd">        Position of edge label along edge (0=head, 0.5=center, 1=tail)</span>
+
+<span class="sd">    font_size : int (default=10)</span>
+<span class="sd">        Font size for text labels</span>
+
+<span class="sd">    font_color : string (default=&#39;k&#39; black)</span>
+<span class="sd">        Font color string</span>
+
+<span class="sd">    font_weight : string (default=&#39;normal&#39;)</span>
+<span class="sd">        Font weight</span>
+
+<span class="sd">    font_family : string (default=&#39;sans-serif&#39;)</span>
+<span class="sd">        Font family</span>
+
+<span class="sd">    alpha : float or None (default=None)</span>
+<span class="sd">        The text transparency</span>
+
+<span class="sd">    bbox : Matplotlib bbox, optional</span>
+<span class="sd">        Specify text box properties (e.g. shape, color etc.) for edge labels.</span>
+<span class="sd">        Default is {boxstyle=&#39;round&#39;, ec=(1.0, 1.0, 1.0), fc=(1.0, 1.0, 1.0)}.</span>
+
+<span class="sd">    horizontalalignment : string (default=&#39;center&#39;)</span>
+<span class="sd">        Horizontal alignment {&#39;center&#39;, &#39;right&#39;, &#39;left&#39;}</span>
+
+<span class="sd">    verticalalignment : string (default=&#39;center&#39;)</span>
+<span class="sd">        Vertical alignment {&#39;center&#39;, &#39;top&#39;, &#39;bottom&#39;, &#39;baseline&#39;,</span>
+<span class="sd">                            &#39;center_baseline&#39;}</span>
+
+<span class="sd">    ax : Matplotlib Axes object, optional</span>
+<span class="sd">        Draw the graph in the specified Matplotlib axes.</span>
+
+<span class="sd">    rotate : bool (deafult=True)</span>
+<span class="sd">        Rotate edge labels to lie parallel to edges</span>
+
+<span class="sd">    clip_on : bool (default=True)</span>
+<span class="sd">        Turn on clipping of edge labels at axis boundaries</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict</span>
+<span class="sd">        `dict` of labels keyed by edge</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+    <span class="k">except</span> <span class="ne">ImportError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span>
+            <span class="s2">&quot;matplotlib needs to be installed prior to running &quot;</span>
+            <span class="s2">&quot;rustworkx.visualization.mpl_draw(). You can install &quot;</span>
+            <span class="s2">&quot;matplotlib with:</span><span class="se">\n</span><span class="s2">&#39;pip install matplotlib&#39;&quot;</span>
+        <span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span>
+
+    <span class="k">if</span> <span class="n">ax</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">edge_labels</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">labels</span> <span class="o">=</span> <span class="p">{(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span> <span class="n">d</span> <span class="k">for</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">graph</span><span class="o">.</span><span class="n">weighted_edge_list</span><span class="p">()}</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">labels</span> <span class="o">=</span> <span class="n">edge_labels</span>
+    <span class="n">text_items</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="p">(</span><span class="n">n1</span><span class="p">,</span> <span class="n">n2</span><span class="p">),</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">labels</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="p">(</span><span class="n">x1</span><span class="p">,</span> <span class="n">y1</span><span class="p">)</span> <span class="o">=</span> <span class="n">pos</span><span class="p">[</span><span class="n">n1</span><span class="p">]</span>
+        <span class="p">(</span><span class="n">x2</span><span class="p">,</span> <span class="n">y2</span><span class="p">)</span> <span class="o">=</span> <span class="n">pos</span><span class="p">[</span><span class="n">n2</span><span class="p">]</span>
+        <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">x1</span> <span class="o">*</span> <span class="n">label_pos</span> <span class="o">+</span> <span class="n">x2</span> <span class="o">*</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="n">label_pos</span><span class="p">),</span>
+            <span class="n">y1</span> <span class="o">*</span> <span class="n">label_pos</span> <span class="o">+</span> <span class="n">y2</span> <span class="o">*</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="n">label_pos</span><span class="p">),</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">rotate</span><span class="p">:</span>
+            <span class="c1"># in degrees</span>
+            <span class="n">angle</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arctan2</span><span class="p">(</span><span class="n">y2</span> <span class="o">-</span> <span class="n">y1</span><span class="p">,</span> <span class="n">x2</span> <span class="o">-</span> <span class="n">x1</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mf">2.0</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span> <span class="o">*</span> <span class="mi">360</span>
+            <span class="c1"># make label orientation &quot;right-side-up&quot;</span>
+            <span class="k">if</span> <span class="n">angle</span> <span class="o">&gt;</span> <span class="mi">90</span><span class="p">:</span>
+                <span class="n">angle</span> <span class="o">-=</span> <span class="mi">180</span>
+            <span class="k">if</span> <span class="n">angle</span> <span class="o">&lt;</span> <span class="o">-</span><span class="mi">90</span><span class="p">:</span>
+                <span class="n">angle</span> <span class="o">+=</span> <span class="mi">180</span>
+            <span class="c1"># transform data coordinate angle to screen coordinate angle</span>
+            <span class="n">xy</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">((</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">))</span>
+            <span class="n">trans_angle</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">transData</span><span class="o">.</span><span class="n">transform_angles</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">((</span><span class="n">angle</span><span class="p">,)),</span> <span class="n">xy</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)))[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">trans_angle</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="c1"># use default box of white with white border</span>
+        <span class="k">if</span> <span class="n">bbox</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">bbox</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">boxstyle</span><span class="o">=</span><span class="s2">&quot;round&quot;</span><span class="p">,</span> <span class="n">ec</span><span class="o">=</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span> <span class="n">fc</span><span class="o">=</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">))</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">label</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">label</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">label</span><span class="p">)</span>  <span class="c1"># this makes &quot;1&quot; and 1 labeled the same</span>
+
+        <span class="n">t</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">text</span><span class="p">(</span>
+            <span class="n">x</span><span class="p">,</span>
+            <span class="n">y</span><span class="p">,</span>
+            <span class="n">label</span><span class="p">,</span>
+            <span class="n">size</span><span class="o">=</span><span class="n">font_size</span><span class="p">,</span>
+            <span class="n">color</span><span class="o">=</span><span class="n">font_color</span><span class="p">,</span>
+            <span class="n">family</span><span class="o">=</span><span class="n">font_family</span><span class="p">,</span>
+            <span class="n">weight</span><span class="o">=</span><span class="n">font_weight</span><span class="p">,</span>
+            <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">,</span>
+            <span class="n">horizontalalignment</span><span class="o">=</span><span class="n">horizontalalignment</span><span class="p">,</span>
+            <span class="n">verticalalignment</span><span class="o">=</span><span class="n">verticalalignment</span><span class="p">,</span>
+            <span class="n">rotation</span><span class="o">=</span><span class="n">trans_angle</span><span class="p">,</span>
+            <span class="n">transform</span><span class="o">=</span><span class="n">ax</span><span class="o">.</span><span class="n">transData</span><span class="p">,</span>
+            <span class="n">bbox</span><span class="o">=</span><span class="n">bbox</span><span class="p">,</span>
+            <span class="n">zorder</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+            <span class="n">clip_on</span><span class="o">=</span><span class="n">clip_on</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">text_items</span><span class="p">[(</span><span class="n">n1</span><span class="p">,</span> <span class="n">n2</span><span class="p">)]</span> <span class="o">=</span> <span class="n">t</span>
+
+    <span class="n">ax</span><span class="o">.</span><span class="n">tick_params</span><span class="p">(</span>
+        <span class="n">axis</span><span class="o">=</span><span class="s2">&quot;both&quot;</span><span class="p">,</span>
+        <span class="n">which</span><span class="o">=</span><span class="s2">&quot;both&quot;</span><span class="p">,</span>
+        <span class="n">bottom</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">left</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">labelbottom</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">labelleft</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">text_items</span>
+
+
+<span class="k">def</span> <span class="nf">apply_alpha</span><span class="p">(</span><span class="n">colors</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">elem_list</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">vmin</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">vmax</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Apply an alpha (or list of alphas) to the colors provided.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+
+<span class="sd">    colors : color string or array of floats (default=&#39;r&#39;)</span>
+<span class="sd">        Color of element. Can be a single color format string,</span>
+<span class="sd">        or a sequence of colors with the same length as node_list.</span>
+<span class="sd">        If numeric values are specified they will be mapped to</span>
+<span class="sd">        colors using the cmap and vmin,vmax parameters.  See</span>
+<span class="sd">        matplotlib.scatter for more details.</span>
+
+<span class="sd">    alpha : float or array of floats</span>
+<span class="sd">        Alpha values for elements. This can be a single alpha value, in</span>
+<span class="sd">        which case it will be applied to all the elements of color. Otherwise,</span>
+<span class="sd">        if it is an array, the elements of alpha will be applied to the colors</span>
+<span class="sd">        in order (cycling through alpha multiple times if necessary).</span>
+
+<span class="sd">    elem_list : array of rustworkx objects</span>
+<span class="sd">        The list of elements which are being colored. These could be nodes,</span>
+<span class="sd">        edges or labels.</span>
+
+<span class="sd">    cmap : matplotlib colormap</span>
+<span class="sd">        Color map for use if colors is a list of floats corresponding to points</span>
+<span class="sd">        on a color mapping.</span>
+
+<span class="sd">    vmin, vmax : float</span>
+<span class="sd">        Minimum and maximum values for normalizing colors if a colormap is used</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+
+<span class="sd">    rgba_colors : numpy ndarray</span>
+<span class="sd">        Array containing RGBA format values for each of the node colours.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">import</span> <span class="nn">matplotlib</span> <span class="k">as</span> <span class="nn">mpl</span>
+        <span class="kn">import</span> <span class="nn">matplotlib.colors</span>  <span class="c1"># call as mpl.colors</span>
+        <span class="kn">import</span> <span class="nn">matplotlib.cm</span>  <span class="c1"># call as mpl.cm</span>
+    <span class="k">except</span> <span class="ne">ImportError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span>
+            <span class="s2">&quot;matplotlib needs to be installed prior to running &quot;</span>
+            <span class="s2">&quot;rustworkx.visualization.mpl_draw(). You can install &quot;</span>
+            <span class="s2">&quot;matplotlib with:</span><span class="se">\n</span><span class="s2">&#39;pip install matplotlib&#39;&quot;</span>
+        <span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span>
+
+    <span class="c1"># If we have been provided with a list of numbers as long as elem_list,</span>
+    <span class="c1"># apply the color mapping.</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">colors</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">elem_list</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">colors</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">Number</span><span class="p">):</span>
+        <span class="n">mapper</span> <span class="o">=</span> <span class="n">mpl</span><span class="o">.</span><span class="n">cm</span><span class="o">.</span><span class="n">ScalarMappable</span><span class="p">(</span><span class="n">cmap</span><span class="o">=</span><span class="n">cmap</span><span class="p">)</span>
+        <span class="n">mapper</span><span class="o">.</span><span class="n">set_clim</span><span class="p">(</span><span class="n">vmin</span><span class="p">,</span> <span class="n">vmax</span><span class="p">)</span>
+        <span class="n">rgba_colors</span> <span class="o">=</span> <span class="n">mapper</span><span class="o">.</span><span class="n">to_rgba</span><span class="p">(</span><span class="n">colors</span><span class="p">)</span>
+    <span class="c1"># Otherwise, convert colors to matplotlib&#39;s RGB using the colorConverter</span>
+    <span class="c1"># object.  These are converted to numpy ndarrays to be consistent with the</span>
+    <span class="c1"># to_rgba method of ScalarMappable.</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">rgba_colors</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">mpl</span><span class="o">.</span><span class="n">colors</span><span class="o">.</span><span class="n">colorConverter</span><span class="o">.</span><span class="n">to_rgba</span><span class="p">(</span><span class="n">colors</span><span class="p">)])</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="n">rgba_colors</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">mpl</span><span class="o">.</span><span class="n">colors</span><span class="o">.</span><span class="n">colorConverter</span><span class="o">.</span><span class="n">to_rgba</span><span class="p">(</span><span class="n">color</span><span class="p">)</span> <span class="k">for</span> <span class="n">color</span> <span class="ow">in</span> <span class="n">colors</span><span class="p">])</span>
+    <span class="c1"># Set the final column of the rgba_colors to have the relevant alpha values</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="c1"># If alpha is longer than the number of colors, resize to the number of</span>
+        <span class="c1"># elements.  Also, if rgba_colors.size (the number of elements of</span>
+        <span class="c1"># rgba_colors) is the same as the number of elements, resize the array,</span>
+        <span class="c1"># to avoid it being interpreted as a colormap by scatter()</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">alpha</span><span class="p">)</span> <span class="o">&gt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">rgba_colors</span><span class="p">)</span> <span class="ow">or</span> <span class="n">rgba_colors</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">elem_list</span><span class="p">):</span>
+            <span class="n">rgba_colors</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">resize</span><span class="p">(</span><span class="n">rgba_colors</span><span class="p">,</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">elem_list</span><span class="p">),</span> <span class="mi">4</span><span class="p">))</span>
+            <span class="n">rgba_colors</span><span class="p">[</span><span class="mi">1</span><span class="p">:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">rgba_colors</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+            <span class="n">rgba_colors</span><span class="p">[</span><span class="mi">1</span><span class="p">:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">rgba_colors</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
+            <span class="n">rgba_colors</span><span class="p">[</span><span class="mi">1</span><span class="p">:,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">rgba_colors</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span>
+        <span class="n">rgba_colors</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">islice</span><span class="p">(</span><span class="n">cycle</span><span class="p">(</span><span class="n">alpha</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">rgba_colors</span><span class="p">)))</span>
+    <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+        <span class="n">rgba_colors</span><span class="p">[:,</span> <span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">alpha</span>
+    <span class="k">return</span> <span class="n">rgba_colors</span>
+</pre></div>
+
+             </article>
+             
+            </div>
+            <footer>
+  
+
+  
+
+    <hr>
+
+  
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2021, rustworkx Contributors.
+
+    </p>
+  </div>
+    
+      <div>
+        Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+      </div>
+     
+
+</footer>
+
+          </div>
+        </div>
+
+        <div class="pytorch-content-right" id="pytorch-content-right">
+          <div class="pytorch-right-menu" id="pytorch-right-menu">
+            <div class="pytorch-side-scroll" id="pytorch-side-scroll-right">
+              
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+  
+
+     
+       <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+         <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+         <script src="../../../_static/jquery.js"></script>
+         <script src="../../../_static/underscore.js"></script>
+         <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+         <script src="../../../_static/doctools.js"></script>
+         <script src="../../../_static/sphinx_highlight.js"></script>
+         <script src="../../../_static/thebelab-helper.js"></script>
+         <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+         <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
+     
+
+  
+
+  <script type="text/javascript" src="../../../_static/js/vendor/popper.min.js"></script>
+  <script type="text/javascript" src="../../../_static/js/vendor/bootstrap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/list.js/1.5.0/list.min.js"></script>
+  <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+ <script type="text/javascript">
+    $(document).ready(function() {
+        $(".toggle > *").hide();
+        $(".toggle .header").show();
+        $(".toggle .header").click(function() {
+            $(this).parent().children().not(".header").toggle(400);
+            $(this).parent().children(".header").toggleClass("open");
+        })
+    });
+</script>
+
+
+  <div>
+    <br>
+  </div>
+
+  <!-- Begin Mobile Menu -->
+
+  <div class="mobile-main-menu">
+    <div class="container-fluid">
+      <div class="container">
+        <div class="mobile-main-menu-header-container">
+          <a class="header-logo" href="https://qiskit.org/" aria-label="PyTorch"></a>
+          <a class="main-menu-close-button" href="#" data-behavior="close-mobile-menu"></a>
+        </div>
+      </div>
+    </div>
+
+    <div class="mobile-main-menu-links-container">
+      <div class="main-menu">
+        <ul>
+          <li>
+            <a href="https://retworkx.readthedocs.io/en/stable/">Qiskit Documentation</a>
+          </li>
+
+          <li>
+            <a href="https://qiskit.org/learn" target="_blank">Learning Resources</a>
+          </li>
+
+          <li>
+            <a href="https://qiskit.slack.com" target="_blank">Slack Support</a>
+          </li>
+
+          <li>
+            <a href="https://github.com/Qiskit/retworkx" target="_blank">Github</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- End Mobile Menu -->
+
+  <script type="text/javascript" src="../../../_static/js/vendor/anchor.min.js"></script>
+
+  <script type="text/javascript">
+    $(document).ready(function() {
+      mobileMenu.bind();
+      mobileTOC.bind();
+      pytorchAnchors.bind();
+      sideMenus.bind();
+      scrollToAnchor.bind();
+      highlightNavigation.bind();
+      mainMenuDropdown.bind();
+      filterTags.bind();
+
+      // Add class to links that have code blocks, since we cannot create links in code blocks
+      $("article.pytorch-article a span.pre").each(function(e) {
+        $(this).closest("a").addClass("has-code");
+      });
+    })
+  </script>
+</body>
+</html>

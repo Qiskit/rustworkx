@@ -1,0 +1,6 @@
+﻿rustworkx.digraph\_write\_matrix\_market
+========================================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: digraph_write_matrix_market

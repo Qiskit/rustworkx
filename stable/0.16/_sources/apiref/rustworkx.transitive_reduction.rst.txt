@@ -1,0 +1,6 @@
+﻿rustworkx.transitive\_reduction
+===============================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: transitive_reduction

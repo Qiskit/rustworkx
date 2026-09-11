@@ -1,0 +1,6 @@
+﻿rustworkx.digraph\_unweighted\_average\_shortest\_path\_length
+==============================================================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: digraph_unweighted_average_shortest_path_length

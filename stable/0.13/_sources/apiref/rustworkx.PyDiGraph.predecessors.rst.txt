@@ -1,0 +1,6 @@
+rustworkx.PyDiGraph.predecessors
+================================
+
+.. currentmodule:: rustworkx
+
+.. automethod:: PyDiGraph.predecessors

@@ -1,0 +1,6 @@
+rustworkx.PyDiGraph.predecessor\_indices
+========================================
+
+.. currentmodule:: rustworkx
+
+.. automethod:: PyDiGraph.predecessor_indices

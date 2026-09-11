@@ -1,0 +1,6 @@
+﻿rustworkx.ancestors
+===================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: ancestors

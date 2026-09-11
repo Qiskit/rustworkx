@@ -1,0 +1,6 @@
+﻿rustworkx.astar\_shortest\_path
+===============================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: astar_shortest_path

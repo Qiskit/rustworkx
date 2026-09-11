@@ -1,0 +1,6 @@
+rustworkx.PyDAG.neighbors
+=========================
+
+.. currentmodule:: rustworkx
+
+.. automethod:: PyDAG.neighbors

@@ -1,0 +1,6 @@
+﻿rustworkx.graph\_all\_simple\_paths
+===================================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: graph_all_simple_paths
