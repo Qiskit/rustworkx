@@ -94,3 +94,41 @@ class TestCoreNumber(unittest.TestCase):
         res = rustworkx.core_number(graph)
         self.assertIsInstance(res, dict)
         self.assertEqual(res, self.example_core)
+
+    # Compact working indices must not replace public node IDs.
+    def test_removed_and_reused_indices(self):
+        graph = rustworkx.PyGraph()
+        graph.add_nodes_from(range(10))
+        graph.remove_nodes_from([1, 3, 5, 7, 9])
+        self.assertEqual(graph.add_node("reused"), 9)
+        self.assertEqual(graph.add_node("isolated"), 7)
+        graph.add_edges_from_no_data([(0, 2), (2, 4), (4, 0), (4, 6), (8, 9)])
+        expected = {0: 2, 2: 2, 4: 2, 6: 1, 7: 0, 8: 1, 9: 1}
+        for function in (rustworkx.core_number, rustworkx.graph_core_number):
+            with self.subTest(function=function.__name__):
+                result = function(graph)
+                self.assertEqual(result, expected)
+                self.assertEqual(list(result), list(expected))
+
+    # Per-call work arrays must not retain earlier adjacency or core values.
+    def test_repeated_calls_after_edge_changes(self):
+        graph = rustworkx.PyGraph()
+        graph.add_nodes_from(range(16))
+        graph.remove_nodes_from(range(1, 16, 2))
+        mixed = [(0, 2), (0, 4), (0, 6), (2, 4), (2, 6), (4, 6), (6, 8), (8, 10), (10, 6), (10, 12)]
+        star = [(0, node) for node in range(2, 14, 2)]
+        for edges, values in [
+            ([], [0] * 8),
+            (mixed, [3, 3, 3, 3, 2, 2, 1, 0]),
+            (star, [1] * 7 + [0]),
+            (mixed, [3, 3, 3, 3, 2, 2, 1, 0]),
+            ([], [0] * 8),
+        ]:
+            graph.clear_edges()
+            graph.add_edges_from_no_data(edges)
+            expected = dict(zip(range(0, 16, 2), values))
+            for function in (rustworkx.core_number, rustworkx.graph_core_number):
+                for _ in range(2):
+                    result = function(graph)
+                    self.assertEqual(result, expected)
+                    self.assertEqual(list(result), list(expected))
