@@ -1,0 +1,6 @@
+﻿rustworkx.articulation\_points
+==============================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: articulation_points

@@ -1,0 +1,6 @@
+﻿rustworkx.transitivity
+======================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: transitivity

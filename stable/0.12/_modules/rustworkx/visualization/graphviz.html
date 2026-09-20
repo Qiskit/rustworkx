@@ -1,0 +1,548 @@
+
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>rustworkx.visualization.graphviz &mdash; rustworkx 0.12.1 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <!-- <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" /> -->
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/jupyter-sphinx.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/thebelab.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/style.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+
+  
+  <script src="../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="pytorch-body">
+
+   
+
+    
+
+    <div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    <span class="rst-current-version-label">0.12</span>
+    <span class="rst-versions-dropdown-icon"></span>
+  </span>
+  <div class="rst-other-versions">
+    <dl>
+      <dt>Versions</dt>
+          <dd><a class="version" href="/documentation/retworkx/index.html">Current Release</a></dd>
+          <dd><a class="version" href="/documentation/retworkx/dev/index.html">Development</a></dd>
+      <dt>Previous Releases</dt>
+        
+            <dd><a class="version" href="/documentation/retworkx/stable/0.12/index.html">0.12</a></dd>
+        
+    </dl>
+  </div>
+  <script>
+    jQuery('.version').click((evt) => {
+      const hash = window.location.hash
+      const complete_url = evt.target.href + hash
+      window.location = complete_url
+      evt.preventDefault()
+    })
+  </script>
+</div>
+
+    <div class="table-of-contents-link-wrapper">
+      <span>Table of Contents</span>
+      <a href="#" class="toggle-table-of-contents" data-behavior="toggle-table-of-contents"></a>
+    </div>
+
+    <nav data-toggle="wy-nav-shift" class="pytorch-left-menu" id="pytorch-left-menu">
+      <div class="pytorch-side-scroll">
+        <div class="pytorch-menu pytorch-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          <div class="pytorch-left-menu-search">
+            
+
+            
+              
+              
+                <div class="version">
+                  0.12.1
+                </div>
+              
+            
+
+            
+
+
+  
+
+
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search Docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+            
+          </div>
+
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html#installing-rustworkx">Installing Rustworkx</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html#platform-support">Platform Support</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html#using-rustworkx">Using rustworkx</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorial/index.html">Rustworkx Tutorials and Guides</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api.html">Rustworkx API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../visualization.html">Visualization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../CONTRIBUTING.html">Contributing Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../networkx.html">rustworkx for NetworkX users</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <div class="pytorch-container">
+      <div class="pytorch-page-level-bar" id="pytorch-page-level-bar">
+        <div class="pytorch-breadcrumbs-wrapper">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="pytorch-breadcrumbs">
+    
+      <li>
+        <a href="../../../index.html">
+          
+            Docs
+          
+        </a> &gt;
+      </li>
+
+        
+          <li><a href="../../index.html">Module code</a> &gt;</li>
+        
+          <li><a href="../../rustworkx.html">rustworkx</a> &gt;</li>
+        
+      <li>rustworkx.visualization.graphviz</li>
+    
+    
+      <li class="pytorch-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+</div>
+        </div>
+
+        <div class="pytorch-shortcuts-wrapper" id="pytorch-shortcuts-wrapper">
+          Shortcuts
+        </div>
+      </div>
+
+      <section data-toggle="wy-nav-shift" id="pytorch-content-wrap" class="pytorch-content-wrap">
+        <div class="pytorch-content-left">
+          
+          <div class="rst-content style-external-links">
+          
+            <div role="main" class="main-content" itemscope="itemscope" itemtype="http://schema.org/Article">
+             <article itemprop="articleBody" id="pytorch-article" class="pytorch-article">
+              
+  <h1>Source code for rustworkx.visualization.graphviz</h1><div class="highlight"><pre>
+<span></span><span class="c1"># This code is licensed under the Apache License, Version 2.0. You may</span>
+<span class="c1"># obtain a copy of this license in the LICENSE.txt file in the root directory</span>
+<span class="c1"># of this source tree or at http://www.apache.org/licenses/LICENSE-2.0.</span>
+<span class="c1">#</span>
+<span class="c1"># Any modifications or derivative works of this code must retain this</span>
+<span class="c1"># copyright notice, and modified files need to carry a notice indicating</span>
+<span class="c1"># that they have been altered from the originals.</span>
+
+<span class="kn">import</span> <span class="nn">subprocess</span>
+<span class="kn">import</span> <span class="nn">tempfile</span>
+<span class="kn">import</span> <span class="nn">io</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">PIL</span> <span class="kn">import</span> <span class="n">Image</span>
+
+    <span class="n">HAS_PILLOW</span> <span class="o">=</span> <span class="kc">True</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="n">HAS_PILLOW</span> <span class="o">=</span> <span class="kc">False</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;graphviz_draw&quot;</span><span class="p">]</span>
+
+<span class="n">METHODS</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;twopi&quot;</span><span class="p">,</span> <span class="s2">&quot;neato&quot;</span><span class="p">,</span> <span class="s2">&quot;circo&quot;</span><span class="p">,</span> <span class="s2">&quot;fdp&quot;</span><span class="p">,</span> <span class="s2">&quot;sfdp&quot;</span><span class="p">,</span> <span class="s2">&quot;dot&quot;</span><span class="p">}</span>
+<span class="n">IMAGE_TYPES</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;canon&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;cmap&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;cmapx&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;cmapx_np&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;dia&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;dot&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;fig&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;gd&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;gd2&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;gif&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;hpgl&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;imap&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;imap_np&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;ismap&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;jpe&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;jpeg&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;jpg&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;mif&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;mp&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;pcl&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;pdf&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;pic&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;plain&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;plain-ext&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;png&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;ps&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;ps2&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;svg&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;svgz&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;vml&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;vmlz&quot;</span> <span class="s2">&quot;vrml&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;vtx&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;wbmp&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;xdor&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;xlib&quot;</span><span class="p">,</span>
+<span class="p">}</span>
+
+
+<div class="viewcode-block" id="graphviz_draw"><a class="viewcode-back" href="../../../apiref/rustworkx.visualization.graphviz_draw.html#rustworkx.visualization.graphviz_draw">[docs]</a><span class="k">def</span> <span class="nf">graphviz_draw</span><span class="p">(</span>
+    <span class="n">graph</span><span class="p">,</span>
+    <span class="n">node_attr_fn</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">edge_attr_fn</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">graph_attr</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">filename</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">image_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">method</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Draw a :class:`~rustworkx.PyGraph` or :class:`~rustworkx.PyDiGraph` object</span>
+<span class="sd">    using graphviz</span>
+
+<span class="sd">    .. note::</span>
+
+<span class="sd">        This requires that pydot, pillow, and graphviz be installed. Pydot can</span>
+<span class="sd">        be installed via pip with ``pip install pydot pillow`` however graphviz</span>
+<span class="sd">        will need to be installed separately. You can refer to the</span>
+<span class="sd">        Graphviz</span>
+<span class="sd">        `documentation &lt;https://graphviz.org/download/#executable-packages&gt;`__</span>
+<span class="sd">        for instructions on how to install it.</span>
+
+<span class="sd">    :param graph: The rustworkx graph object to draw, can be a</span>
+<span class="sd">        :class:`~rustworkx.PyGraph` or a :class:`~rustworkx.PyDiGraph`</span>
+<span class="sd">    :param node_attr_fn: An optional callable object that will be passed the</span>
+<span class="sd">        weight/data payload for every node in the graph and expected to return</span>
+<span class="sd">        a dictionary of Graphviz node attributes to be associated with the node</span>
+<span class="sd">        in the visualization. The key and value of this dictionary **must** be</span>
+<span class="sd">        a string.</span>
+<span class="sd">    :param edge_attr_fn: An optional callable that will be passed the</span>
+<span class="sd">        weight/data payload for each edge in the graph and expected to return a</span>
+<span class="sd">        dictionary of Graphviz edge attributes to be associated with the edge</span>
+<span class="sd">        in the visualization file. The key and value of this dictionary</span>
+<span class="sd">        must be a string.</span>
+<span class="sd">    :param dict graph_attr: An optional dictionary that specifies any Graphviz</span>
+<span class="sd">        graph attributes for the visualization. The key and value of this</span>
+<span class="sd">        dictionary must be a string.</span>
+<span class="sd">    :param str filename: An optional path to write the visualization to. If</span>
+<span class="sd">        specified the return type from this function will be ``None`` as the</span>
+<span class="sd">        output image is saved to disk.</span>
+<span class="sd">    :param str image_type: The image file format to use for the generated</span>
+<span class="sd">        visualization. The support image formats are:</span>
+<span class="sd">        ``&#39;canon&#39;``, ``&#39;cmap&#39;``, ``&#39;cmapx&#39;``, ``&#39;cmapx_np&#39;``, ``&#39;dia&#39;``,</span>
+<span class="sd">        ``&#39;dot&#39;``, ``&#39;fig&#39;``, ``&#39;gd&#39;``, ``&#39;gd2&#39;``, ``&#39;gif&#39;``, ``&#39;hpgl&#39;``,</span>
+<span class="sd">        ``&#39;imap&#39;``, ``&#39;imap_np&#39;``, ``&#39;ismap&#39;``, ``&#39;jpe&#39;``, ``&#39;jpeg&#39;``,</span>
+<span class="sd">        ``&#39;jpg&#39;``, ``&#39;mif&#39;``, ``&#39;mp&#39;``, ``&#39;pcl&#39;``, ``&#39;pdf&#39;``, ``&#39;pic&#39;``,</span>
+<span class="sd">        ``&#39;plain&#39;``, ``&#39;plain-ext&#39;``, ``&#39;png&#39;``, ``&#39;ps&#39;``, ``&#39;ps2&#39;``,</span>
+<span class="sd">        ``&#39;svg&#39;``, ``&#39;svgz&#39;``, ``&#39;vml&#39;``, ``&#39;vmlz&#39;``, ``&#39;vrml&#39;``, ``&#39;vtx&#39;``,</span>
+<span class="sd">        ``&#39;wbmp&#39;``, ``&#39;xdot&#39;``, ``&#39;xlib&#39;``. It&#39;s worth noting that while these</span>
+<span class="sd">        formats can all be used for generating image files when the ``filename``</span>
+<span class="sd">        kwarg is specified, the Pillow library used for the returned object can</span>
+<span class="sd">        not work with all these formats.</span>
+<span class="sd">    :param str method: The layout method/Graphviz command method to use for</span>
+<span class="sd">        generating the visualization. Available options are ``&#39;dot&#39;``,</span>
+<span class="sd">        ``&#39;twopi&#39;``, ``&#39;neato&#39;``, ``&#39;circo&#39;``, ``&#39;fdp&#39;``, and ``&#39;sfdp&#39;``.</span>
+<span class="sd">        You can refer to the</span>
+<span class="sd">        `Graphviz documentation &lt;https://graphviz.org/documentation/&gt;`__ for</span>
+<span class="sd">        more details on the different layout methods. By default ``&#39;dot&#39;`` is</span>
+<span class="sd">        used.</span>
+
+<span class="sd">    :returns: A ``PIL.Image`` object of the generated visualization, if</span>
+<span class="sd">        ``filename`` is not specified. If ``filename`` is specified then</span>
+<span class="sd">        ``None`` will be returned as the visualization was written to the</span>
+<span class="sd">        path specified in ``filename``</span>
+<span class="sd">    :rtype: PIL.Image</span>
+
+<span class="sd">    .. jupyter-execute::</span>
+
+<span class="sd">        import rustworkx as rx</span>
+<span class="sd">        from rustworkx.visualization import graphviz_draw</span>
+
+<span class="sd">        def node_attr(node):</span>
+<span class="sd">          if node == 0:</span>
+<span class="sd">            return {&#39;color&#39;: &#39;yellow&#39;, &#39;fillcolor&#39;: &#39;yellow&#39;, &#39;style&#39;: &#39;filled&#39;}</span>
+<span class="sd">          if node % 2:</span>
+<span class="sd">            return {&#39;color&#39;: &#39;blue&#39;, &#39;fillcolor&#39;: &#39;blue&#39;, &#39;style&#39;: &#39;filled&#39;}</span>
+<span class="sd">          else:</span>
+<span class="sd">            return {&#39;color&#39;: &#39;red&#39;, &#39;fillcolor&#39;: &#39;red&#39;, &#39;style&#39;: &#39;filled&#39;}</span>
+
+<span class="sd">        graph = rx.generators.directed_star_graph(weights=list(range(32)))</span>
+<span class="sd">        graphviz_draw(graph, node_attr_fn=node_attr, method=&#39;sfdp&#39;)</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">HAS_PILLOW</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span>
+            <span class="s2">&quot;Pillow is necessary to use graphviz_draw() &quot;</span>
+            <span class="s2">&quot;it can be installed with &#39;pip install pydot pillow&#39;&quot;</span>
+        <span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+            <span class="p">[</span><span class="s2">&quot;dot&quot;</span><span class="p">,</span> <span class="s2">&quot;-V&quot;</span><span class="p">],</span>
+            <span class="n">cwd</span><span class="o">=</span><span class="n">tempfile</span><span class="o">.</span><span class="n">gettempdir</span><span class="p">(),</span>
+            <span class="n">check</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+            <span class="s2">&quot;Graphviz could not be found or run. This function requires that &quot;</span>
+            <span class="s2">&quot;Graphviz is installed. If you need to install Graphviz you can &quot;</span>
+            <span class="s2">&quot;refer to: https://graphviz.org/download/#executable-packages for &quot;</span>
+            <span class="s2">&quot;instructions.&quot;</span>
+        <span class="p">)</span>
+
+    <span class="n">dot_str</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">to_dot</span><span class="p">(</span><span class="n">node_attr_fn</span><span class="p">,</span> <span class="n">edge_attr_fn</span><span class="p">,</span> <span class="n">graph_attr</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">image_type</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">output_format</span> <span class="o">=</span> <span class="s2">&quot;png&quot;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">image_type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">IMAGE_TYPES</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;The specified value for the image_type argument, &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;&#39;</span><span class="si">{</span><span class="n">image_type</span><span class="si">}</span><span class="s2">&#39; is not a valid choice. It must be one of: &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">IMAGE_TYPES</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+        <span class="n">output_format</span> <span class="o">=</span> <span class="n">image_type</span>
+
+    <span class="k">if</span> <span class="n">method</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">prog</span> <span class="o">=</span> <span class="s2">&quot;dot&quot;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">method</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">METHODS</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;The specified value for the method argument, &#39;</span><span class="si">{</span><span class="n">method</span><span class="si">}</span><span class="s2">&#39; is &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;not a valid choice. It must be one of: </span><span class="si">{</span><span class="n">METHODS</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+        <span class="n">prog</span> <span class="o">=</span> <span class="n">method</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">filename</span><span class="p">:</span>
+        <span class="n">dot_result</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">prog</span><span class="p">,</span> <span class="s2">&quot;-T&quot;</span><span class="p">,</span> <span class="n">output_format</span><span class="p">],</span>
+            <span class="nb">input</span><span class="o">=</span><span class="n">dot_str</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">),</span>
+            <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">encoding</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">check</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">text</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">dot_bytes_image</span> <span class="o">=</span> <span class="n">io</span><span class="o">.</span><span class="n">BytesIO</span><span class="p">(</span><span class="n">dot_result</span><span class="o">.</span><span class="n">stdout</span><span class="p">)</span>
+        <span class="n">image</span> <span class="o">=</span> <span class="n">Image</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">dot_bytes_image</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">image</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">prog</span><span class="p">,</span> <span class="s2">&quot;-T&quot;</span><span class="p">,</span> <span class="n">output_format</span><span class="p">,</span> <span class="s2">&quot;-o&quot;</span><span class="p">,</span> <span class="n">filename</span><span class="p">],</span>
+            <span class="nb">input</span><span class="o">=</span><span class="n">dot_str</span><span class="p">,</span>
+            <span class="n">check</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf8&quot;</span><span class="p">,</span>
+            <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
+</pre></div>
+
+             </article>
+             
+            </div>
+            <footer>
+  
+
+  
+
+    <hr>
+
+  
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2021, rustworkx Contributors.
+
+    </p>
+  </div>
+    
+      <div>
+        Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+      </div>
+     
+
+</footer>
+
+          </div>
+        </div>
+
+        <div class="pytorch-content-right" id="pytorch-content-right">
+          <div class="pytorch-right-menu" id="pytorch-right-menu">
+            <div class="pytorch-side-scroll" id="pytorch-side-scroll-right">
+              
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+  
+
+     
+       <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+         <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+         <script src="../../../_static/jquery.js"></script>
+         <script src="../../../_static/underscore.js"></script>
+         <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+         <script src="../../../_static/doctools.js"></script>
+         <script src="../../../_static/sphinx_highlight.js"></script>
+         <script src="../../../_static/thebelab-helper.js"></script>
+         <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+         <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
+     
+
+  
+
+  <script type="text/javascript" src="../../../_static/js/vendor/popper.min.js"></script>
+  <script type="text/javascript" src="../../../_static/js/vendor/bootstrap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/list.js/1.5.0/list.min.js"></script>
+  <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+ <script type="text/javascript">
+    $(document).ready(function() {
+        $(".toggle > *").hide();
+        $(".toggle .header").show();
+        $(".toggle .header").click(function() {
+            $(this).parent().children().not(".header").toggle(400);
+            $(this).parent().children(".header").toggleClass("open");
+        })
+    });
+</script>
+
+
+  <div>
+    <br>
+  </div>
+
+  <!-- Begin Mobile Menu -->
+
+  <div class="mobile-main-menu">
+    <div class="container-fluid">
+      <div class="container">
+        <div class="mobile-main-menu-header-container">
+          <a class="header-logo" href="https://qiskit.org/" aria-label="PyTorch"></a>
+          <a class="main-menu-close-button" href="#" data-behavior="close-mobile-menu"></a>
+        </div>
+      </div>
+    </div>
+
+    <div class="mobile-main-menu-links-container">
+      <div class="main-menu">
+        <ul>
+          <li>
+            <a href="https://retworkx.readthedocs.io/en/stable/">Qiskit Documentation</a>
+          </li>
+
+          <li>
+            <a href="https://qiskit.org/learn" target="_blank">Learning Resources</a>
+          </li>
+
+          <li>
+            <a href="https://qiskit.slack.com" target="_blank">Slack Support</a>
+          </li>
+
+          <li>
+            <a href="https://github.com/Qiskit/retworkx" target="_blank">Github</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- End Mobile Menu -->
+
+  <script type="text/javascript" src="../../../_static/js/vendor/anchor.min.js"></script>
+
+  <script type="text/javascript">
+    $(document).ready(function() {
+      mobileMenu.bind();
+      mobileTOC.bind();
+      pytorchAnchors.bind();
+      sideMenus.bind();
+      scrollToAnchor.bind();
+      highlightNavigation.bind();
+      mainMenuDropdown.bind();
+      filterTags.bind();
+
+      // Add class to links that have code blocks, since we cannot create links in code blocks
+      $("article.pytorch-article a span.pre").each(function(e) {
+        $(this).closest("a").addClass("has-code");
+      });
+    })
+  </script>
+</body>
+</html>

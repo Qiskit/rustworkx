@@ -1,0 +1,6 @@
+﻿rustworkx.digraph\_maximum\_bisimulation
+========================================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: digraph_maximum_bisimulation

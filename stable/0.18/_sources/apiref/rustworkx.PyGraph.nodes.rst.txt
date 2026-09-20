@@ -1,0 +1,6 @@
+rustworkx.PyGraph.nodes
+=======================
+
+.. currentmodule:: rustworkx
+
+.. automethod:: PyGraph.nodes

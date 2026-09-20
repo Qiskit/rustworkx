@@ -1,0 +1,20 @@
+﻿ProductNodeMap
+==============
+
+.. currentmodule:: rustworkx
+
+.. autoclass:: ProductNodeMap
+   :no-members:
+   :show-inheritance:
+
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+      :toctree: ../apiref/
+
+      ~ProductNodeMap.items
+      ~ProductNodeMap.keys
+      ~ProductNodeMap.values
+
+

@@ -1,0 +1,6 @@
+﻿rustworkx.from\_dot
+===================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: from_dot

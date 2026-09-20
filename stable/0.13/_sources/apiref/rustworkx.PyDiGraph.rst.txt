@@ -1,0 +1,95 @@
+﻿PyDiGraph
+=========
+
+.. currentmodule:: rustworkx
+
+.. autoclass:: PyDiGraph
+   :no-members:
+   :show-inheritance:
+
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+      :toctree: ../apiref/
+
+      ~PyDiGraph.add_child
+      ~PyDiGraph.add_edge
+      ~PyDiGraph.add_edges_from
+      ~PyDiGraph.add_edges_from_no_data
+      ~PyDiGraph.add_node
+      ~PyDiGraph.add_nodes_from
+      ~PyDiGraph.add_parent
+      ~PyDiGraph.adj
+      ~PyDiGraph.adj_direction
+      ~PyDiGraph.compose
+      ~PyDiGraph.contract_nodes
+      ~PyDiGraph.copy
+      ~PyDiGraph.edge_index_map
+      ~PyDiGraph.edge_indices
+      ~PyDiGraph.edge_list
+      ~PyDiGraph.edge_subgraph
+      ~PyDiGraph.edges
+      ~PyDiGraph.extend_from_edge_list
+      ~PyDiGraph.extend_from_weighted_edge_list
+      ~PyDiGraph.find_adjacent_node_by_edge
+      ~PyDiGraph.find_node_by_weight
+      ~PyDiGraph.find_predecessor_node_by_edge
+      ~PyDiGraph.find_predecessors_by_edge
+      ~PyDiGraph.find_successors_by_edge
+      ~PyDiGraph.from_adjacency_matrix
+      ~PyDiGraph.from_complex_adjacency_matrix
+      ~PyDiGraph.get_all_edge_data
+      ~PyDiGraph.get_edge_data
+      ~PyDiGraph.get_edge_data_by_index
+      ~PyDiGraph.get_edge_endpoints_by_index
+      ~PyDiGraph.get_node_data
+      ~PyDiGraph.has_edge
+      ~PyDiGraph.has_parallel_edges
+      ~PyDiGraph.in_degree
+      ~PyDiGraph.in_edges
+      ~PyDiGraph.incident_edge_index_map
+      ~PyDiGraph.incident_edges
+      ~PyDiGraph.insert_node_on_in_edges
+      ~PyDiGraph.insert_node_on_in_edges_multiple
+      ~PyDiGraph.insert_node_on_out_edges
+      ~PyDiGraph.insert_node_on_out_edges_multiple
+      ~PyDiGraph.is_symmetric
+      ~PyDiGraph.make_symmetric
+      ~PyDiGraph.merge_nodes
+      ~PyDiGraph.neighbors
+      ~PyDiGraph.node_indexes
+      ~PyDiGraph.node_indices
+      ~PyDiGraph.nodes
+      ~PyDiGraph.num_edges
+      ~PyDiGraph.num_nodes
+      ~PyDiGraph.out_degree
+      ~PyDiGraph.out_edges
+      ~PyDiGraph.predecessor_indices
+      ~PyDiGraph.predecessors
+      ~PyDiGraph.read_edge_list
+      ~PyDiGraph.remove_edge
+      ~PyDiGraph.remove_edge_from_index
+      ~PyDiGraph.remove_edges_from
+      ~PyDiGraph.remove_node
+      ~PyDiGraph.remove_node_retain_edges
+      ~PyDiGraph.remove_nodes_from
+      ~PyDiGraph.reverse
+      ~PyDiGraph.subgraph
+      ~PyDiGraph.substitute_node_with_subgraph
+      ~PyDiGraph.successor_indices
+      ~PyDiGraph.successors
+      ~PyDiGraph.to_dot
+      ~PyDiGraph.to_undirected
+      ~PyDiGraph.update_edge
+      ~PyDiGraph.update_edge_by_index
+      ~PyDiGraph.weighted_edge_list
+      ~PyDiGraph.write_edge_list
+
+
+
+   .. rubric:: Attributes
+
+   .. autoattribute:: attrs
+   .. autoattribute:: check_cycle
+   .. autoattribute:: multigraph

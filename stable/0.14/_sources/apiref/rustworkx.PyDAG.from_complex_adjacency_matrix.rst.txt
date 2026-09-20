@@ -1,0 +1,6 @@
+rustworkx.PyDAG.from\_complex\_adjacency\_matrix
+================================================
+
+.. currentmodule:: rustworkx
+
+.. automethod:: PyDAG.from_complex_adjacency_matrix

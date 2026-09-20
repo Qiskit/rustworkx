@@ -1,0 +1,6 @@
+rustworkx.PyDiGraph.subgraph\_with\_nodemap
+===========================================
+
+.. currentmodule:: rustworkx
+
+.. automethod:: PyDiGraph.subgraph_with_nodemap

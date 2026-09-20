@@ -1,0 +1,6 @@
+rustworkx.PyDiGraph.edge\_indices\_from\_endpoints
+==================================================
+
+.. currentmodule:: rustworkx
+
+.. automethod:: PyDiGraph.edge_indices_from_endpoints

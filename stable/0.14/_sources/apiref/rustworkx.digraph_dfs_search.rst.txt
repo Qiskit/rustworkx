@@ -1,0 +1,6 @@
+﻿rustworkx.digraph\_dfs\_search
+==============================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: digraph_dfs_search

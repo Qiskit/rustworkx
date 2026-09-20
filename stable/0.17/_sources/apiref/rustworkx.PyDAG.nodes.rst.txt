@@ -1,0 +1,6 @@
+rustworkx.PyDAG.nodes
+=====================
+
+.. currentmodule:: rustworkx
+
+.. automethod:: PyDAG.nodes

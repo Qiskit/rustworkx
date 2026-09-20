@@ -1,0 +1,6 @@
+﻿rustworkx.collect\_runs
+=======================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: collect_runs

@@ -1,0 +1,6 @@
+rustworkx.PyDAG.filter\_edges
+=============================
+
+.. currentmodule:: rustworkx
+
+.. automethod:: PyDAG.filter_edges

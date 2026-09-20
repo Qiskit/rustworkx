@@ -1,0 +1,6 @@
+﻿rustworkx.digraph\_is\_subgraph\_isomorphic
+===========================================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: digraph_is_subgraph_isomorphic

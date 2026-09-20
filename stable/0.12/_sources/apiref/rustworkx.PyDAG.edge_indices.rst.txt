@@ -1,0 +1,6 @@
+rustworkx.PyDAG.edge\_indices
+=============================
+
+.. currentmodule:: rustworkx
+
+.. automethod:: PyDAG.edge_indices

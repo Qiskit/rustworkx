@@ -1,0 +1,6 @@
+﻿rustworkx.digraph\_eigenvector\_centrality
+==========================================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: digraph_eigenvector_centrality

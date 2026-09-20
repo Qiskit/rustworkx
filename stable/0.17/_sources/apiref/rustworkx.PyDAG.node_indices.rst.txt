@@ -1,0 +1,6 @@
+rustworkx.PyDAG.node\_indices
+=============================
+
+.. currentmodule:: rustworkx
+
+.. automethod:: PyDAG.node_indices

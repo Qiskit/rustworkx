@@ -1,0 +1,6 @@
+rustworkx.PyDiGraph.add\_nodes\_from
+====================================
+
+.. currentmodule:: rustworkx
+
+.. automethod:: PyDiGraph.add_nodes_from

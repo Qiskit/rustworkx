@@ -1,0 +1,6 @@
+rustworkx.PyDAG.incident\_edge\_index\_map
+==========================================
+
+.. currentmodule:: rustworkx
+
+.. automethod:: PyDAG.incident_edge_index_map

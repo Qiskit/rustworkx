@@ -1,0 +1,6 @@
+﻿rustworkx.pagerank
+==================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: pagerank

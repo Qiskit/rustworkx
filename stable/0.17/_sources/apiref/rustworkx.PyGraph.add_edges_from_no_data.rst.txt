@@ -1,0 +1,6 @@
+rustworkx.PyGraph.add\_edges\_from\_no\_data
+============================================
+
+.. currentmodule:: rustworkx
+
+.. automethod:: PyGraph.add_edges_from_no_data

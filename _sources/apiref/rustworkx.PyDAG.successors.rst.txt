@@ -1,0 +1,6 @@
+rustworkx.PyDAG.successors
+==========================
+
+.. currentmodule:: rustworkx
+
+.. automethod:: PyDAG.successors

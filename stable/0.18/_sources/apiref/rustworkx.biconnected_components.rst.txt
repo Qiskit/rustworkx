@@ -1,0 +1,6 @@
+﻿rustworkx.biconnected\_components
+=================================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: biconnected_components

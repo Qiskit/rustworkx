@@ -1,0 +1,6 @@
+rustworkx.PyDAG.subgraph\_with\_nodemap
+=======================================
+
+.. currentmodule:: rustworkx
+
+.. automethod:: PyDAG.subgraph_with_nodemap

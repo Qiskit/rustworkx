@@ -1,0 +1,6 @@
+rustworkx.PyDiGraph.to\_dot
+===========================
+
+.. currentmodule:: rustworkx
+
+.. automethod:: PyDiGraph.to_dot

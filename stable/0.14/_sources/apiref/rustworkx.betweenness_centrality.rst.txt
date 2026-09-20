@@ -1,0 +1,6 @@
+﻿rustworkx.betweenness\_centrality
+=================================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: betweenness_centrality

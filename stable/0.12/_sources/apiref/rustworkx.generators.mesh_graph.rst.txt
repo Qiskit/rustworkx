@@ -1,0 +1,6 @@
+﻿rustworkx.generators.mesh\_graph
+================================
+
+.. currentmodule:: rustworkx.generators
+
+.. autofunction:: mesh_graph

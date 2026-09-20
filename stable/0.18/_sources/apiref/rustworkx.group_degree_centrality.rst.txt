@@ -1,0 +1,6 @@
+﻿rustworkx.group\_degree\_centrality
+===================================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: group_degree_centrality

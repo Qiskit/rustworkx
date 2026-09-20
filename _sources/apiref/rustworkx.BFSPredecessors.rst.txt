@@ -1,0 +1,10 @@
+﻿BFSPredecessors
+===============
+
+.. currentmodule:: rustworkx
+
+.. autoclass:: BFSPredecessors
+   :no-members:
+   :show-inheritance:
+
+

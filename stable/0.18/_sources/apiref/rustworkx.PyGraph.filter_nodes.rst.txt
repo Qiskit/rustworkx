@@ -1,0 +1,6 @@
+rustworkx.PyGraph.filter\_nodes
+===============================
+
+.. currentmodule:: rustworkx
+
+.. automethod:: PyGraph.filter_nodes

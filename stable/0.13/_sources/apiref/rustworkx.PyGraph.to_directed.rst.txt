@@ -1,0 +1,6 @@
+rustworkx.PyGraph.to\_directed
+==============================
+
+.. currentmodule:: rustworkx
+
+.. automethod:: PyGraph.to_directed

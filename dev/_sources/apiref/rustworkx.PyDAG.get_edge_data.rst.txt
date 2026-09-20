@@ -1,0 +1,6 @@
+rustworkx.PyDAG.get\_edge\_data
+===============================
+
+.. currentmodule:: rustworkx
+
+.. automethod:: PyDAG.get_edge_data

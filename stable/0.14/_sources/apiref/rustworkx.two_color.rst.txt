@@ -1,0 +1,6 @@
+﻿rustworkx.two\_color
+====================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: two_color

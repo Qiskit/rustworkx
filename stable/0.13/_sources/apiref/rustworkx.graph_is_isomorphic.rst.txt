@@ -1,0 +1,6 @@
+﻿rustworkx.graph\_is\_isomorphic
+===============================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: graph_is_isomorphic

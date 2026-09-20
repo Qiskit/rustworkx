@@ -1,0 +1,6 @@
+rustworkx.PyDAG.num\_nodes
+==========================
+
+.. currentmodule:: rustworkx
+
+.. automethod:: PyDAG.num_nodes

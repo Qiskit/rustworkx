@@ -1,0 +1,6 @@
+﻿rustworkx.hyperbolic\_greedy\_success\_rate
+===========================================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: hyperbolic_greedy_success_rate

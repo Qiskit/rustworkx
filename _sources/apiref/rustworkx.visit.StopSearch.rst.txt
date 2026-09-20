@@ -1,0 +1,6 @@
+﻿rustworkx.visit.StopSearch
+==========================
+
+.. currentmodule:: rustworkx.visit
+
+.. autoexception:: StopSearch

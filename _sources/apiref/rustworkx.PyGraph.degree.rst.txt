@@ -1,0 +1,6 @@
+rustworkx.PyGraph.degree
+========================
+
+.. currentmodule:: rustworkx
+
+.. automethod:: PyGraph.degree

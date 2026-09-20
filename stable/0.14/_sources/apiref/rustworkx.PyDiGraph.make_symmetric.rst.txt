@@ -1,0 +1,6 @@
+rustworkx.PyDiGraph.make\_symmetric
+===================================
+
+.. currentmodule:: rustworkx
+
+.. automethod:: PyDiGraph.make_symmetric

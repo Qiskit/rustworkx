@@ -1,0 +1,10 @@
+﻿Chains
+======
+
+.. currentmodule:: rustworkx
+
+.. autoclass:: Chains
+   :no-members:
+   :show-inheritance:
+
+

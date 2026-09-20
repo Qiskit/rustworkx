@@ -1,0 +1,6 @@
+﻿rustworkx.closeness\_centrality
+===============================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: closeness_centrality

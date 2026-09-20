@@ -1,0 +1,6 @@
+﻿rustworkx.visit.PruneSearch
+===========================
+
+.. currentmodule:: rustworkx.visit
+
+.. autoexception:: PruneSearch

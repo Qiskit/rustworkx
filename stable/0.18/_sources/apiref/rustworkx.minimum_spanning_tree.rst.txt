@@ -1,0 +1,6 @@
+﻿rustworkx.minimum\_spanning\_tree
+=================================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: minimum_spanning_tree

@@ -1,0 +1,6 @@
+rustworkx.PyDAG.write\_edge\_list
+=================================
+
+.. currentmodule:: rustworkx
+
+.. automethod:: PyDAG.write_edge_list

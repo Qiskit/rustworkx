@@ -1,0 +1,6 @@
+rustworkx.PyDAG.incident\_edges
+===============================
+
+.. currentmodule:: rustworkx
+
+.. automethod:: PyDAG.incident_edges

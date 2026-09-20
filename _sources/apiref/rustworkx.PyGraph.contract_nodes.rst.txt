@@ -1,0 +1,6 @@
+rustworkx.PyGraph.contract\_nodes
+=================================
+
+.. currentmodule:: rustworkx
+
+.. automethod:: PyGraph.contract_nodes
