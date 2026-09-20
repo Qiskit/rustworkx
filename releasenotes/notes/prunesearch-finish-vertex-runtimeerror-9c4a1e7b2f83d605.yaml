@@ -1,0 +1,13 @@
+---
+fixes:
+  - |
+    Fixed :func:`~rustworkx.bfs_search`, :func:`~rustworkx.dfs_search` and
+    :func:`~rustworkx.dijkstra_search` raising a
+    ``pyo3_runtime.PanicException`` when a visitor raises
+    :class:`~rustworkx.visit.PruneSearch` from its ``finish_vertex`` event.
+    Pruning is not possible once a vertex is finished, so this was always an
+    error, but ``PanicException`` inherits from ``BaseException`` instead of
+    ``Exception``, so it was not caught by an ``except Exception`` block, and a
+    panic message was printed to ``stderr`` alongside the Python traceback. A
+    ``RuntimeError`` is now raised instead. Refer to
+    `#1383 <https://github.com/Qiskit/rustworkx/issues/1383>`__ for more details.

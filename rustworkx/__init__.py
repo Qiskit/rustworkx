@@ -1834,8 +1834,8 @@ def bfs_search(graph, source, visitor):
 
     .. note::
 
-        An exception is raised if the :class:`~rustworkx.visit.PruneSearch` is
-        raised in the :class:`~rustworkx.visit.BFSVisitor.finish_vertex` event.
+        A ``RuntimeError`` is raised if :class:`~rustworkx.visit.PruneSearch` is
+        raised in the :meth:`~rustworkx.visit.BFSVisitor.finish_vertex` event.
 
 
     :param graph: The graph to be used. This can be a :class:`~rustworkx.PyGraph`
@@ -1930,8 +1930,8 @@ def dfs_search(graph, source, visitor):
 
     .. note::
 
-        An exception is raised if the :class:`~rustworkx.visit.PruneSearch` is
-        raised in the :class:`~rustworkx.visit.DFSVisitor.finish_vertex` event.
+        A ``RuntimeError`` is raised if :class:`~rustworkx.visit.PruneSearch` is
+        raised in the :meth:`~rustworkx.visit.DFSVisitor.finish_vertex` event.
 
     :param graph: The graph to be used. This can be a :class:`~rustworkx.PyGraph`
         or a :class:`~rustworkx.PyDiGraph`
@@ -2042,8 +2042,8 @@ def dijkstra_search(graph, source, weight_fn, visitor):
 
     .. note::
 
-        An exception is raised if the :class:`~rustworkx.visit.PruneSearch` is
-        raised in the :class:`~rustworkx.visit.DijkstraVisitor.finish_vertex` event.
+        A ``RuntimeError`` is raised if :class:`~rustworkx.visit.PruneSearch` is
+        raised in the :meth:`~rustworkx.visit.DijkstraVisitor.finish_vertex` event.
 
     :param graph: The graph to be used. This can be a :class:`~rustworkx.PyGraph`
         or a :class:`~rustworkx.PyDiGraph`.
