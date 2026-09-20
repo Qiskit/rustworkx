@@ -1,0 +1,16 @@
+---
+fixes:
+  - |
+    Fixed :func:`rustworkx_core::dag_algo::longest_path` panicking when the graph's
+    ``NodeId`` type implements ``PartialOrd`` but not ``Ord``. The function no longer
+    compares node ids (ties are broken by node index instead), so its ``NodeId`` bound
+    is relaxed from ``PartialOrd`` to just ``Hash + Eq``.
+    See `#1579 <https://github.com/Qiskit/rustworkx/issues/1579>`__.
+  - |
+    Fixed :func:`rustworkx_core::dag_algo::longest_path` and
+    :func:`rustworkx_core::dag_algo::longest_path_length` silently returning a shorter
+    path (or its length) when the edge weights include values that are not comparable,
+    such as ``f64::NAN``. Consistent with the documented behavior and with the handling
+    of cyclic graphs, both functions now return ``Ok(None)`` when the longest path is
+    not well-defined because two cumulative weights cannot be compared.
+    See `#1580 <https://github.com/Qiskit/rustworkx/issues/1580>`__.
