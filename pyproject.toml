@@ -68,6 +68,7 @@ test = [
   "maturin>=1.9.0,<2.0",
   "testtools>=2.5.0",
   "networkx>=3.2",
+  "scipy>=1.11; python_version >= '3.11' and platform_system != 'Windows'",
   "stestr>=4.1",
 ]
 lint = [
