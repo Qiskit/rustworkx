@@ -16,6 +16,8 @@ Generators
     rustworkx.generators.directed_mesh_graph
     rustworkx.generators.grid_graph
     rustworkx.generators.directed_grid_graph
+    rustworkx.generators.nd_grid_graph
+    rustworkx.generators.directed_nd_grid_graph
     rustworkx.generators.binomial_tree_graph
     rustworkx.generators.directed_binomial_tree_graph
     rustworkx.generators.hexagonal_lattice_graph
