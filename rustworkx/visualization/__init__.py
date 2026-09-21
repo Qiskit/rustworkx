@@ -11,7 +11,9 @@
 __all__ = [
     "mpl_draw",
     "graphviz_draw",
+    "plotly_draw",
 ]
 
 from .matplotlib import mpl_draw
 from .graphviz import graphviz_draw
+from .plotly import plotly_draw
