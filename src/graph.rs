@@ -132,6 +132,31 @@ use petgraph::visit::{
 /// :math:`2^{32} - 1` (4,294,967,294) each. Attempting to add more nodes or
 /// edges than this will result in an exception being raised.
 ///
+/// Type Annotations:
+///
+/// You can use standard Python typing for specifying expected data types for both node and edge parameters.
+/// The generic parameters for ``PyGraph`` are ordered as ``PyGraph[NodeData, EdgeData]``.
+///
+/// .. code-block:: python
+///
+///     import rustworkx as rx
+///
+///     graph: rx.PyGraph[str, int] = rx.PyGraph()
+///     node_a = graph.add_node("qubit0")
+///     node_b = graph.add_node("qubit1")
+///     graph.add_edge(node_a, node_b, 10)
+///
+/// If you plan to use methods that create edges without data (connecting 2 nodes with an edge with no value), such as
+/// :meth:`~rustworkx.PyGraph.add_edges_from_no_data`, you must include
+/// ``None`` in your edge (_T) type annotation (using ``| None``).
+///
+/// .. code-block:: python
+///
+///     # Type hinting a graph where edges can be created without a value
+///     graph: rx.PyGraph[str, int | None] = rx.PyGraph()
+///     graph.add_nodes_from(["qubit0", "qubit1"])
+///     graph.add_edges_from_no_data([(0, 1)])
+///
 /// :param bool multigraph: When this is set to ``False`` the created PyGraph
 ///     object will not be a multigraph. When ``False`` if a method call is
 ///     made that would add parallel edges the weight/weight from that
