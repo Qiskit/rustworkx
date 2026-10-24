@@ -105,7 +105,7 @@ jobs:
         run: |
           python -m pip install -U --group testinfra
       - name: 'Install binary dependencies'
-        run: sudo apt-get install -y graphviz
+        run: sudo apt-get install -y graphviz libgvplugin-neato-layout8
         if: runner.os == 'Linux'
       - name: 'Run tests'
         run: nox -e test
@@ -193,7 +193,7 @@ jobs:
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
       - name: Install binary deps
-        run: sudo apt-get install -y graphviz
+        run: sudo apt-get install -y graphviz libgvplugin-neato-layout8
       - name: Install deps
         run: |
           pip install -U --group testinfra
