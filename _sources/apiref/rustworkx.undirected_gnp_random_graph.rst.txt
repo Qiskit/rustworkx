@@ -1,0 +1,6 @@
+﻿rustworkx.undirected\_gnp\_random\_graph
+========================================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: undirected_gnp_random_graph

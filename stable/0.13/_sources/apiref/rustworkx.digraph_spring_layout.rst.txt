@@ -1,0 +1,6 @@
+﻿rustworkx.digraph\_spring\_layout
+=================================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: digraph_spring_layout

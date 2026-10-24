@@ -1,0 +1,6 @@
+﻿rustworkx.graph\_greedy\_edge\_color
+====================================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: graph_greedy_edge_color

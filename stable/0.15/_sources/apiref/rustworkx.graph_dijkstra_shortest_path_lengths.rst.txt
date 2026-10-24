@@ -1,0 +1,6 @@
+﻿rustworkx.graph\_dijkstra\_shortest\_path\_lengths
+==================================================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: graph_dijkstra_shortest_path_lengths

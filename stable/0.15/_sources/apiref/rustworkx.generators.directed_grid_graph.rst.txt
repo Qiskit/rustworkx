@@ -1,0 +1,6 @@
+﻿rustworkx.generators.directed\_grid\_graph
+==========================================
+
+.. currentmodule:: rustworkx.generators
+
+.. autofunction:: directed_grid_graph

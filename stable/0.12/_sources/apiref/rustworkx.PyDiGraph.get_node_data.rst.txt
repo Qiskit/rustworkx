@@ -1,0 +1,6 @@
+rustworkx.PyDiGraph.get\_node\_data
+===================================
+
+.. currentmodule:: rustworkx
+
+.. automethod:: PyDiGraph.get_node_data

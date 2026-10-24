@@ -1,0 +1,6 @@
+﻿rustworkx.is\_matching
+======================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: is_matching

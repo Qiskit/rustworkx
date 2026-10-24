@@ -1,0 +1,6 @@
+rustworkx.PyDiGraph.find\_adjacent\_node\_by\_edge
+==================================================
+
+.. currentmodule:: rustworkx
+
+.. automethod:: PyDiGraph.find_adjacent_node_by_edge

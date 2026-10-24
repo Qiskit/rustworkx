@@ -1,0 +1,20 @@
+﻿EdgeIndexMap
+============
+
+.. currentmodule:: rustworkx
+
+.. autoclass:: EdgeIndexMap
+   :no-members:
+   :show-inheritance:
+
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+      :toctree: ../apiref/
+
+      ~EdgeIndexMap.items
+      ~EdgeIndexMap.keys
+      ~EdgeIndexMap.values
+
+

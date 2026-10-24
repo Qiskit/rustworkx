@@ -1,0 +1,6 @@
+﻿rustworkx.digraph\_edge\_betweenness\_centrality
+================================================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: digraph_edge_betweenness_centrality

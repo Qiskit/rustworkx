@@ -1,0 +1,22 @@
+﻿DijkstraVisitor
+===============
+
+.. currentmodule:: rustworkx.visit
+
+.. autoclass:: DijkstraVisitor
+   :no-members:
+   :show-inheritance:
+
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+      :toctree: ../apiref/
+
+      ~DijkstraVisitor.discover_vertex
+      ~DijkstraVisitor.edge_not_relaxed
+      ~DijkstraVisitor.edge_relaxed
+      ~DijkstraVisitor.examine_edge
+      ~DijkstraVisitor.finish_vertex
+
+

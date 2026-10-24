@@ -1,0 +1,6 @@
+rustworkx.PyDiGraph.extend\_from\_weighted\_edge\_list
+======================================================
+
+.. currentmodule:: rustworkx
+
+.. automethod:: PyDiGraph.extend_from_weighted_edge_list

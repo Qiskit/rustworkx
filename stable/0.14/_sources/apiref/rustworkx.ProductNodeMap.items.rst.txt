@@ -1,0 +1,6 @@
+rustworkx.ProductNodeMap.items
+==============================
+
+.. currentmodule:: rustworkx
+
+.. automethod:: ProductNodeMap.items

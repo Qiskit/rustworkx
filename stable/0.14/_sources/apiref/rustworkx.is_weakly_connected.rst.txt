@@ -1,0 +1,6 @@
+﻿rustworkx.is\_weakly\_connected
+===============================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: is_weakly_connected

@@ -1,0 +1,6 @@
+﻿rustworkx.digraph\_bfs\_search
+==============================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: digraph_bfs_search

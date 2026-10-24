@@ -1,0 +1,6 @@
+﻿rustworkx.NoPathFound
+=====================
+
+.. currentmodule:: rustworkx
+
+.. autoexception:: NoPathFound

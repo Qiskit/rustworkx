@@ -1,0 +1,6 @@
+rustworkx.EdgeIndexMap.keys
+===========================
+
+.. currentmodule:: rustworkx
+
+.. automethod:: EdgeIndexMap.keys

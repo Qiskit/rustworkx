@@ -1,0 +1,6 @@
+﻿rustworkx.generators.dorogovtsev\_goltsev\_mendes\_graph
+========================================================
+
+.. currentmodule:: rustworkx.generators
+
+.. autofunction:: dorogovtsev_goltsev_mendes_graph

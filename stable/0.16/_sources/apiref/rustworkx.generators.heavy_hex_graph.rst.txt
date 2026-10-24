@@ -1,0 +1,6 @@
+﻿rustworkx.generators.heavy\_hex\_graph
+======================================
+
+.. currentmodule:: rustworkx.generators
+
+.. autofunction:: heavy_hex_graph

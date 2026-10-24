@@ -1,0 +1,6 @@
+rustworkx.PyDAG.neighbors\_undirected
+=====================================
+
+.. currentmodule:: rustworkx
+
+.. automethod:: PyDAG.neighbors_undirected

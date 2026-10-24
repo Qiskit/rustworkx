@@ -1,0 +1,6 @@
+﻿rustworkx.immediate\_dominators
+===============================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: immediate_dominators

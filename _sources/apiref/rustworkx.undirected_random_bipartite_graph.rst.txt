@@ -1,0 +1,6 @@
+﻿rustworkx.undirected\_random\_bipartite\_graph
+==============================================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: undirected_random_bipartite_graph

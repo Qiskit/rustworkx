@@ -1,0 +1,6 @@
+rustworkx.visit.DFSVisitor.tree\_edge
+=====================================
+
+.. currentmodule:: rustworkx.visit
+
+.. automethod:: DFSVisitor.tree_edge

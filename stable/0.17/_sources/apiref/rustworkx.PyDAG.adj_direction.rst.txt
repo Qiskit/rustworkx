@@ -1,0 +1,6 @@
+rustworkx.PyDAG.adj\_direction
+==============================
+
+.. currentmodule:: rustworkx
+
+.. automethod:: PyDAG.adj_direction

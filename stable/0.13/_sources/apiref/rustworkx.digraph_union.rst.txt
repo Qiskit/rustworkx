@@ -1,0 +1,6 @@
+﻿rustworkx.digraph\_union
+========================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: digraph_union

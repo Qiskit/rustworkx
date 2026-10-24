@@ -1,0 +1,6 @@
+﻿rustworkx.simple\_cycles
+========================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: simple_cycles

@@ -1,0 +1,6 @@
+﻿rustworkx.digraph\_closeness\_centrality
+========================================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: digraph_closeness_centrality

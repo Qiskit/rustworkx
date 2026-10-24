@@ -1,0 +1,6 @@
+﻿rustworkx.digraph\_floyd\_warshall\_successor\_and\_distance
+============================================================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: digraph_floyd_warshall_successor_and_distance
