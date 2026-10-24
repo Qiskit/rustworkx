@@ -105,11 +105,8 @@ jobs:
         run: |
           python -m pip install -U --group testinfra
       - name: 'Install binary dependencies'
-        run: sudo apt-get install -y graphviz
+        run: sudo apt-get install -y graphviz libgvplugin-neato-layout8
         if: runner.os == 'Linux'
-      - name: 'Install Graphviz neato plugin'
-        run: sudo apt-get install -y libgvplugin-neato-layout8
-        if: runner.os == 'Linux' && runner.arch != 'ARM64'
       - name: 'Run tests'
         run: nox -e test
   tests_stubs:
