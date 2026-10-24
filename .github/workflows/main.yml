@@ -66,7 +66,7 @@ jobs:
           { os: "macos-15-intel", python-architecture: "x64", rust-target: "x86_64-apple-darwin" },
           { os: "macOS-14", python-architecture: "arm64", rust-target: "aarch64-apple-darwin" },
           { os: "ubuntu-latest", python-architecture: "x64", rust-target: "x86_64-unknown-linux-gnu" },
-          { os: "ubuntu-24.04-arm", python-architecture: "arm64", rust-target: "aarch64-unknown-linux-gnu" },
+          { os: "ubuntu-26.04-arm", python-architecture: "arm64", rust-target: "aarch64-unknown-linux-gnu" },
           { os: "windows-latest", python-architecture: "x64", rust-target: "x86_64-pc-windows-msvc" },
         ]
         include:
@@ -105,8 +105,11 @@ jobs:
         run: |
           python -m pip install -U --group testinfra
       - name: 'Install binary dependencies'
-        run: sudo apt-get install -y graphviz libgvplugin-neato-layout8
+        run: sudo apt-get install -y graphviz
         if: runner.os == 'Linux'
+      - name: 'Install Graphviz neato plugin'
+        run: sudo apt-get install -y libgvplugin-neato-layout8
+        if: runner.os == 'Linux' && runner.arch != 'ARM64'
       - name: 'Run tests'
         run: nox -e test
   tests_stubs:
