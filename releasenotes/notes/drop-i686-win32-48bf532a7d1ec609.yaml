@@ -1,0 +1,4 @@
+upgrade:
+  - |
+    Precompiled wheels are no longer published for Linux i686 or 32-bit
+    Windows.
