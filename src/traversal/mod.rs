@@ -416,8 +416,8 @@ pub fn descendants(graph: &digraph::PyDiGraph, node: usize) -> PyResult<HashSet<
 ///
 /// .. note::
 ///
-///     An exception is raised if the :class:`~rustworkx.visit.PruneSearch` is
-///     raised in the :class:`~rustworkx.visit.BFSVisitor.finish_vertex` event.
+///     A ``RuntimeError`` is raised if :class:`~rustworkx.visit.PruneSearch` is
+///     raised in the :meth:`~rustworkx.visit.BFSVisitor.finish_vertex` event.
 ///
 ///
 /// :param PyDiGraph graph: The graph to be used.
@@ -562,8 +562,8 @@ pub fn digraph_bfs_search(
 ///
 ///
 /// .. note::
-///     An exception is raised if the :class:`~rustworkx.visit.PruneSearch` is raised in the
-///     :class:`~rustworkx.visit.BFSVisitor.finish_vertex` event.
+///     A ``RuntimeError`` is raised if :class:`~rustworkx.visit.PruneSearch` is raised in the
+///     :meth:`~rustworkx.visit.BFSVisitor.finish_vertex` event.
 ///
 ///
 /// :param PyGraph graph: The graph to be used.
@@ -679,8 +679,8 @@ pub fn graph_bfs_search(
 ///
 ///
 /// .. note::
-///     An exception is raised if the :class:`~rustworkx.visit.PruneSearch` is
-///     raised in the :class:`~rustworkx.visit.DFSVisitor.finish_vertex` event.
+///     A ``RuntimeError`` is raised if :class:`~rustworkx.visit.PruneSearch` is
+///     raised in the :meth:`~rustworkx.visit.DFSVisitor.finish_vertex` event.
 ///
 /// :param PyDiGraph graph: The graph to be used.
 /// :param source: An optional list of node indices to use as the starting nodes
@@ -795,8 +795,8 @@ pub fn digraph_dfs_search(
 ///
 ///
 /// .. note::
-///     An exception is raised if the :class:`~rustworkx.visit.PruneSearch` is
-///     raised in the :class:`~rustworkx.visit.DFSVisitor.finish_vertex` event.
+///     A ``RuntimeError`` is raised if :class:`~rustworkx.visit.PruneSearch` is
+///     raised in the :meth:`~rustworkx.visit.DFSVisitor.finish_vertex` event.
 ///
 /// :param PyGraph graph: The graph to be used.
 /// :param source: An optional list of node indices to use as the starting nodes
@@ -929,8 +929,8 @@ pub fn graph_dfs_search(
 ///
 /// .. note::
 ///
-///    An exception is raised if the :class:`~rustworkx.visit.PruneSearch` is
-///    raised in the :class:`~rustworkx.visit.DijkstraVisitor.finish_vertex` event.
+///    A ``RuntimeError`` is raised if :class:`~rustworkx.visit.PruneSearch` is
+///    raised in the :meth:`~rustworkx.visit.DijkstraVisitor.finish_vertex` event.
 ///
 /// :param PyDiGraph graph: The graph to be used.
 /// :param source: An optional list of node indices to use as the starting nodes
@@ -1072,8 +1072,8 @@ pub fn digraph_dijkstra_search(
 ///
 /// .. note::
 ///
-///    An exception is raised if the :class:`~rustworkx.visit.PruneSearch` is
-///    raised in the :class:`~rustworkx.visit.DijkstraVisitor.finish_vertex` event.
+///    A ``RuntimeError`` is raised if :class:`~rustworkx.visit.PruneSearch` is
+///    raised in the :meth:`~rustworkx.visit.DijkstraVisitor.finish_vertex` event.
 ///
 /// :param PyGraph graph: The graph to be used.
 /// :param source: An optional list of node indices to use as the starting nodes
