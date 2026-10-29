@@ -1,0 +1,8 @@
+other:
+  - |
+    Reduced hashing and allocation during :func:`~rustworkx.core_number` and
+    ``rustworkx_core::connectivity::core_number`` by using dense working storage
+    for core decomposition. Adjacency uses a contiguous buffer and per-call
+    markers to remove duplicate neighbors without sorting. Public signatures,
+    result ordering, and node IDs are unchanged, including when nodes have
+    been removed from a graph.
