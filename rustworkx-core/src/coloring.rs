@@ -641,13 +641,22 @@ where
     Ok(edge_colors)
 }
 
-struct MisraGries<G: GraphBase> {
+struct MisraGries<G>
+where
+    G: GraphBase,
+    G::EdgeId: Eq + Hash,
+{
     // The input graph
     graph: G,
     // Maximum node degree in the graph
     max_node_degree: usize,
     // Partially assigned colors (indexed by internal edge index)
     colors: Vec<Option<usize>>,
+    // Maps canonical edge IDs to internal edge indices.
+    edge_indices_by_id: HashMap<G::EdgeId, usize>,
+    // Maps endpoint pairs (in either orientation) to a unique edge index.
+    // None means multiple edges share these endpoints.
+    edge_indices_by_endpoints: HashMap<(usize, usize), Option<usize>>,
     // Performance optimization: explicitly storing edge colors used at each node
     node_used_colors: Vec<HashSet<usize>>,
 }
@@ -655,8 +664,38 @@ struct MisraGries<G: GraphBase> {
 impl<G> MisraGries<G>
 where
     G: EdgeIndexable + IntoEdges + NodeIndexable + IntoNodeIdentifiers,
+    G::EdgeId: Eq + Hash,
 {
     pub fn new(graph: G) -> Self {
+        let mut edge_indices_by_id: HashMap<G::EdgeId, usize> =
+            HashMap::with_capacity(graph.edge_bound());
+        let mut edge_indices_by_endpoints: HashMap<(usize, usize), Option<usize>> =
+            HashMap::with_capacity(graph.edge_bound());
+
+        // Build stable internal indices from global edge references.
+        // Adjacency iterators may expose the opposite orientation of an
+        // undirected GraphMap edge ID.
+        for edge in graph.edge_references() {
+            let edge_id = edge.id();
+            let edge_index = EdgeIndexable::to_index(&graph, edge_id);
+
+            edge_indices_by_id.insert(edge_id, edge_index);
+
+            let source = NodeIndexable::to_index(&graph, edge.source());
+            let target = NodeIndexable::to_index(&graph, edge.target());
+
+            for key in [(source, target), (target, source)] {
+                edge_indices_by_endpoints
+                    .entry(key)
+                    .and_modify(|existing| {
+                        if *existing != Some(edge_index) {
+                            *existing = None;
+                        }
+                    })
+                    .or_insert(Some(edge_index));
+            }
+        }
+
         let colors = vec![None; graph.edge_bound()];
         let max_node_degree = graph
             .node_identifiers()
@@ -670,6 +709,8 @@ where
             graph,
             max_node_degree,
             colors,
+            edge_indices_by_id,
+            edge_indices_by_endpoints,
             node_used_colors,
         }
     }
@@ -690,7 +731,8 @@ where
             self.add_node_used_color(e.target(), *c);
         }
         for (e, c) in new_colors {
-            self.colors[EdgeIndexable::to_index(&self.graph, e.id())] = Some(*c);
+            let edge_index = self.edge_index(*e);
+            self.colors[edge_index] = Some(*c);
         }
     }
 
@@ -706,9 +748,27 @@ where
         self.node_used_colors[uindex].remove(&c);
     }
 
+    // Resolve an edge reference to its internal color-array index.
+    // Prefer the original edge ID to preserve parallel-edge identity.
+    // Fall back to endpoint matching for graph types whose undirected
+    // adjacency references may reverse the edge ID orientation.
+    fn edge_index(&self, e: G::EdgeRef) -> usize {
+        if let Some(&index) = self.edge_indices_by_id.get(&e.id()) {
+            return index;
+        }
+
+        let source = NodeIndexable::to_index(&self.graph, e.source());
+        let target = NodeIndexable::to_index(&self.graph, e.target());
+
+        self.edge_indices_by_endpoints
+            .get(&(source, target))
+            .and_then(|index| *index)
+            .expect("edge reference does not identify a unique graph edge")
+    }
+
     // Gets edge color
     fn get_edge_color(&self, e: G::EdgeRef) -> Option<usize> {
-        self.colors[EdgeIndexable::to_index(&self.graph, e.id())]
+        self.colors[self.edge_index(e)]
     }
 
     // Returns colors used at node u
@@ -1725,6 +1785,187 @@ mod test_misra_gries_edge_coloring {
                 max_color + 1,
                 max_node_degree
             );
+        }
+    }
+
+    #[test]
+    fn test_stable_graph_sparse_edge_indices() {
+        use super::MisraGries;
+        use petgraph::stable_graph::StableUnGraph;
+
+        let mut graph = StableUnGraph::<(), ()>::default();
+
+        let center = graph.add_node(());
+        let a = graph.add_node(());
+        let b = graph.add_node(());
+        let c = graph.add_node(());
+
+        let first = graph.add_edge(center, a, ());
+        let removed = graph.add_edge(center, b, ());
+        let last = graph.add_edge(center, c, ());
+
+        assert!(graph.remove_edge(removed).is_some());
+        assert!(last.index() > first.index() + 1);
+
+        let mg = MisraGries::new(&graph);
+
+        let indices: Vec<_> = graph
+            .edges(center)
+            .map(|edge| mg.edge_index(edge))
+            .collect();
+
+        assert_eq!(indices.len(), 2);
+        assert!(indices.contains(&first.index()));
+        assert!(indices.contains(&last.index()));
+
+        assert!(!mg.edge_indices_by_id.contains_key(&removed));
+
+        let colors = misra_gries_edge_color(&graph);
+
+        assert_eq!(colors.len(), 2);
+
+        let first_color = colors.get(&first).copied().unwrap();
+        let last_color = colors.get(&last).copied().unwrap();
+
+        assert_ne!(first_color, last_color);
+    }
+
+    #[test]
+    fn test_stable_graph_parallel_edge_indices() {
+        use super::MisraGries;
+        use petgraph::stable_graph::StableUnGraph;
+
+        let mut graph = StableUnGraph::<(), ()>::default();
+        let u = graph.add_node(());
+        let v = graph.add_node(());
+
+        let e1 = graph.add_edge(u, v, ());
+        let e2 = graph.add_edge(u, v, ());
+
+        let mg = MisraGries::new(&graph);
+
+        let indices: Vec<_> = graph.edges(u).map(|edge| mg.edge_index(edge)).collect();
+
+        assert_eq!(indices.len(), 2);
+        assert_ne!(e1, e2);
+        assert!(indices.contains(&e1.index()));
+        assert!(indices.contains(&e2.index()));
+
+        // Endpoint matching is ambiguous for parallel edges.
+        assert_eq!(
+            mg.edge_indices_by_endpoints.get(&(u.index(), v.index())),
+            Some(&None),
+        );
+    }
+
+    #[test]
+    fn test_ungraph_map_reverse_edge_insertion() {
+        let mut graph: petgraph::graphmap::UnGraphMap<&str, &str> =
+            petgraph::graphmap::UnGraphMap::new();
+
+        graph.add_edge("Node 3", "Node 2", "Edge 2");
+        graph.add_edge("Node 2", "Node 1", "Edge 1");
+
+        let colors = misra_gries_edge_color(&graph);
+
+        assert_eq!(colors.len(), 2);
+
+        let color_12 = colors
+            .get(&("Node 1", "Node 2"))
+            .copied()
+            .expect("Missing first edge color");
+
+        let color_23 = colors
+            .get(&("Node 2", "Node 3"))
+            .copied()
+            .expect("Missing second edge color");
+
+        assert_ne!(color_12, color_23);
+    }
+
+    #[test]
+    fn test_ungraph_map_triangle_reversed_edges() {
+        use petgraph::graphmap::UnGraphMap;
+
+        let mut graph = UnGraphMap::<i32, ()>::new();
+
+        graph.add_edge(1, 0, ());
+        graph.add_edge(2, 1, ());
+        graph.add_edge(0, 2, ());
+
+        let colors = misra_gries_edge_color(&graph);
+
+        assert_eq!(colors.len(), 3);
+
+        let a = colors.get(&(0, 1)).copied().unwrap();
+        let b = colors.get(&(1, 2)).copied().unwrap();
+        let c = colors.get(&(0, 2)).copied().unwrap();
+
+        assert_ne!(a, b);
+        assert_ne!(a, c);
+        assert_ne!(b, c);
+
+        // Maximum degree is 2, so at most 3 colors are allowed.
+        assert!(colors.values().all(|&color| color < 3));
+    }
+
+    #[test]
+    fn test_ungraph_map_two_edge_path() {
+        let mut graph: petgraph::graphmap::UnGraphMap<&str, &str> =
+            petgraph::graphmap::UnGraphMap::new();
+
+        graph.add_edge("Node 1", "Node 2", "Edge 1");
+        graph.add_edge("Node 2", "Node 3", "Edge 2");
+
+        let colors = misra_gries_edge_color(&graph);
+
+        assert_eq!(colors.len(), 2);
+
+        let color_12 = colors
+            .get(&("Node 1", "Node 2"))
+            .copied()
+            .expect("Missing color for edge Node 1 - Node 2");
+
+        let color_23 = colors
+            .get(&("Node 2", "Node 3"))
+            .copied()
+            .expect("Missing color for edge Node 2 - Node 3");
+
+        assert_ne!(color_12, color_23);
+    }
+
+    #[test]
+    fn test_ungraph_map_complete_graph_coloring() {
+        use petgraph::graphmap::UnGraphMap;
+        use std::collections::HashSet;
+
+        let mut graph = UnGraphMap::<usize, ()>::new();
+        let n = 5usize;
+
+        for u in 0..n {
+            for v in (u + 1)..n {
+                graph.add_edge(v, u, ());
+            }
+        }
+
+        let colors = misra_gries_edge_color(&graph);
+
+        assert_eq!(colors.len(), n * (n - 1) / 2);
+        assert!(colors.values().all(|&color| color < n));
+
+        for u in 0..n {
+            let mut used = HashSet::new();
+
+            for v in 0..n {
+                if u == v {
+                    continue;
+                }
+
+                let key = (u.min(v), u.max(v));
+                let color = *colors.get(&key).unwrap();
+
+                assert!(used.insert(color), "Node {u} has duplicate color {color}");
+            }
         }
     }
 
