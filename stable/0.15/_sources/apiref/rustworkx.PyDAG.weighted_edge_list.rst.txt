@@ -1,0 +1,6 @@
+rustworkx.PyDAG.weighted\_edge\_list
+====================================
+
+.. currentmodule:: rustworkx
+
+.. automethod:: PyDAG.weighted_edge_list

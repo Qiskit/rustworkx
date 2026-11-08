@@ -1,0 +1,6 @@
+rustworkx.PyGraph.find\_node\_by\_weight
+========================================
+
+.. currentmodule:: rustworkx
+
+.. automethod:: PyGraph.find_node_by_weight

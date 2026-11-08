@@ -1,0 +1,6 @@
+﻿rustworkx.graph\_spiral\_layout
+===============================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: graph_spiral_layout

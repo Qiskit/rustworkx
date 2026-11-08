@@ -1,0 +1,6 @@
+﻿rustworkx.has\_path
+===================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: has_path

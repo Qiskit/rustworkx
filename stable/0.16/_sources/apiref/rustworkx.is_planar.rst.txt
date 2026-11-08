@@ -1,0 +1,6 @@
+﻿rustworkx.is\_planar
+====================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: is_planar

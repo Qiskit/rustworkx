@@ -1,0 +1,6 @@
+﻿rustworkx.graph\_transitivity
+=============================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: graph_transitivity

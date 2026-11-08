@@ -1,0 +1,6 @@
+rustworkx.PyDAG.extend\_from\_edge\_list
+========================================
+
+.. currentmodule:: rustworkx
+
+.. automethod:: PyDAG.extend_from_edge_list

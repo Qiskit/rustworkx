@@ -1,0 +1,6 @@
+rustworkx.visit.DFSVisitor.discover\_vertex
+===========================================
+
+.. currentmodule:: rustworkx.visit
+
+.. automethod:: DFSVisitor.discover_vertex

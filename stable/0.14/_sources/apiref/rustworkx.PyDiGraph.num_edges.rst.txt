@@ -1,0 +1,6 @@
+rustworkx.PyDiGraph.num\_edges
+==============================
+
+.. currentmodule:: rustworkx
+
+.. automethod:: PyDiGraph.num_edges

@@ -1,0 +1,707 @@
+
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Directed Acyclic Graphs &mdash; rustworkx 0.12.1 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <!-- <link rel="stylesheet" href="../_static/pygments.css" type="text/css" /> -->
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/jupyter-sphinx.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/thebelab.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/style.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Working with Betweenness Centrality" href="betweenness_centrality.html" />
+    <link rel="prev" title="Introduction to rustworkx" href="introduction.html" /> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="pytorch-body">
+
+   
+
+    
+
+    <div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    <span class="rst-current-version-label">0.12</span>
+    <span class="rst-versions-dropdown-icon"></span>
+  </span>
+  <div class="rst-other-versions">
+    <dl>
+      <dt>Versions</dt>
+          <dd><a class="version" href="/documentation/retworkx/index.html">Current Release</a></dd>
+          <dd><a class="version" href="/documentation/retworkx/dev/index.html">Development</a></dd>
+      <dt>Previous Releases</dt>
+        
+            <dd><a class="version" href="/documentation/retworkx/stable/0.12/index.html">0.12</a></dd>
+        
+    </dl>
+  </div>
+  <script>
+    jQuery('.version').click((evt) => {
+      const hash = window.location.hash
+      const complete_url = evt.target.href + hash
+      window.location = complete_url
+      evt.preventDefault()
+    })
+  </script>
+</div>
+
+    <div class="table-of-contents-link-wrapper">
+      <span>Table of Contents</span>
+      <a href="#" class="toggle-table-of-contents" data-behavior="toggle-table-of-contents"></a>
+    </div>
+
+    <nav data-toggle="wy-nav-shift" class="pytorch-left-menu" id="pytorch-left-menu">
+      <div class="pytorch-side-scroll">
+        <div class="pytorch-menu pytorch-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          <div class="pytorch-left-menu-search">
+            
+
+            
+              
+              
+                <div class="version">
+                  0.12.1
+                </div>
+              
+            
+
+            
+
+
+  
+
+
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search Docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+            
+          </div>
+
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../install.html#installing-rustworkx">Installing Rustworkx</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../install.html#platform-support">Platform Support</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../install.html#using-rustworkx">Using rustworkx</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Rustworkx Tutorials and Guides</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api.html">Rustworkx API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../visualization.html">Visualization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../CONTRIBUTING.html">Contributing Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../networkx.html">rustworkx for NetworkX users</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <div class="pytorch-container">
+      <div class="pytorch-page-level-bar" id="pytorch-page-level-bar">
+        <div class="pytorch-breadcrumbs-wrapper">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="pytorch-breadcrumbs">
+    
+      <li>
+        <a href="../index.html">
+          
+            Docs
+          
+        </a> &gt;
+      </li>
+
+        
+          <li><a href="index.html">rustworkx Tutorials and Guides</a> &gt;</li>
+        
+      <li>Directed Acyclic Graphs</li>
+    
+    
+      <li class="pytorch-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/tutorial/dags.rst.txt" rel="nofollow"><img src="../_static/images/view-page-source-icon.svg"></a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+</div>
+        </div>
+
+        <div class="pytorch-shortcuts-wrapper" id="pytorch-shortcuts-wrapper">
+          Shortcuts
+        </div>
+      </div>
+
+      <section data-toggle="wy-nav-shift" id="pytorch-content-wrap" class="pytorch-content-wrap">
+        <div class="pytorch-content-left">
+          
+          <div class="rst-content style-external-links">
+          
+            <div role="main" class="main-content" itemscope="itemscope" itemtype="http://schema.org/Article">
+             <article itemprop="articleBody" id="pytorch-article" class="pytorch-article">
+              
+  <br><br><br><section id="directed-acyclic-graphs">
+<h1>Directed Acyclic Graphs<a class="headerlink" href="#directed-acyclic-graphs" title="Permalink to this heading">¶</a></h1>
+<p>This tutorial will explore using rustworkx to work with directed acyclic graphs
+(also known as DAGs).</p>
+<section id="directed-graph">
+<h2>Directed Graph<a class="headerlink" href="#directed-graph" title="Permalink to this heading">¶</a></h2>
+<p>As a primer, let’s first review the broader concept of a directed graph (without the acyclic restriction).</p>
+<p>A directed graph is made up of a set of nodes connected by
+directed edges (often called arcs). Directed edges can only be followed in one direction,
+which is different from the edges found in undirected graphs, which can be followed
+in either direction. For example:</p>
+<div class="jupyter_cell jupyter_container docutils container">
+<div class="cell_input code_cell docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">rustworkx</span> <span class="k">as</span> <span class="nn">rx</span>
+<span class="kn">from</span> <span class="nn">rustworkx.visualization</span> <span class="kn">import</span> <span class="n">mpl_draw</span>
+
+<span class="n">path_graph</span> <span class="o">=</span> <span class="n">rx</span><span class="o">.</span><span class="n">generators</span><span class="o">.</span><span class="n">directed_path_graph</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+<span class="n">mpl_draw</span><span class="p">(</span><span class="n">path_graph</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<img alt="../_images/dags_0_0.png" src="../_images/dags_0_0.png" />
+</div>
+</div>
+<p>In this example, we’ve created a 5 node directed path graph. The directionality of
+each edge is denoted by the arrow head, which points to the target node. The node at
+the other end of the edge is called the source.</p>
+</section>
+<section id="id1">
+<h2>Directed Acyclic Graphs<a class="headerlink" href="#id1" title="Permalink to this heading">¶</a></h2>
+<p>A directed acyclic graph is a directed graph which also doesn’t contain
+any cycles. A cycle is a non-empty trail <a class="footnote-reference brackets" href="#id3" id="id2" role="doc-noteref"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></a> in which the first and last nodes in
+the trail are the same. For example:</p>
+<div class="jupyter_cell jupyter_container docutils container">
+<div class="cell_input code_cell docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">cycle_graph</span> <span class="o">=</span> <span class="n">rx</span><span class="o">.</span><span class="n">generators</span><span class="o">.</span><span class="n">directed_cycle_graph</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+<span class="n">mpl_draw</span><span class="p">(</span><span class="n">cycle_graph</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<img alt="../_images/dags_1_0.png" src="../_images/dags_1_0.png" />
+</div>
+</div>
+<p>is <strong>not</strong> acyclic. While the earlier path graph is acyclic.</p>
+<p>In rustworkx you can create a new <a class="reference internal" href="../apiref/rustworkx.PyDiGraph.html#rustworkx.PyDiGraph" title="rustworkx.PyDiGraph"><code class="xref py py-class docutils literal notranslate"><span class="pre">PyDiGraph</span></code></a> object that enforces
+that no cycle is added by using the <code class="docutils literal notranslate"><span class="pre">check_cycle</span></code> constructor property</p>
+<div class="jupyter_cell jupyter_container docutils container">
+<div class="cell_input code_cell docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">dag</span> <span class="o">=</span> <span class="n">rx</span><span class="o">.</span><span class="n">PyDiGraph</span><span class="p">(</span><span class="n">check_cycle</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+</div>
+</div>
+<p>or after a <a class="reference internal" href="../apiref/rustworkx.PyDiGraph.html#rustworkx.PyDiGraph" title="rustworkx.PyDiGraph"><code class="xref py py-class docutils literal notranslate"><span class="pre">PyDiGraph</span></code></a> object is created with the
+<a class="reference internal" href="../apiref/rustworkx.PyDiGraph.html#rustworkx.PyDiGraph.check_cycle" title="rustworkx.PyDiGraph.check_cycle"><code class="xref py py-attr docutils literal notranslate"><span class="pre">check_cycle</span></code></a> attribute:</p>
+<div class="jupyter_cell jupyter_container docutils container">
+<div class="cell_input code_cell docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">dag</span><span class="o">.</span><span class="n">check_cycle</span> <span class="o">=</span> <span class="kc">True</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+</div>
+</div>
+<p>You can also check the status of cycle checking by inspecting the
+<a class="reference internal" href="../apiref/rustworkx.PyDiGraph.html#rustworkx.PyDiGraph.check_cycle" title="rustworkx.PyDiGraph.check_cycle"><code class="xref py py-attr docutils literal notranslate"><span class="pre">check_cycle</span></code></a> attribute:</p>
+<div class="jupyter_cell jupyter_container docutils container">
+<div class="cell_input code_cell docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">dag</span><span class="o">.</span><span class="n">check_cycle</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-none notranslate"><div class="highlight"><pre><span></span>True
+</pre></div>
+</div>
+</div>
+</div>
+<p>With <code class="docutils literal notranslate"><span class="pre">check_cycle</span></code> set to <code class="docutils literal notranslate"><span class="pre">True</span></code>, methods that add edges
+to the graph (e.g. <a class="reference internal" href="../apiref/rustworkx.PyDiGraph.add_edge.html#rustworkx.PyDiGraph.add_edge" title="rustworkx.PyDiGraph.add_edge"><code class="xref py py-meth docutils literal notranslate"><span class="pre">PyDiGraph.add_edge()</span></code></a>) will raise an error
+if a cycle would be introduced. This checking
+does come with a noticeable (and potentially large) runtime overhead so it’s
+best to only use it if it’s strictly necessary. You can also avoid this
+overhead by using <a class="reference internal" href="../apiref/rustworkx.PyDiGraph.add_parent.html#rustworkx.PyDiGraph.add_parent" title="rustworkx.PyDiGraph.add_parent"><code class="xref py py-meth docutils literal notranslate"><span class="pre">PyDiGraph.add_parent()</span></code></a> and
+<a class="reference internal" href="../apiref/rustworkx.PyDiGraph.add_child.html#rustworkx.PyDiGraph.add_child" title="rustworkx.PyDiGraph.add_child"><code class="xref py py-meth docutils literal notranslate"><span class="pre">PyDiGraph.add_child()</span></code></a> as both add a new node and edge simultaneously and
+neither can introduce a cycle.</p>
+<aside class="footnote-list brackets">
+<aside class="footnote brackets" id="id3" role="note">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id2">1</a><span class="fn-bracket">]</span></span>
+<p>A trail is a sequence of nodes and edges on the graph where each edge
+is distinct in the walk.</p>
+</aside>
+</aside>
+</section>
+<section id="applications-of-dags">
+<h2>Applications of DAGs<a class="headerlink" href="#applications-of-dags" title="Permalink to this heading">¶</a></h2>
+<section id="task-scheduling">
+<h3>Task Scheduling<a class="headerlink" href="#task-scheduling" title="Permalink to this heading">¶</a></h3>
+<p>A topological sort of a directed acyclic graph defined as <span class="math notranslate nohighlight">\(G = (V,E)\)</span> is
+a linear ordering of all its nodes such that if <span class="math notranslate nohighlight">\(G\)</span> contains an edge
+<span class="math notranslate nohighlight">\((u, v)\)</span> then <span class="math notranslate nohighlight">\(u\)</span> appears before <cite>v</cite>. This only works with DAGs
+since a cycle in the graph <span class="math notranslate nohighlight">\(G\)</span> would make it impossible
+to find such a linear ordering.</p>
+<p>A common application of DAGs is to use a topological sort to schedule a
+sequence of jobs or tasks based on their dependencies. Jobs are
+represented by nodes and an edge from node <span class="math notranslate nohighlight">\(u\)</span> to node <span class="math notranslate nohighlight">\(v\)</span> implies that
+job <span class="math notranslate nohighlight">\(u\)</span> must be completed before job <span class="math notranslate nohighlight">\(v\)</span>. A topological sort
+of a directed acyclic graph will give an order in which to perform these
+jobs. For example:</p>
+<div class="jupyter_cell jupyter_container docutils container">
+<div class="cell_input code_cell docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">rustworkx.visualization</span> <span class="kn">import</span> <span class="n">graphviz_draw</span>
+
+<span class="c1"># Create a job dag</span>
+<span class="n">dependency_dag</span> <span class="o">=</span> <span class="n">rx</span><span class="o">.</span><span class="n">PyDiGraph</span><span class="p">(</span><span class="n">check_cycle</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">job_a</span> <span class="o">=</span> <span class="n">dependency_dag</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="s2">&quot;Job A&quot;</span><span class="p">)</span>
+<span class="n">job_b</span> <span class="o">=</span> <span class="n">dependency_dag</span><span class="o">.</span><span class="n">add_child</span><span class="p">(</span><span class="n">job_a</span><span class="p">,</span> <span class="s2">&quot;Job B&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+<span class="n">job_c</span> <span class="o">=</span> <span class="n">dependency_dag</span><span class="o">.</span><span class="n">add_child</span><span class="p">(</span><span class="n">job_b</span><span class="p">,</span> <span class="s2">&quot;Job C&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+<span class="n">job_d</span> <span class="o">=</span> <span class="n">dependency_dag</span><span class="o">.</span><span class="n">add_child</span><span class="p">(</span><span class="n">job_a</span><span class="p">,</span> <span class="s2">&quot;Job D&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+<span class="n">job_e</span> <span class="o">=</span> <span class="n">dependency_dag</span><span class="o">.</span><span class="n">add_parent</span><span class="p">(</span><span class="n">job_d</span><span class="p">,</span> <span class="s2">&quot;Job E&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+<span class="n">job_f</span> <span class="o">=</span> <span class="n">dependency_dag</span><span class="o">.</span><span class="n">add_child</span><span class="p">(</span><span class="n">job_e</span><span class="p">,</span> <span class="s2">&quot;Job F&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+<span class="n">dependency_dag</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">job_a</span><span class="p">,</span> <span class="n">job_f</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+<span class="n">dependency_dag</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">job_c</span><span class="p">,</span> <span class="n">job_d</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+<span class="n">graphviz_draw</span><span class="p">(</span><span class="n">dependency_dag</span><span class="p">,</span> <span class="n">node_attr_fn</span><span class="o">=</span><span class="k">lambda</span> <span class="n">node</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;label&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">node</span><span class="p">)})</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<img alt="../_images/dags_5_0.png" src="../_images/dags_5_0.png" />
+</div>
+</div>
+<p>Above we define a DAG with 6 jobs and dependency relationship between these
+jobs. Now if we run the <a class="reference internal" href="../apiref/rustworkx.topological_sort.html#rustworkx.topological_sort" title="rustworkx.topological_sort"><code class="xref py py-func docutils literal notranslate"><span class="pre">topological_sort()</span></code></a> function on the
+graph it will return a linear order to execute the jobs that will respect
+the dependency releationship.</p>
+<div class="jupyter_cell jupyter_container docutils container">
+<div class="cell_input code_cell docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">topo_sorted</span> <span class="o">=</span> <span class="n">rx</span><span class="o">.</span><span class="n">topological_sort</span><span class="p">(</span><span class="n">dependency_dag</span><span class="p">)</span>
+<span class="c1"># Print job labels</span>
+<span class="nb">print</span><span class="p">([</span><span class="n">dependency_dag</span><span class="p">[</span><span class="n">job_index</span><span class="p">]</span> <span class="k">for</span> <span class="n">job_index</span> <span class="ow">in</span> <span class="n">topo_sorted</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-none notranslate"><div class="highlight"><pre><span></span>[&#39;Job E&#39;, &#39;Job A&#39;, &#39;Job F&#39;, &#39;Job B&#39;, &#39;Job C&#39;, &#39;Job D&#39;]
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="qiskit-s-compiler">
+<h3>Qiskit’s Compiler<a class="headerlink" href="#qiskit-s-compiler" title="Permalink to this heading">¶</a></h3>
+<p>Another application using directed acyclic graphs is the compiler in
+<a class="reference external" href="https://qiskit.org">Qiskit</a>. Qiskit is an SDK for working with
+quantum computing. Qiskit’s
+<a class="reference external" href="https://qiskit.org/documentation/apidoc/transpiler.html">compiler</a>
+internally represents a quantum circuit as a
+<a class="reference external" href="https://qiskit.org/documentation/stubs/qiskit.dagcircuit.DAGCircuit.html">directed acyclic graph</a>.
+Rustworkx was originally started to accelerate the performance of the Qiskit
+compiler’s use of directed acyclic graphs.</p>
+<p>To examine how Qiskit uses DAGs, we first need to look at a quantum circuit. A
+quantum circuit is a computation routine consisting of coherent quantum
+operations on quantum data. It is an ordered sequence of quantum operations including gates,
+measurements and resets which may be conditioned on real-time classical
+computation. A quantum circuit is represented graphically like:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>        ┌───┐      ░ ┌─┐
+   q_0: ┤ H ├──■───░─┤M├───
+        └───┘┌─┴─┐ ░ └╥┘┌─┐
+   q_1: ─────┤ X ├─░──╫─┤M├
+             └───┘ ░  ║ └╥┘
+meas: 2/══════════════╩══╩═
+                      0  1
+</pre></div>
+</div>
+<p>The specifics of this circuit aren’t important here beyond the fact that
+we have 2 qubits, <code class="docutils literal notranslate"><span class="pre">q_0</span></code> and <code class="docutils literal notranslate"><span class="pre">q_1</span></code>, 2 classical bits, <code class="docutils literal notranslate"><span class="pre">c_0</span></code> and <code class="docutils literal notranslate"><span class="pre">c_1</span></code>,
+and a series of operations on those qubits with a depedency ordering. The last
+operation on each qubit is a measurement on <code class="docutils literal notranslate"><span class="pre">q_0</span></code> that is stored in <code class="docutils literal notranslate"><span class="pre">c_0</span></code>
+and <code class="docutils literal notranslate"><span class="pre">q_1</span></code> that is stored in <code class="docutils literal notranslate"><span class="pre">c_1</span></code>.</p>
+<p>We can represent this quantum circuit as a directed acyclic graph like Qiskit
+does internally with:</p>
+<div class="jupyter_cell jupyter_container docutils container">
+<div class="cell_input code_cell docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">dag</span> <span class="o">=</span> <span class="n">rx</span><span class="o">.</span><span class="n">PyDiGraph</span><span class="p">()</span>
+<span class="c1"># Input nodes:</span>
+<span class="n">in_nodes</span> <span class="o">=</span> <span class="n">dag</span><span class="o">.</span><span class="n">add_nodes_from</span><span class="p">([</span><span class="s2">&quot;q_0&quot;</span><span class="p">,</span> <span class="s2">&quot;q_1&quot;</span><span class="p">,</span> <span class="s2">&quot;c_0&quot;</span><span class="p">,</span> <span class="s2">&quot;c_1&quot;</span><span class="p">])</span>
+<span class="c1"># Output nodes</span>
+<span class="n">out_nodes</span> <span class="o">=</span> <span class="n">dag</span><span class="o">.</span><span class="n">add_nodes_from</span><span class="p">([</span><span class="s2">&quot;q_0&quot;</span><span class="p">,</span> <span class="s2">&quot;q_1&quot;</span><span class="p">,</span> <span class="s2">&quot;c_0&quot;</span><span class="p">,</span> <span class="s2">&quot;c_1&quot;</span><span class="p">])</span>
+<span class="c1"># Add H gate</span>
+<span class="n">h_gate</span> <span class="o">=</span> <span class="n">dag</span><span class="o">.</span><span class="n">add_child</span><span class="p">(</span><span class="n">in_nodes</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s2">&quot;h&quot;</span><span class="p">,</span> <span class="s2">&quot;q_0&quot;</span><span class="p">)</span>
+<span class="c1"># Add CX Gate</span>
+<span class="n">cx_gate</span> <span class="o">=</span> <span class="n">dag</span><span class="o">.</span><span class="n">add_child</span><span class="p">(</span><span class="n">h_gate</span><span class="p">,</span> <span class="s2">&quot;cx&quot;</span><span class="p">,</span> <span class="s2">&quot;q_0&quot;</span><span class="p">)</span>
+<span class="n">dag</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">in_nodes</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">cx_gate</span><span class="p">,</span> <span class="s2">&quot;q_1&quot;</span><span class="p">)</span>
+<span class="c1"># Add measure Gates</span>
+<span class="n">meas_q0</span> <span class="o">=</span> <span class="n">dag</span><span class="o">.</span><span class="n">add_child</span><span class="p">(</span><span class="n">cx_gate</span><span class="p">,</span> <span class="s2">&quot;measure&quot;</span><span class="p">,</span> <span class="s2">&quot;q_0&quot;</span><span class="p">)</span>
+<span class="n">meas_q1</span> <span class="o">=</span> <span class="n">dag</span><span class="o">.</span><span class="n">add_child</span><span class="p">(</span><span class="n">cx_gate</span><span class="p">,</span> <span class="s2">&quot;measure&quot;</span><span class="p">,</span> <span class="s2">&quot;q_1&quot;</span><span class="p">)</span>
+<span class="c1"># Measure q0 instruction edges</span>
+<span class="n">dag</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">meas_q0</span><span class="p">,</span> <span class="n">out_nodes</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s2">&quot;q_0&quot;</span><span class="p">)</span>
+<span class="n">dag</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">in_nodes</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">meas_q0</span><span class="p">,</span> <span class="s2">&quot;c_0&quot;</span><span class="p">)</span>
+<span class="n">dag</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">meas_q0</span><span class="p">,</span> <span class="n">out_nodes</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="s2">&quot;c_0&quot;</span><span class="p">)</span>
+<span class="c1"># Measure q1 instruction edges</span>
+<span class="n">dag</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">meas_q1</span><span class="p">,</span> <span class="n">out_nodes</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="s2">&quot;q_1&quot;</span><span class="p">)</span>
+<span class="n">dag</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">in_nodes</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="n">meas_q1</span><span class="p">,</span> <span class="s2">&quot;c_1&quot;</span><span class="p">)</span>
+<span class="n">dag</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">meas_q1</span><span class="p">,</span> <span class="n">out_nodes</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="s2">&quot;c_1&quot;</span><span class="p">)</span>
+
+<span class="n">graphviz_draw</span><span class="p">(</span>
+    <span class="n">dag</span><span class="p">,</span>
+    <span class="n">node_attr_fn</span><span class="o">=</span><span class="k">lambda</span> <span class="n">node</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;label&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">node</span><span class="p">)},</span>
+    <span class="n">edge_attr_fn</span><span class="o">=</span><span class="k">lambda</span> <span class="n">edge</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;label&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">edge</span><span class="p">)}</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<img alt="../_images/dags_7_0.png" src="../_images/dags_7_0.png" />
+</div>
+</div>
+<p>In this representation of the circuit, the flow of data through the bits is
+modeled by edges. The first set of nodes are input nodes and the last set
+are output nodes representing the beginning state and end state of each
+bit (both classical and quantum). The compiler then runs analysis and
+transformations on the DAG representation of a quantum circuit to optimize the
+quantum circuit so it can be executed on real hardware. For example, a
+simple transformation pass is to translate the quantum gates in the circuit
+to the set of gates allowed on a device. If we were to attempt to run
+the above circuit on a QPU that didn’t natively support the <code class="docutils literal notranslate"><span class="pre">H</span></code> quantum
+gate, we’d first have to translate it to an equivalent series of instructions
+that the hardware actually supported. A simplified view of how this is
+performed is:</p>
+<div class="jupyter_cell jupyter_container docutils container">
+<div class="cell_input code_cell docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Equivalency matrix</span>
+<span class="n">translation_matrix</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;h&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;rz(pi/2)&quot;</span><span class="p">,</span> <span class="s2">&quot;sx&quot;</span><span class="p">,</span> <span class="s2">&quot;rz(pi/2)&quot;</span><span class="p">]}</span>
+<span class="c1"># Insructions natively supported on target QPU</span>
+<span class="n">hardware_instructions</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;measure&quot;</span><span class="p">,</span> <span class="s2">&quot;cx&quot;</span><span class="p">,</span> <span class="s2">&quot;sx&quot;</span><span class="p">,</span> <span class="s2">&quot;rz&quot;</span><span class="p">,</span> <span class="s2">&quot;x&quot;</span><span class="p">}</span>
+
+<span class="c1"># Iterate over instructions in order and replace gates outside of native</span>
+<span class="c1"># instruction set with a subcircuit from the translation matrix</span>
+<span class="k">for</span> <span class="n">gate_index</span> <span class="ow">in</span> <span class="n">rx</span><span class="o">.</span><span class="n">topological_sort</span><span class="p">(</span><span class="n">dag</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">gate_index</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">in_nodes</span> <span class="ow">and</span> <span class="n">gate_index</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">out_nodes</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">dag</span><span class="p">[</span><span class="n">gate_index</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">hardware_instructions</span><span class="p">:</span>
+            <span class="n">edge_val</span> <span class="o">=</span> <span class="n">dag</span><span class="o">.</span><span class="n">out_edges</span><span class="p">(</span><span class="n">gate_index</span><span class="p">)[</span><span class="mi">0</span><span class="p">][</span><span class="mi">2</span><span class="p">]</span>
+            <span class="n">equivalent_subcircuit</span> <span class="o">=</span> <span class="n">rx</span><span class="o">.</span><span class="n">PyDiGraph</span><span class="p">()</span>
+            <span class="n">count</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">translation_matrix</span><span class="p">[</span><span class="n">dag</span><span class="p">[</span><span class="n">gate_index</span><span class="p">]]:</span>
+                <span class="k">if</span> <span class="n">count</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">equivalent_subcircuit</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">equivalent_subcircuit</span><span class="o">.</span><span class="n">add_child</span><span class="p">(</span><span class="n">count</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">edge_val</span><span class="p">)</span>
+                <span class="n">count</span> <span class="o">+=</span> <span class="mi">1</span>
+
+            <span class="k">def</span> <span class="nf">map_fn</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">weight</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">source</span> <span class="o">==</span> <span class="n">gate_index</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">equivalent_subcircuit</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="mi">0</span>
+
+            <span class="n">dag</span><span class="o">.</span><span class="n">substitute_node_with_subgraph</span><span class="p">(</span>
+                <span class="n">gate_index</span><span class="p">,</span>
+                <span class="n">equivalent_subcircuit</span><span class="p">,</span>
+                <span class="n">map_fn</span>
+            <span class="p">)</span>
+
+<span class="n">graphviz_draw</span><span class="p">(</span>
+    <span class="n">dag</span><span class="p">,</span>
+    <span class="n">node_attr_fn</span><span class="o">=</span><span class="k">lambda</span> <span class="n">node</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;label&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">node</span><span class="p">)},</span>
+    <span class="n">edge_attr_fn</span><span class="o">=</span><span class="k">lambda</span> <span class="n">edge</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;label&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">edge</span><span class="p">)}</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<img alt="../_images/dags_8_0.png" src="../_images/dags_8_0.png" />
+</div>
+</div>
+<p>Another example of how the compiler in Qiskit operates on a DAG is to perform
+analysis to find all the instances of single qubit gates that are executed in
+series. This series of quantum gates can be analyzed and often simplified
+into a shorter sequence of gates. A simplified example of this analysis is:</p>
+<div class="jupyter_cell jupyter_container docutils container">
+<div class="cell_input code_cell docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">bit_nodes</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;q_0&quot;</span><span class="p">,</span> <span class="s2">&quot;q_1&quot;</span><span class="p">,</span> <span class="s2">&quot;c_0&quot;</span><span class="p">,</span> <span class="s2">&quot;c_1&quot;</span><span class="p">}</span>
+
+<span class="k">def</span> <span class="nf">filter_fn</span><span class="p">(</span><span class="n">node</span><span class="p">):</span>
+    <span class="c1"># Don&#39;t collect input or output nodes</span>
+    <span class="k">if</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">bit_nodes</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">False</span>
+    <span class="c1"># Don&#39;t include 2 qubit gates</span>
+    <span class="k">if</span> <span class="n">node</span> <span class="o">==</span> <span class="s2">&quot;cx&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">False</span>
+    <span class="c1"># Ignore non-unitary operations</span>
+    <span class="k">if</span> <span class="n">node</span> <span class="o">==</span> <span class="s2">&quot;measure&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">False</span>
+    <span class="k">return</span> <span class="kc">True</span>
+
+<span class="n">runs</span> <span class="o">=</span> <span class="n">rx</span><span class="o">.</span><span class="n">collect_runs</span><span class="p">(</span><span class="n">dag</span><span class="p">,</span> <span class="n">filter_fn</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">runs</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-none notranslate"><div class="highlight"><pre><span></span>[[&#39;rz(pi/2)&#39;, &#39;sx&#39;, &#39;rz(pi/2)&#39;]]
+</pre></div>
+</div>
+</div>
+</div>
+<p>With this we have the DAG nodes that make up a series of 1 qubit gates that
+we can analyze and attempt to simplify.</p>
+<p>To perform the simplification, we’ll use <a class="reference internal" href="../apiref/rustworkx.PyDiGraph.contract_nodes.html#rustworkx.PyDiGraph.contract_nodes" title="rustworkx.PyDiGraph.contract_nodes"><code class="xref py py-meth docutils literal notranslate"><span class="pre">contract_nodes()</span></code></a> to replace a series of nodes (or gates in our case) with a single equivalent node (gate). For example, if the 3 node sequence
+returned by <a class="reference internal" href="../apiref/rustworkx.collect_runs.html#rustworkx.collect_runs" title="rustworkx.collect_runs"><code class="xref py py-func docutils literal notranslate"><span class="pre">collect_runs()</span></code></a>, <code class="docutils literal notranslate"><span class="pre">['rz(pi/2)',</span> <span class="pre">'sx',</span> <span class="pre">'rz(pi/2)']</span></code>,
+were to be simplified to a single gate <code class="docutils literal notranslate"><span class="pre">&quot;U&quot;</span></code>, it could be done like:</p>
+<div class="jupyter_cell jupyter_container docutils container">
+<div class="cell_input code_cell docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># replace the newest 3 nods (which are the set returned by collect_runs())</span>
+<span class="n">dag</span><span class="o">.</span><span class="n">contract_nodes</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">dag</span><span class="p">)</span> <span class="o">-</span> <span class="mi">2</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">dag</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">),</span> <span class="s2">&quot;U&quot;</span><span class="p">)</span>
+<span class="n">graphviz_draw</span><span class="p">(</span>
+    <span class="n">dag</span><span class="p">,</span>
+    <span class="n">node_attr_fn</span><span class="o">=</span><span class="k">lambda</span> <span class="n">node</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;label&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">node</span><span class="p">)},</span>
+    <span class="n">edge_attr_fn</span><span class="o">=</span><span class="k">lambda</span> <span class="n">edge</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;label&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">edge</span><span class="p">)}</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<img alt="../_images/dags_10_0.png" src="../_images/dags_10_0.png" />
+</div>
+</div>
+<p>In Qiskit the node’s index is stored in the node’s data payload, so the
+above code example is actually written as something like
+<code class="docutils literal notranslate"><span class="pre">dag.contract_nodes([x._node_id</span> <span class="pre">for</span> <span class="pre">x</span> <span class="pre">in</span> <span class="pre">runs[0]],</span> <span class="pre">&quot;U&quot;)</span></code>. But this wouldn’t
+work for the simplified example here.</p>
+</section>
+</section>
+</section>
+
+
+             </article>
+             
+            </div>
+            <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="betweenness_centrality.html" class="btn btn-neutral float-right" title="Working with Betweenness Centrality" accesskey="n" rel="next">Next <img src="../_static/images/chevron-right-orange.svg" class="next-page"></a>
+      
+      
+        <a href="introduction.html" class="btn btn-neutral" title="Introduction to rustworkx" accesskey="p" rel="prev"><img src="../_static/images/chevron-right-orange.svg" class="previous-page"> Previous</a>
+      
+    </div>
+  
+
+  
+
+    <hr>
+
+  
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2021, rustworkx Contributors.
+
+    </p>
+  </div>
+    
+      <div>
+        Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+      </div>
+     
+
+</footer>
+
+          </div>
+        </div>
+
+        <div class="pytorch-content-right" id="pytorch-content-right">
+          <div class="pytorch-right-menu" id="pytorch-right-menu">
+            <div class="pytorch-side-scroll" id="pytorch-side-scroll-right">
+              <ul>
+<li><a class="reference internal" href="#">Directed Acyclic Graphs</a><ul>
+<li><a class="reference internal" href="#directed-graph">Directed Graph</a></li>
+<li><a class="reference internal" href="#id1">Directed Acyclic Graphs</a></li>
+<li><a class="reference internal" href="#applications-of-dags">Applications of DAGs</a><ul>
+<li><a class="reference internal" href="#task-scheduling">Task Scheduling</a></li>
+<li><a class="reference internal" href="#qiskit-s-compiler">Qiskit’s Compiler</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+  
+
+     
+       <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+         <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+         <script src="../_static/jquery.js"></script>
+         <script src="../_static/underscore.js"></script>
+         <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+         <script src="../_static/doctools.js"></script>
+         <script src="../_static/sphinx_highlight.js"></script>
+         <script src="../_static/thebelab-helper.js"></script>
+         <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+         <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
+         <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+     
+
+  
+
+  <script type="text/javascript" src="../_static/js/vendor/popper.min.js"></script>
+  <script type="text/javascript" src="../_static/js/vendor/bootstrap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/list.js/1.5.0/list.min.js"></script>
+  <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+ <script type="text/javascript">
+    $(document).ready(function() {
+        $(".toggle > *").hide();
+        $(".toggle .header").show();
+        $(".toggle .header").click(function() {
+            $(this).parent().children().not(".header").toggle(400);
+            $(this).parent().children(".header").toggleClass("open");
+        })
+    });
+</script>
+
+
+  <div>
+    <br>
+  </div>
+
+  <!-- Begin Mobile Menu -->
+
+  <div class="mobile-main-menu">
+    <div class="container-fluid">
+      <div class="container">
+        <div class="mobile-main-menu-header-container">
+          <a class="header-logo" href="https://qiskit.org/" aria-label="PyTorch"></a>
+          <a class="main-menu-close-button" href="#" data-behavior="close-mobile-menu"></a>
+        </div>
+      </div>
+    </div>
+
+    <div class="mobile-main-menu-links-container">
+      <div class="main-menu">
+        <ul>
+          <li>
+            <a href="https://retworkx.readthedocs.io/en/stable/">Qiskit Documentation</a>
+          </li>
+
+          <li>
+            <a href="https://qiskit.org/learn" target="_blank">Learning Resources</a>
+          </li>
+
+          <li>
+            <a href="https://qiskit.slack.com" target="_blank">Slack Support</a>
+          </li>
+
+          <li>
+            <a href="https://github.com/Qiskit/retworkx" target="_blank">Github</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- End Mobile Menu -->
+
+  <script type="text/javascript" src="../_static/js/vendor/anchor.min.js"></script>
+
+  <script type="text/javascript">
+    $(document).ready(function() {
+      mobileMenu.bind();
+      mobileTOC.bind();
+      pytorchAnchors.bind();
+      sideMenus.bind();
+      scrollToAnchor.bind();
+      highlightNavigation.bind();
+      mainMenuDropdown.bind();
+      filterTags.bind();
+
+      // Add class to links that have code blocks, since we cannot create links in code blocks
+      $("article.pytorch-article a span.pre").each(function(e) {
+        $(this).closest("a").addClass("has-code");
+      });
+    })
+  </script>
+</body>
+</html>

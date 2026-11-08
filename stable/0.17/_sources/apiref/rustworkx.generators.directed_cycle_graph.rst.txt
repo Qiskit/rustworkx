@@ -1,0 +1,6 @@
+﻿rustworkx.generators.directed\_cycle\_graph
+===========================================
+
+.. currentmodule:: rustworkx.generators
+
+.. autofunction:: directed_cycle_graph

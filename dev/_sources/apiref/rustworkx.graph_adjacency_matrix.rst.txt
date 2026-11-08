@@ -1,0 +1,6 @@
+﻿rustworkx.graph\_adjacency\_matrix
+==================================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: graph_adjacency_matrix

@@ -1,0 +1,6 @@
+﻿rustworkx.graph\_vf2\_mapping
+=============================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: graph_vf2_mapping

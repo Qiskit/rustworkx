@@ -1,0 +1,6 @@
+rustworkx.PyDAG.copy
+====================
+
+.. currentmodule:: rustworkx
+
+.. automethod:: PyDAG.copy

@@ -1,0 +1,6 @@
+rustworkx.PyGraph.compose
+=========================
+
+.. currentmodule:: rustworkx
+
+.. automethod:: PyGraph.compose

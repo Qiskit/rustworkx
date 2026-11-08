@@ -1,0 +1,6 @@
+rustworkx.PyDiGraph.subgraph
+============================
+
+.. currentmodule:: rustworkx
+
+.. automethod:: PyDiGraph.subgraph

@@ -1,0 +1,6 @@
+﻿rustworkx.generate\_random\_path
+================================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: generate_random_path

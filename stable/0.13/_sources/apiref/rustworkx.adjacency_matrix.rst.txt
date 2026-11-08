@@ -1,0 +1,6 @@
+﻿rustworkx.adjacency\_matrix
+===========================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: adjacency_matrix

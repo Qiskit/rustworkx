@@ -1,0 +1,659 @@
+
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>PyGraph &mdash; rustworkx 0.12.1 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <!-- <link rel="stylesheet" href="../_static/pygments.css" type="text/css" /> -->
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/jupyter-sphinx.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/thebelab.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/style.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="rustworkx.PyGraph.add_edge" href="rustworkx.PyGraph.add_edge.html" />
+    <link rel="prev" title="Rustworkx API Reference" href="../api.html" /> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="pytorch-body">
+
+   
+
+    
+
+    <div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    <span class="rst-current-version-label">0.12</span>
+    <span class="rst-versions-dropdown-icon"></span>
+  </span>
+  <div class="rst-other-versions">
+    <dl>
+      <dt>Versions</dt>
+          <dd><a class="version" href="/documentation/retworkx/index.html">Current Release</a></dd>
+          <dd><a class="version" href="/documentation/retworkx/dev/index.html">Development</a></dd>
+      <dt>Previous Releases</dt>
+        
+            <dd><a class="version" href="/documentation/retworkx/stable/0.12/index.html">0.12</a></dd>
+        
+    </dl>
+  </div>
+  <script>
+    jQuery('.version').click((evt) => {
+      const hash = window.location.hash
+      const complete_url = evt.target.href + hash
+      window.location = complete_url
+      evt.preventDefault()
+    })
+  </script>
+</div>
+
+    <div class="table-of-contents-link-wrapper">
+      <span>Table of Contents</span>
+      <a href="#" class="toggle-table-of-contents" data-behavior="toggle-table-of-contents"></a>
+    </div>
+
+    <nav data-toggle="wy-nav-shift" class="pytorch-left-menu" id="pytorch-left-menu">
+      <div class="pytorch-side-scroll">
+        <div class="pytorch-menu pytorch-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          <div class="pytorch-left-menu-search">
+            
+
+            
+              
+              
+                <div class="version">
+                  0.12.1
+                </div>
+              
+            
+
+            
+
+
+  
+
+
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search Docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+            
+          </div>
+
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../install.html#installing-rustworkx">Installing Rustworkx</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../install.html#platform-support">Platform Support</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../install.html#using-rustworkx">Using rustworkx</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorial/index.html">Rustworkx Tutorials and Guides</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../api.html">Rustworkx API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../visualization.html">Visualization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../CONTRIBUTING.html">Contributing Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../networkx.html">rustworkx for NetworkX users</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <div class="pytorch-container">
+      <div class="pytorch-page-level-bar" id="pytorch-page-level-bar">
+        <div class="pytorch-breadcrumbs-wrapper">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="pytorch-breadcrumbs">
+    
+      <li>
+        <a href="../index.html">
+          
+            Docs
+          
+        </a> &gt;
+      </li>
+
+        
+          <li><a href="../api.html">Rustworkx API Reference</a> &gt;</li>
+        
+      <li>PyGraph</li>
+    
+    
+      <li class="pytorch-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/apiref/rustworkx.PyGraph.rst.txt" rel="nofollow"><img src="../_static/images/view-page-source-icon.svg"></a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+</div>
+        </div>
+
+        <div class="pytorch-shortcuts-wrapper" id="pytorch-shortcuts-wrapper">
+          Shortcuts
+        </div>
+      </div>
+
+      <section data-toggle="wy-nav-shift" id="pytorch-content-wrap" class="pytorch-content-wrap">
+        <div class="pytorch-content-left">
+          
+          <div class="rst-content style-external-links">
+          
+            <div role="main" class="main-content" itemscope="itemscope" itemtype="http://schema.org/Article">
+             <article itemprop="articleBody" id="pytorch-article" class="pytorch-article">
+              
+  <br><br><br><section id="pygraph">
+<h1>PyGraph<a class="headerlink" href="#pygraph" title="Permalink to this heading">¶</a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="rustworkx.PyGraph">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">PyGraph</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">multigraph</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attrs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">/</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#rustworkx.PyGraph" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>A class for creating undirected graphs</p>
+<p>The PyGraph class is used to create an undirected graph. It can be a
+multigraph (have multiple edges between nodes). Each node and edge
+(although rarely used for edges) is indexed by an integer id. These ids
+are stable for the lifetime of the graph object and on node or edge
+deletions you can have holes in the list of indices for the graph.
+Node indices will be reused on additions after removal. For example:</p>
+<div class="jupyter_cell jupyter_container docutils container">
+<div class="cell_input code_cell docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">rustworkx</span> <span class="k">as</span> <span class="nn">rx</span>
+
+<span class="n">graph</span> <span class="o">=</span> <span class="n">rx</span><span class="o">.</span><span class="n">PyGraph</span><span class="p">()</span>
+<span class="n">graph</span><span class="o">.</span><span class="n">add_nodes_from</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">5</span><span class="p">)))</span>
+<span class="n">graph</span><span class="o">.</span><span class="n">add_nodes_from</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">)))</span>
+<span class="n">graph</span><span class="o">.</span><span class="n">remove_node</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;After deletion:&quot;</span><span class="p">,</span> <span class="n">graph</span><span class="o">.</span><span class="n">node_indices</span><span class="p">())</span>
+<span class="n">res_manual</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;After adding a new node:&quot;</span><span class="p">,</span> <span class="n">graph</span><span class="o">.</span><span class="n">node_indices</span><span class="p">())</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-none notranslate"><div class="highlight"><pre><span></span>After deletion: NodeIndices[0, 1, 3, 4, 5, 6]
+After adding a new node: NodeIndices[0, 1, 2, 3, 4, 5, 6]
+</pre></div>
+</div>
+</div>
+</div>
+<p>Additionally, each node and edge contains an arbitrary Python object as a
+weight/data payload. You can use the index for access to the data payload
+as in the following example:</p>
+<div class="jupyter_cell jupyter_container docutils container">
+<div class="cell_input code_cell docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">rustworkx</span> <span class="k">as</span> <span class="nn">rx</span>
+
+<span class="n">graph</span> <span class="o">=</span> <span class="n">rx</span><span class="o">.</span><span class="n">PyGraph</span><span class="p">()</span>
+<span class="n">data_payload</span> <span class="o">=</span> <span class="s2">&quot;An arbitrary Python object&quot;</span>
+<span class="n">node_index</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="n">data_payload</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Node Index: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">node_index</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">graph</span><span class="p">[</span><span class="n">node_index</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-none notranslate"><div class="highlight"><pre><span></span>Node Index: 0
+An arbitrary Python object
+</pre></div>
+</div>
+</div>
+</div>
+<p>The PyGraph implements the Python mapping protocol for nodes so in
+addition to access you can also update the data payload with:</p>
+<div class="jupyter_cell jupyter_container docutils container">
+<div class="cell_input code_cell docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">rustworkx</span> <span class="k">as</span> <span class="nn">rx</span>
+
+<span class="n">graph</span> <span class="o">=</span> <span class="n">rx</span><span class="o">.</span><span class="n">PyGraph</span><span class="p">()</span>
+<span class="n">data_payload</span> <span class="o">=</span> <span class="s2">&quot;An arbitrary Python object&quot;</span>
+<span class="n">node_index</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="n">data_payload</span><span class="p">)</span>
+<span class="n">graph</span><span class="p">[</span><span class="n">node_index</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;New Payload&quot;</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Node Index: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">node_index</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">graph</span><span class="p">[</span><span class="n">node_index</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-none notranslate"><div class="highlight"><pre><span></span>Node Index: 0
+New Payload
+</pre></div>
+</div>
+</div>
+</div>
+<p>By default a <code class="docutils literal notranslate"><span class="pre">PyGraph</span></code> is a multigraph (meaning there can be parallel
+edges between nodes) however this can be disabled by setting the
+<code class="docutils literal notranslate"><span class="pre">multigraph</span></code> kwarg to <code class="docutils literal notranslate"><span class="pre">False</span></code> when calling the <code class="docutils literal notranslate"><span class="pre">PyGraph</span></code>
+constructor. For example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">rustworkx</span> <span class="k">as</span> <span class="nn">rx</span>
+<span class="n">graph</span> <span class="o">=</span> <span class="n">rx</span><span class="o">.</span><span class="n">PyGraph</span><span class="p">(</span><span class="n">multigraph</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This can only be set at <code class="docutils literal notranslate"><span class="pre">PyGraph</span></code> initialization and not adjusted after
+creation. When <a class="reference internal" href="#rustworkx.PyGraph.multigraph" title="rustworkx.PyGraph.multigraph"><code class="xref py py-attr docutils literal notranslate"><span class="pre">multigraph</span></code></a> is set to <code class="docutils literal notranslate"><span class="pre">False</span></code>
+if a method call is made that would add a parallel edge it will instead
+update the existing edge’s weight/data payload.</p>
+<p>Each <code class="docutils literal notranslate"><span class="pre">PyGraph</span></code> object has an <a class="reference internal" href="#rustworkx.PyGraph.attrs" title="rustworkx.PyGraph.attrs"><code class="xref py py-attr docutils literal notranslate"><span class="pre">attrs</span></code></a> attribute which is
+used to contain additional attributes/metadata of the graph instance. By
+default this is set to <code class="docutils literal notranslate"><span class="pre">None</span></code> but can optionally be specified by using the
+<code class="docutils literal notranslate"><span class="pre">attrs</span></code> keyword argument when constructing a new graph:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">graph</span> <span class="o">=</span> <span class="n">rustworkx</span><span class="o">.</span><span class="n">PyGraph</span><span class="p">(</span><span class="n">attrs</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">source_path</span><span class="o">=</span><span class="s1">&#39;/tmp/graph.csv&#39;</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>This attribute can be set to any Python object. Additionally, you can access
+and modify this attribute after creating an object. For example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">source_path</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">attrs</span>
+<span class="n">graph</span><span class="o">.</span><span class="n">attrs</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;new_path&#39;</span><span class="p">:</span> <span class="s1">&#39;/tmp/new.csv&#39;</span><span class="p">,</span> <span class="s1">&#39;old_path&#39;</span><span class="p">:</span> <span class="n">source_path</span><span class="p">}</span>
+</pre></div>
+</div>
+<p>The maximum number of nodes and edges allowed on a <code class="docutils literal notranslate"><span class="pre">PyGraph</span></code> object is
+<span class="math notranslate nohighlight">\(2^{32} - 1\)</span> (4,294,967,294) each. Attempting to add more nodes or
+edges than this will result in an exception being raised.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>multigraph</strong> (<em>bool</em>) – When this is set to <code class="docutils literal notranslate"><span class="pre">False</span></code> the created PyGraph
+object will not be a multigraph. When <code class="docutils literal notranslate"><span class="pre">False</span></code> if a method call is
+made that would add parallel edges the the weight/weight from that
+method call will be used to update the existing edge in place.</p></li>
+<li><p><strong>attrs</strong> – An optional attributes payload to assign to the
+<a class="reference internal" href="#rustworkx.PyGraph.attrs" title="rustworkx.PyGraph.attrs"><code class="xref py py-attr docutils literal notranslate"><span class="pre">attrs</span></code></a> attribute. This can be any Python object. If
+it is not specified <a class="reference internal" href="#rustworkx.PyGraph.attrs" title="rustworkx.PyGraph.attrs"><code class="xref py py-attr docutils literal notranslate"><span class="pre">attrs</span></code></a> will be set to <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="rustworkx.PyGraph.add_edge.html#rustworkx.PyGraph.add_edge" title="rustworkx.PyGraph.add_edge"><code class="xref py py-obj docutils literal notranslate"><span class="pre">add_edge</span></code></a></p></td>
+<td><p>Add an edge between 2 nodes.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="rustworkx.PyGraph.add_edges_from.html#rustworkx.PyGraph.add_edges_from" title="rustworkx.PyGraph.add_edges_from"><code class="xref py py-obj docutils literal notranslate"><span class="pre">add_edges_from</span></code></a></p></td>
+<td><p>Add new edges to the graph.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="rustworkx.PyGraph.add_edges_from_no_data.html#rustworkx.PyGraph.add_edges_from_no_data" title="rustworkx.PyGraph.add_edges_from_no_data"><code class="xref py py-obj docutils literal notranslate"><span class="pre">add_edges_from_no_data</span></code></a></p></td>
+<td><p>Add new edges to the graph without python data.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="rustworkx.PyGraph.add_node.html#rustworkx.PyGraph.add_node" title="rustworkx.PyGraph.add_node"><code class="xref py py-obj docutils literal notranslate"><span class="pre">add_node</span></code></a></p></td>
+<td><p>Add a new node to the graph.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="rustworkx.PyGraph.add_nodes_from.html#rustworkx.PyGraph.add_nodes_from" title="rustworkx.PyGraph.add_nodes_from"><code class="xref py py-obj docutils literal notranslate"><span class="pre">add_nodes_from</span></code></a></p></td>
+<td><p>Add new nodes to the graph.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="rustworkx.PyGraph.adj.html#rustworkx.PyGraph.adj" title="rustworkx.PyGraph.adj"><code class="xref py py-obj docutils literal notranslate"><span class="pre">adj</span></code></a></p></td>
+<td><p>Get the index and data for the neighbors of a node.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="rustworkx.PyGraph.compose.html#rustworkx.PyGraph.compose" title="rustworkx.PyGraph.compose"><code class="xref py py-obj docutils literal notranslate"><span class="pre">compose</span></code></a></p></td>
+<td><p>Add another PyGraph object into this PyGraph</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="rustworkx.PyGraph.contract_nodes.html#rustworkx.PyGraph.contract_nodes" title="rustworkx.PyGraph.contract_nodes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">contract_nodes</span></code></a></p></td>
+<td><p>Substitute a set of nodes with a single new node.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="rustworkx.PyGraph.copy.html#rustworkx.PyGraph.copy" title="rustworkx.PyGraph.copy"><code class="xref py py-obj docutils literal notranslate"><span class="pre">copy</span></code></a></p></td>
+<td><p>Return a shallow copy of the graph</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="rustworkx.PyGraph.degree.html#rustworkx.PyGraph.degree" title="rustworkx.PyGraph.degree"><code class="xref py py-obj docutils literal notranslate"><span class="pre">degree</span></code></a></p></td>
+<td><p>Get the degree for a node</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="rustworkx.PyGraph.edge_index_map.html#rustworkx.PyGraph.edge_index_map" title="rustworkx.PyGraph.edge_index_map"><code class="xref py py-obj docutils literal notranslate"><span class="pre">edge_index_map</span></code></a></p></td>
+<td><p>Get an edge index map</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="rustworkx.PyGraph.edge_indices.html#rustworkx.PyGraph.edge_indices" title="rustworkx.PyGraph.edge_indices"><code class="xref py py-obj docutils literal notranslate"><span class="pre">edge_indices</span></code></a></p></td>
+<td><p>Return a list of all edge indices.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="rustworkx.PyGraph.edge_list.html#rustworkx.PyGraph.edge_list" title="rustworkx.PyGraph.edge_list"><code class="xref py py-obj docutils literal notranslate"><span class="pre">edge_list</span></code></a></p></td>
+<td><p>Get edge list</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="rustworkx.PyGraph.edge_subgraph.html#rustworkx.PyGraph.edge_subgraph" title="rustworkx.PyGraph.edge_subgraph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">edge_subgraph</span></code></a></p></td>
+<td><p>Return a new PyGraph object for an edge induced subgraph of this graph</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="rustworkx.PyGraph.edges.html#rustworkx.PyGraph.edges" title="rustworkx.PyGraph.edges"><code class="xref py py-obj docutils literal notranslate"><span class="pre">edges</span></code></a></p></td>
+<td><p>Return a list of all edge data.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="rustworkx.PyGraph.extend_from_edge_list.html#rustworkx.PyGraph.extend_from_edge_list" title="rustworkx.PyGraph.extend_from_edge_list"><code class="xref py py-obj docutils literal notranslate"><span class="pre">extend_from_edge_list</span></code></a></p></td>
+<td><p>Extend graph from an edge list</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="rustworkx.PyGraph.extend_from_weighted_edge_list.html#rustworkx.PyGraph.extend_from_weighted_edge_list" title="rustworkx.PyGraph.extend_from_weighted_edge_list"><code class="xref py py-obj docutils literal notranslate"><span class="pre">extend_from_weighted_edge_list</span></code></a></p></td>
+<td><p>Extend graph from a weighted edge list</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="rustworkx.PyGraph.find_node_by_weight.html#rustworkx.PyGraph.find_node_by_weight" title="rustworkx.PyGraph.find_node_by_weight"><code class="xref py py-obj docutils literal notranslate"><span class="pre">find_node_by_weight</span></code></a></p></td>
+<td><p>Find node within this graph given a specific weight</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="rustworkx.PyGraph.from_adjacency_matrix.html#rustworkx.PyGraph.from_adjacency_matrix" title="rustworkx.PyGraph.from_adjacency_matrix"><code class="xref py py-obj docutils literal notranslate"><span class="pre">from_adjacency_matrix</span></code></a></p></td>
+<td><p>Create a new <a class="reference internal" href="#rustworkx.PyGraph" title="rustworkx.PyGraph"><code class="xref py py-class docutils literal notranslate"><span class="pre">PyGraph</span></code></a> object from an adjacency matrix with matrix elements of type <code class="docutils literal notranslate"><span class="pre">float</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="rustworkx.PyGraph.from_complex_adjacency_matrix.html#rustworkx.PyGraph.from_complex_adjacency_matrix" title="rustworkx.PyGraph.from_complex_adjacency_matrix"><code class="xref py py-obj docutils literal notranslate"><span class="pre">from_complex_adjacency_matrix</span></code></a></p></td>
+<td><p>Create a new <a class="reference internal" href="#rustworkx.PyGraph" title="rustworkx.PyGraph"><code class="xref py py-class docutils literal notranslate"><span class="pre">PyGraph</span></code></a> object from an adjacency matrix with matrix elements of type <code class="docutils literal notranslate"><span class="pre">complex</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="rustworkx.PyGraph.get_all_edge_data.html#rustworkx.PyGraph.get_all_edge_data" title="rustworkx.PyGraph.get_all_edge_data"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_all_edge_data</span></code></a></p></td>
+<td><p>Return the edge data for all the edges between 2 nodes.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="rustworkx.PyGraph.get_edge_data.html#rustworkx.PyGraph.get_edge_data" title="rustworkx.PyGraph.get_edge_data"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_edge_data</span></code></a></p></td>
+<td><p>Return the edge data for the edge between 2 nodes.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="rustworkx.PyGraph.get_edge_data_by_index.html#rustworkx.PyGraph.get_edge_data_by_index" title="rustworkx.PyGraph.get_edge_data_by_index"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_edge_data_by_index</span></code></a></p></td>
+<td><p>Return the edge data for the edge by its given index</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="rustworkx.PyGraph.get_edge_endpoints_by_index.html#rustworkx.PyGraph.get_edge_endpoints_by_index" title="rustworkx.PyGraph.get_edge_endpoints_by_index"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_edge_endpoints_by_index</span></code></a></p></td>
+<td><p>Return the edge endpoints for the edge by its given index</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="rustworkx.PyGraph.get_node_data.html#rustworkx.PyGraph.get_node_data" title="rustworkx.PyGraph.get_node_data"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_node_data</span></code></a></p></td>
+<td><p>Return the node data for a given node index</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="rustworkx.PyGraph.has_edge.html#rustworkx.PyGraph.has_edge" title="rustworkx.PyGraph.has_edge"><code class="xref py py-obj docutils literal notranslate"><span class="pre">has_edge</span></code></a></p></td>
+<td><p>Return True if there is an edge between <code class="docutils literal notranslate"><span class="pre">node_a</span></code> and <code class="docutils literal notranslate"><span class="pre">node_b</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="rustworkx.PyGraph.has_parallel_edges.html#rustworkx.PyGraph.has_parallel_edges" title="rustworkx.PyGraph.has_parallel_edges"><code class="xref py py-obj docutils literal notranslate"><span class="pre">has_parallel_edges</span></code></a></p></td>
+<td><p>Detect if the graph has parallel edges or not</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="rustworkx.PyGraph.in_edges.html#rustworkx.PyGraph.in_edges" title="rustworkx.PyGraph.in_edges"><code class="xref py py-obj docutils literal notranslate"><span class="pre">in_edges</span></code></a></p></td>
+<td><p>Get the endpoint indices and edge data for all edges of a node.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="rustworkx.PyGraph.incident_edge_index_map.html#rustworkx.PyGraph.incident_edge_index_map" title="rustworkx.PyGraph.incident_edge_index_map"><code class="xref py py-obj docutils literal notranslate"><span class="pre">incident_edge_index_map</span></code></a></p></td>
+<td><p>Return the index map of edges incident to a provided node</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="rustworkx.PyGraph.incident_edges.html#rustworkx.PyGraph.incident_edges" title="rustworkx.PyGraph.incident_edges"><code class="xref py py-obj docutils literal notranslate"><span class="pre">incident_edges</span></code></a></p></td>
+<td><p>Return the list of edge indices incident to a provided node</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="rustworkx.PyGraph.neighbors.html#rustworkx.PyGraph.neighbors" title="rustworkx.PyGraph.neighbors"><code class="xref py py-obj docutils literal notranslate"><span class="pre">neighbors</span></code></a></p></td>
+<td><p>Get the neighbors of a node.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="rustworkx.PyGraph.node_indexes.html#rustworkx.PyGraph.node_indexes" title="rustworkx.PyGraph.node_indexes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">node_indexes</span></code></a></p></td>
+<td><p>Return a list of all node indices.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="rustworkx.PyGraph.node_indices.html#rustworkx.PyGraph.node_indices" title="rustworkx.PyGraph.node_indices"><code class="xref py py-obj docutils literal notranslate"><span class="pre">node_indices</span></code></a></p></td>
+<td><p>Return a list of all node indices.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="rustworkx.PyGraph.nodes.html#rustworkx.PyGraph.nodes" title="rustworkx.PyGraph.nodes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">nodes</span></code></a></p></td>
+<td><p>Return a list of all node data.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="rustworkx.PyGraph.num_edges.html#rustworkx.PyGraph.num_edges" title="rustworkx.PyGraph.num_edges"><code class="xref py py-obj docutils literal notranslate"><span class="pre">num_edges</span></code></a></p></td>
+<td><p>Return the number of edges in the graph</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="rustworkx.PyGraph.num_nodes.html#rustworkx.PyGraph.num_nodes" title="rustworkx.PyGraph.num_nodes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">num_nodes</span></code></a></p></td>
+<td><p>Return the number of nodes in the graph</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="rustworkx.PyGraph.out_edges.html#rustworkx.PyGraph.out_edges" title="rustworkx.PyGraph.out_edges"><code class="xref py py-obj docutils literal notranslate"><span class="pre">out_edges</span></code></a></p></td>
+<td><p>Get the endpoint indices and edge data for all edges of a node.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="rustworkx.PyGraph.read_edge_list.html#rustworkx.PyGraph.read_edge_list" title="rustworkx.PyGraph.read_edge_list"><code class="xref py py-obj docutils literal notranslate"><span class="pre">read_edge_list</span></code></a></p></td>
+<td><p>Read an edge list file and create a new PyGraph object from the contents</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="rustworkx.PyGraph.remove_edge.html#rustworkx.PyGraph.remove_edge" title="rustworkx.PyGraph.remove_edge"><code class="xref py py-obj docutils literal notranslate"><span class="pre">remove_edge</span></code></a></p></td>
+<td><p>Remove an edge between 2 nodes.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="rustworkx.PyGraph.remove_edge_from_index.html#rustworkx.PyGraph.remove_edge_from_index" title="rustworkx.PyGraph.remove_edge_from_index"><code class="xref py py-obj docutils literal notranslate"><span class="pre">remove_edge_from_index</span></code></a></p></td>
+<td><p>Remove an edge identified by the provided index</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="rustworkx.PyGraph.remove_edges_from.html#rustworkx.PyGraph.remove_edges_from" title="rustworkx.PyGraph.remove_edges_from"><code class="xref py py-obj docutils literal notranslate"><span class="pre">remove_edges_from</span></code></a></p></td>
+<td><p>Remove edges from the graph.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="rustworkx.PyGraph.remove_node.html#rustworkx.PyGraph.remove_node" title="rustworkx.PyGraph.remove_node"><code class="xref py py-obj docutils literal notranslate"><span class="pre">remove_node</span></code></a></p></td>
+<td><p>Remove a node from the graph.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="rustworkx.PyGraph.remove_nodes_from.html#rustworkx.PyGraph.remove_nodes_from" title="rustworkx.PyGraph.remove_nodes_from"><code class="xref py py-obj docutils literal notranslate"><span class="pre">remove_nodes_from</span></code></a></p></td>
+<td><p>Remove nodes from the graph.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="rustworkx.PyGraph.subgraph.html#rustworkx.PyGraph.subgraph" title="rustworkx.PyGraph.subgraph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">subgraph</span></code></a></p></td>
+<td><p>Return a new PyGraph object for a subgraph of this graph</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="rustworkx.PyGraph.to_directed.html#rustworkx.PyGraph.to_directed" title="rustworkx.PyGraph.to_directed"><code class="xref py py-obj docutils literal notranslate"><span class="pre">to_directed</span></code></a></p></td>
+<td><p>Generate a new <a class="reference internal" href="rustworkx.PyDiGraph.html#rustworkx.PyDiGraph" title="rustworkx.PyDiGraph"><code class="xref py py-class docutils literal notranslate"><span class="pre">PyDiGraph</span></code></a> object from this graph</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="rustworkx.PyGraph.to_dot.html#rustworkx.PyGraph.to_dot" title="rustworkx.PyGraph.to_dot"><code class="xref py py-obj docutils literal notranslate"><span class="pre">to_dot</span></code></a></p></td>
+<td><p>Generate a dot file from the graph</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="rustworkx.PyGraph.update_edge.html#rustworkx.PyGraph.update_edge" title="rustworkx.PyGraph.update_edge"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_edge</span></code></a></p></td>
+<td><p>Update an edge's weight/payload in place</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="rustworkx.PyGraph.update_edge_by_index.html#rustworkx.PyGraph.update_edge_by_index" title="rustworkx.PyGraph.update_edge_by_index"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_edge_by_index</span></code></a></p></td>
+<td><p>Update an edge's weight/data payload in place by the edge index</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="rustworkx.PyGraph.weighted_edge_list.html#rustworkx.PyGraph.weighted_edge_list" title="rustworkx.PyGraph.weighted_edge_list"><code class="xref py py-obj docutils literal notranslate"><span class="pre">weighted_edge_list</span></code></a></p></td>
+<td><p>Get edge list with weights</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="rustworkx.PyGraph.write_edge_list.html#rustworkx.PyGraph.write_edge_list" title="rustworkx.PyGraph.write_edge_list"><code class="xref py py-obj docutils literal notranslate"><span class="pre">write_edge_list</span></code></a></p></td>
+<td><p>Write an edge list file from the PyGraph object</p></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Attributes</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="rustworkx.PyGraph.attrs">
+<span class="sig-name descname"><span class="pre">attrs</span></span><a class="headerlink" href="#rustworkx.PyGraph.attrs" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="rustworkx.PyGraph.multigraph">
+<span class="sig-name descname"><span class="pre">multigraph</span></span><a class="headerlink" href="#rustworkx.PyGraph.multigraph" title="Permalink to this definition">¶</a></dt>
+<dd><p>Whether the graph is a multigraph (allows multiple edges between
+nodes) or not</p>
+<p>If set to <code class="docutils literal notranslate"><span class="pre">False</span></code> multiple edges between nodes are not allowed and
+calls that would add a parallel edge will instead update the existing
+edge</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+             </article>
+             
+            </div>
+            <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="rustworkx.PyGraph.add_edge.html" class="btn btn-neutral float-right" title="rustworkx.PyGraph.add_edge" accesskey="n" rel="next">Next <img src="../_static/images/chevron-right-orange.svg" class="next-page"></a>
+      
+      
+        <a href="../api.html" class="btn btn-neutral" title="Rustworkx API Reference" accesskey="p" rel="prev"><img src="../_static/images/chevron-right-orange.svg" class="previous-page"> Previous</a>
+      
+    </div>
+  
+
+  
+
+    <hr>
+
+  
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2021, rustworkx Contributors.
+
+    </p>
+  </div>
+    
+      <div>
+        Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+      </div>
+     
+
+</footer>
+
+          </div>
+        </div>
+
+        <div class="pytorch-content-right" id="pytorch-content-right">
+          <div class="pytorch-right-menu" id="pytorch-right-menu">
+            <div class="pytorch-side-scroll" id="pytorch-side-scroll-right">
+              <ul>
+<li><a class="reference internal" href="#">PyGraph</a><ul>
+<li><a class="reference internal" href="#rustworkx.PyGraph"><code class="docutils literal notranslate"><span class="pre">PyGraph</span></code></a><ul>
+<li><a class="reference internal" href="#rustworkx.PyGraph.attrs"><code class="docutils literal notranslate"><span class="pre">PyGraph.attrs</span></code></a></li>
+<li><a class="reference internal" href="#rustworkx.PyGraph.multigraph"><code class="docutils literal notranslate"><span class="pre">PyGraph.multigraph</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+  
+
+     
+       <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+         <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+         <script src="../_static/jquery.js"></script>
+         <script src="../_static/underscore.js"></script>
+         <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+         <script src="../_static/doctools.js"></script>
+         <script src="../_static/sphinx_highlight.js"></script>
+         <script src="../_static/thebelab-helper.js"></script>
+         <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+         <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
+         <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+     
+
+  
+
+  <script type="text/javascript" src="../_static/js/vendor/popper.min.js"></script>
+  <script type="text/javascript" src="../_static/js/vendor/bootstrap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/list.js/1.5.0/list.min.js"></script>
+  <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+ <script type="text/javascript">
+    $(document).ready(function() {
+        $(".toggle > *").hide();
+        $(".toggle .header").show();
+        $(".toggle .header").click(function() {
+            $(this).parent().children().not(".header").toggle(400);
+            $(this).parent().children(".header").toggleClass("open");
+        })
+    });
+</script>
+
+
+  <div>
+    <br>
+  </div>
+
+  <!-- Begin Mobile Menu -->
+
+  <div class="mobile-main-menu">
+    <div class="container-fluid">
+      <div class="container">
+        <div class="mobile-main-menu-header-container">
+          <a class="header-logo" href="https://qiskit.org/" aria-label="PyTorch"></a>
+          <a class="main-menu-close-button" href="#" data-behavior="close-mobile-menu"></a>
+        </div>
+      </div>
+    </div>
+
+    <div class="mobile-main-menu-links-container">
+      <div class="main-menu">
+        <ul>
+          <li>
+            <a href="https://retworkx.readthedocs.io/en/stable/">Qiskit Documentation</a>
+          </li>
+
+          <li>
+            <a href="https://qiskit.org/learn" target="_blank">Learning Resources</a>
+          </li>
+
+          <li>
+            <a href="https://qiskit.slack.com" target="_blank">Slack Support</a>
+          </li>
+
+          <li>
+            <a href="https://github.com/Qiskit/retworkx" target="_blank">Github</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- End Mobile Menu -->
+
+  <script type="text/javascript" src="../_static/js/vendor/anchor.min.js"></script>
+
+  <script type="text/javascript">
+    $(document).ready(function() {
+      mobileMenu.bind();
+      mobileTOC.bind();
+      pytorchAnchors.bind();
+      sideMenus.bind();
+      scrollToAnchor.bind();
+      highlightNavigation.bind();
+      mainMenuDropdown.bind();
+      filterTags.bind();
+
+      // Add class to links that have code blocks, since we cannot create links in code blocks
+      $("article.pytorch-article a span.pre").each(function(e) {
+        $(this).closest("a").addClass("has-code");
+      });
+    })
+  </script>
+</body>
+</html>

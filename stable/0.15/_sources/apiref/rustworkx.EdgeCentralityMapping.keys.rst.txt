@@ -1,0 +1,6 @@
+rustworkx.EdgeCentralityMapping.keys
+====================================
+
+.. currentmodule:: rustworkx
+
+.. automethod:: EdgeCentralityMapping.keys

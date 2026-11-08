@@ -1,0 +1,6 @@
+﻿rustworkx.generators.directed\_mesh\_graph
+==========================================
+
+.. currentmodule:: rustworkx.generators
+
+.. autofunction:: directed_mesh_graph

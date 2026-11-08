@@ -1,0 +1,6 @@
+﻿rustworkx.union
+===============
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: union

@@ -1,0 +1,6 @@
+﻿rustworkx.graph\_bfs\_search
+============================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: graph_bfs_search

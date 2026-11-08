@@ -1,0 +1,6 @@
+﻿rustworkx.graph\_union
+======================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: graph_union

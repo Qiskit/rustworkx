@@ -1,0 +1,6 @@
+﻿rustworkx.graph\_betweenness\_centrality
+========================================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: graph_betweenness_centrality

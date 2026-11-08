@@ -1,0 +1,6 @@
+﻿rustworkx.random\_regular\_graph
+================================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: random_regular_graph

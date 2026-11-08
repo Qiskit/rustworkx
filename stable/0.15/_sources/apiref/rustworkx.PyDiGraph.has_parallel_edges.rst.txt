@@ -1,0 +1,6 @@
+rustworkx.PyDiGraph.has\_parallel\_edges
+========================================
+
+.. currentmodule:: rustworkx
+
+.. automethod:: PyDiGraph.has_parallel_edges

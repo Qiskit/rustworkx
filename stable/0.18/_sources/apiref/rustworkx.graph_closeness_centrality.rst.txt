@@ -1,0 +1,6 @@
+﻿rustworkx.graph\_closeness\_centrality
+======================================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: graph_closeness_centrality

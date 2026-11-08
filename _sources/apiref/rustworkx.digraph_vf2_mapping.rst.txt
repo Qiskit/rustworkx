@@ -1,0 +1,6 @@
+﻿rustworkx.digraph\_vf2\_mapping
+===============================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: digraph_vf2_mapping

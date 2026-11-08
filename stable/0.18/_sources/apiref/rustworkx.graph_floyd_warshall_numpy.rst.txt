@@ -1,0 +1,6 @@
+﻿rustworkx.graph\_floyd\_warshall\_numpy
+=======================================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: graph_floyd_warshall_numpy

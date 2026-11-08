@@ -1,0 +1,6 @@
+﻿rustworkx.graph\_single\_source\_all\_shortest\_paths
+=====================================================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: graph_single_source_all_shortest_paths

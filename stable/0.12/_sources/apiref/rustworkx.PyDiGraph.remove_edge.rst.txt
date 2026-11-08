@@ -1,0 +1,6 @@
+rustworkx.PyDiGraph.remove\_edge
+================================
+
+.. currentmodule:: rustworkx
+
+.. automethod:: PyDiGraph.remove_edge

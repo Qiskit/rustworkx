@@ -1,0 +1,6 @@
+rustworkx.PathMapping.items
+===========================
+
+.. currentmodule:: rustworkx
+
+.. automethod:: PathMapping.items

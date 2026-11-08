@@ -1,0 +1,6 @@
+﻿rustworkx.digraph\_transitivity
+===============================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: digraph_transitivity

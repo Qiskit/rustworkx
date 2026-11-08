@@ -1,0 +1,6 @@
+rustworkx.PyDiGraph.adj\_direction
+==================================
+
+.. currentmodule:: rustworkx
+
+.. automethod:: PyDiGraph.adj_direction

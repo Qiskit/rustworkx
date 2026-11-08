@@ -1,0 +1,6 @@
+﻿rustworkx.graph\_token\_swapper
+===============================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: graph_token_swapper

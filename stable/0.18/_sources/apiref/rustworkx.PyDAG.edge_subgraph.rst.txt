@@ -1,0 +1,6 @@
+rustworkx.PyDAG.edge\_subgraph
+==============================
+
+.. currentmodule:: rustworkx
+
+.. automethod:: PyDAG.edge_subgraph

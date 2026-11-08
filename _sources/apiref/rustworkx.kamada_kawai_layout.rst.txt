@@ -1,0 +1,6 @@
+﻿rustworkx.kamada\_kawai\_layout
+===============================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: kamada_kawai_layout

@@ -1,0 +1,6 @@
+﻿rustworkx.digraph\_all\_simple\_paths
+=====================================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: digraph_all_simple_paths

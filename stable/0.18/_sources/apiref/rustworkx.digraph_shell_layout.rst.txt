@@ -1,0 +1,6 @@
+﻿rustworkx.digraph\_shell\_layout
+================================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: digraph_shell_layout

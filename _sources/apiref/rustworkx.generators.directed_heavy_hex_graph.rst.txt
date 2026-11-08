@@ -1,0 +1,6 @@
+﻿rustworkx.generators.directed\_heavy\_hex\_graph
+================================================
+
+.. currentmodule:: rustworkx.generators
+
+.. autofunction:: directed_heavy_hex_graph

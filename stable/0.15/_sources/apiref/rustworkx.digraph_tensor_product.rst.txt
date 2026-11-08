@@ -1,0 +1,6 @@
+﻿rustworkx.digraph\_tensor\_product
+==================================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: digraph_tensor_product
