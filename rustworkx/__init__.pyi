@@ -407,6 +407,7 @@ def dijkstra_shortest_path_lengths(
     node: int,
     edge_cost_fn: Callable[[_T], float] | None,
     goal: int | None = ...,
+    cutoff: float | None = ...,
 ) -> PathLengthMapping: ...
 def k_shortest_path_lengths(
     graph: PyGraph[_S, _T] | PyDiGraph[_S, _T],
