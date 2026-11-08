@@ -129,3 +129,87 @@ class TestGridGraph(unittest.TestCase):
             rustworkx.generators.grid_graph()
             rustworkx.generators.grid_graph(rows=5, weights=[1] * 5)
             rustworkx.generators.grid_graph(cols=5, weights=[1] * 5)
+
+
+class TestNdGridGraph(unittest.TestCase):
+    def test_1d_grid(self):
+        graph = rustworkx.generators.nd_grid_graph([5])
+        self.assertEqual(len(graph), 5)
+        self.assertEqual(len(graph.edges()), 4)
+
+    def test_2d_grid(self):
+        graph = rustworkx.generators.nd_grid_graph([3, 4])
+        self.assertEqual(len(graph), 12)
+        self.assertEqual(len(graph.edges()), 17)
+
+    def test_3d_cube(self):
+        graph = rustworkx.generators.nd_grid_graph([2, 2, 2])
+        self.assertEqual(len(graph), 8)
+        self.assertEqual(len(graph.edges()), 12)
+
+    def test_3d_larger(self):
+        graph = rustworkx.generators.nd_grid_graph([2, 3, 4])
+        self.assertEqual(len(graph), 24)
+        self.assertEqual(len(graph.edges()), 46)
+
+    def test_4d(self):
+        graph = rustworkx.generators.nd_grid_graph([2, 2, 2, 2])
+        self.assertEqual(len(graph), 16)
+        self.assertEqual(len(graph.edges()), 32)
+
+    def test_with_positions(self):
+        graph = rustworkx.generators.nd_grid_graph([2, 3], with_positions=True)
+        nodes = graph.nodes()
+        self.assertEqual(nodes[0], [0, 0])
+        self.assertEqual(nodes[1], [1, 0])
+        self.assertEqual(nodes[3], [1, 1])
+
+    def test_periodic(self):
+        # 1D periodic is a cycle
+        graph = rustworkx.generators.nd_grid_graph([5], periodic=True)
+        self.assertEqual(len(graph.edges()), 5)
+
+    def test_torus(self):
+        graph = rustworkx.generators.nd_grid_graph([3, 3], periodic=True)
+        self.assertEqual(len(graph.edges()), 18)
+
+    def test_empty_dim(self):
+        with self.assertRaises(IndexError):
+            rustworkx.generators.nd_grid_graph([])
+
+    def test_zero_dim(self):
+        with self.assertRaises(IndexError):
+            rustworkx.generators.nd_grid_graph([2, 0, 3])
+
+
+class TestDirectedNdGridGraph(unittest.TestCase):
+    def test_basic(self):
+        graph = rustworkx.generators.directed_nd_grid_graph([3, 3])
+        self.assertEqual(len(graph), 9)
+        self.assertEqual(len(graph.edges()), 12)
+
+    def test_cube(self):
+        graph = rustworkx.generators.directed_nd_grid_graph([2, 2, 2])
+        self.assertEqual(len(graph), 8)
+        self.assertEqual(len(graph.edges()), 12)
+
+    def test_bidirectional(self):
+        graph = rustworkx.generators.directed_nd_grid_graph([2, 2, 2], bidirectional=True)
+        self.assertEqual(len(graph.edges()), 24)
+
+    def test_with_positions(self):
+        graph = rustworkx.generators.directed_nd_grid_graph([2, 2], with_positions=True)
+        self.assertEqual(graph.nodes()[0], [0, 0])
+        self.assertEqual(graph.nodes()[3], [1, 1])
+
+    def test_periodic(self):
+        graph = rustworkx.generators.directed_nd_grid_graph([3, 3], periodic=True)
+        self.assertEqual(len(graph.edges()), 18)
+
+    def test_edge_direction(self):
+        graph = rustworkx.generators.directed_nd_grid_graph([2, 2])
+        out_edges = graph.out_edges(0)
+        out_targets = [e[1] for e in out_edges]
+        self.assertIn(1, out_targets)
+        self.assertIn(2, out_targets)
+        self.assertEqual(len(graph.in_edges(0)), 0)
