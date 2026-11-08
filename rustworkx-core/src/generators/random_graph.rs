@@ -102,7 +102,7 @@ where
         None => Pcg64::try_from_rng(&mut SysRng).unwrap(),
     };
 
-    if (num_nodes * degree) % 2 != 0 {
+    if !(num_nodes * degree).is_multiple_of(2) {
         return Err(InvalidInputError {});
     }
 

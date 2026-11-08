@@ -109,7 +109,7 @@ where
     H: FnMut() -> M,
     G::NodeId: Eq + Hash,
 {
-    if d % 2 == 0 {
+    if d.is_multiple_of(2) {
         return Err(InvalidInputError {});
     }
     let num_nodes = 3 * d * d - 2 * d;

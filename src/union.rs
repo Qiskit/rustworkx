@@ -48,11 +48,9 @@ fn union<Ty: EdgeType>(
     let mut node_map: Vec<Entry<NodeIndex>> = vec![Entry::None; second.node_bound()];
     for node in second.node_indices() {
         let weight = &second[node];
-        if merge_nodes {
-            if let Some(index) = find_node_by_weight(py, first, weight)? {
-                node_map[node.index()] = Entry::Merged(index);
-                continue;
-            }
+        if merge_nodes && let Some(index) = find_node_by_weight(py, first, weight)? {
+            node_map[node.index()] = Entry::Merged(index);
+            continue;
         }
 
         let index = out_graph.add_node(weight.clone_ref(py));
