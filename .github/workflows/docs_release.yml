@@ -23,7 +23,7 @@ jobs:
     - name: Install dependencies
       run: |
         pip install -U --group testinfra
-        sudo apt-get install graphviz pandoc
+        sudo apt-get install graphviz pandoc libgvplugin-neato-layout8
     - name: Build docs
       run: |
         tools/build_documentation_release.sh
