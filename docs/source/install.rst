@@ -10,7 +10,7 @@ application.
 Installing Rustworkx
 ====================
 
-rustworkx is published on pypi so on x86_64, i686, ppc64le, s390x, and aarch64
+rustworkx is published on pypi so on x86_64, i686, ppc64le, s390x, riscv64, and aarch64
 Linux systems, x86_64 and arm64 on macOS, and 32 and 64 bit Windows
 installing is as simple as running::
 
@@ -89,6 +89,10 @@ source.
      - s390x
      - :ref:`tier-4`
      - Distributions compatible with the `manylinux 2014`_ packaging specification
+   * - Linux
+     - riscv64
+     - :ref:`tier-4`
+     - Distributions compatible with the ``manylinux_2_35`` packaging specification. Wheels are cross-compiled on x86_64 and are not tested
    * - Linux (musl)
      - x86_64
      - :ref:`tier-2`
