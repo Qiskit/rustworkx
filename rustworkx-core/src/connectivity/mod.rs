@@ -34,6 +34,7 @@ pub use conn_components::connected_components;
 pub use conn_components::number_connected_components;
 pub use core_number::core_number;
 pub use cycle_basis::cycle_basis;
+pub use cycle_basis::cycle_basis_edges;
 pub use find_cycle::find_cycle;
 pub use isolates::isolates;
 pub use johnson_simple_cycles::{SimpleCycleIter, johnson_simple_cycles};
