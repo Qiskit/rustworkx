@@ -44,7 +44,7 @@ rustworkx.dijkstra_shortest_paths(graph, a, c, weight_fn=float)
 
 ## Installing rustworkx
 
-rustworkx is published on [PyPI](https://pypi.org/project/rustworkx/) so on x86\_64, i686, ppc64le, s390x, and
+rustworkx is published on [PyPI](https://pypi.org/project/rustworkx/) so on x86\_64, i686, ppc64le, s390x, riscv64, and
 aarch64 Linux systems, x86\_64 on Mac OSX, and 32 and 64 bit Windows
 installing is as simple as running:
 

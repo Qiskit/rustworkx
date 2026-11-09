@@ -96,6 +96,10 @@ docs = [
 releaseinfra = [
     "cibuildwheel==4.3.4; python_version >= '3.11'",
 ]
+crosscompileinfra = [
+    "maturin>=1.9.0,<2.0",
+    "ziglang==0.16.0",
+]
 
 [tool.ruff]
 line-length = 100
