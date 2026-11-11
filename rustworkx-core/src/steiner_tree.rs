@@ -373,8 +373,8 @@ where
     paths.swap_remove(&dummy);
     distance.swap_remove(&dummy);
 
-    // ``partition[u]`` holds the terminal node closest to node ``u``.
-    let mut partition: Vec<usize> = vec![usize::MAX; graph.node_bound()];
+    // ``partition[u]`` holds the terminal node closest to node ``u`` (``in_graph`` indices).
+    let mut partition: Vec<usize> = vec![usize::MAX; in_graph.node_bound()];
     for (u, path) in paths.iter() {
         let u = NodeIndexable::to_index(&in_graph, reverse_node_map[u]);
         partition[u] = NodeIndexable::to_index(&in_graph, reverse_node_map[&path[1]]);
