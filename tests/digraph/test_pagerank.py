@@ -284,6 +284,19 @@ class TestPageRank(unittest.TestCase):
         for v in rx_graph.node_indices():
             self.assertAlmostEqual(rx_ranks[v], nx_ranks[v], delta=1.0e-4)
 
+    def test_tol_too_large(self):
+        graph = rustworkx.PyDiGraph()
+        graph.extend_from_edge_list([(0, 1), (1, 2), (2, 0), (2, 3)])
+        with self.assertRaisesRegex(ValueError, "`tol` is too large"):
+            rustworkx.pagerank(graph, tol=0.5)
+
+    def test_tol_near_bound_warns(self):
+        graph = rustworkx.PyDiGraph()
+        graph.extend_from_edge_list([(0, 1), (1, 2), (2, 0), (2, 3)])
+        with self.assertWarns(RuntimeWarning):
+            ranks = rustworkx.pagerank(graph, tol=0.1)
+        self.assertEqual(len(ranks), 4)
+
     def test_no_convergence(self):
         graph = rustworkx.generators.directed_complete_graph(4)
         with self.assertRaises(rustworkx.FailedToConverge):

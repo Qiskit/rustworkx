@@ -14,6 +14,7 @@
 #![allow(clippy::too_many_arguments)]
 
 use pyo3::Python;
+use pyo3::exceptions::{PyRuntimeWarning, PyValueError};
 use pyo3::prelude::*;
 
 use crate::digraph::PyDiGraph;
@@ -61,6 +62,9 @@ use sprs::{CsMat, TriMat};
 ///     a uniform distribution is used.
 /// :param float tol: The error tolerance used when checking for convergence in the
 ///     power method. If this is not specified default value of 1e-6 is used.
+///     Convergence is checked against ``tol`` multiplied by the number of nodes,
+///     and that product must stay below 2 for the check to be meaningful, so
+///     larger graphs need a smaller ``tol``.
 /// :param int max_iter: The maximum number of iterations in the power method. If
 ///     not specified a default value of 100 is used.
 /// :param dict dangling: An optional dictionary for the outedges to be assigned to any "dangling" nodes,
@@ -72,6 +76,8 @@ use sprs::{CsMat, TriMat};
 /// :returns: a read-only dict-like object whose keys are the node indices and values are the
 ///      PageRank score for that node.
 /// :rtype: CentralityMapping
+/// :raises ValueError: If ``tol`` multiplied by the number of nodes in ``graph``
+///     is greater than or equal to 2
 #[pyfunction(
     signature = (
         graph,
@@ -108,6 +114,30 @@ pub fn pagerank(
         return Ok(CentralityMapping {
             centralities: DictMap::new(),
         });
+    }
+
+    // The convergence check below compares the L1 distance between two
+    // iterations against `n * tol`. That distance can never exceed 2, so once
+    // `n * tol` reaches 2 the check is always true and the first iteration is
+    // reported as converged, returning the starting vector unchanged. Reject
+    // that outright, and warn when `n * tol` is close enough to 2 that the
+    // result is no longer trustworthy.
+    let tol_bound = n as f64 * tol;
+    if tol_bound >= 2.0 {
+        return Err(PyValueError::new_err(format!(
+            "`tol` is too large for a graph with {n} nodes: `node_count() * tol` is \
+             {tol_bound}, so the convergence check is always satisfied and the result \
+             would be the starting vector. Pass a smaller `tol`"
+        )));
+    } else if tol_bound >= 0.1 {
+        PyErr::warn(
+            py,
+            &py.get_type::<PyRuntimeWarning>(),
+            c"`node_count() * tol` is close to 2 for this graph, which makes the \
+              convergence check of rustworkx.pagerank unreliable. Please verify your \
+              error tolerance, or pass a smaller `tol`",
+            1,
+        )?;
     }
 
     // Grab the graph weights from Python to Rust

@@ -1,0 +1,19 @@
+---
+upgrade:
+  - |
+    :func:`~rustworkx.pagerank` now raises a ``ValueError`` when ``tol``
+    multiplied by the number of nodes in the graph is greater than or equal to
+    2. Calls that used to return a result for such an input will now raise, but
+    that result was the unchanged starting vector rather than a PageRank score.
+    Pass a smaller ``tol`` to keep those calls working.
+fixes:
+  - |
+    Fixed :func:`~rustworkx.pagerank` silently returning the starting vector,
+    usually the uniform distribution, instead of a PageRank score. Convergence
+    is checked by comparing the L1 distance between two iterations against
+    ``tol`` multiplied by the number of nodes, and that distance can never
+    exceed 2, so once the product reached 2 the first iteration was always
+    reported as converged. Such an input now raises a ``ValueError``, and a
+    ``RuntimeWarning`` is emitted while the product is between 0.1 and 2, where
+    the result is no longer trustworthy. Refer to
+    `#1575 <https://github.com/Qiskit/rustworkx/issues/1575>`__ for more details.
