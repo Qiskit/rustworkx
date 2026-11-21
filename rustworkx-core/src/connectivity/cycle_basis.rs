@@ -11,7 +11,8 @@
 // under the License.
 
 use hashbrown::{HashMap, HashSet};
-use petgraph::visit::{IntoNeighbors, IntoNodeIdentifiers, NodeCount};
+use petgraph::Undirected;
+use petgraph::visit::{GraphProp, IntoNeighbors, IntoNodeIdentifiers, NodeCount};
 use std::hash::Hash;
 
 /// Return a list of cycles which form a basis for cycles of a given graph.
@@ -28,6 +29,10 @@ use std::hash::Hash;
 /// The function implicitly assumes that there are no parallel edges.
 /// It may produce incorrect/unexpected results if the input graph has
 /// parallel edges.
+///
+/// The algorithm is only defined for undirected graphs, so the graph type is
+/// restricted to them. Calling this with a directed graph used to loop forever
+/// rather than return.
 ///
 ///
 /// Arguments:
@@ -47,6 +52,7 @@ use std::hash::Hash;
 /// ```
 pub fn cycle_basis<G>(graph: G, root: Option<G::NodeId>) -> Vec<Vec<G::NodeId>>
 where
+    G: GraphProp<EdgeType = Undirected>,
     G: NodeCount,
     G: IntoNeighbors,
     G: IntoNodeIdentifiers,
@@ -156,6 +162,14 @@ mod tests {
         assert_eq!(sorted_cycle(res_1), expected);
         let res_9 = cycle_basis(&graph, Some(NodeIndex::new(9)));
         assert_eq!(sorted_cycle(res_9), expected);
+    }
+
+    #[test]
+    fn test_cycle_basis_stable_graph() {
+        let edge_list = vec![(0, 1), (1, 2), (2, 0), (2, 3)];
+        let graph: StableUnGraph<i32, i32> = StableUnGraph::from_edges(edge_list);
+        let res = cycle_basis(&graph, Some(NodeIndex::new(0)));
+        assert_eq!(sorted_cycle(res), vec![vec![0, 1, 2]]);
     }
 
     #[test]
