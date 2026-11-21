@@ -61,8 +61,8 @@ build-backend = "maturin"
 
 [dependency-groups]
 testinfra = [
-    "nox==2025.10.16",
-    "uv==0.11.15",
+    "nox==2026.10.20",
+    "uv==0.13.5",
 ]
 test = [
   "maturin>=1.9.0,<2.0",
@@ -94,7 +94,7 @@ docs = [
     "lxml_html_clean",
 ]
 releaseinfra = [
-    "cibuildwheel==3.3.0; python_version >= '3.11'",
+    "cibuildwheel==4.3.4; python_version >= '3.11'",
 ]
 
 [tool.ruff]
