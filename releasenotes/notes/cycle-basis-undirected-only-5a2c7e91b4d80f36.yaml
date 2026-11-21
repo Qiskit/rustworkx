@@ -1,19 +1,5 @@
 ---
-upgrade:
-  - |
-    ``rustworkx_core::connectivity::cycle_basis`` now requires its graph
-    argument to be undirected, by way of a
-    ``GraphProp<EdgeType = Undirected>`` bound. Rust code that passed a
-    directed graph no longer compiles. Such calls never returned a result, as
-    the algorithm looped forever on a directed graph, so the restriction turns
-    a hang into a compile error. The Python :func:`~rustworkx.cycle_basis`
-    function is unaffected, since it already only accepted
-    :class:`~rustworkx.PyGraph`.
 fixes:
   - |
-    Fixed ``rustworkx_core::connectivity::cycle_basis`` looping forever when
-    given a directed graph. The algorithm, which comes from Paton's method, is
-    only defined for undirected graphs, and the Rust interface did not enforce
-    that even though the Python one did. The graph type is now restricted to
-    undirected graphs. Refer to
-    `#1495 <https://github.com/Qiskit/rustworkx/issues/1495>`__ for more details.
+    Fixed ``rustworkx_core::connectivity::cycle_basis`` hanging on directed graphs by restricting its input to undirected graphs.
+
