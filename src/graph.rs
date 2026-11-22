@@ -132,12 +132,9 @@ use petgraph::visit::{
 /// :math:`2^{32} - 1` (4,294,967,294) each. Attempting to add more nodes or
 /// edges than this will result in an exception being raised.
 ///
-/// Type Annotations:
-///
-/// You can use standard Python typing for specifying expected data types for both node and edge parameters.
-/// The generic parameters for ``PyGraph`` are ordered as ``PyGraph[NodeData, EdgeData]``.
-///
-/// .. code-block:: python
+/// ``PyGraph`` supports standard Python type annotations for specifying
+/// expected node and edge data payload types using the generic form
+/// ``PyGraph[NodeData, EdgeData]``::
 ///
 ///     import rustworkx as rx
 ///
@@ -146,13 +143,10 @@ use petgraph::visit::{
 ///     node_b = graph.add_node("qubit1")
 ///     graph.add_edge(node_a, node_b, 10)
 ///
-/// If you plan to use methods that create edges without data (connecting 2 nodes with an edge with no value), such as
-/// :meth:`~rustworkx.PyGraph.add_edges_from_no_data`, you must include
-/// ``None`` in your edge (_T) type annotation (using ``| None``).
+/// When using methods that add edges without a data payload, such as
+/// :meth:`~rustworkx.PyGraph.add_edges_from_no_data`, include ``None`` in
+/// the edge data type annotation (e.g. ``int | None``)::
 ///
-/// .. code-block:: python
-///
-///     # Type hinting a graph where edges can be created without a value
 ///     graph: rx.PyGraph[str, int | None] = rx.PyGraph()
 ///     graph.add_nodes_from(["qubit0", "qubit1"])
 ///     graph.add_edges_from_no_data([(0, 1)])

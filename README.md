@@ -23,7 +23,6 @@ All graph classes and top-level functions are accessible with a single import.
 To illustrate this, the following example calculates the shortest path
 between two nodes `A` and `C` in an undirected graph.
 
-
 ```python3
 import rustworkx
 
@@ -41,12 +40,7 @@ graph.add_edges_from([(a, b, 1.5), (a, c, 5.0), (b, c, 2.5)])
 
 # Returns the path A -> B -> C
 rustworkx.dijkstra_shortest_paths(graph, a, c, weight_fn=float)
-
 ```
-
-NOTE:The library supports standard Python type annotations (e.g., `PyGraph[NodeData, EdgeData]`) for specifying expected data types.
-
-
 
 ## Installing rustworkx
 
