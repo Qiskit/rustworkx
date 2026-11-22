@@ -659,7 +659,7 @@ macro_rules! custom_vec_iter_impl {
         #[doc = concat!("Custom iterator class for :class:`.", stringify!($name), "`")]
         // No module because this isn't constructable from Python space, and is only exposed as an
         // implementation detail.
-        #[pyclass(skip_from_py_object)]
+        #[pyclass]
         pub struct $iter {
             inner: Option<Py<$name>>,
             index: usize,
@@ -709,7 +709,7 @@ macro_rules! custom_vec_iter_impl {
         #[doc = concat!("Custom reversed iterator class for :class:`.", stringify!($name), "`")]
         // No module because this isn't constructable from Python space, and is only exposed as an
         // implementation detail.
-        #[pyclass(skip_from_py_object)]
+        #[pyclass]
         pub struct $reversed {
             inner: Option<Py<$name>>,
             index: usize,
@@ -1172,7 +1172,7 @@ impl PyGCProtocol for RelationalCoarsestPartition {}
 
 macro_rules! py_iter_protocol_impl {
     ($name:ident, $data:ident, $T:ty) => {
-        #[pyclass(module = "rustworkx", skip_from_py_object)]
+        #[pyclass(module = "rustworkx")]
         pub struct $name {
             pub $data: Vec<$T>,
             iter_pos: usize,
