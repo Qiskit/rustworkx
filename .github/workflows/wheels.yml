@@ -120,7 +120,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-24.04-ppc64le]
+        os: [ubuntu-24.04-ppc64le-p10]
     steps:
       - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
