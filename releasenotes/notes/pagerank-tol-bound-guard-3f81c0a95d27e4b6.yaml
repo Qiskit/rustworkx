@@ -1,0 +1,9 @@
+---
+upgrade:
+  - |
+    :func:`~rustworkx.pagerank` now emits a ``RuntimeWarning`` when ``tol`` multiplied by the number of nodes is between 0.1 and 2.
+    Results in this range may be unreliable.
+fixes:
+  - |
+    Fixed :func:`~rustworkx.pagerank` silently returning the starting vector instead of a PageRank score when ``tol`` multiplied by the number of nodes is greater than or equal to 2.
+    Such inputs now raise a ``ValueError``.

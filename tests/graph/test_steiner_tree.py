@@ -147,6 +147,14 @@ class TestSteinerTree(unittest.TestCase):
         for edge in expected_edges:
             self.assertIn(edge, steiner_tree_edge_list)
 
+    def test_steiner_tree_multiple_removed_nodes(self):
+        graph = rustworkx.PyGraph()
+        graph.add_nodes_from(range(4))
+        graph.add_edges_from([(0, 1, 1.0), (1, 2, 1.0), (2, 3, 1.0)])
+        graph.remove_nodes_from([0, 1])
+        tree = rustworkx.steiner_tree(graph, [2, 3], weight_fn=float)
+        self.assertEqual(tree.weighted_edge_list(), [(2, 3, 1.0)])
+
     def test_not_connected_steiner_tree(self):
         self.graph.add_node(None)
         with self.assertRaises(ValueError):
