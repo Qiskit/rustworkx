@@ -513,3 +513,16 @@ choice for smaller graphs or cases where you want to integrate your graph
 drawing as part of a larger visualization.
 :func:`~rustworkx.visualization.graphviz_draw` is typically a better choice
 for larger graphs, because Graphviz is a dedicated tool for drawing graphs.
+
+Type Annotations
+================
+
+Both :class:`~rustworkx.PyGraph` and :class:`~rustworkx.PyDiGraph` support
+standard Python type annotations for node and edge data payloads using the
+generic form ``PyGraph[NodeData, EdgeData]`` and
+``PyDiGraph[NodeData, EdgeData]``::
+
+    graph: rx.PyGraph[str, float] = rx.PyGraph()
+    a = graph.add_node("A")
+    b = graph.add_node("B")
+    graph.add_edge(a, b, 1.5)
