@@ -1267,7 +1267,7 @@ pub fn read_graphml<'py>(
 }
 
 /// Key definition: id, domain, name of the key, type, default value.
-#[pyclass(name = "GraphMLKey", skip_from_py_object)]
+#[pyclass(name = "GraphMLKey")]
 pub struct KeySpec {
     #[pyo3(get)]
     id: String,
