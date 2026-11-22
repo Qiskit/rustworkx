@@ -19,7 +19,8 @@ A high-performance, general-purpose graph library for Python, written in Rust.
 ## Usage
 
 Once installed, simply import `rustworkx`.
-All graph classes and top-level functions are accessible with a single import.
+All graph classes and top-level functions are accessible with a single import
+and include type annotations (e.g. `PyGraph[NodeData, EdgeData]`).
 To illustrate this, the following example calculates the shortest path
 between two nodes `A` and `C` in an undirected graph.
 
