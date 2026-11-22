@@ -91,6 +91,10 @@ jobs:
           - rust: stable
             python-version: "3.12"
             platform: { os: "macos-15-intel", python-architecture: "x64", rust-target: "x86_64-apple-darwin" }
+          # TODO: remove in https://github.com/Qiskit/rustworkx/pull/1661
+          - rust: stable
+            python-version: "3.10"
+            platform: { os: "ubuntu-latest", python-architecture: "x64", rust-target: "x86_64-unknown-linux-gnu" }
     steps:
       - uses: actions/checkout@v7
       - name: Set up Python ${{ matrix.python-version }}
