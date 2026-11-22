@@ -170,6 +170,25 @@ use super::dag_algo::is_directed_acyclic_graph;
 /// :math:`2^{32} - 1` (4,294,967,294) each. Attempting to add more nodes or
 /// edges than this will result in an exception being raised.
 ///
+/// ``PyDiGraph`` supports standard Python type annotations for specifying
+/// expected node and edge data payload types using the generic form
+/// ``PyDiGraph[NodeData, EdgeData]``::
+///
+///     import rustworkx as rx
+///
+///     graph: rx.PyDiGraph[str, int] = rx.PyDiGraph()
+///     node_a = graph.add_node("qubit0")
+///     node_b = graph.add_node("qubit1")
+///     graph.add_edge(node_a, node_b, 10)
+///
+/// When using methods that add edges without a data payload, such as
+/// :meth:`~rustworkx.PyDiGraph.add_edges_from_no_data`, include ``None`` in
+/// the edge data type annotation (e.g. ``int | None``)::
+///
+///     graph: rx.PyDiGraph[str, int | None] = rx.PyDiGraph()
+///     graph.add_nodes_from(["qubit0", "qubit1"])
+///     graph.add_edges_from_no_data([(0, 1)])
+///
 /// :param bool check_cycle: When this is set to ``True`` the created
 ///     ``PyDiGraph`` has runtime cycle detection enabled.
 /// :param bool multigraph: When this is set to ``False`` the created
