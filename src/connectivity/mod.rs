@@ -1109,11 +1109,12 @@ pub fn graph_all_simple_paths(
             Ok(result)
         }
         TargetNodes::Multiple(target_set) => {
+            let petgraph_targets = target_set.iter().copied().collect();
             let mut result: Vec<Vec<usize>> =
                 algo::all_simple_paths_multi::<Vec<_>, _, foldhash::fast::RandomState>(
                     &graph.graph,
                     from_index,
-                    &target_set,
+                    &petgraph_targets,
                     min_intermediate_nodes,
                     cutoff_petgraph,
                 )
@@ -1196,11 +1197,12 @@ pub fn digraph_all_simple_paths(
             Ok(result)
         }
         TargetNodes::Multiple(target_set) => {
+            let petgraph_targets = target_set.iter().copied().collect();
             let mut result: Vec<Vec<usize>> =
                 algo::all_simple_paths_multi::<Vec<_>, _, foldhash::fast::RandomState>(
                     &graph.graph,
                     from_index,
-                    &target_set,
+                    &petgraph_targets,
                     min_intermediate_nodes,
                     cutoff_petgraph,
                 )
