@@ -1,0 +1,9 @@
+---
+fixes:
+  - |
+    Fixed :func:`~rustworkx.bfs_search`, :func:`~rustworkx.dfs_search`, and
+    :func:`~rustworkx.dijkstra_search` to raise a ``RuntimeError`` instead of
+    panicking when :class:`~rustworkx.visit.PruneSearch` is raised from the
+    ``finish_vertex`` event. Refer to
+    `#1383 <https://github.com/Qiskit/rustworkx/issues/1383>`__ for more
+    details.
