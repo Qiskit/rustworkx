@@ -185,6 +185,28 @@ class TestDijkstraSearch(unittest.TestCase):
         vis = PruneEdgeNotRelaxed()
         rustworkx.digraph_dijkstra_search(self.graph, [0], float, vis)
 
+    def test_digraph_prune_finish_vertex(self):
+        class PruneFinishVertex(rustworkx.visit.DijkstraVisitor):
+            def finish_vertex(self, v):
+                raise rustworkx.visit.PruneSearch
+
+        vis = PruneFinishVertex()
+        with self.assertRaisesRegex(RuntimeError, "finish_vertex"):
+            rustworkx.digraph_dijkstra_search(self.graph, [0], float, vis)
+
+    def test_digraph_stop_search_finish_vertex(self):
+        class StopFinishVertex(rustworkx.visit.DijkstraVisitor):
+            def __init__(self):
+                self.finished = []
+
+            def finish_vertex(self, v):
+                self.finished.append(v)
+                raise rustworkx.visit.StopSearch
+
+        vis = StopFinishVertex()
+        rustworkx.digraph_dijkstra_search(self.graph, [0], float, vis)
+        self.assertEqual(vis.finished, [0])
+
     def test_invalid_source(self):
         graph = rustworkx.PyDiGraph()
         with self.assertRaises(IndexError):
