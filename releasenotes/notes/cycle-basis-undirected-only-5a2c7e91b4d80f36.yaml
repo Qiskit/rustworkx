@@ -1,0 +1,5 @@
+---
+fixes:
+  - |
+    Fixed ``rustworkx_core::connectivity::cycle_basis`` hanging on directed graphs by restricting its input to undirected graphs.
+

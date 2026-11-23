@@ -1,0 +1,7 @@
+fixes:
+  - |
+    Fixed :func:`~rustworkx.steiner_tree` so it no longer panics with an
+    "index out of bounds" error on a :class:`~rustworkx.PyGraph` where nodes
+    were removed and the remaining node indices exceed the number of remaining
+    nodes. Refer to
+    `#1703 <https://github.com/Qiskit/rustworkx/issues/1703>`__ for more details.
