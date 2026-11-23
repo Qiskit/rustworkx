@@ -33,16 +33,48 @@ use hashbrown::HashSet;
 
 use pyo3::IntoPyObjectExt;
 use pyo3::Python;
-use pyo3::exceptions::{PyIndexError, PyTypeError};
+use pyo3::exceptions::{PyIndexError, PyRuntimeError, PyTypeError};
 use pyo3::prelude::*;
 use pyo3::types::PyList;
 
 use petgraph::EdgeType;
 use petgraph::graph::NodeIndex;
-use petgraph::visit::NodeIndexable;
+use petgraph::visit::{Control, NodeIndexable};
 
-use crate::StablePyGraph;
 use crate::iterators::EdgeList;
+use crate::{PruneSearch, StablePyGraph, StopSearch};
+
+/// Convert a Python visitor callback result into a traversal `Control` action.
+///
+/// There is nothing left to prune once a vertex is finished, and the core
+/// traversal panics on `Control::Prune` for `Finish` events. Convert that
+/// case into a `RuntimeError` here so Python callers get a regular exception.
+#[inline]
+fn handle_visitor_result(
+    py: Python,
+    res: PyResult<Py<PyAny>>,
+    is_finish: impl FnOnce() -> bool,
+    swallow_stop: bool,
+) -> PyResult<Control<()>> {
+    match res {
+        Ok(_) => Ok(Control::Continue),
+        Err(e) => {
+            if e.is_instance_of::<PruneSearch>(py) {
+                if is_finish() {
+                    Err(PyRuntimeError::new_err(
+                        "Pruning on the 'finish_vertex' event is not supported",
+                    ))
+                } else {
+                    Ok(Control::Prune)
+                }
+            } else if swallow_stop && e.is_instance_of::<StopSearch>(py) {
+                Ok(Control::Break(()))
+            } else {
+                Err(e)
+            }
+        }
+    }
+}
 
 fn validate_source_nodes<Ty: EdgeType>(
     graph: &StablePyGraph<Ty>,

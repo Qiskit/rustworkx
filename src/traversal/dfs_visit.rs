@@ -10,13 +10,11 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-use pyo3::exceptions::PyRuntimeError;
 use pyo3::prelude::*;
 
 use petgraph::stable_graph::NodeIndex;
 use petgraph::visit::{Control, Time};
 
-use crate::PruneSearch;
 use rustworkx_core::traversal::DfsEvent;
 
 #[derive(FromPyObject)]
@@ -33,11 +31,6 @@ pub fn dfs_handler(
     vis: &PyDfsVisitor,
     event: DfsEvent<NodeIndex, &Py<PyAny>>,
 ) -> PyResult<Control<()>> {
-    // There is nothing left to prune once a vertex is finished, and the core
-    // traversal panics on a `Prune` for that event. Catch it here instead, so
-    // Python callers get a regular exception.
-    let is_finish = matches!(&event, DfsEvent::Finish(..));
-
     let res = match event {
         DfsEvent::Discover(u, Time(t)) => vis.discover_vertex.call1(py, (u.index(), t)),
         DfsEvent::TreeEdge(u, v, weight) => {
@@ -55,20 +48,5 @@ pub fn dfs_handler(
         DfsEvent::Finish(u, Time(t)) => vis.finish_vertex.call1(py, (u.index(), t)),
     };
 
-    match res {
-        Err(e) => {
-            if e.is_instance_of::<PruneSearch>(py) {
-                if is_finish {
-                    Err(PyRuntimeError::new_err(
-                        "Pruning on the `finish_vertex` event is not supported",
-                    ))
-                } else {
-                    Ok(Control::Prune)
-                }
-            } else {
-                Err(e)
-            }
-        }
-        Ok(_) => Ok(Control::Continue),
-    }
+    super::handle_visitor_result(py, res, || matches!(event, DfsEvent::Finish(..)), false)
 }

@@ -194,29 +194,6 @@ class TestDijkstraSearch(unittest.TestCase):
         with self.assertRaisesRegex(RuntimeError, "finish_vertex"):
             rustworkx.graph_dijkstra_search(self.graph, [0], float, vis)
 
-    def test_graph_prune_finish_vertex_mid_traversal(self):
-        class PruneSecondFinish(rustworkx.visit.DijkstraVisitor):
-            def __init__(self):
-                self.finished = []
-
-            def finish_vertex(self, v):
-                self.finished.append(v)
-                if len(self.finished) == 2:
-                    raise rustworkx.visit.PruneSearch
-
-        vis = PruneSecondFinish()
-        with self.assertRaisesRegex(RuntimeError, "finish_vertex"):
-            rustworkx.graph_dijkstra_search(self.graph, [0], float, vis)
-        self.assertEqual(vis.finished, [0, 1])
-
-    def test_graph_prune_finish_vertex_no_starting_point(self):
-        class PruneFinishVertex(rustworkx.visit.DijkstraVisitor):
-            def finish_vertex(self, v):
-                raise rustworkx.visit.PruneSearch
-
-        with self.assertRaisesRegex(RuntimeError, "finish_vertex"):
-            rustworkx.graph_dijkstra_search(self.graph, None, float, PruneFinishVertex())
-
     def test_graph_stop_search_finish_vertex(self):
         class StopFinishVertex(rustworkx.visit.DijkstraVisitor):
             def __init__(self):

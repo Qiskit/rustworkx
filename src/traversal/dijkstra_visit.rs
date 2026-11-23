@@ -10,13 +10,11 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-use pyo3::exceptions::PyRuntimeError;
 use pyo3::prelude::*;
 
 use petgraph::stable_graph::NodeIndex;
 use petgraph::visit::Control;
 
-use crate::{PruneSearch, StopSearch};
 use rustworkx_core::traversal::DijkstraEvent;
 
 #[derive(FromPyObject)]
@@ -33,11 +31,6 @@ pub fn dijkstra_handler(
     vis: &PyDijkstraVisitor,
     event: DijkstraEvent<NodeIndex, &Py<PyAny>, f64>,
 ) -> PyResult<Control<()>> {
-    // There is nothing left to prune once a vertex is finished, and the core
-    // traversal panics on a `Prune` for that event. Catch it here instead, so
-    // Python callers get a regular exception.
-    let is_finish = matches!(&event, DijkstraEvent::Finish(..));
-
     let res = match event {
         DijkstraEvent::Discover(u, score) => vis.discover_vertex.call1(py, (u.index(), score)),
         DijkstraEvent::ExamineEdge(u, v, weight) => {
@@ -55,22 +48,5 @@ pub fn dijkstra_handler(
         DijkstraEvent::Finish(u) => vis.finish_vertex.call1(py, (u.index(),)),
     };
 
-    match res {
-        Err(e) => {
-            if e.is_instance_of::<PruneSearch>(py) {
-                if is_finish {
-                    Err(PyRuntimeError::new_err(
-                        "Pruning on the `finish_vertex` event is not supported",
-                    ))
-                } else {
-                    Ok(Control::Prune)
-                }
-            } else if e.is_instance_of::<StopSearch>(py) {
-                Ok(Control::Break(()))
-            } else {
-                Err(e)
-            }
-        }
-        Ok(_) => Ok(Control::Continue),
-    }
+    super::handle_visitor_result(py, res, || matches!(event, DijkstraEvent::Finish(..)), true)
 }

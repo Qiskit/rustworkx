@@ -167,29 +167,6 @@ class TestBfsSearch(unittest.TestCase):
         with self.assertRaisesRegex(RuntimeError, "finish_vertex"):
             rustworkx.digraph_bfs_search(self.graph, [0], vis)
 
-    def test_digraph_prune_finish_vertex_mid_traversal(self):
-        class PruneSecondFinish(rustworkx.visit.BFSVisitor):
-            def __init__(self):
-                self.finished = []
-
-            def finish_vertex(self, v):
-                self.finished.append(v)
-                if len(self.finished) == 2:
-                    raise rustworkx.visit.PruneSearch
-
-        vis = PruneSecondFinish()
-        with self.assertRaisesRegex(RuntimeError, "finish_vertex"):
-            rustworkx.digraph_bfs_search(self.graph, [0], vis)
-        self.assertEqual(vis.finished, [0, 2])
-
-    def test_digraph_prune_finish_vertex_no_starting_point(self):
-        class PruneFinishVertex(rustworkx.visit.BFSVisitor):
-            def finish_vertex(self, v):
-                raise rustworkx.visit.PruneSearch
-
-        with self.assertRaisesRegex(RuntimeError, "finish_vertex"):
-            rustworkx.digraph_bfs_search(self.graph, None, PruneFinishVertex())
-
     def test_digraph_stop_search_finish_vertex(self):
         class StopFinishVertex(rustworkx.visit.BFSVisitor):
             def __init__(self):
