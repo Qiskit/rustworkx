@@ -158,6 +158,28 @@ class TestBfsSearch(unittest.TestCase):
         vis = PruneGrayTargetEdge()
         rustworkx.digraph_bfs_search(self.graph, [0], vis)
 
+    def test_digraph_prune_finish_vertex(self):
+        class PruneFinishVertex(rustworkx.visit.BFSVisitor):
+            def finish_vertex(self, v):
+                raise rustworkx.visit.PruneSearch
+
+        vis = PruneFinishVertex()
+        with self.assertRaisesRegex(RuntimeError, "finish_vertex"):
+            rustworkx.digraph_bfs_search(self.graph, [0], vis)
+
+    def test_digraph_stop_search_finish_vertex(self):
+        class StopFinishVertex(rustworkx.visit.BFSVisitor):
+            def __init__(self):
+                self.finished = []
+
+            def finish_vertex(self, v):
+                self.finished.append(v)
+                raise rustworkx.visit.StopSearch
+
+        vis = StopFinishVertex()
+        rustworkx.digraph_bfs_search(self.graph, [0], vis)
+        self.assertEqual(vis.finished, [0])
+
     def test_invalid_source(self):
         graph = rustworkx.PyDiGraph()
         with self.assertRaises(IndexError):
