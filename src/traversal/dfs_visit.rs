@@ -15,7 +15,6 @@ use pyo3::prelude::*;
 use petgraph::stable_graph::NodeIndex;
 use petgraph::visit::{Control, Time};
 
-use crate::PruneSearch;
 use rustworkx_core::traversal::DfsEvent;
 
 #[derive(FromPyObject)]
@@ -49,14 +48,5 @@ pub fn dfs_handler(
         DfsEvent::Finish(u, Time(t)) => vis.finish_vertex.call1(py, (u.index(), t)),
     };
 
-    match res {
-        Err(e) => {
-            if e.is_instance_of::<PruneSearch>(py) {
-                Ok(Control::Prune)
-            } else {
-                Err(e)
-            }
-        }
-        Ok(_) => Ok(Control::Continue),
-    }
+    super::handle_visitor_result(py, res, || matches!(event, DfsEvent::Finish(..)), false)
 }
