@@ -15,7 +15,6 @@ use pyo3::prelude::*;
 use petgraph::stable_graph::NodeIndex;
 use petgraph::visit::Control;
 
-use crate::{PruneSearch, StopSearch};
 use rustworkx_core::traversal::DijkstraEvent;
 
 #[derive(FromPyObject)]
@@ -49,16 +48,5 @@ pub fn dijkstra_handler(
         DijkstraEvent::Finish(u) => vis.finish_vertex.call1(py, (u.index(),)),
     };
 
-    match res {
-        Err(e) => {
-            if e.is_instance_of::<PruneSearch>(py) {
-                Ok(Control::Prune)
-            } else if e.is_instance_of::<StopSearch>(py) {
-                Ok(Control::Break(()))
-            } else {
-                Err(e)
-            }
-        }
-        Ok(_) => Ok(Control::Continue),
-    }
+    super::handle_visitor_result(py, res, || matches!(event, DijkstraEvent::Finish(..)), true)
 }
