@@ -24,8 +24,8 @@ inherent performance and safety. While this provides numerous advantages
 including significantly improved performance it does mean that the library
 needs to be compiled when being installed from source (as opposed to a pure
 Python library which can just be installed). rustworkx supports and publishes
-pre-compiled binaries for Linux on x86, x86_64, aarch64, s390x, and ppc64le,
-MacOS on x86_64, and arm64, and Windows 32bit and 64bit systems. However, if
+pre-compiled binaries for Linux on x86_64, aarch64, s390x, and ppc64le,
+MacOS on x86_64 and arm64, and 64-bit Windows systems. However, if
 you are not running on one of these platforms, you will need a rust compiler
 to install rustworkx.
 

@@ -1,0 +1,4 @@
+features:
+  - |
+    Tier 4 precompiled wheels are now published for Windows ARM64. These wheels
+    are cross-compiled on AMD64 and are not tested.
