@@ -1,0 +1,6 @@
+﻿rustworkx.distance\_matrix
+==========================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: distance_matrix

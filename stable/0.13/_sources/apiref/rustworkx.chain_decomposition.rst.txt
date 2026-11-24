@@ -1,0 +1,6 @@
+﻿rustworkx.chain\_decomposition
+==============================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: chain_decomposition

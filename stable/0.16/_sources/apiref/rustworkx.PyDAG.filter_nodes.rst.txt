@@ -1,0 +1,6 @@
+rustworkx.PyDAG.filter\_nodes
+=============================
+
+.. currentmodule:: rustworkx
+
+.. automethod:: PyDAG.filter_nodes

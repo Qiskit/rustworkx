@@ -1,0 +1,6 @@
+rustworkx.PyDAG.successor\_indices
+==================================
+
+.. currentmodule:: rustworkx
+
+.. automethod:: PyDAG.successor_indices

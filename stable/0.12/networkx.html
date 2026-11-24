@@ -1,0 +1,821 @@
+
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>rustworkx for NetworkX users &mdash; rustworkx 0.12.1 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!-- <link rel="stylesheet" href="_static/pygments.css" type="text/css" /> -->
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/jupyter-sphinx.css" type="text/css" />
+  <link rel="stylesheet" href="_static/thebelab.css" type="text/css" />
+  <link rel="stylesheet" href="_static/style.css" type="text/css" />
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Contributing" href="CONTRIBUTING.html" /> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="pytorch-body">
+
+   
+
+    
+
+    <div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    <span class="rst-current-version-label">0.12</span>
+    <span class="rst-versions-dropdown-icon"></span>
+  </span>
+  <div class="rst-other-versions">
+    <dl>
+      <dt>Versions</dt>
+          <dd><a class="version" href="/documentation/retworkx/index.html">Current Release</a></dd>
+          <dd><a class="version" href="/documentation/retworkx/dev/index.html">Development</a></dd>
+      <dt>Previous Releases</dt>
+        
+            <dd><a class="version" href="/documentation/retworkx/stable/0.12/index.html">0.12</a></dd>
+        
+    </dl>
+  </div>
+  <script>
+    jQuery('.version').click((evt) => {
+      const hash = window.location.hash
+      const complete_url = evt.target.href + hash
+      window.location = complete_url
+      evt.preventDefault()
+    })
+  </script>
+</div>
+
+    <div class="table-of-contents-link-wrapper">
+      <span>Table of Contents</span>
+      <a href="#" class="toggle-table-of-contents" data-behavior="toggle-table-of-contents"></a>
+    </div>
+
+    <nav data-toggle="wy-nav-shift" class="pytorch-left-menu" id="pytorch-left-menu">
+      <div class="pytorch-side-scroll">
+        <div class="pytorch-menu pytorch-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          <div class="pytorch-left-menu-search">
+            
+
+            
+              
+              
+                <div class="version">
+                  0.12.1
+                </div>
+              
+            
+
+            
+
+
+  
+
+
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search Docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+            
+          </div>
+
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="install.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="install.html#installing-rustworkx">Installing Rustworkx</a></li>
+<li class="toctree-l1"><a class="reference internal" href="install.html#platform-support">Platform Support</a></li>
+<li class="toctree-l1"><a class="reference internal" href="install.html#using-rustworkx">Using rustworkx</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorial/index.html">Rustworkx Tutorials and Guides</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">Rustworkx API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="visualization.html">Visualization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="CONTRIBUTING.html">Contributing Guide</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">rustworkx for NetworkX users</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <div class="pytorch-container">
+      <div class="pytorch-page-level-bar" id="pytorch-page-level-bar">
+        <div class="pytorch-breadcrumbs-wrapper">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="pytorch-breadcrumbs">
+    
+      <li>
+        <a href="index.html">
+          
+            Docs
+          
+        </a> &gt;
+      </li>
+
+        
+      <li>rustworkx for NetworkX users</li>
+    
+    
+      <li class="pytorch-breadcrumbs-aside">
+        
+            
+            <a href="_sources/networkx.rst.txt" rel="nofollow"><img src="_static/images/view-page-source-icon.svg"></a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+</div>
+        </div>
+
+        <div class="pytorch-shortcuts-wrapper" id="pytorch-shortcuts-wrapper">
+          Shortcuts
+        </div>
+      </div>
+
+      <section data-toggle="wy-nav-shift" id="pytorch-content-wrap" class="pytorch-content-wrap">
+        <div class="pytorch-content-left">
+          
+          <div class="rst-content style-external-links">
+          
+            <div role="main" class="main-content" itemscope="itemscope" itemtype="http://schema.org/Article">
+             <article itemprop="articleBody" id="pytorch-article" class="pytorch-article">
+              
+  <br><br><br><section id="rustworkx-for-networkx-users">
+<span id="networkx"></span><h1>rustworkx for NetworkX users<a class="headerlink" href="#rustworkx-for-networkx-users" title="Permalink to this heading">¶</a></h1>
+<p>This is an introductory guide for existing <a class="reference external" href="https://networkx.org">NetworkX</a>
+users on how to use rustworkx, how it differs from NetworkX, and key
+differences to keep in mind.</p>
+<section id="some-key-differences">
+<h2>Some Key Differences<a class="headerlink" href="#some-key-differences" title="Permalink to this heading">¶</a></h2>
+<p>rustworkx (as the name implies) was inspired by networkx and the goal of the
+project is to provide a similar level of functionality and utility to what
+networkx offers but with much faster performance. However, because of
+limitations in the boundary between rust and python, different design
+decisions, and other differences the libraries are not identical.</p>
+<p>The biggest difference to keep in mind is networkx is a very dynamic in how it
+can be used. It allows you to treat a graph object associatively (like a python
+dictionary) and interact with the graph using the objects you’re putting
+on the graph. For example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">networkx</span> <span class="k">as</span> <span class="nn">nx</span>
+
+<span class="n">graph</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">MultiDiGraph</span><span class="p">()</span>
+<span class="n">graph</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="s1">&#39;my_node_a&#39;</span><span class="p">)</span>
+<span class="n">graph</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="s1">&#39;my_node_b&#39;</span><span class="p">)</span>
+<span class="n">graph</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s1">&#39;my_node_a&#39;</span><span class="p">,</span> <span class="s1">&#39;my_node_b&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>While rustworkx being written in Rust puts more constraints on how
+you interact with graph objects. With rustworkx you can still attach any Python
+object on the a graph but each node and edge is assigned an integer index.
+That index must be used for accessing nodes and edges on the graph.
+In rustworkx the above example would be something like:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">rustworkx</span> <span class="k">as</span> <span class="nn">rx</span>
+
+<span class="n">graph</span> <span class="o">=</span> <span class="n">rx</span><span class="o">.</span><span class="n">PyDiGraph</span><span class="p">()</span>
+<span class="n">node_a</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="s1">&#39;my_node_a&#39;</span><span class="p">)</span>
+<span class="n">node_b</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="s1">&#39;my_node_b&#39;</span><span class="p">)</span>
+<span class="n">graph</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">node_a</span><span class="p">,</span> <span class="n">node_b</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>where <code class="docutils literal notranslate"><span class="pre">node_a</span> <span class="pre">==</span> <span class="pre">0</span></code> and <code class="docutils literal notranslate"><span class="pre">node_b</span> <span class="pre">==</span> <span class="pre">1</span></code>. These node indices can be used with a
+graph object to access the objects set as the payload object via the python
+mapping protocol (<strong>not</strong> the sequence protocol because the indices are not
+guaranteed to be a sequence after nodes or edges are removed from a graph). Continuing
+from the above rustworkx example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">assert</span> <span class="s1">&#39;my_node_a&#39;</span> <span class="o">==</span> <span class="n">graph</span><span class="p">[</span><span class="n">node_a</span><span class="p">]</span>
+<span class="k">assert</span> <span class="s1">&#39;my_node_b&#39;</span> <span class="o">==</span> <span class="n">graph</span><span class="p">[</span><span class="n">node_b</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>The use of integer indices for everything is normally the biggest difference that
+existing networkx users have to adapt to when migrating to rustworkx.</p>
+<p>Similarly when there are algorithm functions that operate on a node or edge
+data, callback functions are used in rustworkx to return statically typed data
+from node or edge payloads to use for various algorithms. In networkx this is
+typically done using named attributes of nodes or edges (the typical example of
+a node or edge attribute named <code class="docutils literal notranslate"><span class="pre">weight</span></code> is used by default for functions that
+need a numerical weight).</p>
+<p>For example, in networkx:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">networkx</span> <span class="k">as</span> <span class="nn">nx</span>
+
+<span class="n">graph</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">MultiDiGraph</span><span class="p">()</span>
+<span class="n">graph</span><span class="o">.</span><span class="n">add_edges_from</span><span class="p">([(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;weight&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">}),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;weight&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">}),</span>
+                      <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;weight&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">}),</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;weight&#39;</span><span class="p">:</span> <span class="mi">3</span><span class="p">})])</span>
+<span class="n">dist_matrix</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">floyd_warshall_numpy</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="s1">&#39;weight&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>while in rustworkx you would use:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">rustworkx</span> <span class="k">as</span> <span class="nn">rx</span>
+
+<span class="n">graph</span> <span class="o">=</span> <span class="n">rx</span><span class="o">.</span><span class="n">PyDiGraph</span><span class="p">()</span>
+<span class="n">graph</span><span class="o">.</span><span class="n">extend_from</span> <span class="n">weighted_edge_list</span><span class="p">(</span>
+    <span class="p">[(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;weight&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">}),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;weight&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">}),</span>
+     <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;weight&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">}),</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;weight&#39;</span><span class="p">:</span> <span class="mi">3</span><span class="p">})])</span>
+<span class="n">dist_matrix</span> <span class="o">=</span> <span class="n">rx</span><span class="o">.</span><span class="n">digraph_floyd_warshall_numpy</span><span class="p">(</span>
+    <span class="n">graph</span><span class="p">,</span> <span class="n">weight_fn</span><span class="o">=</span><span class="k">lambda</span> <span class="n">edge</span><span class="p">:</span> <span class="n">edge</span><span class="p">[</span><span class="n">weight</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>or more concisely:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">rustworkx</span> <span class="k">as</span> <span class="nn">rx</span>
+
+<span class="n">graph</span> <span class="o">=</span> <span class="n">rx</span><span class="o">.</span><span class="n">PyDiGraph</span><span class="p">()</span>
+<span class="n">graph</span><span class="o">.</span><span class="n">extend_from</span> <span class="n">weighted_edge_list</span><span class="p">(</span>
+    <span class="p">[(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span>
+     <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">)])</span>
+<span class="n">dist_matrix</span> <span class="o">=</span> <span class="n">rx</span><span class="o">.</span><span class="n">digraph_floyd_warshall_numpy</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span>
+                                              <span class="n">weight_fn</span><span class="o">=</span><span class="k">lambda</span> <span class="n">edge</span><span class="p">:</span> <span class="n">edge</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The other large difference to keep in mind is that many functions in rustworkx
+are explicitly typed. This means that they either always return or accept
+either a <a class="reference internal" href="apiref/rustworkx.PyDiGraph.html#rustworkx.PyDiGraph" title="rustworkx.PyDiGraph"><code class="xref py py-class docutils literal notranslate"><span class="pre">PyDiGraph</span></code></a> or a <a class="reference internal" href="apiref/rustworkx.PyGraph.html#rustworkx.PyGraph" title="rustworkx.PyGraph"><code class="xref py py-class docutils literal notranslate"><span class="pre">PyGraph</span></code></a> but not
+both. Generally, functions prefixed with <cite>graph_*</cite> and <cite>digraph_*</cite> explicitly typed.
+Explicitly typed functions also indicate their type on the docstrings.
+This is different from networkx where everything is pretty much dynamically
+typed and you can pass a graph object to any function and it will work as
+expected (unless it isn’t supported and then it will raise an exception).</p>
+</section>
+<section id="graph-data-and-attributes">
+<h2>Graph Data and Attributes<a class="headerlink" href="#graph-data-and-attributes" title="Permalink to this heading">¶</a></h2>
+<section id="nodes">
+<h3>Nodes<a class="headerlink" href="#nodes" title="Permalink to this heading">¶</a></h3>
+<p>In networkx a node can be any hashable python object. That object is then used
+to access or refer to a node. Additionally, you can set optional attributes
+on a node. This is described in more detail below.</p>
+<p>In rustworkx any python object (hashable or not) can be used as a node, however
+nodes can only be accessed by an integer node index (which is returned by any
+function adding a node). There are no optional attributes for nodes. If this
+is required that is expected to be added to the node’s data payload.</p>
+</section>
+<section id="edges">
+<h3>Edges<a class="headerlink" href="#edges" title="Permalink to this heading">¶</a></h3>
+<p>Edges in networkx are accessible by the tuple of the nodes the edge is between.
+Edges only have optional attributes (as described below) and no other object
+payload.</p>
+<p>In rustworkx any python object can be an edge and have a unique integer index
+assigned to it, just like nodes. However, edges are in most functions/methods
+referenced by the tuple of the indices of the nodes the edge is between
+instead of the edge’s index.</p>
+</section>
+<section id="attributes">
+<h3>Attributes<a class="headerlink" href="#attributes" title="Permalink to this heading">¶</a></h3>
+<p>networkx has a concept of
+<a class="reference external" href="https://networkx.org/documentation/stable/tutorial.html#graph-attributes">graph</a>,
+<a class="reference external" href="https://networkx.org/documentation/stable/tutorial.html#node-attributes">node</a>,
+and <a class="reference external" href="https://networkx.org/documentation/stable/tutorial.html#edge-attributes">edge attributes</a>
+in addition to the hashable object used for a node’s payload. Retworkx has
+graph attributes similar to NetworkX however instead of being treated like
+a dictionary on the graph object itself they’re accessible from a dedicated
+<code class="xref py py-class docutils literal notranslate"><span class="pre">attrs</span></code> attribute. This attribute can be any Python object
+so you can use it to have different containers than a dictionary. For example,
+something like:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">networkx</span> <span class="k">as</span> <span class="nn">nx</span>
+
+<span class="n">graph</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">Graph</span><span class="p">(</span><span class="n">day</span><span class="o">=</span><span class="s2">&quot;Friday&quot;</span><span class="p">)</span>
+<span class="n">graph</span><span class="p">[</span><span class="s1">&#39;day&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Monday&quot;</span>
+</pre></div>
+</div>
+<p>can be done in rustworkx with:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">rustworkx</span> <span class="k">as</span> <span class="nn">rx</span>
+
+<span class="n">graph</span> <span class="o">=</span> <span class="n">rx</span><span class="o">.</span><span class="n">PyGraph</span><span class="p">(</span><span class="n">attrs</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">day</span><span class="o">=</span><span class="s2">&quot;Friday&quot;</span><span class="p">))</span>
+<span class="n">graph</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;day&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Monday&quot;</span>
+</pre></div>
+</div>
+<p>Additionally you could use a custom class with rustworkx like:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">Day</span><span class="p">:</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">day</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">day</span> <span class="o">=</span> <span class="n">day</span>
+
+<span class="n">graph</span> <span class="o">=</span> <span class="n">rx</span><span class="o">.</span><span class="n">PyGraph</span><span class="p">(</span><span class="n">attrs</span><span class="o">=</span><span class="n">Day</span><span class="p">(</span><span class="s2">&quot;Friday&quot;</span><span class="p">))</span>
+<span class="n">graph</span><span class="o">.</span><span class="n">attrs</span> <span class="o">=</span> <span class="n">Day</span><span class="p">(</span><span class="s2">&quot;Monday&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>But for nodes and edges rustworkx has no analogous concept. Instead, the payloads
+for nodes and edges are any python object (hashable or not). This enables you to
+build similar structures to the attributes concept, but also use alternative
+structures specific to your use case.</p>
+<p>For example, something like:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">networkx</span> <span class="k">as</span> <span class="nn">nx</span>
+
+<span class="n">graph</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">Graph</span><span class="p">()</span>
+<span class="n">graph</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">time</span><span class="o">=</span><span class="s1">&#39;5pm&#39;</span><span class="p">)</span>
+<span class="n">graph</span><span class="o">.</span><span class="n">add_nodes_from</span><span class="p">([</span><span class="mi">3</span><span class="p">],</span> <span class="n">time</span><span class="o">=</span><span class="s1">&#39;2pm&#39;</span><span class="p">)</span>
+<span class="n">graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="s1">&#39;room&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">714</span>
+</pre></div>
+</div>
+<p>can be accomplished by using a <code class="docutils literal notranslate"><span class="pre">dict</span></code> for node weights:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">rustworkx</span> <span class="k">as</span> <span class="nn">rx</span>
+
+<span class="n">graph</span> <span class="o">=</span> <span class="n">rx</span><span class="o">.</span><span class="n">PyGraph</span><span class="p">()</span>
+<span class="n">node_a</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">add_node</span><span class="p">({</span><span class="s1">&#39;time&#39;</span><span class="p">:</span> <span class="s1">&#39;5pm&#39;</span><span class="p">})</span>
+<span class="n">node_b</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">add_nodes_from</span><span class="p">([{</span><span class="s1">&#39;time&#39;</span><span class="p">:</span> <span class="s1">&#39;2pm&#39;</span><span class="p">}])</span>
+<span class="n">graph</span><span class="p">[</span><span class="n">node_a</span><span class="p">][</span><span class="s1">&#39;room&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">714</span>
+</pre></div>
+</div>
+</section>
+<section id="examining-elements-of-a-graph">
+<h3>Examining elements of a graph<a class="headerlink" href="#examining-elements-of-a-graph" title="Permalink to this heading">¶</a></h3>
+<p>networkx provides 4 attributes on graph objects <code class="docutils literal notranslate"><span class="pre">nodes</span></code>, <code class="docutils literal notranslate"><span class="pre">edges</span></code>, <code class="docutils literal notranslate"><span class="pre">adj</span></code>,
+and <code class="docutils literal notranslate"><span class="pre">degree</span></code> which act as set like views for the nodes, edges, neighbors, and
+degrees of nodes respectively. These properties provide a real time view into
+the different properties of the graphs and provide additional methods on those
+attributes for looking at graph properties in different ways.</p>
+<p>rustworkx doesn’t offer views, but instead provides different accessor methods
+that return copies of the analogous data. There are different functions/methods
+that offer different views on that data. For example,
+<a class="reference internal" href="apiref/rustworkx.PyDiGraph.edge_list.html#rustworkx.PyDiGraph.edge_list" title="rustworkx.PyDiGraph.edge_list"><code class="xref py py-meth docutils literal notranslate"><span class="pre">edge_list()</span></code></a> is analogous to networkx’s <code class="docutils literal notranslate"><span class="pre">edges</span></code> view
+and <a class="reference internal" href="apiref/rustworkx.PyDiGraph.weighted_edge_list.html#rustworkx.PyDiGraph.weighted_edge_list" title="rustworkx.PyDiGraph.weighted_edge_list"><code class="xref py py-meth docutils literal notranslate"><span class="pre">weighted_edge_list()</span></code></a> is equivalent to networkx’s
+<code class="docutils literal notranslate"><span class="pre">edges(data=True)</span></code>.</p>
+<p>Additionally, since everything in rustworkx is integer indexed, to access node
+data the <a class="reference internal" href="apiref/rustworkx.PyDiGraph.html#rustworkx.PyDiGraph" title="rustworkx.PyDiGraph"><code class="xref py py-class docutils literal notranslate"><span class="pre">PyDiGraph</span></code></a> and <a class="reference internal" href="apiref/rustworkx.PyGraph.html#rustworkx.PyGraph" title="rustworkx.PyGraph"><code class="xref py py-class docutils literal notranslate"><span class="pre">PyGraph</span></code></a> classes
+implement the python mapping protocol so you can access node’s data using a
+node’s index.</p>
+</section>
+</section>
+<section id="api-equivalents">
+<h2>API Equivalents<a class="headerlink" href="#api-equivalents" title="Permalink to this heading">¶</a></h2>
+<section id="class-constructors">
+<h3>Class Constructors<a class="headerlink" href="#class-constructors" title="Permalink to this heading">¶</a></h3>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>networkx</p></th>
+<th class="head"><p>rustworkx</p></th>
+<th class="head"><p>Notes</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Graph()</span></code></p></td>
+<td><p><a class="reference internal" href="apiref/rustworkx.PyGraph.html#rustworkx.PyGraph" title="rustworkx.PyGraph"><code class="xref py py-class docutils literal notranslate"><span class="pre">PyGraph(multigraph=False)</span></code></a></p></td>
+<td><p>Only in multigraph flag added in rustworkx&gt;= 0.8.0 prior releases
+always allow multiple edges</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">DiGraph()</span></code></p></td>
+<td><p><a class="reference internal" href="apiref/rustworkx.PyDiGraph.html#rustworkx.PyDiGraph" title="rustworkx.PyDiGraph"><code class="xref py py-class docutils literal notranslate"><span class="pre">PyDiGraph(multigraph=False)</span></code></a></p></td>
+<td><p>Only in multigraph flag added in rustworkx&gt;= 0.8.0 prior releases
+always allow multiple edges</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">MultiGraph()</span></code></p></td>
+<td><p><a class="reference internal" href="apiref/rustworkx.PyGraph.html#rustworkx.PyGraph" title="rustworkx.PyGraph"><code class="xref py py-class docutils literal notranslate"><span class="pre">PyGraph()</span></code></a></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">MultiDiGraph()</span></code></p></td>
+<td><p><a class="reference internal" href="apiref/rustworkx.PyDiGraph.html#rustworkx.PyDiGraph" title="rustworkx.PyDiGraph"><code class="xref py py-class docutils literal notranslate"><span class="pre">PyDiGraph()</span></code></a></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>The other thing to note here is that rustworkx does not allow initialization
+of a graph when the constructor is called. You will need to call an appropriate
+method of the object to add nodes or edges or use an alternative constructor
+method:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>networkx</p></th>
+<th class="head"><p>rustworkx</p></th>
+<th class="head"><p>Notes</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Graph</span><span class="p">([(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)])</span>
+</pre></div>
+</div>
+</td>
+<td><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">graph</span> <span class="o">=</span> <span class="n">PyGraph</span><span class="p">()</span>
+<span class="n">graph</span><span class="o">.</span><span class="n">extend_from_edge_list</span><span class="p">([(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)])</span>
+</pre></div>
+</div>
+</td>
+<td><p>rustworkx input must be a list of 2-tuples, while networkx can be an
+iterator</p></td>
+</tr>
+<tr class="row-odd"><td><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Graph</span><span class="p">([(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;weight&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">}),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;weight&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">})])</span>
+</pre></div>
+</div>
+</td>
+<td><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">graph</span> <span class="o">=</span> <span class="n">PyGraph</span><span class="p">()</span>
+<span class="n">graph</span><span class="o">.</span><span class="n">extend_from_edge_list</span><span class="p">([(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)])</span>
+</pre></div>
+</div>
+</td>
+<td><p>rustworkx input must be a list of 3-tuples, while networkx can be an
+iterator</p></td>
+</tr>
+<tr class="row-even"><td><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Graph</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]]))</span>
+</pre></div>
+</div>
+</td>
+<td><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">PyGraph</span><span class="o">.</span><span class="n">from_adjacency_matrix</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">))</span>
+</pre></div>
+</div>
+</td>
+<td><p>rustworkx <a class="reference internal" href="apiref/rustworkx.PyDiGraph.from_adjacency_matrix.html#rustworkx.PyDiGraph.from_adjacency_matrix" title="rustworkx.PyDiGraph.from_adjacency_matrix"><code class="xref py py-meth docutils literal notranslate"><span class="pre">from_adjacency_matrix()</span></code></a> can only take
+a float dtype numpy array, you can use
+<code class="docutils literal notranslate"><span class="pre">.astype(np.float64,</span> <span class="pre">copy=False)</span></code> to adapt a non-float array.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="graph-modifiers">
+<h3>Graph Modifiers<a class="headerlink" href="#graph-modifiers" title="Permalink to this heading">¶</a></h3>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>networkx</p></th>
+<th class="head"><p>rustworkx</p></th>
+<th class="head"><p>Notes</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">add_node()</span></code></p></td>
+<td><p><a class="reference internal" href="apiref/rustworkx.PyDiGraph.add_node.html#rustworkx.PyDiGraph.add_node" title="rustworkx.PyDiGraph.add_node"><code class="xref py py-meth docutils literal notranslate"><span class="pre">add_node()</span></code></a></p></td>
+<td><p>rustworkx returns a node index for the newly created node</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">add_nodes_from</span></code></p></td>
+<td><p><a class="reference internal" href="apiref/rustworkx.PyDiGraph.add_nodes_from.html#rustworkx.PyDiGraph.add_nodes_from" title="rustworkx.PyDiGraph.add_nodes_from"><code class="xref py py-meth docutils literal notranslate"><span class="pre">add_nodes_from()</span></code></a></p></td>
+<td><p>rustworkx requires the input to be a list of objects and will return a
+list of node indices for the newly created nodes</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">add_edge</span></code></p></td>
+<td><p><a class="reference internal" href="apiref/rustworkx.PyDiGraph.add_edge.html#rustworkx.PyDiGraph.add_edge" title="rustworkx.PyDiGraph.add_edge"><code class="xref py py-meth docutils literal notranslate"><span class="pre">add_edge()</span></code></a></p></td>
+<td><p>rustworkx requires 3 parameters be used, the 2 node indices and the payload
+(networkx works with either 2 or 3)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">add_edges_from</span></code></p></td>
+<td><p><a class="reference internal" href="apiref/rustworkx.PyDiGraph.add_edges_from.html#rustworkx.PyDiGraph.add_edges_from" title="rustworkx.PyDiGraph.add_edges_from"><code class="xref py py-meth docutils literal notranslate"><span class="pre">add_edges_from()</span></code></a>,
+<a class="reference internal" href="apiref/rustworkx.PyDiGraph.add_edges_from_no_data.html#rustworkx.PyDiGraph.add_edges_from_no_data" title="rustworkx.PyDiGraph.add_edges_from_no_data"><code class="xref py py-meth docutils literal notranslate"><span class="pre">add_edges_from_no_data()</span></code></a>,
+<a class="reference internal" href="apiref/rustworkx.PyDiGraph.extend_from_edge_list.html#rustworkx.PyDiGraph.extend_from_edge_list" title="rustworkx.PyDiGraph.extend_from_edge_list"><code class="xref py py-meth docutils literal notranslate"><span class="pre">extend_from_edge_list()</span></code></a>,
+<a class="reference internal" href="apiref/rustworkx.PyDiGraph.extend_from_weighted_edge_list.html#rustworkx.PyDiGraph.extend_from_weighted_edge_list" title="rustworkx.PyDiGraph.extend_from_weighted_edge_list"><code class="xref py py-meth docutils literal notranslate"><span class="pre">extend_from_weighted_edge_list()</span></code></a></p></td>
+<td><p>rustworkx requires a list of either a 3 or 2 tuple (depending on whether
+weights/data are expected or not). The difference between the rustworkx
+<code class="docutils literal notranslate"><span class="pre">extend_from*</span></code> and <code class="docutils literal notranslate"><span class="pre">add_edges_from*</span></code> methods are that the
+<code class="docutils literal notranslate"><span class="pre">extend_from*</span></code> will create new nodes with a weight/data payload of
+<code class="docutils literal notranslate"><span class="pre">None</span></code> if any node indices are missing.</p></td>
+</tr>
+</tbody>
+</table>
+<p>(note the rustworkx version links to the <a class="reference internal" href="apiref/rustworkx.PyDiGraph.html#rustworkx.PyDiGraph" title="rustworkx.PyDiGraph"><code class="xref py py-class docutils literal notranslate"><span class="pre">PyDiGraph</span></code></a> version,
+but there are also equivalent <a class="reference internal" href="apiref/rustworkx.PyGraph.html#rustworkx.PyGraph" title="rustworkx.PyGraph"><code class="xref py py-class docutils literal notranslate"><span class="pre">PyGraph</span></code></a> methods available)</p>
+</section>
+<section id="matrix-converter-functions">
+<h3>Matrix Converter Functions<a class="headerlink" href="#matrix-converter-functions" title="Permalink to this heading">¶</a></h3>
+<p>NetworkX has several functions for going back and forth between a NetworkX
+graph and matrices in other libraries. This includes <code class="docutils literal notranslate"><span class="pre">to_numpy_matrix()</span></code>,
+<code class="docutils literal notranslate"><span class="pre">to_numpy_array()</span></code>, <code class="docutils literal notranslate"><span class="pre">to_numpy_recarray()</span></code>, <code class="docutils literal notranslate"><span class="pre">to_scipy_sparse_matrix()</span></code>,
+<code class="docutils literal notranslate"><span class="pre">to_pandas_adjacency()</span></code>, and <code class="docutils literal notranslate"><span class="pre">adjacency_matrix()</span></code> (which is equivalent to
+<code class="docutils literal notranslate"><span class="pre">to_scipy_sparse_matrix()</span></code> and returns a scipy csr sparse matrix of the
+adjacency matrix).</p>
+<p>However, in rustworkx there is <strong>only</strong> a <a class="reference internal" href="apiref/rustworkx.adjacency_matrix.html#rustworkx.adjacency_matrix" title="rustworkx.adjacency_matrix"><code class="xref py py-meth docutils literal notranslate"><span class="pre">adjacency_matrix()</span></code></a>
+function (and it’s per type variants <a class="reference internal" href="apiref/rustworkx.digraph_adjacency_matrix.html#rustworkx.digraph_adjacency_matrix" title="rustworkx.digraph_adjacency_matrix"><code class="xref py py-meth docutils literal notranslate"><span class="pre">digraph_adjacency_matrix()</span></code></a>
+and <a class="reference internal" href="apiref/rustworkx.graph_adjacency_matrix.html#rustworkx.graph_adjacency_matrix" title="rustworkx.graph_adjacency_matrix"><code class="xref py py-meth docutils literal notranslate"><span class="pre">graph_adjacency_matrix()</span></code></a>) which will return a numpy array
+of the adjacency matrix (<strong>not</strong> a scipy csr sparse matrix like networkx’s
+function). This function is equivalent to networkx’s <code class="docutils literal notranslate"><span class="pre">to_numpy_array()</span></code>
+function.</p>
+<p>This difference with rustworkx is primarily because numpy exposes a public C
+interface which rustworkx can interface with directly, while the other
+libraries and types only expose Python APIs.</p>
+</section>
+<section id="visualization-functions">
+<h3>Visualization Functions<a class="headerlink" href="#visualization-functions" title="Permalink to this heading">¶</a></h3>
+<p>NetworkX provides a native drawer with a matplotlib drawer (the
+<code class="docutils literal notranslate"><span class="pre">networkx_drawer*</span></code> functions) and then functions to interface with
+<code class="docutils literal notranslate"><span class="pre">pygraphviz</span></code> and <code class="docutils literal notranslate"><span class="pre">pydot</span></code> to enable visualization with graphviz via those
+libraries (in addition to functions to serialize graphs in formats other
+graph visualization tools can use). NetworkX also provides several functions
+<a class="reference external" href="https://networkx.org/documentation/stable/reference/drawing.html#module-networkx.drawing.layout">layout functions</a>
+for generating different layouts that can be used for visualizing the graph.</p>
+<p>rustworkx has drawer functions with 2 visualization backends, matplotlib
+(<a class="reference internal" href="apiref/rustworkx.visualization.mpl_draw.html#rustworkx.visualization.mpl_draw" title="rustworkx.visualization.mpl_draw"><code class="xref py py-func docutils literal notranslate"><span class="pre">mpl_draw()</span></code></a>) and graphviz
+(<a class="reference internal" href="apiref/rustworkx.visualization.graphviz_draw.html#rustworkx.visualization.graphviz_draw" title="rustworkx.visualization.graphviz_draw"><code class="xref py py-func docutils literal notranslate"><span class="pre">graphviz_draw()</span></code></a>). Unlike networkx the
+<a class="reference internal" href="apiref/rustworkx.visualization.graphviz_draw.html#rustworkx.visualization.graphviz_draw" title="rustworkx.visualization.graphviz_draw"><code class="xref py py-func docutils literal notranslate"><span class="pre">graphviz_draw()</span></code></a> will handle calling graphviz and
+generate an image file. For layout functions rustworkx has a similar variety of
+<a class="reference internal" href="api.html#layout-functions"><span class="std std-ref">Layout Functions</span></a>, however it should be noted that rustworkx’s functions
+are strictly 2 dimensional. The also return a <a class="reference internal" href="apiref/rustworkx.Pos2DMapping.html#rustworkx.Pos2DMapping" title="rustworkx.Pos2DMapping"><code class="xref py py-class docutils literal notranslate"><span class="pre">Pos2DMapping</span></code></a>
+custom return type which acts as read-only dictionary (which is different from
+networkx which returns a normal dictionary that can be modified).</p>
+<section id="matplotlib-drawers">
+<h4>Matplotlib Drawers<a class="headerlink" href="#matplotlib-drawers" title="Permalink to this heading">¶</a></h4>
+<p>The retwork function <a class="reference internal" href="apiref/rustworkx.visualization.mpl_draw.html#rustworkx.visualization.mpl_draw" title="rustworkx.visualization.mpl_draw"><code class="xref py py-func docutils literal notranslate"><span class="pre">mpl_draw()</span></code></a> function is
+basically equivalent to the networkx function <code class="docutils literal notranslate"><span class="pre">draw_networkx</span></code> (it was
+actually originally forked from the networkx drawer). However, there are some
+key differences to keep in mind between the networkx and rustworkx matplotlib
+drawer.</p>
+<p><code class="docutils literal notranslate"><span class="pre">networkx.draw_networkx</span></code> and <code class="docutils literal notranslate"><span class="pre">rustworkx.mpl_draw</span></code> differences:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>networkx</p></th>
+<th class="head"><p>rustworkx</p></th>
+<th class="head"><p>Notes</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">nodelist</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">node_list</span></code></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">edgelist</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">edge_list</span></code></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">arrowsize</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">arrow_size</span></code></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">labels</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">labels</span></code></p></td>
+<td><p>For <code class="docutils literal notranslate"><span class="pre">networkx_drawer</span></code> <code class="docutils literal notranslate"><span class="pre">labels</span></code> is a dict of nodes to their label,
+while rustworkx’s <code class="docutils literal notranslate"><span class="pre">mpl_drawer</span></code> <code class="docutils literal notranslate"><span class="pre">labels</span></code> is a callback function
+that will be passed a node’s data payload and expected to return the
+node’s label</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">networkx.draw_networkx_edge_labels()</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">edge_labels</span></code></p></td>
+<td><p>NetworkX’s <code class="docutils literal notranslate"><span class="pre">networkx_drawer</span></code> doesn’t have an option for edge labels
+and instead adding labels is only exposed via a separate function
+<code class="docutils literal notranslate"><span class="pre">draw_networkx_edge_labels()</span></code> which requires the <code class="docutils literal notranslate"><span class="pre">pos</span></code> dictionary
+from the original visualization to be used. rustworkx’s <code class="docutils literal notranslate"><span class="pre">edge_labels</span></code>
+kwarg takes a callback function that will be passed an edge’s data
+payload and expected to return the label.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+</section>
+</section>
+<section id="converting-from-a-networkx-graph">
+<span id="networkx-converter"></span><h2>Converting from a networkx graph<a class="headerlink" href="#converting-from-a-networkx-graph" title="Permalink to this heading">¶</a></h2>
+<p>If you’re using a function or an external library that is already generating a
+networkx graph then you can use <a class="reference internal" href="apiref/rustworkx.networkx_converter.html#rustworkx.networkx_converter" title="rustworkx.networkx_converter"><code class="xref py py-func docutils literal notranslate"><span class="pre">rustworkx.networkx_converter()</span></code></a> to convert
+that networkx <code class="docutils literal notranslate"><span class="pre">Graph</span></code> object into an equivalent rustworkx
+<a class="reference internal" href="apiref/rustworkx.PyGraph.html#rustworkx.PyGraph" title="rustworkx.PyGraph"><code class="xref py py-class docutils literal notranslate"><span class="pre">PyGraph</span></code></a> or <a class="reference internal" href="apiref/rustworkx.PyDiGraph.html#rustworkx.PyDiGraph" title="rustworkx.PyDiGraph"><code class="xref py py-class docutils literal notranslate"><span class="pre">PyDiGraph</span></code></a> object. Note that
+networkx is <strong>not</strong> a dependency for rustworkx and you are responsible for
+installing networkx to use this function. Accordingly, there is not equivalent
+function provided to convert the reverse direction (because doing so would add
+an unwanted dependency on networkx, even an optional one) but writing such a
+function is straightforward, for example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">networkx</span> <span class="k">as</span> <span class="nn">nx</span>
+<span class="kn">import</span> <span class="nn">rustworkx</span> <span class="k">as</span> <span class="nn">rx</span>
+
+
+<span class="k">def</span> <span class="nf">convert_rustworkx_to_networkx</span><span class="p">(</span><span class="n">graph</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert a rustworkx PyGraph or PyDiGraph to a networkx graph.&quot;&quot;&quot;</span>
+    <span class="n">edge_list</span> <span class="o">=</span> <span class="p">[(</span>
+        <span class="n">graph</span><span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]],</span> <span class="n">graph</span><span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]],</span>
+        <span class="p">{</span><span class="s1">&#39;weight&#39;</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="mi">2</span><span class="p">]})</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">graph</span><span class="o">.</span><span class="n">weighted_edge_list</span><span class="p">()]</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">rx</span><span class="o">.</span><span class="n">PyGraph</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">graph</span><span class="o">.</span><span class="n">multigraph</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">nx</span><span class="o">.</span><span class="n">MultiGraph</span><span class="p">(</span><span class="n">edge_list</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">nx</span><span class="o">.</span><span class="n">Graph</span><span class="p">(</span><span class="n">edge_list</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">graph</span><span class="o">.</span><span class="n">multigraph</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">nx</span><span class="o">.</span><span class="n">MultiDiGraph</span><span class="p">(</span><span class="n">edge_list</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">nx</span><span class="o">.</span><span class="n">DiGraph</span><span class="p">(</span><span class="n">edge_list</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="functionality-gaps">
+<h2>Functionality Gaps<a class="headerlink" href="#functionality-gaps" title="Permalink to this heading">¶</a></h2>
+<p>networkx is a mature library that has a wide user base and extensive feature set,
+while rustworkx, by comparison, is a much younger library and is missing a lot
+of the features that networkx offers. If you encounter a feature that networkx
+offers which is missing from rustworkx that you would like to use please open an
+“Enhancement request” issue at: <a class="reference external" href="https://github.com/Qiskit/rustworkx/issues/new/choose">https://github.com/Qiskit/rustworkx/issues/new/choose</a>
+Once an issue is opened we can prioritize working on adding an equivalent
+feature to rustworkx.</p>
+</section>
+</section>
+
+
+             </article>
+             
+            </div>
+            <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+      
+        <a href="CONTRIBUTING.html" class="btn btn-neutral" title="Contributing" accesskey="p" rel="prev"><img src="_static/images/chevron-right-orange.svg" class="previous-page"> Previous</a>
+      
+    </div>
+  
+
+  
+
+    <hr>
+
+  
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2021, rustworkx Contributors.
+
+    </p>
+  </div>
+    
+      <div>
+        Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+      </div>
+     
+
+</footer>
+
+          </div>
+        </div>
+
+        <div class="pytorch-content-right" id="pytorch-content-right">
+          <div class="pytorch-right-menu" id="pytorch-right-menu">
+            <div class="pytorch-side-scroll" id="pytorch-side-scroll-right">
+              <ul>
+<li><a class="reference internal" href="#">rustworkx for NetworkX users</a><ul>
+<li><a class="reference internal" href="#some-key-differences">Some Key Differences</a></li>
+<li><a class="reference internal" href="#graph-data-and-attributes">Graph Data and Attributes</a><ul>
+<li><a class="reference internal" href="#nodes">Nodes</a></li>
+<li><a class="reference internal" href="#edges">Edges</a></li>
+<li><a class="reference internal" href="#attributes">Attributes</a></li>
+<li><a class="reference internal" href="#examining-elements-of-a-graph">Examining elements of a graph</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#api-equivalents">API Equivalents</a><ul>
+<li><a class="reference internal" href="#class-constructors">Class Constructors</a></li>
+<li><a class="reference internal" href="#graph-modifiers">Graph Modifiers</a></li>
+<li><a class="reference internal" href="#matrix-converter-functions">Matrix Converter Functions</a></li>
+<li><a class="reference internal" href="#visualization-functions">Visualization Functions</a><ul>
+<li><a class="reference internal" href="#matplotlib-drawers">Matplotlib Drawers</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#converting-from-a-networkx-graph">Converting from a networkx graph</a></li>
+<li><a class="reference internal" href="#functionality-gaps">Functionality Gaps</a></li>
+</ul>
+</li>
+</ul>
+
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+  
+
+     
+       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+         <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+         <script src="_static/jquery.js"></script>
+         <script src="_static/underscore.js"></script>
+         <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+         <script src="_static/doctools.js"></script>
+         <script src="_static/sphinx_highlight.js"></script>
+         <script src="_static/thebelab-helper.js"></script>
+         <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+         <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
+     
+
+  
+
+  <script type="text/javascript" src="_static/js/vendor/popper.min.js"></script>
+  <script type="text/javascript" src="_static/js/vendor/bootstrap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/list.js/1.5.0/list.min.js"></script>
+  <script type="text/javascript" src="_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+ <script type="text/javascript">
+    $(document).ready(function() {
+        $(".toggle > *").hide();
+        $(".toggle .header").show();
+        $(".toggle .header").click(function() {
+            $(this).parent().children().not(".header").toggle(400);
+            $(this).parent().children(".header").toggleClass("open");
+        })
+    });
+</script>
+
+
+  <div>
+    <br>
+  </div>
+
+  <!-- Begin Mobile Menu -->
+
+  <div class="mobile-main-menu">
+    <div class="container-fluid">
+      <div class="container">
+        <div class="mobile-main-menu-header-container">
+          <a class="header-logo" href="https://qiskit.org/" aria-label="PyTorch"></a>
+          <a class="main-menu-close-button" href="#" data-behavior="close-mobile-menu"></a>
+        </div>
+      </div>
+    </div>
+
+    <div class="mobile-main-menu-links-container">
+      <div class="main-menu">
+        <ul>
+          <li>
+            <a href="https://retworkx.readthedocs.io/en/stable/">Qiskit Documentation</a>
+          </li>
+
+          <li>
+            <a href="https://qiskit.org/learn" target="_blank">Learning Resources</a>
+          </li>
+
+          <li>
+            <a href="https://qiskit.slack.com" target="_blank">Slack Support</a>
+          </li>
+
+          <li>
+            <a href="https://github.com/Qiskit/retworkx" target="_blank">Github</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- End Mobile Menu -->
+
+  <script type="text/javascript" src="_static/js/vendor/anchor.min.js"></script>
+
+  <script type="text/javascript">
+    $(document).ready(function() {
+      mobileMenu.bind();
+      mobileTOC.bind();
+      pytorchAnchors.bind();
+      sideMenus.bind();
+      scrollToAnchor.bind();
+      highlightNavigation.bind();
+      mainMenuDropdown.bind();
+      filterTags.bind();
+
+      // Add class to links that have code blocks, since we cannot create links in code blocks
+      $("article.pytorch-article a span.pre").each(function(e) {
+        $(this).closest("a").addClass("has-code");
+      });
+    })
+  </script>
+</body>
+</html>

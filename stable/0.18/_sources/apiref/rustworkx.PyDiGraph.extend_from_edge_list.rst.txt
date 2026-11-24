@@ -1,0 +1,6 @@
+rustworkx.PyDiGraph.extend\_from\_edge\_list
+============================================
+
+.. currentmodule:: rustworkx
+
+.. automethod:: PyDiGraph.extend_from_edge_list

@@ -1,0 +1,6 @@
+rustworkx.visit.DijkstraVisitor.examine\_edge
+=============================================
+
+.. currentmodule:: rustworkx.visit
+
+.. automethod:: DijkstraVisitor.examine_edge

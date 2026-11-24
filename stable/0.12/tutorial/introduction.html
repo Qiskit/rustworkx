@@ -1,0 +1,1049 @@
+
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Introduction to rustworkx &mdash; rustworkx 0.12.1 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <!-- <link rel="stylesheet" href="../_static/pygments.css" type="text/css" /> -->
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/jupyter-sphinx.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/thebelab.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/style.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Directed Acyclic Graphs" href="dags.html" />
+    <link rel="prev" title="rustworkx Tutorials and Guides" href="index.html" /> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="pytorch-body">
+
+   
+
+    
+
+    <div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    <span class="rst-current-version-label">0.12</span>
+    <span class="rst-versions-dropdown-icon"></span>
+  </span>
+  <div class="rst-other-versions">
+    <dl>
+      <dt>Versions</dt>
+          <dd><a class="version" href="/documentation/retworkx/index.html">Current Release</a></dd>
+          <dd><a class="version" href="/documentation/retworkx/dev/index.html">Development</a></dd>
+      <dt>Previous Releases</dt>
+        
+            <dd><a class="version" href="/documentation/retworkx/stable/0.12/index.html">0.12</a></dd>
+        
+    </dl>
+  </div>
+  <script>
+    jQuery('.version').click((evt) => {
+      const hash = window.location.hash
+      const complete_url = evt.target.href + hash
+      window.location = complete_url
+      evt.preventDefault()
+    })
+  </script>
+</div>
+
+    <div class="table-of-contents-link-wrapper">
+      <span>Table of Contents</span>
+      <a href="#" class="toggle-table-of-contents" data-behavior="toggle-table-of-contents"></a>
+    </div>
+
+    <nav data-toggle="wy-nav-shift" class="pytorch-left-menu" id="pytorch-left-menu">
+      <div class="pytorch-side-scroll">
+        <div class="pytorch-menu pytorch-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          <div class="pytorch-left-menu-search">
+            
+
+            
+              
+              
+                <div class="version">
+                  0.12.1
+                </div>
+              
+            
+
+            
+
+
+  
+
+
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search Docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+            
+          </div>
+
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../install.html#installing-rustworkx">Installing Rustworkx</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../install.html#platform-support">Platform Support</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../install.html#using-rustworkx">Using rustworkx</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Rustworkx Tutorials and Guides</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api.html">Rustworkx API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../visualization.html">Visualization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../CONTRIBUTING.html">Contributing Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../networkx.html">rustworkx for NetworkX users</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <div class="pytorch-container">
+      <div class="pytorch-page-level-bar" id="pytorch-page-level-bar">
+        <div class="pytorch-breadcrumbs-wrapper">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="pytorch-breadcrumbs">
+    
+      <li>
+        <a href="../index.html">
+          
+            Docs
+          
+        </a> &gt;
+      </li>
+
+        
+          <li><a href="index.html">rustworkx Tutorials and Guides</a> &gt;</li>
+        
+      <li>Introduction to rustworkx</li>
+    
+    
+      <li class="pytorch-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/tutorial/introduction.rst.txt" rel="nofollow"><img src="../_static/images/view-page-source-icon.svg"></a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+</div>
+        </div>
+
+        <div class="pytorch-shortcuts-wrapper" id="pytorch-shortcuts-wrapper">
+          Shortcuts
+        </div>
+      </div>
+
+      <section data-toggle="wy-nav-shift" id="pytorch-content-wrap" class="pytorch-content-wrap">
+        <div class="pytorch-content-left">
+          
+          <div class="rst-content style-external-links">
+          
+            <div role="main" class="main-content" itemscope="itemscope" itemtype="http://schema.org/Article">
+             <article itemprop="articleBody" id="pytorch-article" class="pytorch-article">
+              
+  <br><br><br><section id="introduction-to-rustworkx">
+<span id="intro-tutorial"></span><h1>Introduction to rustworkx<a class="headerlink" href="#introduction-to-rustworkx" title="Permalink to this heading">¶</a></h1>
+<p>The rustworkx library is a Python library for working with graphs (or networks)
+and graph theory.</p>
+<p>This guide serves as an introduction to working with rustworkx. If you’re a
+current or past <a class="reference external" href="https:://networkx.org">NetworkX</a> user who is looking at
+using rustworkx as a replacement for NetworkX, you can also refer to
+<a class="reference internal" href="../networkx.html#networkx"><span class="std std-ref">rustworkx for NetworkX users</span></a> for a detailed comparison.</p>
+<section id="installing-rustworkx">
+<h2>Installing rustworkx<a class="headerlink" href="#installing-rustworkx" title="Permalink to this heading">¶</a></h2>
+<p>To install rustworkx you need a Python installation. Rustworkx works in any
+Python environment. If you already have Python, you can install rustworkx with:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">rustworkx</span>
+</pre></div>
+</div>
+<p>(if you’re running on a supported platform, if you’re not you will need to
+refer to the <a class="reference internal" href="../install.html#install-unsupported"><span class="std std-ref">Installing on a platform without precompiled binaries</span></a> on how to build and install)</p>
+</section>
+<section id="how-to-import-rustworkx">
+<h2>How to import rustworkx<a class="headerlink" href="#how-to-import-rustworkx" title="Permalink to this heading">¶</a></h2>
+<p>To access rustworkx and its functions import it into your Python code like this:</p>
+<div class="jupyter_cell jupyter_container docutils container">
+<div class="cell_input code_cell docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">rustworkx</span> <span class="k">as</span> <span class="nn">rx</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+</div>
+</div>
+<p>We shorten the name to <code class="docutils literal notranslate"><span class="pre">rx</span></code> for better readability of code using Rustworkx.
+This is a widely adopted convention that you can follow.</p>
+</section>
+<section id="creating-a-graph">
+<h2>Creating a Graph<a class="headerlink" href="#creating-a-graph" title="Permalink to this heading">¶</a></h2>
+<p>To create an empty undirected graph <span class="math notranslate nohighlight">\(G\)</span> with no nodes and no edges you
+can run the following code:</p>
+<div class="jupyter_cell jupyter_container docutils container">
+<div class="cell_input code_cell docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">G</span> <span class="o">=</span> <span class="n">rx</span><span class="o">.</span><span class="n">PyGraph</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+</div>
+</div>
+<p>A <a class="reference internal" href="../apiref/rustworkx.PyGraph.html#rustworkx.PyGraph" title="rustworkx.PyGraph"><code class="xref py py-class docutils literal notranslate"><span class="pre">PyGraph</span></code></a> is comprised of nodes (vertices)
+and unordered pairings of nodes (called edges, links, etc). Both nodes and
+edges in rustworkx have an assigned data payload (also referred to as a weight
+in the API and documentation) which can be any Python object (e.g. a numeric
+value, a string, an image, an XML object, another graph, a custom node object,
+etc.). Nodes and edges are uniquely identified by an integer <code class="docutils literal notranslate"><span class="pre">index</span></code>
+which is stable for the lifetime of that node or edge in the graph. These
+indices are not guaranteed to be contiguous as removed nodes or
+edges will leave holes in the sequence of assigned indices, and an index
+can be reused after a removal.</p>
+</section>
+<section id="nodes">
+<h2>Nodes<a class="headerlink" href="#nodes" title="Permalink to this heading">¶</a></h2>
+<p>The graph <span class="math notranslate nohighlight">\(G\)</span> can be grown in several ways. There are also graph generator
+functions and functions to read and write graphs in different formats.</p>
+<p>To get started we can add a single node:</p>
+<div class="jupyter_cell jupyter_container docutils container">
+<div class="cell_input code_cell docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">G</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-none notranslate"><div class="highlight"><pre><span></span>0
+</pre></div>
+</div>
+</div>
+</div>
+<p>The <a class="reference internal" href="../apiref/rustworkx.PyGraph.add_node.html#rustworkx.PyGraph.add_node" title="rustworkx.PyGraph.add_node"><code class="xref py py-meth docutils literal notranslate"><span class="pre">add_node()</span></code></a> method returns an integer. This integer
+is the index used to uniquely identify this new node in the graph. You can use
+this index to identify the node as long as node remains in the graph.</p>
+<p>It is also possible to add nodes to <span class="math notranslate nohighlight">\(G\)</span> from any
+<a class="reference external" href="https://docs.python.org/3/glossary.html#term-sequence">sequence</a> of
+elements such as a
+<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list">list</a> or
+<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#ranges">range</a>:</p>
+<div class="jupyter_cell jupyter_container docutils container">
+<div class="cell_input code_cell docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">indices</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">add_nodes_from</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">5</span><span class="p">))</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">indices</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-none notranslate"><div class="highlight"><pre><span></span>NodeIndices[1, 2, 3, 4, 5]
+</pre></div>
+</div>
+</div>
+</div>
+<p>Just as with <a class="reference internal" href="../apiref/rustworkx.PyGraph.add_node.html#rustworkx.PyGraph.add_node" title="rustworkx.PyGraph.add_node"><code class="xref py py-meth docutils literal notranslate"><span class="pre">add_node()</span></code></a>, the
+<a class="reference internal" href="../apiref/rustworkx.PyGraph.add_nodes_from.html#rustworkx.PyGraph.add_nodes_from" title="rustworkx.PyGraph.add_nodes_from"><code class="xref py py-meth docutils literal notranslate"><span class="pre">add_nodes_from()</span></code></a> method returns the indices for the nodes
+added as a <a class="reference internal" href="../apiref/rustworkx.NodeIndices.html#rustworkx.NodeIndices" title="rustworkx.NodeIndices"><code class="xref py py-class docutils literal notranslate"><span class="pre">NodeIndices</span></code></a> object, which is a custom sequence
+type that contains the index of each node in the order it’s added from the input
+sequence.</p>
+<p>In the above cases, we were adding nodes with a data payload of type integer (e.g. <code class="docutils literal notranslate"><span class="pre">G.add_node(1)</span></code>).
+However, rustworkx doesn’t place constraints on what the node data payload can
+be, so you can use more involved objects including types which are not
+<a class="reference external" href="https://docs.python.org/3/glossary.html#term-hashable">hashable</a>. For
+example, we can add a node with a data payload that’s a a
+<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict">dict</a>:</p>
+<div class="jupyter_cell jupyter_container docutils container">
+<div class="cell_input code_cell docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">G</span><span class="o">.</span><span class="n">add_node</span><span class="p">({</span>
+    <span class="s2">&quot;color&quot;</span><span class="p">:</span> <span class="s2">&quot;green&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;size&quot;</span><span class="p">:</span> <span class="mi">42</span><span class="p">,</span>
+<span class="p">})</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-none notranslate"><div class="highlight"><pre><span></span>6
+</pre></div>
+</div>
+</div>
+</div>
+<p>A discussion of how to select what to use for your data payload is in the
+<a class="reference internal" href="#data-payload"><span class="std std-ref">What to use for node and edge data payload</span></a> section.</p>
+</section>
+<section id="edges">
+<h2>Edges<a class="headerlink" href="#edges" title="Permalink to this heading">¶</a></h2>
+<p>The graph <span class="math notranslate nohighlight">\(G\)</span> can also be grown by adding one edge at a time</p>
+<div class="jupyter_cell jupyter_container docutils container">
+<div class="cell_input code_cell docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-none notranslate"><div class="highlight"><pre><span></span>0
+</pre></div>
+</div>
+</div>
+</div>
+<p>This will add an edge between node index <code class="docutils literal notranslate"><span class="pre">1</span></code> and node index <code class="docutils literal notranslate"><span class="pre">2</span></code> with a
+data payload of <code class="docutils literal notranslate"><span class="pre">None</span></code>. Similarly to <a class="reference internal" href="../apiref/rustworkx.PyGraph.add_node.html#rustworkx.PyGraph.add_node" title="rustworkx.PyGraph.add_node"><code class="xref py py-meth docutils literal notranslate"><span class="pre">add_node()</span></code></a>, the
+<a class="reference internal" href="../apiref/rustworkx.PyGraph.add_edge.html#rustworkx.PyGraph.add_edge" title="rustworkx.PyGraph.add_edge"><code class="xref py py-meth docutils literal notranslate"><span class="pre">add_edge()</span></code></a> method returns the new edge’s unique
+index.</p>
+</section>
+<section id="examining-elements-of-a-graph">
+<h2>Examining elements of a graph<a class="headerlink" href="#examining-elements-of-a-graph" title="Permalink to this heading">¶</a></h2>
+<p>We can examine the nodes and edges of a graph in rustworkx fairly easily. The
+first thing to do is to get a list of node and edge indices using
+<a class="reference internal" href="../apiref/rustworkx.PyGraph.node_indices.html#rustworkx.PyGraph.node_indices" title="rustworkx.PyGraph.node_indices"><code class="xref py py-meth docutils literal notranslate"><span class="pre">node_indices()</span></code></a> and
+<a class="reference internal" href="../apiref/rustworkx.PyGraph.edge_indices.html#rustworkx.PyGraph.edge_indices" title="rustworkx.PyGraph.edge_indices"><code class="xref py py-meth docutils literal notranslate"><span class="pre">edge_indices()</span></code></a>:</p>
+<div class="jupyter_cell jupyter_container docutils container">
+<div class="cell_input code_cell docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">node_indices</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">node_indices</span><span class="p">()</span>
+<span class="n">edge_indices</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">edge_indices</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">node_indices</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">edge_indices</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-none notranslate"><div class="highlight"><pre><span></span>NodeIndices[0, 1, 2, 3, 4, 5, 6]
+EdgeIndices[0]
+</pre></div>
+</div>
+</div>
+</div>
+<p>Since indices are the unique identifiers for nodes and edges, they’re your
+handle to elements in the graph. This is especially important for edges in the
+multigraph case, or where you have identical data payloads between multiple
+nodes. You can use the indices to access the data payload. For nodes, the
+<a class="reference internal" href="../apiref/rustworkx.PyGraph.html#rustworkx.PyGraph" title="rustworkx.PyGraph"><code class="xref py py-class docutils literal notranslate"><span class="pre">PyGraph</span></code></a> object behaves like a
+<a class="reference external" href="https://docs.python.org/3/glossary.html#term-mapping">mapping</a> with the
+index:</p>
+<div class="jupyter_cell jupyter_container docutils container">
+<div class="cell_input code_cell docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">first_index_data</span> <span class="o">=</span> <span class="n">G</span><span class="p">[</span><span class="n">node_indices</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">first_index_data</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-none notranslate"><div class="highlight"><pre><span></span>1
+</pre></div>
+</div>
+</div>
+</div>
+<p>For edges, you can use the <a class="reference internal" href="../apiref/rustworkx.PyGraph.get_edge_data_by_index.html#rustworkx.PyGraph.get_edge_data_by_index" title="rustworkx.PyGraph.get_edge_data_by_index"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_edge_data_by_index()</span></code></a>
+method to access the data payload for a given edge and
+<a class="reference internal" href="../apiref/rustworkx.PyGraph.get_edge_endpoints_by_index.html#rustworkx.PyGraph.get_edge_endpoints_by_index" title="rustworkx.PyGraph.get_edge_endpoints_by_index"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_edge_endpoints_by_index()</span></code></a> to get the endpoints
+of a given edge from its index:</p>
+<div class="jupyter_cell jupyter_container docutils container">
+<div class="cell_input code_cell docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">first_index_data</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">get_edge_data_by_index</span><span class="p">(</span><span class="n">edge_indices</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+<span class="n">first_index_edgepoints</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">get_edge_endpoints_by_index</span><span class="p">(</span><span class="n">edge_indices</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">first_index_edgepoints</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">first_index_data</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-none notranslate"><div class="highlight"><pre><span></span>(1, 2)
+None
+</pre></div>
+</div>
+</div>
+</div>
+<p>We don’t implement the mapping protocol for edges, so there is a helper
+method available to get the mapping of edge indices to edge endpoints and
+data payloads, <a class="reference internal" href="../apiref/rustworkx.PyGraph.edge_index_map.html#rustworkx.PyGraph.edge_index_map" title="rustworkx.PyGraph.edge_index_map"><code class="xref py py-meth docutils literal notranslate"><span class="pre">edge_index_map()</span></code></a>:</p>
+<div class="jupyter_cell jupyter_container docutils container">
+<div class="cell_input code_cell docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">edge_index_map</span><span class="p">())</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-none notranslate"><div class="highlight"><pre><span></span>EdgeIndexMap{0: (1, 2, None)}
+</pre></div>
+</div>
+</div>
+</div>
+<p>Additionally, you can access the list of node and edge data payloads directly
+with <a class="reference internal" href="../apiref/rustworkx.PyGraph.nodes.html#rustworkx.PyGraph.nodes" title="rustworkx.PyGraph.nodes"><code class="xref py py-meth docutils literal notranslate"><span class="pre">nodes()</span></code></a> and <a class="reference internal" href="../apiref/rustworkx.PyGraph.edges.html#rustworkx.PyGraph.edges" title="rustworkx.PyGraph.edges"><code class="xref py py-meth docutils literal notranslate"><span class="pre">edges()</span></code></a></p>
+<div class="jupyter_cell jupyter_container docutils container">
+<div class="cell_input code_cell docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Node data payloads&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">nodes</span><span class="p">())</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Edge data payloads&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">edges</span><span class="p">())</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-none notranslate"><div class="highlight"><pre><span></span>Node data payloads
+[1, 0, 1, 2, 3, 4, {&#39;color&#39;: &#39;green&#39;, &#39;size&#39;: 42}]
+Edge data payloads
+[None]
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="removing-elements-from-a-graph">
+<span id="tutorial-removal"></span><h2>Removing elements from a graph<a class="headerlink" href="#removing-elements-from-a-graph" title="Permalink to this heading">¶</a></h2>
+<p>You can remove a node or edge from a graph in a similar manner to adding
+elements to the graph. There are methods <a class="reference internal" href="../apiref/rustworkx.PyGraph.remove_node.html#rustworkx.PyGraph.remove_node" title="rustworkx.PyGraph.remove_node"><code class="xref py py-meth docutils literal notranslate"><span class="pre">remove_node()</span></code></a>,
+<a class="reference internal" href="../apiref/rustworkx.PyGraph.remove_nodes_from.html#rustworkx.PyGraph.remove_nodes_from" title="rustworkx.PyGraph.remove_nodes_from"><code class="xref py py-meth docutils literal notranslate"><span class="pre">remove_nodes_from()</span></code></a>,
+<a class="reference internal" href="../apiref/rustworkx.PyGraph.remove_edge.html#rustworkx.PyGraph.remove_edge" title="rustworkx.PyGraph.remove_edge"><code class="xref py py-meth docutils literal notranslate"><span class="pre">remove_edge()</span></code></a>,
+<a class="reference internal" href="../apiref/rustworkx.PyGraph.remove_edge_from_index.html#rustworkx.PyGraph.remove_edge_from_index" title="rustworkx.PyGraph.remove_edge_from_index"><code class="xref py py-meth docutils literal notranslate"><span class="pre">remove_edge_from_index()</span></code></a>, and
+<a class="reference internal" href="../apiref/rustworkx.PyGraph.remove_edges_from.html#rustworkx.PyGraph.remove_edges_from" title="rustworkx.PyGraph.remove_edges_from"><code class="xref py py-meth docutils literal notranslate"><span class="pre">remove_edges_from()</span></code></a> to remove nodes and edges from
+the graph. One thing to note is that removals can introduce holes in the
+lists of indices for nodes and edges in the graph. For example:</p>
+<div class="jupyter_cell jupyter_container docutils container">
+<div class="cell_input code_cell docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">graph</span> <span class="o">=</span> <span class="n">rx</span><span class="o">.</span><span class="n">PyGraph</span><span class="p">()</span>
+<span class="n">graph</span><span class="o">.</span><span class="n">add_nodes_from</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">5</span><span class="p">)))</span>
+<span class="n">graph</span><span class="o">.</span><span class="n">add_nodes_from</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">)))</span>
+<span class="n">graph</span><span class="o">.</span><span class="n">remove_node</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">node_indices</span><span class="p">())</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-none notranslate"><div class="highlight"><pre><span></span>NodeIndices[0, 1, 3, 4, 5, 6]
+</pre></div>
+</div>
+</div>
+</div>
+<p>You can see here that <code class="docutils literal notranslate"><span class="pre">2</span></code> is now absent from the node indices of <code class="docutils literal notranslate"><span class="pre">graph</span></code>.
+Also, after a removal, the index of the removed node or edge will be reused on
+subsequent additions. For example, building off the previous example if you ran</p>
+<div class="jupyter_cell jupyter_container docutils container">
+<div class="cell_input code_cell docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">graph</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="s2">&quot;New Node&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-none notranslate"><div class="highlight"><pre><span></span>2
+</pre></div>
+</div>
+</div>
+</div>
+<p>this new node is assigned index 2 again.</p>
+</section>
+<section id="modifying-elements-of-a-graph">
+<h2>Modifying elements of a graph<a class="headerlink" href="#modifying-elements-of-a-graph" title="Permalink to this heading">¶</a></h2>
+<p>The graph classes in rustworkx also allow for in place mutation of the payloads
+for elements in the graph. For nodes you can simply use the mapping protocol to
+change the payload via it’s node index. For example:</p>
+<div class="jupyter_cell jupyter_container docutils container">
+<div class="cell_input code_cell docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">last_index</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">node_indices</span><span class="p">()[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+<span class="n">graph</span><span class="p">[</span><span class="n">last_index</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;New Payload&quot;</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">graph</span><span class="p">[</span><span class="n">last_index</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-none notranslate"><div class="highlight"><pre><span></span>New Payload
+</pre></div>
+</div>
+</div>
+</div>
+<p>You can update the payload of any node in the graph using this interface. For
+edges you can leverage the <code class="xref py py-class docutils literal notranslate"><span class="pre">update_edge</span></code> or
+<code class="xref py py-class docutils literal notranslate"><span class="pre">update_edge_by_index</span></code> methods to update an edge’s payload
+in place. For example:</p>
+<div class="jupyter_cell jupyter_container docutils container">
+<div class="cell_input code_cell docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">edge_index</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+<span class="n">graph</span><span class="o">.</span><span class="n">update_edge_by_index</span><span class="p">(</span><span class="n">edge_index</span><span class="p">,</span> <span class="s2">&quot;New Edge Payload&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">get_edge_data_by_index</span><span class="p">(</span><span class="n">edge_index</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-none notranslate"><div class="highlight"><pre><span></span>New Edge Payload
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="what-to-use-for-node-and-edge-data-payload">
+<span id="data-payload"></span><h2>What to use for node and edge data payload<a class="headerlink" href="#what-to-use-for-node-and-edge-data-payload" title="Permalink to this heading">¶</a></h2>
+<p>In the above examples for the most part we use integers, strings, and <code class="docutils literal notranslate"><span class="pre">None</span></code>
+for the data payload of nodes and edges in graphs (mostly for simplicity).
+However, rustworkx allows the use of any Python object as the data payload for
+nodes and edges. This flexibility is very powerful as
+it allows you to create graphs that contain other graphs, graphs that contain
+files, graphs with functions, etc. This means you only need to keep a reference
+to the integer index returned by rustworkx for the objects you use as a data
+payloads to find those objects in the graph. For example, one approach you can
+take is to store the index as an attribute on the object you add to the graph:</p>
+<div class="jupyter_cell jupyter_container docutils container">
+<div class="cell_input code_cell docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">GraphNode</span><span class="p">:</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">value</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="kc">None</span>
+
+<span class="n">graph</span> <span class="o">=</span> <span class="n">rx</span><span class="o">.</span><span class="n">PyGraph</span><span class="p">()</span>
+<span class="n">index</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="n">GraphNode</span><span class="p">(</span><span class="s2">&quot;A&quot;</span><span class="p">))</span>
+<span class="n">graph</span><span class="p">[</span><span class="n">index</span><span class="p">]</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="n">index</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+</div>
+</div>
+<p>Additionally, at any time you can find the index mapping to the data payload
+and build a mapping or update a reference to it. For example, building on the
+above example you can update the index references all at once after creation:</p>
+<div class="jupyter_cell jupyter_container docutils container">
+<div class="cell_input code_cell docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">GraphNode</span><span class="p">:</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">value</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;GraphNode: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2"> @ index: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">index</span><span class="si">}</span><span class="s2">&quot;</span>
+
+<span class="k">class</span> <span class="nc">GraphEdge</span><span class="p">:</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">value</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;EdgeNode: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2"> @ index: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">index</span><span class="si">}</span><span class="s2">&quot;</span>
+
+<span class="n">graph</span> <span class="o">=</span> <span class="n">rx</span><span class="o">.</span><span class="n">PyGraph</span><span class="p">()</span>
+<span class="n">graph</span><span class="o">.</span><span class="n">add_nodes_from</span><span class="p">([</span><span class="n">GraphNode</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">5</span><span class="p">)])</span>
+<span class="n">graph</span><span class="o">.</span><span class="n">add_edges_from</span><span class="p">([(</span><span class="n">i</span><span class="p">,</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">GraphEdge</span><span class="p">(</span><span class="n">i</span><span class="p">))</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">4</span><span class="p">)])</span>
+<span class="c1"># Populate index attribute in GraphNode objects</span>
+<span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="n">graph</span><span class="o">.</span><span class="n">node_indices</span><span class="p">():</span>
+    <span class="n">graph</span><span class="p">[</span><span class="n">index</span><span class="p">]</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="n">index</span>
+<span class="c1"># Populate index attribute in GraphEdge objects</span>
+<span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">data</span> <span class="ow">in</span> <span class="n">graph</span><span class="o">.</span><span class="n">edge_index_map</span><span class="p">()</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+    <span class="n">data</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="n">index</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Nodes:&quot;</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">():</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Edges:&quot;</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">edge</span> <span class="ow">in</span> <span class="n">graph</span><span class="o">.</span><span class="n">edges</span><span class="p">():</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">edge</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-none notranslate"><div class="highlight"><pre><span></span>Nodes:
+GraphNode: 0 @ index: 0
+GraphNode: 1 @ index: 1
+GraphNode: 2 @ index: 2
+GraphNode: 3 @ index: 3
+GraphNode: 4 @ index: 4
+Edges:
+EdgeNode: 0 @ index: 0
+EdgeNode: 1 @ index: 1
+EdgeNode: 2 @ index: 2
+EdgeNode: 3 @ index: 3
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="accessing-edges-and-neighbors">
+<h2>Accessing edges and neighbors<a class="headerlink" href="#accessing-edges-and-neighbors" title="Permalink to this heading">¶</a></h2>
+<p>You can access edges from a node using the <a class="reference internal" href="../apiref/rustworkx.PyGraph.incident_edges.html#rustworkx.PyGraph.incident_edges" title="rustworkx.PyGraph.incident_edges"><code class="xref py py-meth docutils literal notranslate"><span class="pre">incident_edges()</span></code></a>
+method:</p>
+<div class="jupyter_cell jupyter_container docutils container">
+<div class="cell_input code_cell docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">incident_edges</span><span class="p">(</span><span class="mi">2</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-none notranslate"><div class="highlight"><pre><span></span>EdgeIndices[0]
+</pre></div>
+</div>
+</div>
+</div>
+<p>which will return the edge indices of the edges incident to node <code class="docutils literal notranslate"><span class="pre">2</span></code>. You
+can also find the neighbor nodes using the <a class="reference internal" href="../apiref/rustworkx.PyGraph.neighbors.html#rustworkx.PyGraph.neighbors" title="rustworkx.PyGraph.neighbors"><code class="xref py py-meth docutils literal notranslate"><span class="pre">neighbors()</span></code></a>
+method:</p>
+<div class="jupyter_cell jupyter_container docutils container">
+<div class="cell_input code_cell docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">neighbors</span><span class="p">(</span><span class="mi">2</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-none notranslate"><div class="highlight"><pre><span></span>NodeIndices[1]
+</pre></div>
+</div>
+</div>
+</div>
+<p>which returns the node indices of any neighbors of node <code class="docutils literal notranslate"><span class="pre">2</span></code>.</p>
+</section>
+<section id="graph-attributes">
+<h2>Graph Attributes<a class="headerlink" href="#graph-attributes" title="Permalink to this heading">¶</a></h2>
+<p>Graphs in rustworkx have an attribute which can be used to assign
+metadata to a graph object. This can be assigned at object creation or
+accessed and modified after creation with the <a class="reference internal" href="../apiref/rustworkx.PyGraph.html#rustworkx.PyGraph.attrs" title="rustworkx.PyGraph.attrs"><code class="xref py py-attr docutils literal notranslate"><span class="pre">attrs</span></code></a> attribute.
+This attribute can be any Python object and defaults to being <code class="docutils literal notranslate"><span class="pre">None</span></code> if not
+specified at graph object creation time. For example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">graph</span> <span class="o">=</span> <span class="n">rx</span><span class="o">.</span><span class="n">PyGraph</span><span class="p">(</span><span class="n">attrs</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">day</span><span class="o">=</span><span class="s2">&quot;Friday&quot;</span><span class="p">))</span>
+<span class="n">graph</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;day&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Monday&quot;</span>
+</pre></div>
+</div>
+<p>Or, you could use a custom class like:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">Day</span><span class="p">:</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">day</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">day</span> <span class="o">=</span> <span class="n">day</span>
+
+<span class="n">graph</span> <span class="o">=</span> <span class="n">rx</span><span class="o">.</span><span class="n">PyGraph</span><span class="p">(</span><span class="n">attrs</span><span class="o">=</span><span class="n">Day</span><span class="p">(</span><span class="s2">&quot;Friday&quot;</span><span class="p">))</span>
+<span class="n">graph</span><span class="o">.</span><span class="n">attrs</span> <span class="o">=</span> <span class="n">Day</span><span class="p">(</span><span class="s2">&quot;Monday&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="directed-graphs">
+<h2>Directed Graphs<a class="headerlink" href="#directed-graphs" title="Permalink to this heading">¶</a></h2>
+<p>A directed graph is a graph that is made up of a set of nodes connected by
+directed edges (often called arcs). Edges have a directionality which is
+different from undirected graphs where edges have no notion of a direction to
+them. In rustworkx the <a class="reference internal" href="../apiref/rustworkx.PyDiGraph.html#rustworkx.PyDiGraph" title="rustworkx.PyDiGraph"><code class="xref py py-class docutils literal notranslate"><span class="pre">PyDiGraph</span></code></a> class is used to create
+directed graphs. For example:</p>
+<div class="jupyter_cell jupyter_container docutils container">
+<div class="cell_input code_cell docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">rustworkx.visualization</span> <span class="kn">import</span> <span class="n">mpl_draw</span>
+
+<span class="n">path_graph</span> <span class="o">=</span> <span class="n">rx</span><span class="o">.</span><span class="n">generators</span><span class="o">.</span><span class="n">directed_path_graph</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+<span class="n">mpl_draw</span><span class="p">(</span><span class="n">path_graph</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<img alt="../_images/introduction_19_0.png" src="../_images/introduction_19_0.png" />
+</div>
+</div>
+<p>In this example we created a directed path graph with 5 nodes. This shows the
+directionality of the edges in the graph visualization with the arrow head
+pointing to the target node.</p>
+</section>
+<section id="multigraphs">
+<h2>Multigraphs<a class="headerlink" href="#multigraphs" title="Permalink to this heading">¶</a></h2>
+<p>By default all graphs in rustworkx are multigraphs. This means that each
+graph object can contain parallel edges between nodes. However, you can set
+the <code class="docutils literal notranslate"><span class="pre">multigraph</span></code> argument to <code class="docutils literal notranslate"><span class="pre">False</span></code> on the <a class="reference internal" href="../apiref/rustworkx.PyGraph.html#rustworkx.PyGraph" title="rustworkx.PyGraph"><code class="xref py py-class docutils literal notranslate"><span class="pre">PyGraph</span></code></a> and
+<a class="reference internal" href="../apiref/rustworkx.PyDiGraph.html#rustworkx.PyDiGraph" title="rustworkx.PyDiGraph"><code class="xref py py-class docutils literal notranslate"><span class="pre">PyDiGraph</span></code></a> constructors when creating a new graph object to
+prevent parallel edges from being introduced. When <code class="docutils literal notranslate"><span class="pre">multigraph</span></code> is set to <code class="docutils literal notranslate"><span class="pre">False</span></code>
+any method call made that would add a parallel edge will instead update the
+existing edge’s weight/data payload. For example:</p>
+<div class="jupyter_cell jupyter_container docutils container">
+<div class="cell_input code_cell docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">graph</span> <span class="o">=</span> <span class="n">rx</span><span class="o">.</span><span class="n">PyGraph</span><span class="p">(</span><span class="n">multigraph</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="n">graph</span><span class="o">.</span><span class="n">add_nodes_from</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">))</span>
+<span class="n">graph</span><span class="o">.</span><span class="n">add_edges_from</span><span class="p">([(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;A&#39;</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;B&#39;</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="s1">&#39;C&#39;</span><span class="p">)])</span>
+<span class="n">mpl_draw</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">with_labels</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">edge_labels</span><span class="o">=</span><span class="nb">str</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<img alt="../_images/introduction_20_0.png" src="../_images/introduction_20_0.png" />
+</div>
+</div>
+<p>In this example, our attempt to add a parallel edge between nodes <code class="docutils literal notranslate"><span class="pre">0</span></code>
+and <code class="docutils literal notranslate"><span class="pre">1</span></code> will instead result in the existing edge’s data payload being updated from
+<code class="docutils literal notranslate"><span class="pre">'A'</span></code> to <code class="docutils literal notranslate"><span class="pre">'B'</span></code>.</p>
+</section>
+<section id="graph-generators-and-operations">
+<h2>Graph Generators and operations<a class="headerlink" href="#graph-generators-and-operations" title="Permalink to this heading">¶</a></h2>
+<p>In addition to constructing graphs one node and edge at a time, you can also
+create graphs using the <a class="reference internal" href="../api.html#generator-funcs"><span class="std std-ref">Generators</span></a>, <a class="reference internal" href="../api.html#random-generators"><span class="std std-ref">Random Graph Generator Functions</span></a>,
+and <a class="reference internal" href="../api.html#graph-ops"><span class="std std-ref">Graph Operations</span></a> to quickly generate graphs and/or apply different
+operations on the graph. For example:</p>
+<div class="jupyter_cell jupyter_container docutils container">
+<div class="cell_input code_cell docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">lolipop_graph</span> <span class="o">=</span> <span class="n">rx</span><span class="o">.</span><span class="n">generators</span><span class="o">.</span><span class="n">lollipop_graph</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+<span class="n">mesh_graph</span> <span class="o">=</span> <span class="n">rx</span><span class="o">.</span><span class="n">generators</span><span class="o">.</span><span class="n">mesh_graph</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
+<span class="n">combined_graph</span> <span class="o">=</span> <span class="n">rx</span><span class="o">.</span><span class="n">cartesian_product</span><span class="p">(</span><span class="n">lolipop_graph</span><span class="p">,</span> <span class="n">mesh_graph</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+<span class="n">mpl_draw</span><span class="p">(</span><span class="n">combined_graph</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<img alt="../_images/introduction_21_0.png" src="../_images/introduction_21_0.png" />
+</div>
+</div>
+<p>Additionally there are alternate constructors such as
+<a class="reference internal" href="../apiref/rustworkx.PyGraph.read_edge_list.html#rustworkx.PyGraph.read_edge_list" title="rustworkx.PyGraph.read_edge_list"><code class="xref py py-meth docutils literal notranslate"><span class="pre">read_edge_list()</span></code></a> or <a class="reference internal" href="../apiref/rustworkx.PyGraph.from_adjacency_matrix.html#rustworkx.PyGraph.from_adjacency_matrix" title="rustworkx.PyGraph.from_adjacency_matrix"><code class="xref py py-meth docutils literal notranslate"><span class="pre">from_adjacency_matrix()</span></code></a>
+for building graphs from files or other inputs. For example:</p>
+<div class="jupyter_cell jupyter_container docutils container">
+<div class="cell_input code_cell docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">tempfile</span>
+
+<span class="k">with</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">NamedTemporaryFile</span><span class="p">(</span><span class="s1">&#39;wt&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fd</span><span class="p">:</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="n">fd</span><span class="o">.</span><span class="n">name</span>
+    <span class="n">fd</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;0 1</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="n">fd</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;0 2</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="n">fd</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;0 3</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="n">fd</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;1 2</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="n">fd</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;2 3</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="n">fd</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+    <span class="n">graph</span> <span class="o">=</span> <span class="n">rx</span><span class="o">.</span><span class="n">PyGraph</span><span class="o">.</span><span class="n">read_edge_list</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+<span class="n">mpl_draw</span><span class="p">(</span><span class="n">graph</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<img alt="../_images/introduction_22_0.png" src="../_images/introduction_22_0.png" />
+</div>
+</div>
+</section>
+<section id="analyzing-graphs">
+<h2>Analyzing graphs<a class="headerlink" href="#analyzing-graphs" title="Permalink to this heading">¶</a></h2>
+<p>The structure of a graph <span class="math notranslate nohighlight">\(G\)</span> can be analyzed using the available graph algorithm
+functions. For example:</p>
+<div class="jupyter_cell jupyter_container docutils container">
+<div class="cell_input code_cell docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">G</span> <span class="o">=</span> <span class="n">rx</span><span class="o">.</span><span class="n">PyGraph</span><span class="p">()</span>
+<span class="n">G</span><span class="o">.</span><span class="n">extend_from_edge_list</span><span class="p">([(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">)])</span>
+<span class="n">new_node</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="s2">&quot;spam&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">rx</span><span class="o">.</span><span class="n">connected_components</span><span class="p">(</span><span class="n">G</span><span class="p">))</span>
+<span class="n">degrees</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">node_indices</span><span class="p">():</span>
+    <span class="n">degrees</span><span class="p">[</span><span class="n">node</span><span class="p">]</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">degree</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">degrees</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-none notranslate"><div class="highlight"><pre><span></span>[{0, 1, 2}, {3}]
+{0: 2, 1: 1, 2: 1, 3: 0}
+</pre></div>
+</div>
+</div>
+</div>
+<div class="jupyter_cell jupyter_container docutils container">
+<div class="cell_input code_cell docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">G</span><span class="o">.</span><span class="n">remove_node</span><span class="p">(</span><span class="n">new_node</span><span class="p">)</span>
+<span class="n">G</span><span class="o">.</span><span class="n">extend_from_edge_list</span><span class="p">([(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)])</span>
+<span class="n">rx</span><span class="o">.</span><span class="n">transitivity</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-none notranslate"><div class="highlight"><pre><span></span>0.375
+</pre></div>
+</div>
+</div>
+</div>
+<p>See the <a class="reference internal" href="../api.html#algorithm-api"><span class="std std-ref">Algorithm Functions</span></a> API documentation section for a list of the available
+functions and corresponding usage information.</p>
+</section>
+<section id="drawing-graphs">
+<h2>Drawing graphs<a class="headerlink" href="#drawing-graphs" title="Permalink to this heading">¶</a></h2>
+<p>There are two visualization functions provided in rustworkx for visualizing
+graphs. The first is <a class="reference internal" href="../apiref/rustworkx.visualization.mpl_draw.html#rustworkx.visualization.mpl_draw" title="rustworkx.visualization.mpl_draw"><code class="xref py py-func docutils literal notranslate"><span class="pre">mpl_draw()</span></code></a>, which uses the
+<a class="reference external" href="https://matplotlib.org/">matplotlib</a> library to render the
+visualization of the graph. The <a class="reference internal" href="../apiref/rustworkx.visualization.mpl_draw.html#rustworkx.visualization.mpl_draw" title="rustworkx.visualization.mpl_draw"><code class="xref py py-func docutils literal notranslate"><span class="pre">mpl_draw()</span></code></a>
+function relies on the <a class="reference internal" href="../api.html#layout-functions"><span class="std std-ref">Layout Functions</span></a> provided with rustworkx to
+generate a layout (the coordinates to draw the nodes of the graph) for the
+graph (by default <a class="reference internal" href="../apiref/rustworkx.spring_layout.html#rustworkx.spring_layout" title="rustworkx.spring_layout"><code class="xref py py-func docutils literal notranslate"><span class="pre">spring_layout()</span></code></a> is used). For example:</p>
+<div class="jupyter_cell jupyter_container docutils container">
+<div class="cell_input code_cell docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+
+<span class="n">G</span> <span class="o">=</span> <span class="n">rx</span><span class="o">.</span><span class="n">generators</span><span class="o">.</span><span class="n">generalized_petersen_graph</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="n">subax1</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">121</span><span class="p">)</span>
+<span class="n">mpl_draw</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">with_labels</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">subax1</span><span class="p">)</span>
+<span class="n">subax2</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">122</span><span class="p">)</span>
+<span class="n">layout</span> <span class="o">=</span> <span class="n">rx</span><span class="o">.</span><span class="n">shell_layout</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">nlist</span><span class="o">=</span><span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">],</span> <span class="p">[</span><span class="mi">6</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">9</span><span class="p">,</span> <span class="mi">5</span><span class="p">]])</span>
+<span class="n">mpl_draw</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">pos</span><span class="o">=</span><span class="n">layout</span><span class="p">,</span> <span class="n">with_labels</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">subax2</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<img alt="../_images/introduction_25_0.png" src="../_images/introduction_25_0.png" />
+</div>
+</div>
+<p>The second function is <a class="reference internal" href="../apiref/rustworkx.visualization.graphviz_draw.html#rustworkx.visualization.graphviz_draw" title="rustworkx.visualization.graphviz_draw"><code class="xref py py-func docutils literal notranslate"><span class="pre">graphviz_draw()</span></code></a>, which
+uses <a class="reference external" href="https://graphviz.org/">Graphviz</a> to generate visualizations. For
+example:</p>
+<div class="jupyter_cell jupyter_container docutils container">
+<div class="cell_input code_cell docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">rustworkx.visualization</span> <span class="kn">import</span> <span class="n">graphviz_draw</span>
+
+<span class="n">G</span> <span class="o">=</span> <span class="n">rx</span><span class="o">.</span><span class="n">generators</span><span class="o">.</span><span class="n">heavy_hex_graph</span><span class="p">(</span><span class="mi">7</span><span class="p">)</span>
+<span class="c1"># set data payload to index</span>
+<span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">node_indices</span><span class="p">():</span>
+    <span class="n">G</span><span class="p">[</span><span class="n">node</span><span class="p">]</span> <span class="o">=</span> <span class="n">node</span>
+
+<span class="k">def</span> <span class="nf">node_attr_fn</span><span class="p">(</span><span class="n">node</span><span class="p">):</span>
+    <span class="n">attr_dict</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;style&quot;</span><span class="p">:</span> <span class="s2">&quot;filled&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;shape&quot;</span><span class="p">:</span> <span class="s2">&quot;circle&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;label&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+    <span class="p">}</span>
+    <span class="c1"># Data nodes are yellow</span>
+    <span class="k">if</span> <span class="n">node</span> <span class="o">&lt;</span> <span class="mi">7</span> <span class="o">*</span> <span class="mi">7</span><span class="p">:</span>
+        <span class="n">attr_dict</span><span class="p">[</span><span class="s2">&quot;color&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;yellow&quot;</span>
+        <span class="n">attr_dict</span><span class="p">[</span><span class="s2">&quot;fill_color&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;yellow&quot;</span>
+    <span class="c1"># Syndrome nodes are black</span>
+    <span class="k">elif</span> <span class="n">node</span> <span class="o">&gt;=</span> <span class="mi">7</span> <span class="o">*</span> <span class="mi">7</span> <span class="ow">and</span> <span class="n">node</span> <span class="o">&lt;</span> <span class="p">(</span><span class="mi">7</span> <span class="o">*</span> <span class="mi">7</span><span class="p">)</span> <span class="o">+</span> <span class="p">((</span><span class="mi">7</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mi">7</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span><span class="p">):</span>
+        <span class="n">attr_dict</span><span class="p">[</span><span class="s2">&quot;color&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;black&quot;</span>
+        <span class="n">attr_dict</span><span class="p">[</span><span class="s2">&quot;fill_color&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;black&quot;</span>
+        <span class="n">attr_dict</span><span class="p">[</span><span class="s2">&quot;fontcolor&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;white&quot;</span>
+    <span class="c1"># Flag quits are blue</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">attr_dict</span><span class="p">[</span><span class="s2">&quot;color&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;blue&quot;</span>
+        <span class="n">attr_dict</span><span class="p">[</span><span class="s2">&quot;fill_color&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;blue&quot;</span>
+    <span class="k">return</span> <span class="n">attr_dict</span>
+
+<span class="n">graphviz_draw</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">node_attr_fn</span><span class="o">=</span><span class="n">node_attr_fn</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">&quot;neato&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<img alt="../_images/introduction_26_0.png" src="../_images/introduction_26_0.png" />
+</div>
+</div>
+<p>Generally, when deciding which visualization function to use, there are a few
+considerations to make. <a class="reference internal" href="../apiref/rustworkx.visualization.mpl_draw.html#rustworkx.visualization.mpl_draw" title="rustworkx.visualization.mpl_draw"><code class="xref py py-func docutils literal notranslate"><span class="pre">mpl_draw()</span></code></a> is a better
+choice for smaller graphs or cases where you want to integrate your graph
+drawing as part of a larger visualization.
+<a class="reference internal" href="../apiref/rustworkx.visualization.graphviz_draw.html#rustworkx.visualization.graphviz_draw" title="rustworkx.visualization.graphviz_draw"><code class="xref py py-func docutils literal notranslate"><span class="pre">graphviz_draw()</span></code></a> is typically a better choice
+for larger graphs, because Graphviz is a dedicated tool for drawing graphs.</p>
+</section>
+</section>
+
+
+             </article>
+             
+            </div>
+            <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="dags.html" class="btn btn-neutral float-right" title="Directed Acyclic Graphs" accesskey="n" rel="next">Next <img src="../_static/images/chevron-right-orange.svg" class="next-page"></a>
+      
+      
+        <a href="index.html" class="btn btn-neutral" title="rustworkx Tutorials and Guides" accesskey="p" rel="prev"><img src="../_static/images/chevron-right-orange.svg" class="previous-page"> Previous</a>
+      
+    </div>
+  
+
+  
+
+    <hr>
+
+  
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2021, rustworkx Contributors.
+
+    </p>
+  </div>
+    
+      <div>
+        Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+      </div>
+     
+
+</footer>
+
+          </div>
+        </div>
+
+        <div class="pytorch-content-right" id="pytorch-content-right">
+          <div class="pytorch-right-menu" id="pytorch-right-menu">
+            <div class="pytorch-side-scroll" id="pytorch-side-scroll-right">
+              <ul>
+<li><a class="reference internal" href="#">Introduction to rustworkx</a><ul>
+<li><a class="reference internal" href="#installing-rustworkx">Installing rustworkx</a></li>
+<li><a class="reference internal" href="#how-to-import-rustworkx">How to import rustworkx</a></li>
+<li><a class="reference internal" href="#creating-a-graph">Creating a Graph</a></li>
+<li><a class="reference internal" href="#nodes">Nodes</a></li>
+<li><a class="reference internal" href="#edges">Edges</a></li>
+<li><a class="reference internal" href="#examining-elements-of-a-graph">Examining elements of a graph</a></li>
+<li><a class="reference internal" href="#removing-elements-from-a-graph">Removing elements from a graph</a></li>
+<li><a class="reference internal" href="#modifying-elements-of-a-graph">Modifying elements of a graph</a></li>
+<li><a class="reference internal" href="#what-to-use-for-node-and-edge-data-payload">What to use for node and edge data payload</a></li>
+<li><a class="reference internal" href="#accessing-edges-and-neighbors">Accessing edges and neighbors</a></li>
+<li><a class="reference internal" href="#graph-attributes">Graph Attributes</a></li>
+<li><a class="reference internal" href="#directed-graphs">Directed Graphs</a></li>
+<li><a class="reference internal" href="#multigraphs">Multigraphs</a></li>
+<li><a class="reference internal" href="#graph-generators-and-operations">Graph Generators and operations</a></li>
+<li><a class="reference internal" href="#analyzing-graphs">Analyzing graphs</a></li>
+<li><a class="reference internal" href="#drawing-graphs">Drawing graphs</a></li>
+</ul>
+</li>
+</ul>
+
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+  
+
+     
+       <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+         <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+         <script src="../_static/jquery.js"></script>
+         <script src="../_static/underscore.js"></script>
+         <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+         <script src="../_static/doctools.js"></script>
+         <script src="../_static/sphinx_highlight.js"></script>
+         <script src="../_static/thebelab-helper.js"></script>
+         <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+         <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
+         <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+     
+
+  
+
+  <script type="text/javascript" src="../_static/js/vendor/popper.min.js"></script>
+  <script type="text/javascript" src="../_static/js/vendor/bootstrap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/list.js/1.5.0/list.min.js"></script>
+  <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+ <script type="text/javascript">
+    $(document).ready(function() {
+        $(".toggle > *").hide();
+        $(".toggle .header").show();
+        $(".toggle .header").click(function() {
+            $(this).parent().children().not(".header").toggle(400);
+            $(this).parent().children(".header").toggleClass("open");
+        })
+    });
+</script>
+
+
+  <div>
+    <br>
+  </div>
+
+  <!-- Begin Mobile Menu -->
+
+  <div class="mobile-main-menu">
+    <div class="container-fluid">
+      <div class="container">
+        <div class="mobile-main-menu-header-container">
+          <a class="header-logo" href="https://qiskit.org/" aria-label="PyTorch"></a>
+          <a class="main-menu-close-button" href="#" data-behavior="close-mobile-menu"></a>
+        </div>
+      </div>
+    </div>
+
+    <div class="mobile-main-menu-links-container">
+      <div class="main-menu">
+        <ul>
+          <li>
+            <a href="https://retworkx.readthedocs.io/en/stable/">Qiskit Documentation</a>
+          </li>
+
+          <li>
+            <a href="https://qiskit.org/learn" target="_blank">Learning Resources</a>
+          </li>
+
+          <li>
+            <a href="https://qiskit.slack.com" target="_blank">Slack Support</a>
+          </li>
+
+          <li>
+            <a href="https://github.com/Qiskit/retworkx" target="_blank">Github</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- End Mobile Menu -->
+
+  <script type="text/javascript" src="../_static/js/vendor/anchor.min.js"></script>
+
+  <script type="text/javascript">
+    $(document).ready(function() {
+      mobileMenu.bind();
+      mobileTOC.bind();
+      pytorchAnchors.bind();
+      sideMenus.bind();
+      scrollToAnchor.bind();
+      highlightNavigation.bind();
+      mainMenuDropdown.bind();
+      filterTags.bind();
+
+      // Add class to links that have code blocks, since we cannot create links in code blocks
+      $("article.pytorch-article a span.pre").each(function(e) {
+        $(this).closest("a").addClass("has-code");
+      });
+    })
+  </script>
+</body>
+</html>

@@ -1,0 +1,6 @@
+﻿rustworkx.descendants
+=====================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: descendants

@@ -1,0 +1,6 @@
+rustworkx.PyDAG.add\_parent
+===========================
+
+.. currentmodule:: rustworkx
+
+.. automethod:: PyDAG.add_parent

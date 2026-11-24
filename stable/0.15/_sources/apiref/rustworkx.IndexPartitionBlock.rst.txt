@@ -1,0 +1,10 @@
+﻿IndexPartitionBlock
+===================
+
+.. currentmodule:: rustworkx
+
+.. autoclass:: IndexPartitionBlock
+   :no-members:
+   :show-inheritance:
+
+

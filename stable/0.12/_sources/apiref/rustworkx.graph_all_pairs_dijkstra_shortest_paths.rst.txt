@@ -1,0 +1,6 @@
+﻿rustworkx.graph\_all\_pairs\_dijkstra\_shortest\_paths
+======================================================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: graph_all_pairs_dijkstra_shortest_paths

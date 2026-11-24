@@ -1,0 +1,6 @@
+rustworkx.PyDAG.make\_symmetric
+===============================
+
+.. currentmodule:: rustworkx
+
+.. automethod:: PyDAG.make_symmetric

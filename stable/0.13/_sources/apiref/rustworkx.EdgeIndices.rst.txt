@@ -1,0 +1,10 @@
+﻿EdgeIndices
+===========
+
+.. currentmodule:: rustworkx
+
+.. autoclass:: EdgeIndices
+   :no-members:
+   :show-inheritance:
+
+

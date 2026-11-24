@@ -1,0 +1,6 @@
+﻿rustworkx.vf2\_mapping
+======================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: vf2_mapping

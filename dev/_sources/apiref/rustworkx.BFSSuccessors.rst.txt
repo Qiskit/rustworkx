@@ -1,0 +1,10 @@
+﻿BFSSuccessors
+=============
+
+.. currentmodule:: rustworkx
+
+.. autoclass:: BFSSuccessors
+   :no-members:
+   :show-inheritance:
+
+

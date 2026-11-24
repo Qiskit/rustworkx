@@ -1,0 +1,6 @@
+rustworkx.PyDiGraph.remove\_edge\_from\_index
+=============================================
+
+.. currentmodule:: rustworkx
+
+.. automethod:: PyDiGraph.remove_edge_from_index

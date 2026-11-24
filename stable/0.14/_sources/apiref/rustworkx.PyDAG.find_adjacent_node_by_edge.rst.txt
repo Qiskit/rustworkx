@@ -1,0 +1,6 @@
+rustworkx.PyDAG.find\_adjacent\_node\_by\_edge
+==============================================
+
+.. currentmodule:: rustworkx
+
+.. automethod:: PyDAG.find_adjacent_node_by_edge

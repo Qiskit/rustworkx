@@ -1,0 +1,20 @@
+﻿NodeMap
+=======
+
+.. currentmodule:: rustworkx
+
+.. autoclass:: NodeMap
+   :no-members:
+   :show-inheritance:
+
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+      :toctree: ../apiref/
+
+      ~NodeMap.items
+      ~NodeMap.keys
+      ~NodeMap.values
+
+

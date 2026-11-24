@@ -1,0 +1,6 @@
+rustworkx.PathLengthMapping.items
+=================================
+
+.. currentmodule:: rustworkx
+
+.. automethod:: PathLengthMapping.items

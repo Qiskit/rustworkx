@@ -1,0 +1,6 @@
+﻿rustworkx.digraph\_bipartite\_layout
+====================================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: digraph_bipartite_layout

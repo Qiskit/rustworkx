@@ -1,0 +1,6 @@
+﻿rustworkx.visualization.graphviz\_draw
+======================================
+
+.. currentmodule:: rustworkx.visualization
+
+.. autofunction:: graphviz_draw

@@ -1,0 +1,6 @@
+﻿rustworkx.generators.full\_rary\_tree
+=====================================
+
+.. currentmodule:: rustworkx.generators
+
+.. autofunction:: full_rary_tree

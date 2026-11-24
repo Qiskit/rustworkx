@@ -1,0 +1,6 @@
+﻿rustworkx.NoSuitableNeighbors
+=============================
+
+.. currentmodule:: rustworkx
+
+.. autoexception:: NoSuitableNeighbors

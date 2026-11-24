@@ -1,0 +1,6 @@
+﻿rustworkx.generators.grid\_graph
+================================
+
+.. currentmodule:: rustworkx.generators
+
+.. autofunction:: grid_graph

@@ -1,0 +1,22 @@
+﻿DFSVisitor
+==========
+
+.. currentmodule:: rustworkx.visit
+
+.. autoclass:: DFSVisitor
+   :no-members:
+   :show-inheritance:
+
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+      :toctree: ../apiref/
+
+      ~DFSVisitor.back_edge
+      ~DFSVisitor.discover_vertex
+      ~DFSVisitor.finish_vertex
+      ~DFSVisitor.forward_or_cross_edge
+      ~DFSVisitor.tree_edge
+
+

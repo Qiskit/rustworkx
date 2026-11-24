@@ -1,0 +1,6 @@
+rustworkx.visit.DijkstraVisitor.edge\_not\_relaxed
+==================================================
+
+.. currentmodule:: rustworkx.visit
+
+.. automethod:: DijkstraVisitor.edge_not_relaxed

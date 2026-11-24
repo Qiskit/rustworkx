@@ -1,0 +1,6 @@
+rustworkx.visit.DFSVisitor.finish\_vertex
+=========================================
+
+.. currentmodule:: rustworkx.visit
+
+.. automethod:: DFSVisitor.finish_vertex

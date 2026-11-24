@@ -1,0 +1,6 @@
+rustworkx.CentralityMapping.values
+==================================
+
+.. currentmodule:: rustworkx
+
+.. automethod:: CentralityMapping.values

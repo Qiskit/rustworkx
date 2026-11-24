@@ -1,0 +1,6 @@
+﻿rustworkx.generators.directed\_star\_graph
+==========================================
+
+.. currentmodule:: rustworkx.generators
+
+.. autofunction:: directed_star_graph

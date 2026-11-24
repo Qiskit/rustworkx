@@ -1,0 +1,6 @@
+rustworkx.PyDAG.remove\_edges\_from
+===================================
+
+.. currentmodule:: rustworkx
+
+.. automethod:: PyDAG.remove_edges_from

@@ -1,0 +1,499 @@
+
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Working with Betweenness Centrality &mdash; rustworkx 0.12.1 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <!-- <link rel="stylesheet" href="../_static/pygments.css" type="text/css" /> -->
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/jupyter-sphinx.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/thebelab.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/style.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Rustworkx API Reference" href="../api.html" />
+    <link rel="prev" title="Directed Acyclic Graphs" href="dags.html" /> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="pytorch-body">
+
+   
+
+    
+
+    <div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    <span class="rst-current-version-label">0.12</span>
+    <span class="rst-versions-dropdown-icon"></span>
+  </span>
+  <div class="rst-other-versions">
+    <dl>
+      <dt>Versions</dt>
+          <dd><a class="version" href="/documentation/retworkx/index.html">Current Release</a></dd>
+          <dd><a class="version" href="/documentation/retworkx/dev/index.html">Development</a></dd>
+      <dt>Previous Releases</dt>
+        
+            <dd><a class="version" href="/documentation/retworkx/stable/0.12/index.html">0.12</a></dd>
+        
+    </dl>
+  </div>
+  <script>
+    jQuery('.version').click((evt) => {
+      const hash = window.location.hash
+      const complete_url = evt.target.href + hash
+      window.location = complete_url
+      evt.preventDefault()
+    })
+  </script>
+</div>
+
+    <div class="table-of-contents-link-wrapper">
+      <span>Table of Contents</span>
+      <a href="#" class="toggle-table-of-contents" data-behavior="toggle-table-of-contents"></a>
+    </div>
+
+    <nav data-toggle="wy-nav-shift" class="pytorch-left-menu" id="pytorch-left-menu">
+      <div class="pytorch-side-scroll">
+        <div class="pytorch-menu pytorch-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          <div class="pytorch-left-menu-search">
+            
+
+            
+              
+              
+                <div class="version">
+                  0.12.1
+                </div>
+              
+            
+
+            
+
+
+  
+
+
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search Docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+            
+          </div>
+
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../install.html#installing-rustworkx">Installing Rustworkx</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../install.html#platform-support">Platform Support</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../install.html#using-rustworkx">Using rustworkx</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Rustworkx Tutorials and Guides</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api.html">Rustworkx API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../visualization.html">Visualization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../CONTRIBUTING.html">Contributing Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../networkx.html">rustworkx for NetworkX users</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <div class="pytorch-container">
+      <div class="pytorch-page-level-bar" id="pytorch-page-level-bar">
+        <div class="pytorch-breadcrumbs-wrapper">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="pytorch-breadcrumbs">
+    
+      <li>
+        <a href="../index.html">
+          
+            Docs
+          
+        </a> &gt;
+      </li>
+
+        
+          <li><a href="index.html">rustworkx Tutorials and Guides</a> &gt;</li>
+        
+      <li>Working with Betweenness Centrality</li>
+    
+    
+      <li class="pytorch-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/tutorial/betweenness_centrality.rst.txt" rel="nofollow"><img src="../_static/images/view-page-source-icon.svg"></a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+</div>
+        </div>
+
+        <div class="pytorch-shortcuts-wrapper" id="pytorch-shortcuts-wrapper">
+          Shortcuts
+        </div>
+      </div>
+
+      <section data-toggle="wy-nav-shift" id="pytorch-content-wrap" class="pytorch-content-wrap">
+        <div class="pytorch-content-left">
+          
+          <div class="rst-content style-external-links">
+          
+            <div role="main" class="main-content" itemscope="itemscope" itemtype="http://schema.org/Article">
+             <article itemprop="articleBody" id="pytorch-article" class="pytorch-article">
+              
+  <br><br><br><section id="working-with-betweenness-centrality">
+<h1>Working with Betweenness Centrality<a class="headerlink" href="#working-with-betweenness-centrality" title="Permalink to this heading">¶</a></h1>
+<p>The betweenness centrality of a graph is a measure of centrality based on shortest
+paths. For every pair of nodes in a connected graph, there is at least a single
+shortest path between the nodes such that the number of edges the path passes
+through is minimized. The betweenness centrality for a given graph node is the number
+of these shortest paths that pass through the node.</p>
+<p>This is defined as:</p>
+<div class="math notranslate nohighlight">
+\[c_B(v) =\sum_{s,t \in V} \frac{\sigma(s, t|v)}{\sigma(s, t)}\]</div>
+<p>where <span class="math notranslate nohighlight">\(V\)</span> is the set of nodes, <span class="math notranslate nohighlight">\(\sigma(s, t)\)</span> is the number of
+shortest <span class="math notranslate nohighlight">\((s, t)\)</span> paths, and <span class="math notranslate nohighlight">\(\sigma(s, t|v)\)</span> is the number of
+those paths passing through some  node <span class="math notranslate nohighlight">\(v\)</span> other than <span class="math notranslate nohighlight">\(s, t\)</span>.
+If <span class="math notranslate nohighlight">\(s = t\)</span>, <span class="math notranslate nohighlight">\(\sigma(s, t) = 1\)</span>, and if <span class="math notranslate nohighlight">\(v \in {s, t}\)</span>,
+<span class="math notranslate nohighlight">\(\sigma(s, t|v) = 0\)</span></p>
+<p>This tutorial will take you through the process of calculating the betweenness
+centrality of a graph and visualizing it.</p>
+<section id="generate-a-graph">
+<h2>Generate a Graph<a class="headerlink" href="#generate-a-graph" title="Permalink to this heading">¶</a></h2>
+<p>To start we need to generate a graph:</p>
+<div class="jupyter_cell jupyter_container docutils container">
+<div class="cell_input code_cell docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">rustworkx</span> <span class="k">as</span> <span class="nn">rx</span>
+<span class="kn">from</span> <span class="nn">rustworkx.visualization</span> <span class="kn">import</span> <span class="n">mpl_draw</span>
+
+<span class="n">graph</span> <span class="o">=</span> <span class="n">rx</span><span class="o">.</span><span class="n">generators</span><span class="o">.</span><span class="n">hexagonal_lattice_graph</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+<span class="n">mpl_draw</span><span class="p">(</span><span class="n">graph</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<img alt="../_images/betweenness_centrality_0_0.png" src="../_images/betweenness_centrality_0_0.png" />
+</div>
+</div>
+</section>
+<section id="calculate-the-betweeness-centrality">
+<h2>Calculate the Betweeness Centrality<a class="headerlink" href="#calculate-the-betweeness-centrality" title="Permalink to this heading">¶</a></h2>
+<p>The <a class="reference internal" href="../apiref/rustworkx.betweenness_centrality.html#rustworkx.betweenness_centrality" title="rustworkx.betweenness_centrality"><code class="xref py py-func docutils literal notranslate"><span class="pre">betweenness_centrality()</span></code></a> function can be used to calculate
+the betweenness centrality for each node in the graph.</p>
+<div class="jupyter_cell jupyter_container docutils container">
+<div class="cell_input code_cell docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">pprint</span>
+
+<span class="n">centrality</span> <span class="o">=</span> <span class="n">rx</span><span class="o">.</span><span class="n">betweenness_centrality</span><span class="p">(</span><span class="n">graph</span><span class="p">)</span>
+<span class="c1"># Print the centrality value for the first 5 nodes in the graph</span>
+<span class="n">pprint</span><span class="o">.</span><span class="n">pprint</span><span class="p">({</span><span class="n">x</span><span class="p">:</span> <span class="n">centrality</span><span class="p">[</span><span class="n">x</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">5</span><span class="p">)})</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-none notranslate"><div class="highlight"><pre><span></span>{0: 0.007277212457600987,
+ 1: 0.02047046385621779,
+ 2: 0.07491079688119466,
+ 3: 0.04242324126690451,
+ 4: 0.09205321351482312}
+</pre></div>
+</div>
+</div>
+</div>
+<p>The output of <a class="reference internal" href="../apiref/rustworkx.betweenness_centrality.html#rustworkx.betweenness_centrality" title="rustworkx.betweenness_centrality"><code class="xref py py-func docutils literal notranslate"><span class="pre">betweenness_centrality()</span></code></a> is a
+<a class="reference internal" href="../apiref/rustworkx.CentralityMapping.html#rustworkx.CentralityMapping" title="rustworkx.CentralityMapping"><code class="xref py py-class docutils literal notranslate"><span class="pre">CentralityMapping</span></code></a> which is a custom
+<a class="reference external" href="https://docs.python.org/3/glossary.html#term-mapping">mapping</a> type that
+maps the node index to the centrality value as a float. This is a mapping and
+not a sequence because node indices (and edge indices too, which is not
+relevant here) are not guaranteed to be a contiguous sequence if there are
+removals.</p>
+</section>
+<section id="visualize-the-betweenness-centrality">
+<h2>Visualize the Betweenness Centrality<a class="headerlink" href="#visualize-the-betweenness-centrality" title="Permalink to this heading">¶</a></h2>
+<p>Now that we’ve found the betweenness centrality for <code class="docutils literal notranslate"><span class="pre">graph</span></code> lets visualize it.
+We’ll color each node in the output visualization using its calculated
+centrality:</p>
+<div class="jupyter_cell jupyter_container docutils container">
+<div class="cell_input code_cell docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+
+<span class="c1"># Generate a color list</span>
+<span class="n">colors</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">graph</span><span class="o">.</span><span class="n">node_indices</span><span class="p">():</span>
+    <span class="n">colors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">centrality</span><span class="p">[</span><span class="n">node</span><span class="p">])</span>
+<span class="c1"># Generate a visualization with a colorbar</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s1">&#39;figure.figsize&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="mi">15</span><span class="p">,</span> <span class="mi">10</span><span class="p">]</span>
+<span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span>
+<span class="n">sm</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">cm</span><span class="o">.</span><span class="n">ScalarMappable</span><span class="p">(</span><span class="n">norm</span><span class="o">=</span><span class="n">plt</span><span class="o">.</span><span class="n">Normalize</span><span class="p">(</span>
+    <span class="n">vmin</span><span class="o">=</span><span class="nb">min</span><span class="p">(</span><span class="n">centrality</span><span class="o">.</span><span class="n">values</span><span class="p">()),</span>
+    <span class="n">vmax</span><span class="o">=</span><span class="nb">max</span><span class="p">(</span><span class="n">centrality</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+<span class="p">))</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">sm</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;Betweenness Centrality of a 4 x 4 Hexagonal Lattice Graph&quot;</span><span class="p">)</span>
+<span class="n">mpl_draw</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">node_color</span><span class="o">=</span><span class="n">colors</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<img alt="../_images/betweenness_centrality_2_0.png" src="../_images/betweenness_centrality_2_0.png" />
+</div>
+</div>
+<p>Alternatively, you can use <a class="reference internal" href="../apiref/rustworkx.visualization.graphviz_draw.html#rustworkx.visualization.graphviz_draw" title="rustworkx.visualization.graphviz_draw"><code class="xref py py-func docutils literal notranslate"><span class="pre">graphviz_draw()</span></code></a>:</p>
+<div class="jupyter_cell jupyter_container docutils container">
+<div class="cell_input code_cell docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">rustworkx.visualization</span> <span class="kn">import</span> <span class="n">graphviz_draw</span>
+<span class="kn">import</span> <span class="nn">matplotlib</span>
+
+<span class="c1"># For graphviz visualization we need to assign the data payload for each</span>
+<span class="c1"># node to its centrality value so that we can color based on this</span>
+<span class="k">for</span> <span class="n">node</span><span class="p">,</span> <span class="n">btw</span> <span class="ow">in</span> <span class="n">centrality</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+    <span class="n">graph</span><span class="p">[</span><span class="n">node</span><span class="p">]</span> <span class="o">=</span> <span class="n">btw</span>
+
+<span class="c1"># Leverage matplotlib for color map</span>
+<span class="n">colormap</span> <span class="o">=</span> <span class="n">matplotlib</span><span class="o">.</span><span class="n">cm</span><span class="o">.</span><span class="n">get_cmap</span><span class="p">(</span><span class="s2">&quot;magma&quot;</span><span class="p">)</span>
+<span class="n">norm</span> <span class="o">=</span> <span class="n">matplotlib</span><span class="o">.</span><span class="n">colors</span><span class="o">.</span><span class="n">Normalize</span><span class="p">(</span>
+    <span class="n">vmin</span><span class="o">=</span><span class="nb">min</span><span class="p">(</span><span class="n">centrality</span><span class="o">.</span><span class="n">values</span><span class="p">()),</span>
+    <span class="n">vmax</span><span class="o">=</span><span class="nb">max</span><span class="p">(</span><span class="n">centrality</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+<span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">color_node</span><span class="p">(</span><span class="n">node</span><span class="p">):</span>
+    <span class="n">rgba</span> <span class="o">=</span> <span class="n">matplotlib</span><span class="o">.</span><span class="n">colors</span><span class="o">.</span><span class="n">to_hex</span><span class="p">(</span><span class="n">colormap</span><span class="p">(</span><span class="n">norm</span><span class="p">(</span><span class="n">node</span><span class="p">)),</span> <span class="n">keep_alpha</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">&quot;color&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="se">\&quot;</span><span class="si">{</span><span class="n">rgba</span><span class="si">}</span><span class="se">\&quot;</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;fillcolor&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="se">\&quot;</span><span class="si">{</span><span class="n">rgba</span><span class="si">}</span><span class="se">\&quot;</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;style&quot;</span><span class="p">:</span> <span class="s2">&quot;filled&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;shape&quot;</span><span class="p">:</span> <span class="s2">&quot;circle&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;label&quot;</span><span class="p">:</span> <span class="s2">&quot;</span><span class="si">%.2f</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">node</span><span class="p">,</span>
+    <span class="p">}</span>
+
+<span class="n">graphviz_draw</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">node_attr_fn</span><span class="o">=</span><span class="n">color_node</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">&quot;neato&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<img alt="../_images/betweenness_centrality_3_1.png" src="../_images/betweenness_centrality_3_1.png" />
+</div>
+</div>
+</section>
+</section>
+
+
+             </article>
+             
+            </div>
+            <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../api.html" class="btn btn-neutral float-right" title="Rustworkx API Reference" accesskey="n" rel="next">Next <img src="../_static/images/chevron-right-orange.svg" class="next-page"></a>
+      
+      
+        <a href="dags.html" class="btn btn-neutral" title="Directed Acyclic Graphs" accesskey="p" rel="prev"><img src="../_static/images/chevron-right-orange.svg" class="previous-page"> Previous</a>
+      
+    </div>
+  
+
+  
+
+    <hr>
+
+  
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2021, rustworkx Contributors.
+
+    </p>
+  </div>
+    
+      <div>
+        Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+      </div>
+     
+
+</footer>
+
+          </div>
+        </div>
+
+        <div class="pytorch-content-right" id="pytorch-content-right">
+          <div class="pytorch-right-menu" id="pytorch-right-menu">
+            <div class="pytorch-side-scroll" id="pytorch-side-scroll-right">
+              <ul>
+<li><a class="reference internal" href="#">Working with Betweenness Centrality</a><ul>
+<li><a class="reference internal" href="#generate-a-graph">Generate a Graph</a></li>
+<li><a class="reference internal" href="#calculate-the-betweeness-centrality">Calculate the Betweeness Centrality</a></li>
+<li><a class="reference internal" href="#visualize-the-betweenness-centrality">Visualize the Betweenness Centrality</a></li>
+</ul>
+</li>
+</ul>
+
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+  
+
+     
+       <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+         <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+         <script src="../_static/jquery.js"></script>
+         <script src="../_static/underscore.js"></script>
+         <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+         <script src="../_static/doctools.js"></script>
+         <script src="../_static/sphinx_highlight.js"></script>
+         <script src="../_static/thebelab-helper.js"></script>
+         <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+         <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
+         <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+     
+
+  
+
+  <script type="text/javascript" src="../_static/js/vendor/popper.min.js"></script>
+  <script type="text/javascript" src="../_static/js/vendor/bootstrap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/list.js/1.5.0/list.min.js"></script>
+  <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+ <script type="text/javascript">
+    $(document).ready(function() {
+        $(".toggle > *").hide();
+        $(".toggle .header").show();
+        $(".toggle .header").click(function() {
+            $(this).parent().children().not(".header").toggle(400);
+            $(this).parent().children(".header").toggleClass("open");
+        })
+    });
+</script>
+
+
+  <div>
+    <br>
+  </div>
+
+  <!-- Begin Mobile Menu -->
+
+  <div class="mobile-main-menu">
+    <div class="container-fluid">
+      <div class="container">
+        <div class="mobile-main-menu-header-container">
+          <a class="header-logo" href="https://qiskit.org/" aria-label="PyTorch"></a>
+          <a class="main-menu-close-button" href="#" data-behavior="close-mobile-menu"></a>
+        </div>
+      </div>
+    </div>
+
+    <div class="mobile-main-menu-links-container">
+      <div class="main-menu">
+        <ul>
+          <li>
+            <a href="https://retworkx.readthedocs.io/en/stable/">Qiskit Documentation</a>
+          </li>
+
+          <li>
+            <a href="https://qiskit.org/learn" target="_blank">Learning Resources</a>
+          </li>
+
+          <li>
+            <a href="https://qiskit.slack.com" target="_blank">Slack Support</a>
+          </li>
+
+          <li>
+            <a href="https://github.com/Qiskit/retworkx" target="_blank">Github</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- End Mobile Menu -->
+
+  <script type="text/javascript" src="../_static/js/vendor/anchor.min.js"></script>
+
+  <script type="text/javascript">
+    $(document).ready(function() {
+      mobileMenu.bind();
+      mobileTOC.bind();
+      pytorchAnchors.bind();
+      sideMenus.bind();
+      scrollToAnchor.bind();
+      highlightNavigation.bind();
+      mainMenuDropdown.bind();
+      filterTags.bind();
+
+      // Add class to links that have code blocks, since we cannot create links in code blocks
+      $("article.pytorch-article a span.pre").each(function(e) {
+        $(this).closest("a").addClass("has-code");
+      });
+    })
+  </script>
+</body>
+</html>

@@ -1,0 +1,6 @@
+rustworkx.PyDAG.remove\_node\_retain\_edges\_by\_key
+====================================================
+
+.. currentmodule:: rustworkx
+
+.. automethod:: PyDAG.remove_node_retain_edges_by_key

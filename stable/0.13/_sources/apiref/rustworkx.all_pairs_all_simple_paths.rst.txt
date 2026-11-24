@@ -1,0 +1,6 @@
+﻿rustworkx.all\_pairs\_all\_simple\_paths
+========================================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: all_pairs_all_simple_paths

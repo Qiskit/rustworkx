@@ -1,0 +1,6 @@
+rustworkx.PyDiGraph.from\_complex\_adjacency\_matrix
+====================================================
+
+.. currentmodule:: rustworkx
+
+.. automethod:: PyDiGraph.from_complex_adjacency_matrix

@@ -1,0 +1,6 @@
+rustworkx.PyDAG.find\_predecessor\_node\_by\_edge
+=================================================
+
+.. currentmodule:: rustworkx
+
+.. automethod:: PyDAG.find_predecessor_node_by_edge

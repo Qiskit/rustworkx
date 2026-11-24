@@ -1,0 +1,6 @@
+﻿rustworkx.read\_matrix\_market
+==============================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: read_matrix_market

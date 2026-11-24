@@ -1,0 +1,20 @@
+﻿Pos2DMapping
+============
+
+.. currentmodule:: rustworkx
+
+.. autoclass:: Pos2DMapping
+   :no-members:
+   :show-inheritance:
+
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+      :toctree: ../apiref/
+
+      ~Pos2DMapping.items
+      ~Pos2DMapping.keys
+      ~Pos2DMapping.values
+
+

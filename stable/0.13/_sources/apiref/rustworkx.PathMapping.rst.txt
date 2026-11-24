@@ -1,0 +1,20 @@
+﻿PathMapping
+===========
+
+.. currentmodule:: rustworkx
+
+.. autoclass:: PathMapping
+   :no-members:
+   :show-inheritance:
+
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+      :toctree: ../apiref/
+
+      ~PathMapping.items
+      ~PathMapping.keys
+      ~PathMapping.values
+
+

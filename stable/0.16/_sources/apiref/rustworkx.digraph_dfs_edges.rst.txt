@@ -1,0 +1,6 @@
+﻿rustworkx.digraph\_dfs\_edges
+=============================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: digraph_dfs_edges

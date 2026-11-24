@@ -1,0 +1,6 @@
+﻿rustworkx.dag\_weighted\_longest\_path
+======================================
+
+.. currentmodule:: rustworkx
+
+.. autofunction:: dag_weighted_longest_path
