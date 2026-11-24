@@ -1,0 +1,12 @@
+features:
+  - |
+    Added an optional ``cutoff`` argument to
+    :func:`~rustworkx.dijkstra_shortest_path_lengths`,
+    :func:`~rustworkx.graph_dijkstra_shortest_path_lengths`, and
+    :func:`~rustworkx.digraph_dijkstra_shortest_path_lengths`.
+    The search only explores paths whose total weight is at most ``cutoff``,
+    avoiding traversal of distant parts of the graph. For example,
+    ``rx.dijkstra_shortest_path_lengths(graph, source, float, cutoff=10)``
+    returns distances up to and including 10. If a specified ``goal`` is beyond
+    the cutoff, the result is empty. Omitting ``cutoff`` keeps the existing
+    unbounded search. Cutoffs must be non-negative and not NaN.

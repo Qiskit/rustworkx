@@ -25,7 +25,7 @@ use numpy::{IntoPyArray, PyArray2};
 use petgraph::graph::NodeIndex;
 use petgraph::prelude::*;
 use petgraph::stable_graph::EdgeIndex;
-use petgraph::visit::NodeCount;
+use petgraph::visit::{Control, IntoEdges, NodeCount, Visitable};
 use pyo3::Python;
 use pyo3::exceptions::{PyIndexError, PyTypeError, PyValueError};
 use pyo3::prelude::*;
@@ -35,6 +35,7 @@ use rustworkx_core::shortest_path::{
     all_shortest_paths, astar, bellman_ford, dijkstra, k_shortest_path, negative_cycle_finder,
     single_source_all_shortest_paths,
 };
+use rustworkx_core::traversal::{DijkstraEvent, dijkstra_search};
 
 use crate::iterators::{
     AllPairsPathLengthMapping, AllPairsPathMapping, NodeIndices, NodesCountMapping,
@@ -544,6 +545,44 @@ pub fn digraph_has_path(
     Ok(!path_mapping.paths.is_empty())
 }
 
+fn bounded_dijkstra_lengths<G, F>(
+    graph: G,
+    start: NodeIndex,
+    goal: Option<NodeIndex>,
+    edge_cost: F,
+    cutoff: f64,
+) -> PyResult<PathLengthMapping>
+where
+    G: IntoEdges<NodeId = NodeIndex> + Visitable,
+    F: FnMut(G::EdgeRef) -> PyResult<f64>,
+{
+    if cutoff.is_nan() || cutoff < 0.0 {
+        return Err(PyValueError::new_err(
+            "cutoff must be non-negative and not NaN",
+        ));
+    }
+
+    // A bounded query may reach very few nodes, so avoid a graph-sized distance array.
+    let mut path_lengths = DictMap::new();
+    dijkstra_search(graph, Some(start), edge_cost, |event| {
+        if let DijkstraEvent::Discover(node, cost) = event {
+            if cost > cutoff {
+                return Control::Break(());
+            }
+            if let Some(goal) = goal {
+                if node == goal {
+                    path_lengths.insert(node.index(), cost);
+                    return Control::Break(());
+                }
+            } else if node != start {
+                path_lengths.insert(node.index(), cost);
+            }
+        }
+        Control::Continue
+    })?;
+    Ok(PathLengthMapping { path_lengths })
+}
+
 /// Compute the lengths of the shortest paths for a PyGraph object using
 /// Dijkstra's algorithm
 ///
@@ -557,21 +596,25 @@ pub fn digraph_has_path(
 ///     When specified the traversal will stop when the goal is reached and
 ///     the output dictionary will only have a single entry with the length
 ///     of the shortest path to the goal node.
+/// :param float cutoff: An optional maximum path cost, inclusive. Paths above
+///     this cost are not explored. Must be non-negative and not NaN. If None,
+///     the search is unbounded. Edge costs are evaluated only for edges reached
+///     by the bounded search.
 ///
 /// :returns: A dictionary of the shortest paths from the provided node where
 ///     the key is the node index of the end of the path and the value is the
 ///     cost/sum of the weights of path
 /// :rtype: PathLengthMapping
-/// :raises ValueError: when an edge weight with NaN or negative value
-///     is provided.
+/// :raises ValueError: when cutoff or an evaluated edge weight is NaN or negative.
 #[pyfunction]
-#[pyo3(text_signature = "(graph, node, edge_cost_fn, /, goal=None)", signature = (graph, node, edge_cost_fn, goal=None))]
+#[pyo3(text_signature = "(graph, node, edge_cost_fn, /, goal=None, cutoff=None)", signature = (graph, node, edge_cost_fn, goal=None, cutoff=None))]
 pub fn graph_dijkstra_shortest_path_lengths(
     py: Python,
     graph: &graph::PyGraph,
     node: usize,
     edge_cost_fn: Py<PyAny>,
     goal: Option<usize>,
+    cutoff: Option<f64>,
 ) -> PyResult<PathLengthMapping> {
     let start = NodeIndex::new(node);
     let edge_cost_callable = CostFn::from(edge_cost_fn);
@@ -581,6 +624,16 @@ pub fn graph_dijkstra_shortest_path_lengths(
         return Err(PyIndexError::new_err(format!(
             "Node source index \"{node}\" out of graph bound"
         )));
+    }
+
+    if let Some(cutoff) = cutoff {
+        return bounded_dijkstra_lengths(
+            &graph.graph,
+            start,
+            goal_index,
+            |e| edge_cost_callable.call(py, e.weight()),
+            cutoff,
+        );
     }
 
     let res: Vec<Option<f64>> = dijkstra(
@@ -632,21 +685,25 @@ pub fn graph_dijkstra_shortest_path_lengths(
 ///     When specified the traversal will stop when the goal is reached and
 ///     the output dictionary will only have a single entry with the length
 ///     of the shortest path to the goal node.
+/// :param float cutoff: An optional maximum path cost, inclusive. Paths above
+///     this cost are not explored. Must be non-negative and not NaN. If None,
+///     the search is unbounded. Edge costs are evaluated only for edges reached
+///     by the bounded search.
 ///
 /// :returns: A dictionary of the shortest paths from the provided node where
 ///     the key is the node index of the end of the path and the value is the
 ///     cost/sum of the weights of path
 /// :rtype: PathLengthMapping
-/// :raises ValueError: when an edge weight with NaN or negative value
-///     is provided.
+/// :raises ValueError: when cutoff or an evaluated edge weight is NaN or negative.
 #[pyfunction]
-#[pyo3(text_signature = "(graph, node, edge_cost_fn, /, goal=None)", signature = (graph, node, edge_cost_fn, goal=None))]
+#[pyo3(text_signature = "(graph, node, edge_cost_fn, /, goal=None, cutoff=None)", signature = (graph, node, edge_cost_fn, goal=None, cutoff=None))]
 pub fn digraph_dijkstra_shortest_path_lengths(
     py: Python,
     graph: &digraph::PyDiGraph,
     node: usize,
     edge_cost_fn: Py<PyAny>,
     goal: Option<usize>,
+    cutoff: Option<f64>,
 ) -> PyResult<PathLengthMapping> {
     let edge_cost_callable = CostFn::from(edge_cost_fn);
 
@@ -657,6 +714,16 @@ pub fn digraph_dijkstra_shortest_path_lengths(
         return Err(PyIndexError::new_err(format!(
             "Node source index \"{node}\" out of graph bound"
         )));
+    }
+
+    if let Some(cutoff) = cutoff {
+        return bounded_dijkstra_lengths(
+            &graph.graph,
+            start,
+            goal_index,
+            |e| edge_cost_callable.call(py, e.weight()),
+            cutoff,
+        );
     }
 
     let res: Vec<Option<f64>> = dijkstra(

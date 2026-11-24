@@ -564,7 +564,7 @@ def all_pairs_dijkstra_path_lengths(graph, edge_cost_fn):
 
 
 @_rustworkx_dispatch
-def dijkstra_shortest_path_lengths(graph, node, edge_cost_fn, goal=None):
+def dijkstra_shortest_path_lengths(graph, node, edge_cost_fn, goal=None, cutoff=None):
     """Compute the lengths of the shortest paths for a graph object using
     Dijkstra's algorithm.
 
@@ -579,11 +579,17 @@ def dijkstra_shortest_path_lengths(graph, node, edge_cost_fn, goal=None):
         When specified the traversal will stop when the goal is reached and
         the output dictionary will only have a single entry with the length
         of the shortest path to the goal node.
+    :param float cutoff: An optional maximum path cost, inclusive. Paths above
+        this cost are not explored. Must be non-negative and not NaN. If None,
+        the search is unbounded. Edge costs are evaluated only for edges reached
+        by the bounded search.
 
     :returns: A dictionary of the shortest paths from the provided node where
         the key is the node index of the end of the path and the value is the
         cost/sum of the weights of path
     :rtype: dict
+    :raises ValueError: If cutoff is negative or NaN, or an evaluated edge cost
+        is negative or NaN.
     """
     raise TypeError(f"Invalid Input Type {type(graph)} for graph")
 

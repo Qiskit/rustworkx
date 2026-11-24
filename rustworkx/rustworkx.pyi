@@ -905,6 +905,7 @@ def digraph_dijkstra_shortest_path_lengths(
     edge_cost_fn: Callable[[_T], float] | None,
     /,
     goal: int | None = ...,
+    cutoff: float | None = ...,
 ) -> PathLengthMapping: ...
 def graph_dijkstra_shortest_path_lengths(
     graph: PyGraph[_S, _T],
@@ -912,6 +913,7 @@ def graph_dijkstra_shortest_path_lengths(
     edge_cost_fn: Callable[[_T], float] | None,
     /,
     goal: int | None = ...,
+    cutoff: float | None = ...,
 ) -> PathLengthMapping: ...
 def digraph_all_pairs_bellman_ford_path_lengths(
     graph: PyDiGraph[_S, _T],
