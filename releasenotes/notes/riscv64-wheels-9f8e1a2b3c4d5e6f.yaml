@@ -1,0 +1,6 @@
+---
+features:
+  - |
+    Tier 4 precompiled wheels are now published for Linux ``riscv64``
+    (``manylinux_2_35``, requiring ``glibc >= 2.35``). These wheels are
+    cross-compiled on ``x86_64`` and are not tested.
