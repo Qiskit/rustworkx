@@ -287,10 +287,14 @@ type LongestPathResult<G, T, E> = Result<Option<(Vec<NodeId<G>>, T)>, E>;
 /// ```
 pub fn longest_path<G, F, T, E>(graph: G, mut weight_fn: F) -> LongestPathResult<G, T, E>
 where
-    G: GraphProp<EdgeType = Directed> + IntoNodeIdentifiers + IntoEdgesDirected + Visitable,
+    G: GraphProp<EdgeType = Directed>
+        + IntoNodeIdentifiers
+        + IntoEdgesDirected
+        + Visitable
+        + NodeIndexable,
     F: FnMut(G::EdgeRef) -> Result<T, E>,
     T: Num + Zero + PartialOrd + Copy,
-    <G as GraphBase>::NodeId: Hash + Eq + PartialOrd,
+    <G as GraphBase>::NodeId: Hash + Eq,
 {
     let mut path: Vec<NodeId<G>> = Vec::new();
     let nodes = match algo::toposort(graph, None) {
@@ -306,27 +310,55 @@ where
 
     // Iterate over nodes in topological order
     for node in nodes {
+        // Tracks whether an incomparable pair of weights (e.g. `f64::NaN`) was seen while
+        // choosing the incoming edge with the greatest cumulative weight.
+        let mut incomparable = false;
         let max_path = graph
             .edges_directed(node, petgraph::Direction::Incoming)
             .try_fold((T::zero(), node), |longest, p_edge| -> Result<_, E> {
                 let p_node = p_edge.source();
                 let weight: T = weight_fn(p_edge)?;
                 let length = dist[&p_node].0 + weight;
-                if length >= longest.0 {
-                    Ok((length, p_node))
-                } else {
-                    Ok(longest)
+                match length.partial_cmp(&longest.0) {
+                    Some(Ordering::Greater) | Some(Ordering::Equal) => Ok((length, p_node)),
+                    Some(Ordering::Less) => Ok(longest),
+                    // Incomparable weights mean the longest path is not well-defined.
+                    None => {
+                        incomparable = true;
+                        Ok(longest)
+                    }
                 }
             })?;
+        if incomparable {
+            return Ok(None);
+        }
 
         // Store the maximum distance and the corresponding parent node for the current node
         dist.insert(node, max_path);
     }
-    let (first, _) = dist
-        .iter()
-        .max_by(|a, b| a.1.partial_cmp(b.1).unwrap())
-        .unwrap();
-    let mut v = *first;
+    // Select the node with the greatest cumulative distance.  Ties are broken by node index so
+    // the result is deterministic without requiring `NodeId: Ord`, and if any two distances are
+    // incomparable the longest path is not well-defined, so we return `None` (as for a cycle).
+    let mut best: Option<(T, G::NodeId)> = None;
+    for (node, (distance, _)) in dist.iter() {
+        best = Some(match best {
+            None => (*distance, *node),
+            Some(current) => match distance.partial_cmp(&current.0) {
+                Some(Ordering::Greater) => (*distance, *node),
+                Some(Ordering::Less) => current,
+                Some(Ordering::Equal) if graph.to_index(*node) > graph.to_index(current.1) => {
+                    (*distance, *node)
+                }
+                Some(Ordering::Equal) => current,
+                None => return Ok(None),
+            },
+        });
+    }
+    // `dist` is non-empty because `nodes` is non-empty (checked above), so `best` is `Some`.
+    let Some((_, first)) = best else {
+        return Ok(Some((path, T::zero())));
+    };
+    let mut v = first;
     let mut u: Option<G::NodeId> = None;
     // Backtrack from this node to find the path
     #[allow(clippy::unnecessary_map_or)]
@@ -336,7 +368,7 @@ where
         v = dist[&v].1;
     }
     path.reverse(); // Reverse the path to get the correct order
-    let path_weight = dist[first].0; // The total weight of the longest path
+    let path_weight = dist[&first].0; // The total weight of the longest path
 
     Ok(Some((path, path_weight)))
 }
@@ -399,7 +431,7 @@ where
         + NodeIndexable,
     F: FnMut(G::EdgeRef) -> Result<T, E>,
     T: Num + Zero + PartialOrd + Copy,
-    <G as GraphBase>::NodeId: Hash + Eq + PartialOrd,
+    <G as GraphBase>::NodeId: Hash + Eq,
 {
     let nodes = match algo::toposort(graph, None) {
         Ok(nodes) => nodes,
@@ -414,18 +446,28 @@ where
 
     // Iterate over nodes in topological order
     for node in nodes {
+        // Tracks whether an incomparable pair of weights (e.g. `f64::NaN`) was seen while
+        // choosing the incoming edge with the greatest cumulative weight.
+        let mut incomparable = false;
         let max_path = graph
             .edges_directed(node, petgraph::Direction::Incoming)
             .try_fold((T::zero(), node), |longest, p_edge| -> Result<_, E> {
                 let p_node = p_edge.source();
                 let weight: T = weight_fn(p_edge)?;
                 let length = dist[graph.to_index(p_node)].unwrap().0 + weight;
-                if length >= longest.0 {
-                    Ok((length, p_node))
-                } else {
-                    Ok(longest)
+                match length.partial_cmp(&longest.0) {
+                    Some(Ordering::Greater) | Some(Ordering::Equal) => Ok((length, p_node)),
+                    Some(Ordering::Less) => Ok(longest),
+                    // Incomparable weights mean the longest path is not well-defined.
+                    None => {
+                        incomparable = true;
+                        Ok(longest)
+                    }
                 }
             })?;
+        if incomparable {
+            return Ok(None);
+        }
 
         // Store the maximum distance and the corresponding parent node for the current node
         dist[graph.to_index(node)] = Some(max_path);
@@ -939,6 +981,23 @@ mod test_longest_path {
     }
 
     #[test]
+    fn test_incomparable_weights_return_none() {
+        // gh #1580: when weights are not comparable (e.g. NaN), the longest path is not
+        // well-defined, so the function must return Ok(None) rather than silently dropping
+        // the incomparable path and returning a shorter one.
+        let mut graph: DiGraph<(), f64> = DiGraph::new();
+        let n0 = graph.add_node(());
+        let n1 = graph.add_node(());
+        let n2 = graph.add_node(());
+        graph.add_edge(n0, n1, 1.0);
+        graph.add_edge(n0, n2, f64::NAN);
+        graph.add_edge(n1, n2, 1.0);
+        let weight_fn = |edge: petgraph::graph::EdgeReference<f64>| Ok::<f64, &str>(*edge.weight());
+        let result = longest_path(&graph, weight_fn);
+        assert_eq!(result, Ok(None));
+    }
+
+    #[test]
     fn test_dag_with_multiple_paths() {
         let mut graph: DiGraph<(), i32> = DiGraph::new();
         let n0 = graph.add_node(());
@@ -1045,6 +1104,23 @@ mod test_longest_path_length {
         let weight_fn = |_: petgraph::graph::EdgeReference<()>| Ok::<i32, &str>(0);
         let result = longest_path_length(&graph, weight_fn);
         assert_eq!(result, Ok(Some(0)));
+    }
+
+    #[test]
+    fn test_incomparable_weights_return_none() {
+        // gh #1580: mirror `longest_path` — incomparable weights (e.g. NaN) mean the longest
+        // path length is not well-defined, so return Ok(None) rather than a suppressed shorter
+        // length, keeping the two functions consistent.
+        let mut graph: DiGraph<(), f64> = DiGraph::new();
+        let n0 = graph.add_node(());
+        let n1 = graph.add_node(());
+        let n2 = graph.add_node(());
+        graph.add_edge(n0, n1, 1.0);
+        graph.add_edge(n0, n2, f64::NAN);
+        graph.add_edge(n1, n2, 1.0);
+        let weight_fn = |edge: petgraph::graph::EdgeReference<f64>| Ok::<f64, &str>(*edge.weight());
+        let result = longest_path_length(&graph, weight_fn);
+        assert_eq!(result, Ok(None));
     }
 
     #[test]
