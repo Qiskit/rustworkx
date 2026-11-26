@@ -1,0 +1,4 @@
+upgrade:
+  - |
+    The minimum supported Rust version for building rustworkx and
+    rustworkx-core from source has been raised from 1.85 to 1.89.

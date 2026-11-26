@@ -941,10 +941,10 @@ where
                                 == self.ordering
                         {
                             self._counter += 1;
-                            if let Some(limit) = self.call_limit {
-                                if self._counter > limit {
-                                    return Ok(None);
-                                }
+                            if let Some(limit) = self.call_limit
+                                && self._counter > limit
+                            {
+                                return Ok(None);
                             }
                             let f0 = Frame::Unwind {
                                 nodes,

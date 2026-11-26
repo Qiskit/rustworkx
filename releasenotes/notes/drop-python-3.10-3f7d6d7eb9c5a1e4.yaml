@@ -1,0 +1,4 @@
+upgrade:
+  - |
+    The minimum supported Python version for rustworkx has been raised to
+    Python 3.11. Python 3.10 is no longer supported.

@@ -108,14 +108,14 @@ fn xml_attribute<'a>(element: &'a BytesStart<'a>, key: &[u8]) -> Result<String, 
     element
         .attributes()
         .find_map(|a| {
-            if let Ok(a) = a {
-                if a.key == QName(key) {
-                    let decoded = a
-                        .unescape_value()
-                        .map_err(Error::from)
-                        .map(|cow_str| cow_str.into_owned());
-                    return Some(decoded);
-                }
+            if let Ok(a) = a
+                && a.key == QName(key)
+            {
+                let decoded = a
+                    .unescape_value()
+                    .map_err(Error::from)
+                    .map(|cow_str| cow_str.into_owned());
+                return Some(decoded);
             }
             None
         })

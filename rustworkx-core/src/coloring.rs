@@ -750,19 +750,19 @@ where
             fan_extended = false;
 
             for edge in &neighbors {
-                if let Some(color) = self.get_edge_color(*edge) {
-                    if self.is_free_color(last_node_in_fan, color) {
-                        fan.push(*edge);
-                        last_node_in_fan = edge.target();
-                        fan_extended = true;
-                        neighbors.remove(
-                            neighbors
-                                .iter()
-                                .position(|x| x.target() == last_node_in_fan)
-                                .unwrap(),
-                        );
-                        break;
-                    }
+                if let Some(color) = self.get_edge_color(*edge)
+                    && self.is_free_color(last_node_in_fan, color)
+                {
+                    fan.push(*edge);
+                    last_node_in_fan = edge.target();
+                    fan_extended = true;
+                    neighbors.remove(
+                        neighbors
+                            .iter()
+                            .position(|x| x.target() == last_node_in_fan)
+                            .unwrap(),
+                    );
+                    break;
                 }
             }
         }
@@ -785,14 +785,14 @@ where
         while path_extended {
             path_extended = false;
             for edge in self.graph.edges(cur_node) {
-                if let Some(color) = self.get_edge_color(edge) {
-                    if color == cur_color {
-                        path_extended = true;
-                        path.push((edge, cur_color));
-                        cur_node = edge.target();
-                        cur_color = self.flip_color(c, d, cur_color);
-                        break;
-                    }
+                if let Some(color) = self.get_edge_color(edge)
+                    && color == cur_color
+                {
+                    path_extended = true;
+                    path.push((edge, cur_color));
+                    cur_node = edge.target();
+                    cur_color = self.flip_color(c, d, cur_color);
+                    break;
                 }
             }
         }
