@@ -1,0 +1,19 @@
+---
+features:
+  - |
+    Added :func:`~rustworkx.generators.nd_grid_graph` and
+    :func:`~rustworkx.generators.directed_nd_grid_graph` for generating
+    n-dimensional grid graphs. These extend the existing 2D grid_graph
+    to support arbitrary dimensions.
+
+    .. jupyter-execute::
+
+      import rustworkx.generators
+
+      # 3D cube
+      cube = rustworkx.generators.nd_grid_graph([2, 2, 2])
+      print(f"{len(cube)} nodes, {len(cube.edges())} edges")
+
+      # with coordinate labels
+      grid = rustworkx.generators.nd_grid_graph([3, 3], with_positions=True)
+      print(f"node 0: {grid[0]}")
