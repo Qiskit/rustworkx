@@ -1,0 +1,5 @@
+upgrade:
+  - |
+    Support for macOS x86_64 has been downgraded from tier 1 to tier 4. Wheels
+    will continue to be published, but they will be cross-compiled on arm64
+    and will not be tested.

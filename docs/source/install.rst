@@ -77,6 +77,22 @@ source.
      - aarch64
      - :ref:`tier-1`
      - Distributions compatible with the `manylinux 2014`_ packaging specification
+   * - macOS (11 or newer)
+     - arm64
+     - :ref:`tier-1`
+     -
+   * - Windows 64bit
+     - x86_64
+     - :ref:`tier-1`
+     -
+   * - Linux (musl)
+     - x86_64
+     - :ref:`tier-2`
+     -
+   * - Linux (musl)
+     - aarch64
+     - :ref:`tier-2`
+     -
    * - Linux
      - i686 
      - :ref:`tier-4`
@@ -89,26 +105,10 @@ source.
      - s390x
      - :ref:`tier-4`
      - Distributions compatible with the `manylinux 2014`_ packaging specification
-   * - Linux (musl)
-     - x86_64
-     - :ref:`tier-2`
-     -
-   * - Linux (musl)
-     - aarch64
-     - :ref:`tier-2`
-     - 
    * - macOS (10.12 or newer)
      - x86_64
-     - :ref:`tier-1`
-     -
-   * - macOS (11 or newer)
-     - arm64
-     - :ref:`tier-1`
-     -
-   * - Windows 64bit
-     - x86_64
-     - :ref:`tier-1`
-     -
+     - :ref:`tier-4`
+     - Wheels are cross-compiled on arm64 and are not tested
    * - Windows 32bit 
      - i686 or x86_64
      - :ref:`tier-4`
